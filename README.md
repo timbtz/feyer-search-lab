@@ -2,6 +2,24 @@
 
 Make **Differometor** faster while preserving its physical predictions and gradients.
 
+## Team optimization lab
+
+To clone the **complete team setup**, including the simulator, official benchmark,
+serial evaluator and shared search workflow:
+
+```bash
+git clone https://github.com/timbtz/feyer-search-lab.git
+cd feyer-search-lab
+```
+
+Follow the [three-instance team workflow](.wiki/team-search.md) and
+[new AMD instance setup](.wiki/portable-amd.md). Each teammate uses their own local
+Claude/Codex account and evaluator; Qwen and SMAC are optional. The
+[shared GitHub queue](https://github.com/timbtz/feyer-search-lab/tree/control/team-search)
+tracks task ownership, exact candidates, evidence, stalled directions and combinations.
+The [lab documentation](.wiki/README.md) covers existing automated controllers.
+The original challenge instructions follow below.
+
 This repository includes the public simulator source, example data, [challenge PDF](challenge.pdf), [judging criteria PDF](judging-criteria.pdf), [editable brief](challenge.docx), a short [start-here example](start_here.py), and a [full benchmark](benchmark.py). No separate simulator checkout or GPU is required.
 
 ## Start here
