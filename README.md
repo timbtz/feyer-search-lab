@@ -61,7 +61,7 @@ graph TD
 
 Every edge records intended inputs, not proof of speedup.
 
-Recorded jobs: 13. Decisions/events: 38.
+Recorded jobs: 13. Decisions/events: 39.
 
 ## External research records
 
@@ -90,5 +90,6 @@ Recorded jobs: 13. Decisions/events: 38.
 | astra-guided-v2 | explore | unknown | compilation, forward, gradient | current |
 | astra-group-numerical-v3 | refine | unknown | gradient_compile, forward_compile, gradient, forward | current |
 | claude-guided-v2 | explore | 633689f9bf05 | unknown | completed |
+| claude-guided-v2 | diagnose | unknown | unknown | current |
 
 These records are evidence, not competing task claims or winner declarations.
