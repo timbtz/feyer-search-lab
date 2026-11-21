@@ -94,6 +94,42 @@ def _host_array(values, dtype):
     return jnp.asarray(np.asarray(values, dtype=np_dtype))
 
 
+import jax.tree_util as _tree_util
+
+
+@_tree_util.register_pytree_node_class
+class StaticIndices:
+    """Structural integer indices carried as hashable pytree auxiliary data.
+
+    Derived from the setup topology on the host. Under `jit` they are trace-time
+    constants instead of traced array leaves; values are identical.
+    """
+
+    __slots__ = ("array", "_key")
+
+    def __init__(self, array):
+        array = np.ascontiguousarray(np.asarray(array, dtype=np.int64))
+        array.setflags(write=False)
+        self.array = array
+        self._key = (array.shape, array.tobytes())
+
+    def tree_flatten(self):
+        return (), self
+
+    @classmethod
+    def tree_unflatten(cls, aux, children):
+        return aux
+
+    def __hash__(self):
+        return hash(self._key)
+
+    def __eq__(self, other):
+        return isinstance(other, StaticIndices) and self._key == other._key
+
+    def __array__(self, dtype=None, copy=None):
+        return self.array if dtype is None else self.array.astype(dtype)
+
+
 def _np_phase_shift(tuning, frequency, refractive_index):
     return 2 * np.radians(tuning) * refractive_index * (1 + frequency / F0)
 
@@ -1552,7 +1588,7 @@ def _group_component_indices(function_indices, function_input_indices=None):
     }
     if function_input_indices is not None:
         result["parameter_indices"] = {
-            index: _host_array([function_input_indices[row] for row in groups[index]], int)
+            index: StaticIndices([function_input_indices[row] for row in groups[index]])
             for index in sorted(groups)
         }
     return result

@@ -252,8 +252,34 @@ My LU / non-LU cost split is source inference and is unmeasured.
   - Outputs bitwise identical, and nothing else changes.
 - **Ceiling:** the 0.30 s build phase.
 
+### Results: SHA `7d6f99624be6e65451051fea0a2e0d99e177780c`
+
+**Screen** (`2aee0b83`): 21.595 s, build 0.300 s.
+
+**Full** (`5d084466`): official PASS, strict PASS, all outputs bitwise identical, gradient normalized 1.6e-8.
+
+| Phase | Seconds |
+| --- | --- |
+| Complete first run | 21.889 |
+| Build | 0.298 (aa2b1ab: 0.303) |
+| Forward compile | 7.871 (noise) |
+| Forward execute | 8.538 |
+
+**Decision:** no measurable build effect. The change is harmless and kept; the higher total is attributed to compile and execute noise. Following coordinator guidance, I am stopping the small build tweaks.
+
+## Candidate 7: static structural indices (coordinator lever)
+
+### Hypothesis
+- **Change:** the per-group component input indices `component_groups[...]["parameter_indices"]` become `build.StaticIndices`. This is a hashable pytree node with no children, carrying a read-only int64 NumPy array as auxiliary data. Inside `update`, the gather `parameters[indices]` therefore uses trace-time constant indices instead of traced array arguments. Values are identical.
+- **Target:** forward lower and compile (7.87 s, job `5d084466`), and gradient compile (1.94 s).
+- **Mechanism:** constant gather indices let XLA simplify or fuse the input selection, and the indices drop out of the jit argument list. Constants can also enlarge the HLO.
+- **Status:** unmeasured, with no predicted magnitude; the direction is uncertain.
+- **Expected numerics:** outputs and gradient bitwise identical, since the same gathers run with the same values.
+- **Fallback:** revert to `_host_array` for this field.
+- **Next families**, only if compile improves: `function_rows`, `output_rows`, the matrix destination indices.
+
 ### Results
-- Pending (final candidate of this session).
+- Pending (submitted at the deadline; the job may drain afterward).
 
 ## Handoff
 - **Session:** claude-profile-guided-v1. Thread `a825c74d-c575-4b2c-bf1b-d3c07bcc2e26`, seed `96474bdd4d83bb02c163640f63fae1c4bd7a21d4`, deadline unix 1795294994.

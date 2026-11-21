@@ -150,6 +150,8 @@ def update(
             # New builders compose these structural indices on the host.
             if "parameter_indices" in component_groups:
                 input_indices = component_groups["parameter_indices"][function_index]
+                # Static topology indices (build.StaticIndices) become trace constants.
+                input_indices = getattr(input_indices, "array", input_indices)
             else:
                 input_indices = function_input_indices[rows]
             group_inputs = parameters[input_indices]
