@@ -1,0 +1,416 @@
+{
+  "schema": "feyer-official-transfer-run-v1",
+  "upstream": "83f8d2f40fc75218a1d8ec7908cc0bf1c8f99a75",
+  "harness": {
+    "upstream_commit": "83f8d2f40fc75218a1d8ec7908cc0bf1c8f99a75",
+    "source": "https://github.com/feyerlabs/start-hack-munich-2026",
+    "files": {
+      "benchmark.py": "b2e8c5367705e220f83c3d5f2bb95301e3148b102dc0d34f5c2c6f5792b9984e",
+      "benchmark_aligo.py": "8c1018592e33f66b0913490159f7e2c20f5a2acec614b95b9bbbda18d90d99fc",
+      "plot_timings.py": "21e19966f36fbffc6bd0e416b5fb99e8d7d6b4593bf5b14b7a0d4e3b5216ca8a"
+    }
+  },
+  "reference_sha": "02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f",
+  "candidate_sha": "aac9904cb4dd9b2caae377d8d4694f6782ec3498",
+  "cpu": 2,
+  "started_at": 1795303202.0618198,
+  "status": "passed",
+  "ranking_eligible": false,
+  "timing_scope": "Matched one-CPU fresh processes; support evidence, not queue promotion. External contention not excluded.",
+  "resource_snapshot": {
+    "container_limits": {
+      "memory.max": "59055800320",
+      "memory.swap.max": "0",
+      "cpu.max": "1600000 100000",
+      "cpuset.cpus.effective": "0-127"
+    },
+    "worker_cpu_affinity_ids": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127
+    ],
+    "per_job_memory_limit_enforced": false,
+    "memory_measurement": "GNU time maximum resident set size; shared cgroup limits are recorded separately"
+  },
+  "checks": [
+    {
+      "name": "reference",
+      "setup": "grid",
+      "sha": "02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f",
+      "command": [
+        "taskset",
+        "-c",
+        "2",
+        "/workspace/venv-feyer/bin/python",
+        "-u",
+        "/workspace/feyer-transfer/releases/f8817a4/experiments/vendor/official-transfer/benchmark.py",
+        "--repo",
+        "/workspace/feyer-transfer/aac9904-official-v1/reference-code",
+        "--cpus",
+        "1",
+        "--repeats",
+        "3",
+        "--output",
+        "/workspace/feyer-transfer/aac9904-official-v1/reference-grid/report.json",
+        "--save-arrays",
+        "/workspace/feyer-transfer/aac9904-official-v1/reference-grid/arrays.npz"
+      ],
+      "returncode": 0,
+      "failure": null,
+      "wall_seconds": 125.0263210888952,
+      "memory": {
+        "budget_bytes": 16000000000,
+        "enforcement": "sampled_process_group_rss",
+        "kernel_memory_limit_enforced": false,
+        "sampled_process_group_peak_rss_bytes": 15516549120,
+        "samples": 466,
+        "exceeded": false,
+        "notes": "RSS sampling can miss brief peaks and counts shared pages in each process. It excludes GPU VRAM and does not reserve RAM or constrain other instance work."
+      },
+      "official": {
+        "passed": true,
+        "issues": [],
+        "package_xla_flags": null,
+        "scope": "Pinned official transfer benchmark; package compiler settings recorded, not blanket-rejected."
+      },
+      "total_seconds": 35.88300763070583,
+      "report_sha256": "5dd94cb7914aa4d5d7642b29ca520c032afd07345712e3967a94b6e9dc5657ae",
+      "arrays_sha256": "c3f6cba045f8b41f488dc19c960f5056b5f2e75cfa64f9a687b52f2a9ba2751e"
+    },
+    {
+      "name": "candidate",
+      "setup": "grid",
+      "sha": "aac9904cb4dd9b2caae377d8d4694f6782ec3498",
+      "command": [
+        "taskset",
+        "-c",
+        "2",
+        "/workspace/venv-feyer/bin/python",
+        "-u",
+        "/workspace/feyer-transfer/releases/f8817a4/experiments/vendor/official-transfer/benchmark.py",
+        "--repo",
+        "/workspace/feyer-transfer/aac9904-official-v1/candidate-code",
+        "--cpus",
+        "1",
+        "--repeats",
+        "3",
+        "--output",
+        "/workspace/feyer-transfer/aac9904-official-v1/candidate-grid/report.json",
+        "--save-arrays",
+        "/workspace/feyer-transfer/aac9904-official-v1/candidate-grid/arrays.npz"
+      ],
+      "returncode": 0,
+      "failure": null,
+      "wall_seconds": 83.47385412827134,
+      "memory": {
+        "budget_bytes": 16000000000,
+        "enforcement": "sampled_process_group_rss",
+        "kernel_memory_limit_enforced": false,
+        "sampled_process_group_peak_rss_bytes": 7885078528,
+        "samples": 311,
+        "exceeded": false,
+        "notes": "RSS sampling can miss brief peaks and counts shared pages in each process. It excludes GPU VRAM and does not reserve RAM or constrain other instance work."
+      },
+      "official": {
+        "passed": true,
+        "issues": [],
+        "package_xla_flags": null,
+        "scope": "Pinned official transfer benchmark; package compiler settings recorded, not blanket-rejected."
+      },
+      "total_seconds": 17.97020067088306,
+      "report_sha256": "571c4a367e90a14f71efa889e99c6fc2284fbbcc2298c2642b490717130c90e6",
+      "arrays_sha256": "5c2fbb7c11214daef4ba24c6e10fc1fd53d13ae056f62057c94c281819772ae2"
+    },
+    {
+      "name": "reference",
+      "setup": "aligo",
+      "sha": "02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f",
+      "command": [
+        "taskset",
+        "-c",
+        "2",
+        "/workspace/venv-feyer/bin/python",
+        "-u",
+        "/workspace/feyer-transfer/releases/f8817a4/experiments/vendor/official-transfer/benchmark_aligo.py",
+        "--repo",
+        "/workspace/feyer-transfer/aac9904-official-v1/reference-code",
+        "--cpus",
+        "1",
+        "--repeats",
+        "3",
+        "--output",
+        "/workspace/feyer-transfer/aac9904-official-v1/reference-aligo/report.json",
+        "--save-arrays",
+        "/workspace/feyer-transfer/aac9904-official-v1/reference-aligo/arrays.npz"
+      ],
+      "returncode": 0,
+      "failure": null,
+      "wall_seconds": 29.29267517849803,
+      "memory": {
+        "budget_bytes": 16000000000,
+        "enforcement": "sampled_process_group_rss",
+        "kernel_memory_limit_enforced": false,
+        "sampled_process_group_peak_rss_bytes": 1489305600,
+        "samples": 109,
+        "exceeded": false,
+        "notes": "RSS sampling can miss brief peaks and counts shared pages in each process. It excludes GPU VRAM and does not reserve RAM or constrain other instance work."
+      },
+      "official": {
+        "passed": true,
+        "issues": [],
+        "package_xla_flags": null,
+        "scope": "Pinned official transfer benchmark; package compiler settings recorded, not blanket-rejected."
+      },
+      "total_seconds": 21.245026355609298,
+      "report_sha256": "1a1bfcf309f0642e935ee456714958c2067ee83a5d70d661d11585bbb88d41b5",
+      "arrays_sha256": "879dfe5fa45bdfedc6d0f4aabc563ef5191c6f22aa2ad3199afdeb42b306275e"
+    },
+    {
+      "name": "candidate",
+      "setup": "aligo",
+      "sha": "aac9904cb4dd9b2caae377d8d4694f6782ec3498",
+      "command": [
+        "taskset",
+        "-c",
+        "2",
+        "/workspace/venv-feyer/bin/python",
+        "-u",
+        "/workspace/feyer-transfer/releases/f8817a4/experiments/vendor/official-transfer/benchmark_aligo.py",
+        "--repo",
+        "/workspace/feyer-transfer/aac9904-official-v1/candidate-code",
+        "--cpus",
+        "1",
+        "--repeats",
+        "3",
+        "--output",
+        "/workspace/feyer-transfer/aac9904-official-v1/candidate-aligo/report.json",
+        "--save-arrays",
+        "/workspace/feyer-transfer/aac9904-official-v1/candidate-aligo/arrays.npz"
+      ],
+      "returncode": 0,
+      "failure": null,
+      "wall_seconds": 11.819497102871537,
+      "memory": {
+        "budget_bytes": 16000000000,
+        "enforcement": "sampled_process_group_rss",
+        "kernel_memory_limit_enforced": false,
+        "sampled_process_group_peak_rss_bytes": 651337728,
+        "samples": 44,
+        "exceeded": false,
+        "notes": "RSS sampling can miss brief peaks and counts shared pages in each process. It excludes GPU VRAM and does not reserve RAM or constrain other instance work."
+      },
+      "official": {
+        "passed": true,
+        "issues": [],
+        "package_xla_flags": null,
+        "scope": "Pinned official transfer benchmark; package compiler settings recorded, not blanket-rejected."
+      },
+      "total_seconds": 7.720194945111871,
+      "report_sha256": "924728e897cb2422a406e5c7c8f835fdc8c5c233374981cc740d91765ac27caa",
+      "arrays_sha256": "13dd7a0b67f405d4f8035b841bcbb6413eb25e2fc4b790b3e6e32318ecac9334"
+    }
+  ],
+  "comparisons": [
+    {
+      "passed": true,
+      "issues": [],
+      "arrays": {
+        "carrier": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "gradient": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "noise": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "powers": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "sensitivity": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "signal": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "log_sensitivity_error": 0.0
+      },
+      "regression_policy": {
+        "rtol": 1e-07,
+        "scale_atol": 1e-12,
+        "sensitivity_log_tolerance": 1e-05
+      },
+      "setup": "grid"
+    },
+    {
+      "passed": true,
+      "issues": [],
+      "arrays": {
+        "carrier": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "gradient": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "noise": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "powers": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "sensitivity": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "signal": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "log_sensitivity_error": 0.0
+      },
+      "regression_policy": {
+        "rtol": 1e-07,
+        "scale_atol": 1e-12,
+        "sensitivity_log_tolerance": 1e-06
+      },
+      "setup": "aligo"
+    }
+  ],
+  "passed": true,
+  "finished_at": 1795303451.8342652
+}

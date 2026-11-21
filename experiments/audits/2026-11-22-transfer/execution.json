@@ -1,0 +1,23 @@
+[
+  {
+    "label": "aac9904",
+    "returncode": 0,
+    "stdout": "{\"passed\": true, \"output\": \"/workspace/feyer-transfer/archive-audit-v1/aac9904.json\"}\n",
+    "stderr": "",
+    "scope": "Re-audit of retained historical archives; source identity inherited, not independently authenticated by archive format."
+  },
+  {
+    "label": "c4153e7",
+    "returncode": 1,
+    "stdout": "{\"passed\": false, \"output\": \"/workspace/feyer-transfer/archive-audit-v1/c4153e7.json\"}\n",
+    "stderr": "",
+    "scope": "Re-audit of retained historical archives; source identity inherited, not independently authenticated by archive format."
+  },
+  {
+    "label": "53f38d3",
+    "returncode": 1,
+    "stdout": "{\"passed\": false, \"output\": \"/workspace/feyer-transfer/archive-audit-v1/53f38d3.json\"}\n",
+    "stderr": "",
+    "scope": "Re-audit of retained historical archives; source identity inherited, not independently authenticated by archive format."
+  }
+]

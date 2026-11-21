@@ -1,0 +1,59 @@
+{
+  "schema": "feyer-transfer-audit-summary-v1",
+  "candidate_sha": "aac9904cb4dd9b2caae377d8d4694f6782ec3498",
+  "official_run_runtime": "f8817a4",
+  "loss_supplement_and_archive_audit_runtime": "d804f35",
+  "upstream": "83f8d2f40fc75218a1d8ec7908cc0bf1c8f99a75",
+  "ranking_eligible": false,
+  "claude_headless_running": false,
+  "official_and_strict_passed": true,
+  "timings": [
+    {
+      "name": "reference",
+      "setup": "grid",
+      "sha": "02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f",
+      "total_seconds": 35.88300763070583
+    },
+    {
+      "name": "candidate",
+      "setup": "grid",
+      "sha": "aac9904cb4dd9b2caae377d8d4694f6782ec3498",
+      "total_seconds": 17.97020067088306
+    },
+    {
+      "name": "reference",
+      "setup": "aligo",
+      "sha": "02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f",
+      "total_seconds": 21.245026355609298
+    },
+    {
+      "name": "candidate",
+      "setup": "aligo",
+      "sha": "aac9904cb4dd9b2caae377d8d4694f6782ec3498",
+      "total_seconds": 7.720194945111871
+    }
+  ],
+  "archive_checks": [
+    {
+      "label": "aac9904",
+      "passed": true,
+      "passed_cases": 12,
+      "total_cases": 12,
+      "scope": "Historical archive re-audit; not a new simulation or authenticated exact-source binding."
+    },
+    {
+      "label": "c4153e7",
+      "passed": false,
+      "passed_cases": 2,
+      "total_cases": 12,
+      "scope": "Historical archive re-audit; not a new simulation or authenticated exact-source binding."
+    },
+    {
+      "label": "53f38d3",
+      "passed": false,
+      "passed_cases": 2,
+      "total_cases": 12,
+      "scope": "Historical archive re-audit; not a new simulation or authenticated exact-source binding."
+    }
+  ]
+}

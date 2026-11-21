@@ -108,3 +108,39 @@ checks would be needed to prove every intermediate or first-run output. Package
 compiler choices must remain visible in candidate source and results. This update
 does not authorize caching answers, omitting compilation from totals, or changing
 the physical workload.
+
+## Executed evidence
+
+The bounded support run finished and released both evaluator locks. No Claude
+headless model was launched. Raw official reports, execution/memory receipts and
+re-audit results are in
+[`experiments/audits/2026-11-22-transfer`](../experiments/audits/2026-11-22-transfer/summary.json).
+The original run used immutable runtime `f8817a4`; the loss-inclusive supplemental
+comparison and historical archive re-audit used `d804f35`. No running code was
+modified during the test.
+
+| Official setup | Pristine first run | Dense `aac9904` first run | Official / full-array comparison |
+|---|---:|---:|---|
+| Large grid (101/193) | 35.8830 s | 17.9702 s | Both pass |
+| aLIGO (101/29) | 21.2450 s | 7.7202 s | Both pass |
+
+Loss-inclusive comparison also passed for both setups. These are single fresh
+process measurements on AMD, explicitly nonranking; they do not establish a
+leaderboard win, final hidden-setup correctness or repeated timing confidence.
+
+The 12-case retained-archive strict re-audit passed 12/12 for dense `aac9904`,
+but only 2/12 for host solver `c4153e7` and its compiler-settings variant `53f38d3`.
+Both host variants exceed the custom 1e-5 log-sensitivity comparison bound on
+`uifo_rand1` (~2.04e-4) and `uifo_rand3` (~5.81e-5), and have additional elementwise
+strict discrepancies. This is disagreement with the retained dense reference,
+**not proof which solver is more accurate** on ill-conditioned systems. The
+compiler variant shows the same pattern; these results do not isolate compiler
+settings as its cause. Independent numerical arbitration remains necessary.
+Historical archives lack independently authenticated code bindings; the new
+official run has clean exact-commit checkouts and recorded artifact hashes.
+
+Validation: 25 new focused tests plus 23 existing worker/array tests passed;
+GitHub tests and SMAC jobs passed. Four synthetic legacy false-pass reproductions
+(changed power, NaN loss, float32 gradient, missing reference) are recorded and
+all fail under the new audit. The extension is a reviewed-branch candidate;
+historical queue verdicts, deployed workers and acceptance policy are untouched.

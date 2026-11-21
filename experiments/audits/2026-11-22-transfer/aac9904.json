@@ -1,0 +1,501 @@
+{
+  "schema": "feyer-transfer-array-audit-v1",
+  "passed": true,
+  "cases": [
+    {
+      "passed": true,
+      "issues": [],
+      "arrays": {
+        "carrier": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "gradient": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "loss": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "noise": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "powers": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "sensitivity": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "signal": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "log_sensitivity_error": 0.0
+      },
+      "regression_policy": {
+        "rtol": 1e-07,
+        "scale_atol": 1e-12,
+        "sensitivity_log_tolerance": 1e-05
+      },
+      "case": "dev"
+    },
+    {
+      "passed": true,
+      "issues": [],
+      "arrays": {
+        "carrier": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "gradient": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "loss": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "noise": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "powers": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "sensitivity": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "signal": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "log_sensitivity_error": 0.0
+      },
+      "regression_policy": {
+        "rtol": 1e-07,
+        "scale_atol": 1e-12,
+        "sensitivity_log_tolerance": 1e-05
+      },
+      "case": "dev_perturbed"
+    },
+    {
+      "passed": true,
+      "issues": [],
+      "arrays": {
+        "carrier": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "gradient": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "loss": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "noise": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "powers": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "sensitivity": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "signal": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "log_sensitivity_error": 0.0
+      },
+      "regression_policy": {
+        "rtol": 1e-07,
+        "scale_atol": 1e-12,
+        "sensitivity_log_tolerance": 1e-05
+      },
+      "case": "uifo_20_5000"
+    },
+    {
+      "passed": true,
+      "issues": [],
+      "arrays": {
+        "carrier": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "gradient": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "loss": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "noise": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "powers": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "sensitivity": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "signal": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "log_sensitivity_error": 0.0
+      },
+      "regression_policy": {
+        "rtol": 1e-07,
+        "scale_atol": 1e-12,
+        "sensitivity_log_tolerance": 1e-05
+      },
+      "case": "uifo_rand1"
+    },
+    {
+      "passed": true,
+      "issues": [],
+      "arrays": {
+        "carrier": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "gradient": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "loss": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "noise": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "powers": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "sensitivity": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "signal": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "log_sensitivity_error": 0.0
+      },
+      "regression_policy": {
+        "rtol": 1e-07,
+        "scale_atol": 1e-12,
+        "sensitivity_log_tolerance": 1e-05
+      },
+      "case": "uifo_rand2"
+    },
+    {
+      "passed": true,
+      "issues": [],
+      "arrays": {
+        "carrier": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "gradient": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "loss": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "noise": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "powers": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "sensitivity": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "signal": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "log_sensitivity_error": 0.0
+      },
+      "regression_policy": {
+        "rtol": 1e-07,
+        "scale_atol": 1e-12,
+        "sensitivity_log_tolerance": 1e-05
+      },
+      "case": "uifo_rand3"
+    },
+    {
+      "passed": true,
+      "issues": [],
+      "arrays": {
+        "carrier": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "gradient": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "loss": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "noise": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "powers": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "sensitivity": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "signal": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "log_sensitivity_error": 0.0
+      },
+      "regression_policy": {
+        "rtol": 1e-07,
+        "scale_atol": 1e-12,
+        "sensitivity_log_tolerance": 1e-05
+      },
+      "case": "voyager"
+    },
+    {
+      "passed": true,
+      "issues": [],
+      "arrays": {
+        "carrier": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "gradient": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "loss": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "noise": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "powers": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "sensitivity": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "signal": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "log_sensitivity_error": 0.0
+      },
+      "regression_policy": {
+        "rtol": 1e-07,
+        "scale_atol": 1e-12,
+        "sensitivity_log_tolerance": 1e-05
+      },
+      "case": "aligo"
+    },
+    {
+      "passed": true,
+      "issues": [],
+      "arrays": {
+        "carrier": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "gradient": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "loss": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "noise": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "powers": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "sensitivity": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "signal": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "log_sensitivity_error": 0.0
+      },
+      "regression_policy": {
+        "rtol": 1e-07,
+        "scale_atol": 1e-12,
+        "sensitivity_log_tolerance": 1e-05
+      },
+      "case": "dev_randparams"
+    },
+    {
+      "passed": true,
+      "issues": [],
+      "arrays": {
+        "carrier": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "gradient": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "loss": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "noise": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "powers": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "sensitivity": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "signal": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "log_sensitivity_error": 0.0
+      },
+      "regression_policy": {
+        "rtol": 1e-07,
+        "scale_atol": 1e-12,
+        "sensitivity_log_tolerance": 1e-05
+      },
+      "case": "uifo_randparams1"
+    },
+    {
+      "passed": true,
+      "issues": [],
+      "arrays": {
+        "carrier": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "gradient": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "loss": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "noise": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "powers": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "sensitivity": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "signal": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "log_sensitivity_error": 0.0
+      },
+      "regression_policy": {
+        "rtol": 1e-07,
+        "scale_atol": 1e-12,
+        "sensitivity_log_tolerance": 1e-05
+      },
+      "case": "uifo_randparams2"
+    },
+    {
+      "passed": true,
+      "issues": [],
+      "arrays": {
+        "carrier": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "gradient": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "loss": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "noise": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "powers": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "sensitivity": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "signal": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "log_sensitivity_error": 0.0
+      },
+      "regression_policy": {
+        "rtol": 1e-07,
+        "scale_atol": 1e-12,
+        "sensitivity_log_tolerance": 1e-05
+      },
+      "case": "uifo_randparams3"
+    }
+  ],
+  "reference_archive_sha256": "ea1980477379e05f6d6c2f7c5f0824762144a633c368c94618fd54b65ac05f8e",
+  "candidate_archive_sha256": "768d51da7cd072ee51bacf01055edd2faddcb97ba1f0ffe5bbd807ed07de5fe0",
+  "scope": "Additional strict review; not official PASS, no ranking or timing promotion."
+}
