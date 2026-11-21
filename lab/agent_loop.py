@@ -223,8 +223,9 @@ def _recover_submission(active, args, client, state, status_file):
 
 def _finish_record(active, args, worktree, directory, state, status_file):
     feedback = active['feedback']
-    from .profiler import feedback_profile
-    feedback['profiler'] = feedback_profile(feedback)
+    if state.get('feedback_mode', 'guided') == 'guided':
+        from .profiler import feedback_profile
+        feedback['profiler'] = feedback_profile(feedback)
     records = worktree / 'experiments' / 'runs' / args.name
     records.mkdir(parents=True, exist_ok=True)
     record = records / f'candidate-{active["iteration"]:02d}.json'
@@ -321,11 +322,41 @@ def _commit_candidate(pending, args, worktree, state, status_file):
     active = {'iteration': pending['iteration'], 'sha': current, 'response': response, 'jobs': {},
               'feedback': {'candidate_sha': current, 'agent_response': response,
                            'input_receipt': pending.get('input_receipt'),
-                           'provenance': {'parent_candidates': [state.get('candidate_sha') or state.get('initial_sha')]},
+                           'provenance': {'parent_candidates': [state.get('candidate_sha') or state.get('initial_sha')],
+                                          'feedback_mode': state.get('feedback_mode', 'guided')},
                            'agent_context': copy.deepcopy(pending.get('agent_context'))}}
     _save(state, status_file, active_candidate=active, pending_turn=None,
           candidates=pending['iteration'], candidate_sha=current, status='candidate_ready')
     return active
+
+
+
+def evidence_only_feedback(feedback, *, name, branch, direction, candidate_sha):
+    """Only this session's raw jobs and response, without derived guidance."""
+    if not feedback:
+        return None
+    if not isinstance(feedback, dict) or feedback.get('candidate_sha') != candidate_sha:
+        raise ValueError('Independent feedback does not match this session candidate')
+    selected = {'candidate_sha': candidate_sha}
+    if 'agent_response' in feedback:
+        selected['agent_response'] = copy.deepcopy(validate_response(feedback['agent_response']))
+    for profile in ('screen', 'full'):
+        if profile not in feedback:
+            continue
+        job = feedback[profile]
+        expected = dict(sha=candidate_sha, agent=name, branch=branch, direction=direction, profile=profile)
+        if not isinstance(job, dict) or any(job.get(key) != value for key, value in expected.items()):
+            raise ValueError('Independent feedback contains another session or candidate job')
+        # These fields originate in the queue, worker, or artifact fetch. Exclude
+        # derived analyses and any coordinator/source-context envelopes.
+        selected[profile] = copy.deepcopy({key: job[key] for key in (
+            'id', 'sha', 'request_id', 'profile', 'status', 'agent', 'branch', 'direction',
+            'hypothesis', 'created_at', 'updated_at', 'started_at', 'finished_at', 'worker_id',
+            'result', 'error', 'report.json', 'comparison.json', 'stdout.log', 'comparison.log',
+            'artifact_fetch_error') if key in job})
+    if 'full_skipped' in feedback:
+        selected['full_skipped'] = feedback['full_skipped']
+    return selected
 
 
 def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
@@ -333,6 +364,16 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
         raise ValueError('Session already exists; use --resume or choose a new session name')
     if args.resume and not status_file.exists():
         raise ValueError('No saved session exists to resume')
+    mode = getattr(args, 'feedback_mode', 'guided')
+    if mode not in ('guided', 'evidence-only'):
+        raise ValueError('Unknown feedback mode')
+    state = json.loads(status_file.read_text()) if status_file.exists() else {}
+    if state and state.get('feedback_mode', 'guided') != mode:
+        raise ValueError('Cannot change feedback mode while resuming a session')
+    if mode == 'evidence-only' and any((getattr(args, 'continuation_guidance', None),
+                                      getattr(args, 'profile_seed', None),
+                                      state.get('continuation_guidance'), state.get('profile_seed'))):
+        raise ValueError('Evidence-only sessions reject continuation guidance and profile seeds')
     guidance = None
     guidance_path = getattr(args, 'continuation_guidance', None)
     if guidance_path:
@@ -344,7 +385,6 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
             raise ValueError('Continuation guidance must be nonempty and at most 65536 bytes')
         guidance = {'path': str(path), 'sha256': hashlib.sha256(raw).hexdigest(),
                     'text': raw.decode('utf-8')}
-    state = json.loads(status_file.read_text()) if status_file.exists() else {}
     provider = getattr(args, 'agent_provider', 'codex')
     model = getattr(args, 'agent_model', None)
     if state and (state.get('agent_provider', 'codex') != provider or state.get('agent_model') != model):
@@ -355,6 +395,8 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
     invocation_started = time.time()
     deadline_unix = invocation_started + args.max_minutes * 60
     absolute_deadline = getattr(args, 'deadline_unix', None)
+    if mode == 'evidence-only' and absolute_deadline is None and state.get('fixed_deadline_unix') is None:
+        absolute_deadline = deadline_unix
     if state.get('fixed_deadline_unix') is not None:
         if absolute_deadline is not None and absolute_deadline != state['fixed_deadline_unix']:
             raise ValueError('Cannot change the fixed session deadline on resume')
@@ -363,7 +405,7 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
         deadline_unix = min(deadline_unix, absolute_deadline)
     deadline = time.monotonic() + max(0, deadline_unix - invocation_started)
     _save(state, status_file, pid=os.getpid(), branch=args.branch, worktree=str(worktree), direction=args.direction,
-          status='starting', agent_provider=provider, agent_model=model,
+          status='starting', agent_provider=provider, agent_model=model, feedback_mode=mode,
           fixed_deadline_unix=absolute_deadline, candidate_limit=args.max_candidates,
           invocation_started_at=invocation_started, invocation_deadline_at=deadline_unix)
     try:
@@ -374,8 +416,12 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
         if not args.resume and changed_paths(worktree):
             raise ValueError('Initial agent worktree must be clean')
         client = Client(args.host)
-        brief_path = getattr(args, 'brief', None) or (repo / 'experiments' / 'initial-agent.md')
+        default_brief = (Path(__file__).resolve().parent.parent / 'experiments/briefs/astra-independent.md'
+                         if mode == 'evidence-only' else repo / 'experiments' / 'initial-agent.md')
+        brief_path = getattr(args, 'brief', None) or default_brief
         brief = Path(brief_path).read_text()
+        if mode == 'evidence-only' and brief != default_brief.read_text():
+            raise ValueError('Evidence-only sessions require the committed independent challenge brief')
         from .profiler_feedback import load_seed, prompt_guidance
         seed_path = getattr(args, 'profile_seed', None)
         if seed_path and not state.get('profile_seed'):
@@ -441,18 +487,25 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
                        'and harness unchanged. Make one focused candidate, then return the requested JSON. Returning does not discard '
                        'this conversation: you will be resumed with measured feedback. Do not spawn agents. If a previous turn was '
                        'interrupted, inspect and continue its uncommitted edits.\n')
-            if args.max_candidates is None:
+            if args.max_candidates is None and mode == 'evidence-only':
+                prompt += f'Candidate {iteration}. There is no candidate-count limit; the fixed session deadline applies.\n'
+            elif args.max_candidates is None:
                 prompt += (f'Candidate {iteration}. There is no candidate-count limit. The user removed the former '
                            'four-candidate cap; this supersedes older brief, worktree rules and conversation instructions '
                            'about that cap. Continue exploring after candidate four while time remains.\n')
             else:
                 prompt += f'Candidate {iteration}/{args.max_candidates}.\n'
             prompt += f'Remaining session seconds: {max(0, int(deadline-time.monotonic()))}.\n'
-            if state.get('feedback'):
-                prompt += 'Evaluator feedback:\n' + json.dumps(state['feedback'], indent=2) + '\n'
-            if not state.get('feedback') and state.get('profile_seed'):
-                prompt += 'Initial exact-parent evidence (including numerical comparison):\n' + json.dumps(state['profile_seed'], indent=2) + '\n'
-            prompt += prompt_guidance(state.get('feedback') or state.get('profile_seed'))
+            delivered_feedback = state.get('feedback')
+            if mode == 'evidence-only':
+                delivered_feedback = evidence_only_feedback(delivered_feedback, name=args.name,
+                    branch=args.branch, direction=args.direction, candidate_sha=state.get('candidate_sha'))
+            if delivered_feedback:
+                prompt += 'Evaluator feedback:\n' + json.dumps(delivered_feedback, indent=2) + '\n'
+            if mode == 'guided':
+                if not state.get('feedback') and state.get('profile_seed'):
+                    prompt += 'Initial exact-parent evidence (including numerical comparison):\n' + json.dumps(state['profile_seed'], indent=2) + '\n'
+                prompt += prompt_guidance(state.get('feedback') or state.get('profile_seed'))
             if guidance:
                 prompt += ('\n\nCoordinator continuation guidance (separate from evaluator evidence; '
                            'the existing session deadline and evaluation rules still apply):\n'
@@ -460,21 +513,31 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
             prompt_digest = hashlib.sha256(prompt.encode('utf-8')).hexdigest()
             prompt_path = directory / f'turn-{turn_number:02d}-prompt-{prompt_digest}.json'
             input_receipt = {'path': str(prompt_path), 'sha256': prompt_digest,
-                             'turn': turn_number, 'thread_id': thread}
-            if state.get('feedback'):
-                consumed = state['feedback']
+                             'turn': turn_number, 'thread_id': thread, 'feedback_mode': mode}
+            if delivered_feedback:
+                consumed = delivered_feedback
                 input_receipt.update(
                     consumed_feedback_digest=hashlib.sha256(json.dumps(
                         consumed, sort_keys=True, separators=(',', ':'), allow_nan=False
                     ).encode('utf-8')).hexdigest(),
                     consumed_candidate_sha=consumed.get('candidate_sha'))
+                if mode == 'evidence-only':
+                    delivered_path = directory / 'feedback-inputs' / (input_receipt['consumed_feedback_digest'] + '.json')
+                    delivered_path.parent.mkdir(parents=True, exist_ok=True)
+                    if not delivered_path.exists():
+                        write_json(delivered_path, consumed)
+                    input_receipt.update(consumed_feedback_ref=str(delivered_path),
+                        consumed_feedback_projection='evidence-only-v1',
+                        source_feedback_digest=hashlib.sha256(json.dumps(
+                            state['feedback'], sort_keys=True, separators=(',', ':'), allow_nan=False
+                        ).encode('utf-8')).hexdigest())
             if not prompt_path.exists():
                 write_json(prompt_path, dict(input_receipt, prompt=prompt))
             pending['input_receipt'] = input_receipt
             pending['agent_context'] = copy.deepcopy({key: state.get(key) for key in
                 ('agent_provider', 'agent_model', 'actual_model', 'runtime_commit',
                  'brief_sha256', 'thread_id', 'initial_sha', 'fixed_deadline_unix',
-                 'continuation_guidance')})
+                 'continuation_guidance', 'feedback_mode')})
             _save(state, status_file, pending_turn=pending)
             try:
                 thread, response = turn(worktree, directory, turn_number, prompt, thread,
@@ -524,6 +587,8 @@ def main():
     parser.add_argument('--agent-provider', choices=('codex', 'claude'), default='codex')
     parser.add_argument('--agent-model', help='Explicit Claude model; no automatic fallback')
     parser.add_argument('--brief', type=Path, help='Direction-specific instructions')
+    parser.add_argument('--feedback-mode', choices=('guided', 'evidence-only'), default='guided',
+                        help='Immutable session mode; evidence-only supplies own raw results without profiler guidance')
     parser.add_argument('--continuation-guidance', type=Path,
                         help='Append coordinator instructions on --resume without changing evaluator feedback')
     parser.add_argument('--profile-seed', type=Path, help='Trusted full job or feedback for the exact initial HEAD')
