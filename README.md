@@ -31,9 +31,12 @@ graph TD
   c6["96474bdd4d83"]
   c7["bb9a183fd64f"]
   c8["d09dc1d08fb0"]
-  c9["e525ee5ee4ef"]
-  c10["f3139c71ae2a"]
+  c9["e0a1dc69f495"]
+  c10["e525ee5ee4ef"]
+  c11["f3139c71ae2a"]
+  c1 -->|combine| c9
   c3 -->|explore| c4
+  c4 -->|combine| c9
   c5 -->|combine| c1
   c8 -->|explore| c0
   c8 -->|explore| c2
@@ -41,14 +44,14 @@ graph TD
   c8 -->|explore| c5
   c8 -->|explore| c6
   c8 -->|explore| c7
-  c8 -->|explore| c9
   c8 -->|explore| c10
-  c10 -->|combine| c1
+  c8 -->|explore| c11
+  c11 -->|combine| c1
 ```
 
 Every edge records intended inputs, not proof of speedup.
 
-Recorded jobs: 13. Decisions/events: 25.
+Recorded jobs: 13. Decisions/events: 26.
 
 ## External research records
 
@@ -64,5 +67,6 @@ Recorded jobs: 13. Decisions/events: 25.
 | claude-structure-solve | explore | 39b23e3c6e84 | unknown | completed |
 | claude-structure-solve | explore | 3e94580ec446 | unknown | completed |
 | claude-structure-solve | explore | 423bcc4ad6e9 | unknown | completed |
+| layout-numerical-v2 | combine | e0a1dc69f495 | unknown | evaluated |
 
 These records are evidence, not competing task claims or winner declarations.

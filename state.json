@@ -44415,6 +44415,42 @@
         ],
         "target_evidence": []
       }
+    },
+    {
+      "seq": 26,
+      "at": 1795294512.51265,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "layout-v2-seed-e0a1dc69f4951c100fefbc9fc08a23c3c12058dc",
+        "kind": "combine",
+        "executor": {
+          "kind": "campaign",
+          "id": "layout-numerical-v2"
+        },
+        "status": "evaluated",
+        "candidate_sha": "e0a1dc69f4951c100fefbc9fc08a23c3c12058dc",
+        "parents": [
+          "28566a64a9efbdddc104762ac1f8212eb1d8370c",
+          "423bcc4ad6e99b85cd651980bee541612ed2ee20"
+        ],
+        "target_phases": [],
+        "hypothesis": "Combine guarded noise reuse and merged RHS solves with separately assembled coefficients and RHS.",
+        "change_summary": "Port the reviewed split coefficient/RHS layout into the validated combination seed.",
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/7855640c2ed92e6268f682b32ed56736e295cac9/experiments/control/layout-numerical-v2/provenance.json",
+        "source_digest": "16b222a5cf7d919557d5ddc9599cc6770d3d78e66fe52ef37c49a601d997b328",
+        "source_digest_kind": "canonical_json_sha256",
+        "stopping_reason": null,
+        "evaluations": [
+          {
+            "job_id": "d07456c28e8647289ddf32fd9676bf0d",
+            "candidate_sha": "e0a1dc69f4951c100fefbc9fc08a23c3c12058dc",
+            "profile": "full"
+          }
+        ],
+        "target_evidence": []
+      }
     }
   ],
   "comparison_regime": {
@@ -44861,6 +44897,36 @@
         {
           "job_id": "4ace8bcd73364c7cbde02c8dc9c1de16",
           "candidate_sha": "423bcc4ad6e99b85cd651980bee541612ed2ee20",
+          "profile": "full"
+        }
+      ],
+      "target_evidence": []
+    },
+    "layout-v2-seed-e0a1dc69f4951c100fefbc9fc08a23c3c12058dc": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "layout-v2-seed-e0a1dc69f4951c100fefbc9fc08a23c3c12058dc",
+      "kind": "combine",
+      "executor": {
+        "kind": "campaign",
+        "id": "layout-numerical-v2"
+      },
+      "status": "evaluated",
+      "candidate_sha": "e0a1dc69f4951c100fefbc9fc08a23c3c12058dc",
+      "parents": [
+        "28566a64a9efbdddc104762ac1f8212eb1d8370c",
+        "423bcc4ad6e99b85cd651980bee541612ed2ee20"
+      ],
+      "target_phases": [],
+      "hypothesis": "Combine guarded noise reuse and merged RHS solves with separately assembled coefficients and RHS.",
+      "change_summary": "Port the reviewed split coefficient/RHS layout into the validated combination seed.",
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/7855640c2ed92e6268f682b32ed56736e295cac9/experiments/control/layout-numerical-v2/provenance.json",
+      "source_digest": "16b222a5cf7d919557d5ddc9599cc6770d3d78e66fe52ef37c49a601d997b328",
+      "source_digest_kind": "canonical_json_sha256",
+      "stopping_reason": null,
+      "evaluations": [
+        {
+          "job_id": "d07456c28e8647289ddf32fd9676bf0d",
+          "candidate_sha": "e0a1dc69f4951c100fefbc9fc08a23c3c12058dc",
           "profile": "full"
         }
       ],
