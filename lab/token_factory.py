@@ -2,6 +2,7 @@
 import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
+from http.client import HTTPException
 import json
 import math
 import os
@@ -74,8 +75,11 @@ class TokenFactory:
         A 200 response alone is not success: inspect usable_completion and, for
         structured tasks, independently validate the returned content/schema.
         """
-        if max_tokens < 1 or max_seconds <= 0:
-            raise ValueError('Token and duration limits must be positive')
+        if isinstance(max_tokens, bool) or not isinstance(max_tokens, int) or max_tokens < 1:
+            raise ValueError('Token limit must be a positive integer')
+        if (isinstance(max_seconds, bool) or not isinstance(max_seconds, (int, float))
+                or not math.isfinite(max_seconds) or max_seconds <= 0):
+            raise ValueError('Duration limit must be finite and positive')
         payload = {'model': self.model, 'messages': messages, 'stream': True,
                    'max_tokens': max_tokens, 'reasoning_effort': reasoning_effort,
                    'temperature': 0}
@@ -164,7 +168,7 @@ class TokenFactory:
                         lines.append(line[5:].lstrip(' '))
                 if not result['stream_done']:
                     raise ValueError('Stream ended before [DONE]')
-        except (OSError, ValueError, TypeError, KeyError) as error:
+        except (OSError, HTTPException, ValueError, TypeError, KeyError) as error:
             result['error'] = str(error).replace(self.key, '[redacted]')[:500]
         result['latency_seconds'] = time.monotonic() - started
         result['data'] = {'choices': [{'message': {'content': ''.join(content)},

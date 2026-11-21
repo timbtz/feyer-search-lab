@@ -1,5 +1,6 @@
 import io
 import json
+from http.client import IncompleteRead
 import unittest
 from unittest.mock import patch
 from urllib.error import HTTPError
@@ -109,6 +110,33 @@ class StreamingTests(unittest.TestCase):
             r = TokenFactory('secret').chat_stream([])
         self.assertFalse(r['usable_completion'])
         self.assertIn('not text', r['error'])
+
+    def test_incomplete_chunked_transport_keeps_partial_and_closes(self):
+        class BrokenStream(Stream):
+            reads = 0
+            def readline(self, size=-1):
+                self.reads += 1
+                if self.reads == 3:
+                    raise IncompleteRead(b'broken frame', 30)
+                return super().readline(size)
+        stream = BrokenStream(b'data: {"choices":[{"delta":{"content":"partial"}}]}\n\n')
+        with patch('lab.token_factory.urlopen', return_value=stream):
+            r = TokenFactory('secret').chat_stream([])
+        self.assertFalse(r['usable_completion'])
+        self.assertFalse(r['stream_done'])
+        self.assertEqual(r['data']['choices'][0]['message']['content'], 'partial')
+        self.assertIn('IncompleteRead', r['error'])
+        self.assertTrue(stream.closed)
+
+    def test_invalid_limits_rejected_before_network(self):
+        with patch('lab.token_factory.urlopen') as call:
+            for tokens in (True, False, 0, -1, 1.5, float('nan'), float('inf'), '4096'):
+                with self.subTest(max_tokens=tokens), self.assertRaises(ValueError):
+                    TokenFactory('secret').chat_stream([], max_tokens=tokens)
+            for duration in (True, False, 0, -1, float('nan'), float('inf'), -float('inf'), '30'):
+                with self.subTest(max_seconds=duration), self.assertRaises(ValueError):
+                    TokenFactory('secret').chat_stream([], max_seconds=duration)
+            call.assert_not_called()
 
 if __name__ == '__main__':
     unittest.main()

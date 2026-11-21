@@ -47,3 +47,13 @@ The user explicitly authorized diagnosing failures and proposing repairs while p
 Qwen proposed restoring `d^H solve(A,Nw)` instead of the rewritten `w^H Nw`. This is a conservative fallback, not a demonstrated speed-preserving repair. Its assertion that the change guarantees identical rounding is unsupported; its bitwise-equality requirements are also stricter than the unchanged numeric gate. We retain `review_required`, not validated. No code was edited or evaluated.
 
 The practical demonstrated role is compact failure diagnosis with a reviewed proposal. Keep broad open-ended source audits with stronger agents for now. Both source/repair response evidence and the compact approved input are stored under `experiments/services/qwen-*-trial.json` and `qwen-repair-diagnosis-input.json`. The optional client and17 focused tests are on `infra/qwen-streaming`; production campaigns have not been switched automatically.
+
+## User-confirmed role split
+
+The same Codex or Claude session that proposes a candidate receives its evaluator feedback and owns repairs. Qwen is an optional second opinion or fallback, not a mandatory new stage. Numerical correctness requirements remain unchanged.
+
+Use enumeration or SMAC to select among a small, registered finite set of implementation configurations. Qwen can optionally rank a short list, explain a compact failure, or suggest a targeted check. Its output must stay within an explicit schema/menu; a deterministic materializer owns any code transformation. It may not change the optical topology, physical parameters, workload, precision or validation rules to improve the score.
+
+The earlier fixed-space Qwen pilot selected a legal recipe that passed full official and strict checks, but its 28.65-second result did not improve the 28.09-second seed median. This demonstrates one valid selection, not optimization advantage or reliable autonomous coding. The source-review timeouts/truncation and the compact diagnosis's overclaims also remain part of the evidence. No new swarm, automatic repair loop or production caller switch follows from this policy.
+
+Streaming follow-up validation: 19 focused tests pass, including incomplete chunked HTTP transport with partial-answer retention/connection closure and rejection of non-finite, boolean or invalid token/duration budgets.
