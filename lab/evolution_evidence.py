@@ -57,9 +57,13 @@ def _monitor(monitor, budget):
     return complete, within, policy
 
 
-def policy_from_job(job):
-    """Pin execution/checker identities from a coordinator-approved full seed job."""
-    evidence = normalize_job(job)
+def policy_from_job(job, policy_context=None):
+    """Pin identities from a full seed under explicit coordinator-owned lane policy.
+
+    Defaults stay CPU 2 / 32 GB. Non-default lane CPU/memory policy must be
+    supplied independently of the candidate job; never bootstrap trust from its claims.
+    """
+    evidence = normalize_job(job, policy_context=policy_context)
     if not evidence['eligible_full']:
         raise ValueError('Cannot derive policy from an unvalidated or incomplete full seed job')
     result = job['result']
