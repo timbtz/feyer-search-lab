@@ -59,6 +59,77 @@ def solve(matrix: jnp.ndarray, right_hand_side: jnp.ndarray) -> jnp.ndarray:
     return jnp.linalg.solve(matrix, right_hand_side)
 
 
+def lu_factor(matrix: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
+    """
+    LU-factorize a (batched) complex system once, without differentiating the factors.
+
+    Returns packed LU factors (..., N, N) and a row permutation (..., N) with
+    ``matrix[..., permutation, :] == L @ U``. As in ``jnp.linalg.solve``, gradients flow
+    through the matrix-vector products of ``solve_factored``, not through the factors.
+    """
+    lu, _, permutation = lax.linalg.lu(lax.stop_gradient(matrix.astype(jnp.complex128)))
+    return lu, permutation
+
+
+def _lu_solve(lu: jnp.ndarray, permutation: jnp.ndarray, vector: jnp.ndarray, trans: int) -> jnp.ndarray:
+    """Solve with packed LU factors of A: trans 0 -> A, 1 -> A^T, 2 -> A^H. Shapes (N, N), (N,), (N,)."""
+    x = vector[:, None]
+    if trans == 0:
+        x = x[permutation, :]
+        x = lax.linalg.triangular_solve(lu, x, left_side=True, lower=True, unit_diagonal=True)
+        x = lax.linalg.triangular_solve(lu, x, left_side=True, lower=False)
+    else:
+        conjugate = trans == 2
+        x = lax.linalg.triangular_solve(lu, x, left_side=True, lower=False, transpose_a=True, conjugate_a=conjugate)
+        x = lax.linalg.triangular_solve(
+            lu, x, left_side=True, lower=True, unit_diagonal=True, transpose_a=True, conjugate_a=conjugate
+        )
+        x = jnp.zeros_like(x).at[permutation, :].set(x)
+    return x[:, 0]
+
+
+def solve_factored(
+    matrix: jnp.ndarray,
+    lu: jnp.ndarray,
+    permutation: jnp.ndarray,
+    right_hand_side: jnp.ndarray,
+    conjugate_transpose: bool = False,
+) -> jnp.ndarray:
+    """
+    Solve ``A x = b`` (or ``A^H x = b``) for one system, reusing LU factors of ``A``.
+
+    ``matrix`` (N, N) is ``A`` itself. Differentiation uses ``lax.custom_linear_solve``
+    exactly like ``jnp.linalg.solve``: the operator's matvec carries the dependence on
+    ``A``; the solves only reuse the precomputed factorization. For ``M = A^H`` the
+    (non-conjugate) transpose system is ``conj(A) y = b``, solved as
+    ``conj(A^{-1} conj(b))``, which is complex-linear in ``b``.
+    """
+    matrix = matrix.astype(jnp.complex128)
+    right_hand_side = right_hand_side.astype(jnp.complex128)
+    precision = lax.Precision.HIGHEST
+
+    if conjugate_transpose:
+        def matvec(x):
+            return jnp.matmul(jnp.conjugate(matrix).T, x, precision=precision)
+
+        def forward_solve(_, x):
+            return _lu_solve(lu, permutation, x, 2)
+
+        def transpose_solve(_, x):
+            return jnp.conjugate(_lu_solve(lu, permutation, jnp.conjugate(x), 0))
+    else:
+        def matvec(x):
+            return jnp.matmul(matrix, x, precision=precision)
+
+        def forward_solve(_, x):
+            return _lu_solve(lu, permutation, x, 0)
+
+        def transpose_solve(_, x):
+            return _lu_solve(lu, permutation, x, 1)
+
+    return lax.custom_linear_solve(matvec, right_hand_side, forward_solve, transpose_solve)
+
+
 def update(
     parameters: jnp.ndarray,
     matrix: jnp.ndarray,
@@ -332,7 +403,12 @@ def simulate(
         jnp.conjugate(signal_matrix[:, carrier_size : carrier_size * 2, carrier_size * 2 :])
     )
 
-    signal = vmap(solve)(signal_matrix[:, :, :-1], signal_matrix[:, :, -1])
+    # Factor each frequency's signal system once; the signal, noise-weight (A^H) and
+    # covariance solves below all reuse these factors.
+    signal_system = signal_matrix[:, :, :-1].astype(jnp.complex128)
+    signal_lu, signal_permutation = lu_factor(signal_system)
+
+    signal = vmap(solve_factored)(signal_system, signal_lu, signal_permutation, signal_matrix[:, :, -1])
 
     # --------------------
     # Quantum noise solve
@@ -366,13 +442,16 @@ def simulate(
         :, :, carrier.shape[1] : carrier.shape[1] * 2
     ].set(lower_carrier_selections)
 
-    # Back-propagate detector weights by solving the transposed conjugated signal system.
-    transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(signal_matrix[:, :, :-1]), (0, 2, 1))
+    # Back-propagate detector weights by solving the transposed conjugated signal system
+    # A^H w = s, reusing the LU factors of A (no separate factorization of A^H).
     carrier_selections = jnp.broadcast_to(
         carrier_selections,
-        (carrier_selections.shape[0], transposed_conjugated_signal_matrix.shape[0], carrier_selections.shape[2]),
+        (carrier_selections.shape[0], signal_system.shape[0], carrier_selections.shape[2]),
     )
-    noise_weights = vmap(vmap(solve), in_axes=(None, 0))(transposed_conjugated_signal_matrix, carrier_selections)
+    solve_conjugate_transpose = vmap(lambda m, lu, p, b: solve_factored(m, lu, p, b, conjugate_transpose=True))
+    noise_weights = vmap(solve_conjugate_transpose, in_axes=(None, None, None, 0))(
+        signal_system, signal_lu, signal_permutation, carrier_selections
+    )
 
     # Update noise source matrix (may depend on current parameters).
     noise_matrix = vmap(update, in_axes=(0, None, None, None, None, None))(
@@ -404,7 +483,9 @@ def simulate(
 
     # Project noise sources into the system and propagate through the signal matrix.
     noise_sources = vmap(matmul_single_batch, in_axes=(None, 0))(noise_matrix, noise_weights)
-    covariances = vmap(vmap(solve), in_axes=(None, 0))(signal_matrix[:, :, :-1], noise_sources)
+    covariances = vmap(vmap(solve_factored), in_axes=(None, None, None, 0))(
+        signal_system, signal_lu, signal_permutation, noise_sources
+    )
 
     # Convert propagated covariances into amplitude spectral density.
     temporary_sum = jnp.sum(jnp.real(covariances * jnp.conjugate(carrier_selections)), axis=2)
