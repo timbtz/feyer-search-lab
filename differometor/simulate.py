@@ -513,6 +513,10 @@ def simulate(
                     return (block_signal_matrix,)
                 return block_signal_matrix, block_noise_matrix
 
+            if ASSEMBLY_REMAT:
+                # Save only the loop inputs in the forward vjp; the reverse loop
+                # recomputes each row's assembly (same primal ops) before transposing.
+                block_assemble = jax.checkpoint(block_assemble, prevent_cse=False)
             assembled = _map_row_chunks(block_assemble, (parameters, row_carrier_entries), chunk_size)
             assembled_signal = assembled[0]
             assembled_noise = broadcast_noise(assembled[1] if len(assembled) > 1 else None)
@@ -537,6 +541,11 @@ FREQUENCY_CHUNK_SIZE: int | None = 1
 # Loop scope when chunking: "signal_noise" (assembly + solves), "solve" (solves only)
 # or "assemble" (assembly only; solves stay full-vmap).
 FREQUENCY_LOOP_SCOPE: str = "assemble"
+# Rematerialize the per-row assembly body of the "assemble" loop in the reverse pass
+# (jax.checkpoint, nothing saved but loop inputs). Intended to shrink the forward vjp
+# program (no stacked per-row assembly residuals) at the cost of a larger reverse
+# program and recomputed assembly in the gradient. False is the validated aa2b1ab path.
+ASSEMBLY_REMAT: bool = True
 # Build the noise source matrix once and broadcast it across signal rows when the
 # builder proved (host-side, before dummy filling) that no noise input index is a
 # real changing index. False always uses the per-row noise assembly.
