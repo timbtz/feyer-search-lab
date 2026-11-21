@@ -6,6 +6,8 @@ Runtime commit/path, provider/model, brief hash, declared parent/combination can
 
 ## Current readiness
 
+The follow-up [connectivity diagnosis](amd-codex-connectivity.md) distinguishes two independent blockers: AMD's proxy denies the ChatGPT inference host, and OpenAI's token endpoint rejects the current egress region. Both CLIs are now on the normal SSH command path. The diagnosis includes exact response evidence and an unsent AMD support draft.
+
 On 2026-11-21, both native Linux CLIs were installed under `/workspace/feyer-agents/bin`: Codex 0.171.0 and Claude Code 2.1.323. Small HTTP range downloads from the official npm registry succeeded where whole downloads stalled. Completed archives matched the registry's SHA-512 integrity values before extracting the executables, and both `--version` checks passed. No Node installation or evaluator dependency change was needed. The package versions were `@openai/codex@0.171.0-linux-x64` and `@anthropic-ai/claude-code-linux-x64@2.1.323`.
 
 The installed Codex supports the supervisor's headless flags, but its actual `login --device-auth` request failed with HTTP 403. Claude's fresh login command generated a browser authorization URL; it was not completed. Its current authorization and token-service domains, `claude.com` and `platform.claude.com`, also returned proxy CONNECT 403 in unauthenticated connectivity checks. Do not describe this as a successful login or inference test. The persistent installation and connectivity evidence is `/workspace/feyer-agents/migration-status.json`; no laptop credentials were copied.
