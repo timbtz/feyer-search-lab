@@ -534,7 +534,7 @@ FREQUENCY_LOOP_SCOPE: str = "assemble"
 # Build the noise source matrix once and broadcast it across signal rows when the
 # builder proved (host-side, before dummy filling) that no noise input index is a
 # real changing index. False always uses the per-row noise assembly.
-NOISE_ROW_REUSE: bool = True
+NOISE_ROW_REUSE: bool = False
 
 
 def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):
