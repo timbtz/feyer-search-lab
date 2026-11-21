@@ -360,6 +360,115 @@ def simulate(
     # Signal solve
     # --------------------
     parameters = expand_parameters(parameters, signal_changing_parameter_indices, signal_changing_values)
+
+    # Detector selections do not depend on the signal frequency; prepare them once.
+    # Apply quadrature-homodyne-detector phases into the selection vectors.
+    # `lax.scatter_mul` is used (rather than `.at[...].set`) so empty index arrays
+    # remain valid without conditionals.
+    noise_selection_vectors = lax.scatter_mul(
+        noise_selection_vectors,
+        qhd_placing_indices.reshape(-1, 3),
+        qhd_phase_values,
+        lax.ScatterDimensionNumbers(
+            update_window_dims=(),
+            inserted_window_dims=(0, 1, 2),
+            scatter_dims_to_operand_dims=(0, 1, 2),
+        ),
+        unique_indices=True,
+    )
+
+    # Broadcast selection vectors across the carrier sweep dimension.
+    noise_selection_vectors = jnp.tile(noise_selection_vectors, (1, carrier.shape[0], 1))
+
+    # Select necessary carrier entries and build upper and lower sideband selections.
+    upper_carrier_selections = noise_selection_vectors[:, :, : carrier.shape[1]] * carrier
+    upper_carrier_selections = noise_selection_vectors.at[:, :, : carrier.shape[1]].set(upper_carrier_selections)
+
+    lower_carrier_selections = jnp.conjugate(
+        upper_carrier_selections[:, :, carrier.shape[1] : carrier.shape[1] * 2] * carrier
+    )
+    base_carrier_selections = upper_carrier_selections.at[
+        :, :, carrier.shape[1] : carrier.shape[1] * 2
+    ].set(lower_carrier_selections)
+
+    def signal_and_noise(parameters):
+        """Signal and noise for a block of signal-sweep rows; returns (B, SN), (D, B)."""
+        return _signal_and_noise(
+            parameters,
+            carrier,
+            base_carrier_selections,
+            signal_matrix,
+            noise_matrix,
+            signal_function_input_indices,
+            signal_function_indices,
+            signal_output_indices,
+            signal_matrix_indices,
+            signal_carrier_indices,
+            signal_carrier_placing_indices,
+            noise_function_input_indices,
+            noise_function_indices,
+            noise_output_indices,
+            noise_system_matrix_indices,
+            component_groups,
+        )
+
+    chunk_size = FREQUENCY_CHUNK_SIZE
+    if chunk_size is None or carrier.shape[0] != 1 or parameters.shape[0] <= chunk_size:
+        # Full frequency vmap (original layout), also used for carrier sweeps.
+        signal, noise = signal_and_noise(parameters)
+    else:
+        signal, noise = _map_frequency_chunks(signal_and_noise, parameters, chunk_size)
+
+    return carrier.T, signal.T, noise.squeeze()
+
+
+# Static frequency-axis execution granularity for the signal and noise solves.
+# None evaluates all signal frequencies in one vmapped batch. A positive integer
+# evaluates bounded blocks of that many frequencies sequentially with `lax.map`;
+# a final partial block is padded by repeating the last frequency row and the
+# padded results are discarded. Read at trace time; not a traced argument.
+FREQUENCY_CHUNK_SIZE: int | None = 1
+
+
+def _map_frequency_chunks(function, parameters: jnp.ndarray, chunk_size: int):
+    """Apply `function` to sequential blocks of `chunk_size` parameter rows."""
+    count = parameters.shape[0]
+    chunk_count = -(-count // chunk_size)
+    padded_count = chunk_count * chunk_size
+    if padded_count != count:
+        padding = jnp.broadcast_to(parameters[-1:], (padded_count - count, parameters.shape[1]))
+        parameters = jnp.concatenate([parameters, padding], axis=0)
+    chunks = parameters.reshape(chunk_count, chunk_size, parameters.shape[1])
+    signal, noise = lax.map(function, chunks)
+    # signal: (C, k, SN) -> (B, SN); noise: (C, D, k) -> (D, B).
+    signal = signal.reshape(padded_count, signal.shape[-1])[:count]
+    noise = jnp.moveaxis(noise, 0, 1).reshape(noise.shape[1], padded_count)[:, :count]
+    return signal, noise
+
+
+def _signal_and_noise(
+    parameters,
+    carrier,
+    base_carrier_selections,
+    signal_matrix,
+    noise_matrix,
+    signal_function_input_indices,
+    signal_function_indices,
+    signal_output_indices,
+    signal_matrix_indices,
+    signal_carrier_indices,
+    signal_carrier_placing_indices,
+    noise_function_input_indices,
+    noise_function_indices,
+    noise_output_indices,
+    noise_system_matrix_indices,
+    component_groups,
+):
+    """Assemble and solve the signal and quantum-noise systems for B signal rows.
+
+    `parameters` has shape (B, P). Returns the signal solution (B, SN) and the
+    unsqueezed noise amplitude spectral density (D, B).
+    """
     signal_matrix = vmap(update, in_axes=(0, None, None, None, None, None, None))(
         parameters,
         signal_matrix,
@@ -405,34 +514,7 @@ def simulate(
     # --------------------
     # Quantum noise solve
     # --------------------
-    # Apply quadrature-homodyne-detector phases into the selection vectors.
-    # `lax.scatter_mul` is used (rather than `.at[...].set`) so empty index arrays
-    # remain valid without conditionals.
-    noise_selection_vectors = lax.scatter_mul(
-        noise_selection_vectors,
-        qhd_placing_indices.reshape(-1, 3),
-        qhd_phase_values,
-        lax.ScatterDimensionNumbers(
-            update_window_dims=(),
-            inserted_window_dims=(0, 1, 2),
-            scatter_dims_to_operand_dims=(0, 1, 2),
-        ),
-        unique_indices=True,
-    )
-
-    # Broadcast selection vectors across the carrier sweep dimension.
-    noise_selection_vectors = jnp.tile(noise_selection_vectors, (1, carrier.shape[0], 1))
-
-    # Select necessary carrier entries and build upper and lower sideband selections.
-    upper_carrier_selections = noise_selection_vectors[:, :, : carrier.shape[1]] * carrier
-    upper_carrier_selections = noise_selection_vectors.at[:, :, : carrier.shape[1]].set(upper_carrier_selections)
-
-    lower_carrier_selections = jnp.conjugate(
-        upper_carrier_selections[:, :, carrier.shape[1] : carrier.shape[1] * 2] * carrier
-    )
-    carrier_selections = upper_carrier_selections.at[
-        :, :, carrier.shape[1] : carrier.shape[1] * 2
-    ].set(lower_carrier_selections)
+    carrier_selections = base_carrier_selections
 
     # Back-propagate detector weights by solving the transposed conjugated signal system.
     transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(signal_matrix[:, :, :-1]), (0, 2, 1))
@@ -479,7 +561,7 @@ def simulate(
     temporary_sum = jnp.sum(jnp.real(covariances * jnp.conjugate(carrier_selections)), axis=2)
     noise = jnp.sqrt(2 * temporary_sum * UNIT_VACUUM * H_PLANCK * F0 * 0.25)
 
-    return carrier.T, signal.T, noise.squeeze()
+    return signal, noise
 
 
 def run_build_step(
