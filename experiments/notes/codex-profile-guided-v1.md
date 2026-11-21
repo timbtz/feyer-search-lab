@@ -275,3 +275,64 @@ This deliberately abandons saving nonlinear floating values; it does not cast co
 Validation: syntax parsing and AST isolation passed. Removing only the new policy function and checkpoint policy keyword restores the entire executable candidate-3 module AST exactly. This confirms the failed policy was fully replaced and the remaining simulator is unchanged. Source inspection verifies permitted output dtypes, including explicit conversion destination check. No JAX run, local benchmark, diagnostic, independent test infrastructure or environment modification. The supervisor must establish whether this repaired policy executes and changes timing; no performance or strict-array result exists yet.
 
 Next: supervisor screen and full if eligible. Inspect every output/gradient check and full phase/total/warm/memory/wall deltas vs retained candidate 3 and non-checkpoint candidate 2. On another trace failure or a total regression, return to executable checkpointing and pursue another mechanism rather than patching dependencies. Coordinator-owned diagnostic request: for retained SHA `d7f257ab82f0615b14f059adcddfc7512da8cf50`, identify saved residual shapes and major forward/reverse compiler work under unchanged JIT boundaries if available; this is a request only, no diagnostic launched here.
+
+
+## Candidate 5 evaluation — executable, retain provisionally
+
+Candidate SHA **`c1233f6b8eaf4c36dc2d034dfa75ee1f9fef90bb`**, Git parent failed candidate 4 `e63f627129ed9d59da5b5f7189dbf54944e2a151`. Scientific comparator: retained executable candidate 3 `d7f257ab82f0615b14f059adcddfc7512da8cf50`. Candidate 4's trace failure remains recorded above and in history; there is no timing comparison to that failed run.
+
+Screen **`32aaf88424844df287000f4d1ff6ed91`**, request `5c3339f7ac2749a390a6f228f028a921`: provisional cheap checks pass, first run **22.250286136 s**, compilation 11.104043134 s, wall 23.216468610 s, peak RSS 7,837,540 KiB. No official, strict, finite-difference or warm validation in screen.
+
+Full **`249bd1a64b6c4ab19476e420e5b1bc93`**, request `201368477dbb460887267ec68eb4c93d`: official/strict/resource/source/workload/precision all pass. Matching full cohort `10567ad0f8dcb7122b6b182e1be342313b89eef340d4070073fdf62d6342204c`; frozen environment, evaluator and comparison identities unchanged. Read local report/result/comparison artifacts as well as supplied feedback.
+
+Complete first run **22.045253349 s**, **-0.038680045 s** vs candidate 3. Combined trace/lower/compile **10.762039740 s**, -0.165593060 s. Warm median **10.685314681 s**, +0.427835001 s; warm samples 10.685314681, 10.443721326, 10.833768148 s. Job wall **88.565806283 s**, +0.938810596 s. RSS **7,854,884 KiB**, -8,504 KiB; sampled peak 8,044,449,792 bytes. These separate metrics do not establish a repeat-confirmed improvement. Retain candidate 5 provisionally as the executable exact parent for the next attributable change, with candidate 3 as fallback. No further checkpoint-policy tuning is justified by this small difference alone.
+
+Full phases, seconds, against retained candidate 3 full `a62229a57daa4377ba04657b7acd7ac6`:
+
+| Phase | Candidate 5 | Delta vs candidate 3 |
+| --- | ---: | ---: |
+| imports | 0.291808644 | +0.000955984 |
+| initialize | 0.002916679 | +0.000018110 |
+| load | 0.001516553 | +0.000086026 |
+| build | 0.830541717 | -0.000262247 |
+| forward_lower | 0.756163578 | +0.006837634 |
+| forward_compile | 4.663825801 | -0.011131119 |
+| forward | 8.655115936 | +0.102658512 |
+| sensitivity_lower | 0.082729027 | +0.007319411 |
+| sensitivity_compile | 0.363949455 | +0.013508668 |
+| sensitivity | 0.000981260 | +0.000103520 |
+| gradient_lower | 0.296382403 | -0.025112709 |
+| gradient_compile | 4.598989476 | -0.157014946 |
+| gradient | 1.499977384 | +0.023400009 |
+| host_transfer | 0.000355437 | -0.000046900 |
+
+All saved-output and gradient checks inspected (last warm evaluation, unchanged strict reference/tolerances):
+
+| Output | Max absolute error | Relative L2 error | Max normalized error | Failures |
+| --- | ---: | ---: | ---: | ---: |
+| carrier | 0 | 0 | 0 | 0 |
+| signal | 0 | 0 | 0 | 0 |
+| noise | 0 | 0 | 0 | 0 |
+| sensitivity | 0 | 0 | 0 | 0 |
+| powers | 0 | 0 | 0 | 0 |
+| gradient | 5.3114490583539e-10 | 7.93070107438469e-15 | 7.53524626872314e-07 | 0 |
+| parameters | 0 | 0 | 0 | 0 |
+| frequencies | 0 | 0 | 0 | 0 |
+
+All finite; all mismatch index/detail lists empty; exact parameter/frequency checks passed. Official sensitivity max absolute log error 5.374104176780747e-6, finite-difference spot check passes, full gradient shape 193 and norm 70517.10686388832. The complete saved gradient is checked, not inferred from the spot check.
+
+## Candidate 6 — prepare flat component-output gathers
+
+Exact parent and retained comparator **`c1233f6b8eaf4c36dc2d034dfa75ee1f9fef90bb`**. Candidate SHA and evaluator IDs pending supervisor.
+
+Measured ranking from **full job `249bd1a64b6c4ab19476e420e5b1bc93`**: forward execution **8.655115936 s (39.26%)**, forward compile **4.663825801 s (21.16%)**, gradient compile **4.598989476 s (20.86%)**, gradient execution **1.499977384 s (6.80%)**. Combined lowering/compilation **10.762039740 s (48.82%)**. Native gather/solve/kernel costs remain unknown; source counts do not provide those costs.
+
+One implementation mechanism: compose the static component-output row permutation and four-column selection into flat offsets in `_group_component_indices`, then replace that path's two traced gathers and coordinate preparation with one rank-one `lax.gather` in `update`. Normalize valid negative rows/columns on the host; emit the metadata only for matching selector lengths and in-bounds offsets. Preserve original selector order and repetitions. No uniqueness promise is made for the gather, because repeated component outputs need cotangent accumulation. Invalid selectors, old metadata and dummy paths retain the previous selection. Metadata rebuild requirements now explicitly include output selectors.
+
+Prediction: simplify forward and reverse compile/lower graphs, especially checkpoint recomputation and gather transposes. Tentative combined compile saving **0–0.5 s**, unmeasured. The two compile phases total **9.262815276 s**; eliminating both entirely is only an opportunity ceiling, not a prediction. Added host indexing/metadata and altered compiler optimization may offset savings or affect execution. Strict gradients may expose changed accumulation order despite identical output selection. Total first-run time, all three JIT stages and all strict checks decide retention.
+
+The previously considered real-parameter representation was not implemented: arbitrary linking functions and complex component semantics would require broader guards. This candidate changes only structural gather indexing. Component formulas, physical parameter representation/values, precision, all 101 frequencies and 193 variables, checkpoint policy/scope, solves, noise contraction and official harness stay unchanged. Distinct from independent noise-contraction scheduling work.
+
+Validation: all simulator modules parse; `git diff --check` passes. A standard-library-only check executed the actual builder helper extracted by AST with an array-construction stub, covering 363 component partitions of one through five rows, all valid positive/negative row and column selectors, repeated selections, out-of-range fallback, mismatched lengths, empty selectors and absent optional metadata. All selected values matched the original composed indexing. This verifies host index algebra, not JAX lowering or physics. No simulator/benchmark execution, new test infrastructure, dependency change, commit, push, SSH or agents.
+
+Next: supervisor screen, then official full and every saved-output/gradient comparison if eligible; compare total and phase deltas to exact parent c1233f6b8eaf4c36dc2d034dfa75ee1f9fef90bb. Reject numerical failure or total regression regardless of phase savings. Continue only within original deadline **2026-11-21 21:09:24.088367 UTC**, session `codex-profile-guided-v1`, thread `01a1ffba-57ec-7191-8ba9-c6163633a3b3`; no candidate-count cap.

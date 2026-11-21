@@ -1462,7 +1462,7 @@ def _matrix_indices_are_unique(matrix_indices, matrix_shape):
     return True
 
 
-def _group_component_indices(function_indices, function_input_indices=None):
+def _group_component_indices(function_indices, function_input_indices=None, output_indices=None):
     """Classify instructions and map original rows to grouped output rows."""
     groups = defaultdict(list)
     for row, function_index in enumerate(function_indices):
@@ -1480,6 +1480,21 @@ def _group_component_indices(function_indices, function_input_indices=None):
             index: jnp.array([function_input_indices[row] for row in groups[index]], dtype=int)
             for index in sorted(groups)
         }
+    if output_indices is not None:
+        # Compose the output-row permutation and the four-column component
+        # selector on the host. Keep the generic gather for out-of-bounds inputs.
+        rows, columns = output_indices
+        flat_indices = []
+        if len(rows) == len(columns):
+            for row, column in zip(rows, columns):
+                row, column = int(row), int(column)
+                row = row + len(output_rows) if row < 0 else row
+                column = column + 4 if column < 0 else column
+                if not (0 <= row < len(output_rows) and 0 <= column < 4):
+                    break
+                flat_indices.append(output_rows[row] * 4 + column)
+            else:
+                result["flat_output_indices"] = jnp.array(flat_indices, dtype=int)
     return result
 
 
@@ -1530,7 +1545,8 @@ def pairs_to_arrays(
         mapping original rows to concatenated group rows. An empty-tuple
         `unique_matrix_indices` marker is added only for verified unique destinations.
         `parameter_indices` contains the input indices for each group.
-        Rebuild if selectors, input indices or matrix destination indices change.
+        `flat_output_indices` composes valid output selectors with the grouping.
+        Rebuild if selectors, input/output indices or matrix destination indices change.
     matrix_shapes:
         Optional system matrix shapes, used to verify destination uniqueness on the
         host, including aliases between negative and positive indices.
@@ -1697,9 +1713,11 @@ def pairs_to_arrays(
             )
 
         function_input_indices = np.vstack(arrays["function_input_indices"])
-        if component_groups is not None:
-            component_groups[system] = _group_component_indices(arrays["function_indices"], function_input_indices)
         output_indices = np.stack((np.concatenate(arrays["output_row_indices"]), np.concatenate(arrays["output_column_indices"])))
+        if component_groups is not None:
+            component_groups[system] = _group_component_indices(
+                arrays["function_indices"], function_input_indices, output_indices
+            )
         system_matrix_indices = np.stack((np.concatenate(arrays["system_matrix_row_indices"]), np.concatenate(arrays["system_matrix_column_indices"])))
 
         if component_groups is not None and matrix_shapes is not None:

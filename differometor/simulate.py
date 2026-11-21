@@ -141,7 +141,8 @@ def update(
         `parameter_indices`, when present, supplies prepared input indices per group.
         An optional `unique_matrix_indices` key marks verified distinct destinations.
         `flat_matrix_indices` supplies normalized, in-bounds row-major destinations.
-        Omit or rebuild metadata when changing selectors, input indices, matrix shape
+        `flat_output_indices` supplies composed, in-bounds component output offsets.
+        Omit or rebuild metadata when changing selectors, input/output indices, matrix shape
         or matrix destinations, including carrier coupling destinations.
     carrier_entries : jnp.ndarray | None
         Optional carrier factors, used only with builder-proven
@@ -184,10 +185,22 @@ def update(
             group_values.append(_evaluate_component_group(function_index, group_inputs))
         if group_values:
             output_matrix = jnp.concatenate(group_values, axis=0)
-            output_rows = component_groups["output_rows"][output_rows]
+            if "flat_output_indices" not in component_groups:
+                output_rows = component_groups["output_rows"][output_rows]
         else:
             output_matrix = jnp.zeros((function_input_indices.shape[0], 4), dtype=jnp.complex128)
-    outputs = output_matrix[output_rows, output_indices[1]]
+    if component_groups is not None and "flat_output_indices" in component_groups:
+        outputs = lax.gather(
+            output_matrix.reshape(-1),
+            component_groups["flat_output_indices"].reshape(-1, 1),
+            lax.GatherDimensionNumbers(
+                offset_dims=(), collapsed_slice_dims=(0,), start_index_map=(0,),
+            ),
+            slice_sizes=(1,),
+            mode="promise_in_bounds",
+        )
+    else:
+        outputs = output_matrix[output_rows, output_indices[1]]
     if carrier_entries is not None:
         positions = component_groups["carrier_output_positions"]
         scaled_outputs = -outputs[positions] * carrier_entries
