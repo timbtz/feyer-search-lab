@@ -1,0 +1,31 @@
+{
+  "campaign_id": "astra-group-numerical-v3",
+  "start_unix": 1795296282.878179,
+  "deadline_unix": 1795299882.878179,
+  "max_total_jobs": 40,
+  "seed_jobs_reserved": 1,
+  "seed_sha": "d947905c9b73e310257235cf00cb065c31572ecd",
+  "seed_branch": "explore/astra-guided-v2",
+  "host": "amd-hackathon",
+  "root": "/workspace/feyer-lab-lane1",
+  "policy": {
+    "worker_sha256": "d3c212da0ab1215187407d9cd21dc2cbb5f88dc0b5ee7885135bf7f002d14b58",
+    "evaluator_sha256": "d5950bbd872e5b00ad63f0bd7081e5096fb14ba9c96c80a6854a3b714719bd4e",
+    "comparison_evaluator_sha256": "1bc9b39fe0023afc3db93211b9e3d6cd37ed2b13ee281f142749c2237a16ea8f",
+    "reference_arrays_sha256": "c3f6cba045f8b41f488dc19c960f5056b5f2e75cfa64f9a687b52f2a9ba2751e",
+    "memory_budget_bytes": 16000000000,
+    "cpu": 34
+  },
+  "manifest_digest": "e5bdfa32e6c07a1a588e3bb84059a47e02162e8edf95bbbc9c192bd4a0581045",
+  "seed_request": {
+    "request_id": "6dafe0c50f2543d7a27c511585f69693",
+    "job_id": "15ca7b7e27964b7c94b545d4b95849b8"
+  },
+  "controller_sha": "838a2370de8b5b97a3f204326f4f2363720ed877",
+  "menu_status": "source_reviewed; reservation_published_GitHub_issue6",
+  "authorization": "Fresh40job60min round relayed by coordinating profiler; old window not extended.",
+  "support_max_jobs": 11,
+  "previous_window_jobs": 1,
+  "global_allocation_ceiling": 12,
+  "control_sha": "c107e53dea482d0d39935cbdcb706677ac3d53e6"
+}

@@ -1,0 +1,11 @@
+{
+  "pid": 92789,
+  "started_at": 1795296671.935345,
+  "global_window_started_at": 1795296282.878179,
+  "deadline_unix": 1795299882.878179,
+  "script": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/astra-numerical-control/experiments/control/astra-numerical-v3/group_seed.py",
+  "script_sha256": "2f539851413a7f9027bfbe17a8b8b73b8e8801759ded1f76ae10aecc6d19666f",
+  "runtime_sha": "838a2370de8b5b97a3f204326f4f2363720ed877",
+  "control_sha": "c107e53dea482d0d39935cbdcb706677ac3d53e6",
+  "status": "fresh_group_seed_then_finite_menu"
+}
