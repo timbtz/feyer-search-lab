@@ -44064,6 +44064,56 @@
         ],
         "target_evidence": []
       }
+    },
+    {
+      "seq": 19,
+      "at": 1795294480.398602,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "feedback-78b3fbbeeb3fea92b5ee59cebfc9dbf51abcb985cb4fc576fc0b8a7515b31b66",
+        "executor": {
+          "kind": "supervisor",
+          "id": "claude-noise-reuse"
+        },
+        "kind": "explore",
+        "status": "completed",
+        "candidate_sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+        "parents": [
+          "d09dc1d08fb046d08b3b699685d8ff780d611e87"
+        ],
+        "target_phases": [],
+        "hypothesis": "Candidate 3 showed that the replicated direct custom_linear_solve with an explicit LU reproduces jnp.linalg.solve bitwise (signal error 0.0), and that the forward pass ran separate A factorizations (about 4 s and 3.5 GB removed). Sharing A's LU between the signal and covariance solves only, with A^H factored separately as before, should keep every output and the gradient at candidate 1's strict margin. It should also remove one batched LU: an expected forward saving of about 2 s and a first run of roughly 21 s, not measured.",
+        "change_summary": "Candidate 4 (not executed; this session cannot run code) repairs rejected candidate 3. Candidate 3 (bb9a183, full f62c5c80): official PASS, strict FAIL. Gradient indices 33/161/180 failed, max normalized error 14.7. First run 18.65 s, forward execute 5.17 s, peak RSS 6.37 GB. Signal was bitwise identical; the drift comes from solving A^H through A's LU. Candidate 4: NOISE_FACTOR_REUSE is now a string (\"off\" | \"direct\" | \"all\") and set to \"direct\". In differometor/simulate.py:_solve_signal_and_noise, one LU of A is shared by the signal and covariance custom_linear_solves. The noise weights go back to the original jnp.linalg.solve on the explicitly transposed-conjugated matrix (separate LU, as in the parent). NOISE_REUSE_MODE stays \"broadcast\" (variant A). Notes and knob handoff updated.",
+        "stopping_reason": null,
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-04.json",
+        "source_digest": "78b3fbbeeb3fea92b5ee59cebfc9dbf51abcb985cb4fc576fc0b8a7515b31b66",
+        "source_digest_kind": "canonical_json_sha256",
+        "feedback_ref": {
+          "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-04.json",
+          "artifact_digest": "78b3fbbeeb3fea92b5ee59cebfc9dbf51abcb985cb4fc576fc0b8a7515b31b66",
+          "digest_kind": "canonical_json_sha256"
+        },
+        "session_id": "c3962834-70b7-4d37-bcd1-ac7a66ece4cd",
+        "iteration": null,
+        "checkpoint": null,
+        "next_input": null,
+        "input_receipt": null,
+        "evaluations": [
+          {
+            "job_id": "ebd893f35b5a4497a8ea6e81bd8ca82b",
+            "candidate_sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+            "profile": "screen"
+          },
+          {
+            "job_id": "ab12c14c29354bad9aa6dc024c91f8e6",
+            "candidate_sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+            "profile": "full"
+          }
+        ],
+        "target_evidence": []
+      }
     }
   ],
   "comparison_regime": {
@@ -44201,6 +44251,50 @@
         {
           "job_id": "f62c5c8053f84088a013f742fbe429a3",
           "candidate_sha": "bb9a183fd64f80e322ff90b3161edbcdfd29c4ab",
+          "profile": "full"
+        }
+      ],
+      "target_evidence": []
+    },
+    "feedback-78b3fbbeeb3fea92b5ee59cebfc9dbf51abcb985cb4fc576fc0b8a7515b31b66": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "feedback-78b3fbbeeb3fea92b5ee59cebfc9dbf51abcb985cb4fc576fc0b8a7515b31b66",
+      "executor": {
+        "kind": "supervisor",
+        "id": "claude-noise-reuse"
+      },
+      "kind": "explore",
+      "status": "completed",
+      "candidate_sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+      "parents": [
+        "d09dc1d08fb046d08b3b699685d8ff780d611e87"
+      ],
+      "target_phases": [],
+      "hypothesis": "Candidate 3 showed that the replicated direct custom_linear_solve with an explicit LU reproduces jnp.linalg.solve bitwise (signal error 0.0), and that the forward pass ran separate A factorizations (about 4 s and 3.5 GB removed). Sharing A's LU between the signal and covariance solves only, with A^H factored separately as before, should keep every output and the gradient at candidate 1's strict margin. It should also remove one batched LU: an expected forward saving of about 2 s and a first run of roughly 21 s, not measured.",
+      "change_summary": "Candidate 4 (not executed; this session cannot run code) repairs rejected candidate 3. Candidate 3 (bb9a183, full f62c5c80): official PASS, strict FAIL. Gradient indices 33/161/180 failed, max normalized error 14.7. First run 18.65 s, forward execute 5.17 s, peak RSS 6.37 GB. Signal was bitwise identical; the drift comes from solving A^H through A's LU. Candidate 4: NOISE_FACTOR_REUSE is now a string (\"off\" | \"direct\" | \"all\") and set to \"direct\". In differometor/simulate.py:_solve_signal_and_noise, one LU of A is shared by the signal and covariance custom_linear_solves. The noise weights go back to the original jnp.linalg.solve on the explicitly transposed-conjugated matrix (separate LU, as in the parent). NOISE_REUSE_MODE stays \"broadcast\" (variant A). Notes and knob handoff updated.",
+      "stopping_reason": null,
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-04.json",
+      "source_digest": "78b3fbbeeb3fea92b5ee59cebfc9dbf51abcb985cb4fc576fc0b8a7515b31b66",
+      "source_digest_kind": "canonical_json_sha256",
+      "feedback_ref": {
+        "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-04.json",
+        "artifact_digest": "78b3fbbeeb3fea92b5ee59cebfc9dbf51abcb985cb4fc576fc0b8a7515b31b66",
+        "digest_kind": "canonical_json_sha256"
+      },
+      "session_id": "c3962834-70b7-4d37-bcd1-ac7a66ece4cd",
+      "iteration": null,
+      "checkpoint": null,
+      "next_input": null,
+      "input_receipt": null,
+      "evaluations": [
+        {
+          "job_id": "ebd893f35b5a4497a8ea6e81bd8ca82b",
+          "candidate_sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+          "profile": "screen"
+        },
+        {
+          "job_id": "ab12c14c29354bad9aa6dc024c91f8e6",
+          "candidate_sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
           "profile": "full"
         }
       ],
