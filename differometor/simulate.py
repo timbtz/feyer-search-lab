@@ -18,6 +18,7 @@ Conventions used throughout:
 """
 
 import jax
+import jax.scipy.linalg
 from functools import partial
 from time import time
 import jax.numpy as jnp
@@ -543,7 +544,11 @@ NOISE_ROW_REUSE: bool = True
 # "broadcast" (variant A; broadcast to (B, NN, NN), unchanged batched einsum;
 # candidate f3139c7 passed official + strict with bitwise forward outputs) or
 # "shared" (variant B; unbatched einsum "ij,dbj->dbi", may round differently).
-NOISE_REUSE_MODE: str = "shared"
+NOISE_REUSE_MODE: str = "broadcast"
+# Factor each signal matrix once and reuse the LU for the signal, adjoint
+# noise-weight and covariance solves (candidate 3 experiment). False keeps the
+# original three jnp.linalg.solve calls, including the separate LU of A^H.
+NOISE_FACTOR_REUSE: bool = True
 
 
 def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):
@@ -666,20 +671,49 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
     selections (D, 1 or B, SN). Returns the signal solution (B, SN) and the
     unsqueezed noise amplitude spectral density (D, B).
     """
-    signal = vmap(solve)(signal_matrix[:, :, :-1], signal_matrix[:, :, -1])
-
-    # --------------------
-    # Quantum noise solve
-    # --------------------
     carrier_selections = base_carrier_selections
-
-    # Back-propagate detector weights by solving the transposed conjugated signal system.
-    transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(signal_matrix[:, :, :-1]), (0, 2, 1))
     carrier_selections = jnp.broadcast_to(
         carrier_selections,
-        (carrier_selections.shape[0], transposed_conjugated_signal_matrix.shape[0], carrier_selections.shape[2]),
+        (carrier_selections.shape[0], signal_matrix.shape[0], carrier_selections.shape[2]),
     )
-    noise_weights = vmap(vmap(solve), in_axes=(None, 0))(transposed_conjugated_signal_matrix, carrier_selections)
+
+    if NOISE_FACTOR_REUSE:
+        # One LU per signal row, shared by the signal solve, the adjoint noise-weight
+        # solve (A^H y = s via trans=2) and the covariance solve. Each solve is a
+        # custom_linear_solve whose matvec depends differentiably on A, mirroring
+        # jnp.linalg.solve's structure (factorization of stop_gradient(A)).
+        system = signal_matrix[:, :, :-1].astype(jnp.complex128)
+        lu_matrix, lu_pivots, _ = jax.lax.linalg.lu(lax.stop_gradient(system))
+        factors = (lu_matrix, lu_pivots)
+
+        def lu_apply(rhs, trans):
+            return jax.scipy.linalg.lu_solve(factors, rhs, trans=trans)
+
+        def direct_solve(rhs):
+            return lax.custom_linear_solve(
+                lambda x: jnp.einsum("bij,bj->bi", system, x),
+                rhs.astype(jnp.complex128),
+                solve=lambda _, x: lu_apply(x, 0),
+                transpose_solve=lambda _, x: lu_apply(x, 1),
+            )
+
+        def adjoint_solve(rhs):
+            # Linear transpose of x -> A^H x is x -> conj(A) x: conj(A) z = x
+            # <=> A conj(z) = conj(x).
+            return lax.custom_linear_solve(
+                lambda x: jnp.einsum("bji,bj->bi", jnp.conjugate(system), x),
+                rhs.astype(jnp.complex128),
+                solve=lambda _, x: lu_apply(x, 2),
+                transpose_solve=lambda _, x: jnp.conjugate(lu_apply(jnp.conjugate(x), 0)),
+            )
+
+        signal = direct_solve(signal_matrix[:, :, -1])
+        noise_weights = vmap(adjoint_solve)(carrier_selections)
+    else:
+        signal = vmap(solve)(signal_matrix[:, :, :-1], signal_matrix[:, :, -1])
+        # Back-propagate detector weights by solving the transposed conjugated signal system.
+        transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(signal_matrix[:, :, :-1]), (0, 2, 1))
+        noise_weights = vmap(vmap(solve), in_axes=(None, 0))(transposed_conjugated_signal_matrix, carrier_selections)
 
     def matmul_single_batch(matrix_batch: jnp.ndarray, vector_batch: jnp.ndarray) -> jnp.ndarray:
         """
@@ -705,7 +739,10 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
         noise_sources = jnp.einsum("ij,dbj->dbi", noise_matrix, noise_weights)
     else:
         noise_sources = vmap(matmul_single_batch, in_axes=(None, 0))(noise_matrix, noise_weights)
-    covariances = vmap(vmap(solve), in_axes=(None, 0))(signal_matrix[:, :, :-1], noise_sources)
+    if NOISE_FACTOR_REUSE:
+        covariances = vmap(direct_solve)(noise_sources)
+    else:
+        covariances = vmap(vmap(solve), in_axes=(None, 0))(signal_matrix[:, :, :-1], noise_sources)
 
     # Convert propagated covariances into amplitude spectral density.
     temporary_sum = jnp.sum(jnp.real(covariances * jnp.conjugate(carrier_selections)), axis=2)

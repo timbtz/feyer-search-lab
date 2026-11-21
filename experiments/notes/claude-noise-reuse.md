@@ -66,8 +66,43 @@ The time gain is expected but not measured, and probably small (well under 1 s).
 - **Change:** new module knob `NOISE_REUSE_MODE` (`"shared"` | `"broadcast"`). In `_solve_signal_and_noise`, a 2-D noise matrix selects the unbatched einsum. The `solve` scope always uses the broadcast form, because its loop slices noise rows.
 - **Fallback:** if strict fails, set `NOISE_REUSE_MODE="broadcast"`, which is the validated candidate 1 behaviour.
 
+### Results: candidate SHA `e525ee5ee4efabeeee9b3188b906fa560c0990a2`
+
+**Screen** (`518c46e9b88f471f92b79f82c35ed008`): 22.599 s, peak RSS 9.02 GB.
+
+**Full** (`ab7f50a0967e446db98e716cf8ea088a`): **official PASS, strict PASS**.
+
+| Phase | Seconds |
+| --- | --- |
+| Complete first run | **22.564** |
+| Imports | 0.290 |
+| Build | 0.832 |
+| Forward lower | 0.799 |
+| Forward compile | 7.608 |
+| Forward execute | 8.871 |
+| Gradient compile | 1.843 |
+| Gradient execute | 1.694 |
+
+- Warm runs: median 11.265 s (forward 9.399 s, gradient 1.693 s).
+- Total job wall time: 88.5 s.
+- Peak RSS: 9.03 GB, against candidate 1's 9.93 GB, a measured drop of about 0.9 GB. This matches the predicted broadcast residual.
+
+**Strict comparison:**
+- Carrier, signal and powers: bitwise identical.
+- Noise: max normalized error 1.6e-8. Sensitivity: 1.5e-8.
+- **Gradient: max normalized error 0.949 (limit 1.0), max absolute error 2.45e-4, relative L2 error 4.1e-9.**
+
+**Interpretation:** this passes, but with a thin margin. The reassociation in the shared GEMM moves one gradient coordinate to 95% of the strict tolerance. It is the fastest validated revision in this lane: −1.28 s against the parent's single run and −0.76 s against candidate 1. These are single runs, not paired repeats. Treat it as fragile: any further numerical change stacked on top is likely to cross the strict limit.
+
+## Candidate 3: shared LU factorization for the signal, adjoint noise-weight and covariance solves
+- **Lane note:** this reuses factorizations on the noise path. It is not block elimination or permutation, which belong to the other worker. The coordinator should sequence it against that worker's solve changes.
+- **Hypothesis:** the parent factors `A` (signal and covariance solves; XLA may or may not CSE these) and separately factors `A^H` for the noise weights. One `lax.linalg.lu(stop_gradient(A))` per row, with `lu_solve` `trans=0/1/2` inside `lax.custom_linear_solve` (the same structure as `jnp.linalg.solve`), should remove at least the `A^H` factorization: one of two or three batched 751×751 complex LUs. Expected effect is a lower forward execute time. Not measured.
+- **Base:** `NOISE_REUSE_MODE="broadcast"` (variant A). This isolates the effect from variant B's thin gradient margin.
+- **Numerical risk:** the noise weights now come from `A`'s LU through a conjugate-transpose triangular solve instead of an LU of `A^H`. Every gradient coordinate can change. Earlier in-loop solve changes failed strict at 1.9e-7.
+- **New knob:** `NOISE_FACTOR_REUSE` (bool).
+
 ### Results
-- Candidate SHA: (supervisor fills in). Screen/full: pending.
+- Candidate SHA: (supervisor fills in). Pending.
 
 ## Proposed knobs (draft, not admitted)
 ```json
