@@ -89,6 +89,28 @@ class TopologyManifestTests(unittest.TestCase):
             with self.subTest(mode=mode), self.assertRaises(ValueError):
                 observations(manifest(), [], seed)
 
+    def test_nondefault_lane_requires_independent_policy_and_excludes_old_cohort(self):
+        m = manifest()
+        cpu2 = full_job()
+        cpu2['report.json']['source']['simulator_files_sha256'] = {
+            p: digest(s) for p, s in m['base_sources'].items()}
+        lane = copy.deepcopy(cpu2)
+        lane['id'] = 'cpu34-job'
+        lane['result']['cpu'] = 34
+        lane['report.json']['environment']['cpu_affinity_ids'] = [34]
+        lane['result']['reported_environment'] = copy.deepcopy(lane['report.json']['environment'])
+        lane['result']['memory_budget_bytes'] = 16_000_000_000
+        lane['result']['memory_monitoring']['budget_bytes'] = 16_000_000_000
+        lane['result']['comparison']['memory_monitoring']['budget_bytes'] = 16_000_000_000
+        with self.assertRaises(ValueError):
+            observations(m, [], lane)
+        rows, cohort = observations(m, [cpu2], lane,
+            policy_context={'cpu': 34, 'memory_budget_bytes': 16_000_000_000})
+        self.assertEqual(rows[0]['job_ids'], ['cpu34-job'])
+        self.assertEqual(len(rows), 1)
+        with self.assertRaises(ValueError):
+            observations(m, [], lane, policy_context={'cpu': 35, 'memory_budget_bytes': 16_000_000_000})
+
     def test_bad_budget_does_not_create_state(self):
         from lab.topology_run import initialize
         import time

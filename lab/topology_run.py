@@ -26,7 +26,9 @@ def initialize(args):
     manifest = json.loads(args.manifest.read_text())
     verify_parent(args.repo, manifest)
     seed = json.loads(args.seed_report.read_text())
-    rows, cohort = observations(manifest, [], seed)
+    context_path = getattr(args, 'policy_context', None)
+    policy_context = json.loads(context_path.read_text()) if context_path else None
+    rows, cohort = observations(manifest, [], seed, policy_context=policy_context)
     if state.exists() or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,99}', args.name):
         raise ValueError('New state directory and simple campaign name required')
     if git(args.repo, 'status', '--porcelain'):
@@ -40,7 +42,7 @@ def initialize(args):
             'seed_sha': manifest['parent_sha'], 'seed_confirmed': False,
             'controller_commit': git(args.repo, 'rev-parse', 'HEAD'),
             'objective': {'primary': 'total', 'direction': 'minimize'},
-            'evaluation_policy': policy_from_job(seed),
+            'evaluation_policy': policy_from_job(seed, policy_context=policy_context),
             'guidance_policy': 'Validated exploratory seed; no paired confirmation or topology transfer implied'}
     state.mkdir(parents=True)
     campaign = Campaign(state / 'campaign.sqlite3')
@@ -136,7 +138,7 @@ def run(args):
                 if plan['action'] != 'mutate':
                     return {'status': plan['action']}
                 jobs = [json.loads(p.read_text()) for p in (state / 'queue-results').glob('*.json')]
-                rows, cohort = observations(manifest, jobs, seed)
+                rows, cohort = observations(manifest, jobs, seed, policy_context=runtime['policy'])
                 if cohort != spec['cohort_digest']:
                     raise ValueError('Training cohort drift')
                 request = {'metadata': spec['optimizer'], 'dimensions': manifest['dimensions'],
@@ -180,6 +182,8 @@ def main():
     init.add_argument('--name', required=True)
     init.add_argument('--manifest', type=Path, required=True)
     init.add_argument('--seed-report', type=Path, required=True)
+    init.add_argument('--policy-context', type=Path,
+                      help='Coordinator-approved CPU/memory/checker policy for this isolated lane')
     init.add_argument('--deadline-unix', type=float, required=True)
     init.add_argument('--max-evaluations', type=int, default=10)
     init.add_argument('--host', default='amd-hackathon')
