@@ -5,7 +5,7 @@
 - Starting checkout / candidate parent: `0bf57ae2af4a377f72cb34a3d6a328c714baafc8`
 - Public simulator baseline: `02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f`
 - Managed session label: `seed-agent`; Codex thread identifier: `01a1fe87-7574-74b2-a289-227279a3bdc8`, read from supervisor status during turn 4. Status is in `/Users/t.betz/Documents/Feyer challenge/.lab/sessions/seed-agent/status.json` (not the assigned worktree). Supervisor owns session continuity and submission.
-- Budget: original one-hour session remains in force. In the candidate 5 resumption, the user explicitly removed the four-candidate cap and authorized continued exploration while time remains; this supersedes the older stop-after-four instruction. Remaining allowances at candidate 5/6/7/8/9 start: 1878/1597/1249/980/708 seconds. No commits, pushes, SSH calls, local benchmark runs or evaluator submissions made by agent.
+- Budget: original one-hour session remains in force. In the candidate 5 resumption, the user explicitly removed the four-candidate cap and authorized continued exploration while time remains; this supersedes the older stop-after-four instruction. Remaining allowances at candidate 5/6/7/8/9/10 start: 1878/1597/1249/980/708/371 seconds. No commits, pushes, SSH calls, local benchmark runs or evaluator submissions made by agent.
 
 ## Baseline evidence supplied by maintainer
 
@@ -594,16 +594,88 @@ Unchanged AMD official complete first-evaluation totals: 35.821919, 35.614326, 3
 
 ## Candidate 9: inline the scalar component JIT helper
 
-- Candidate SHA: pending supervisor commit. Parent after candidate 8 feedback: `c284cf2b670ccc508aebb663e991410705d4e8ac`.
+- Candidate SHA: `c33dafe112eab30fda33ff9d794e2ca1a333d158`. Parent after candidate 8 feedback: `c284cf2b670ccc508aebb663e991410705d4e8ac`.
 - Change only the helper decorator from `@jit` to `@partial(jit, inline=True)`, adding the standard-library functools import. Preserve branch-local checkpointing and every numerical expression from validated candidate 8.
 - Hypothesis: allowing the helper to inline into the surrounding mapped computation may reduce reverse compilation cost through optimization across the helper boundary. Candidate 8 still spends 6.078370517 s compiling reverse and 4.938510042 s compiling forward. Whether inlining improves those costs is unmeasured; it can also enlarge compilation work. No optimized HLO inspection or runtime saving is claimed.
 - The option is part of the [JAX jit API](https://docs.jax.dev/en/latest/_autosummary/jax.jit.html). The helper remains JIT wrapped; this is a local tracing/lowering option. The official three outer JIT stages, component order, all frequencies and parameters, precision and physical operations remain intact. No persistent caching or global configuration changes.
 - Local syntax and AST isolation checks passed: after normalizing the decorator and removing the added import, the complete module AST equals candidate 8. No local simulator or benchmark execution. Supervisor evaluation must establish numerical equivalence and total timing.
 
+
+### Candidate 9 screen result
+
+- Run `77464577654c4b758b12538fec01857f`; verdict `screened`; official passed: False.
+- Complete first-run 29.545667112 s; process wall 30.775237022 s; peak RSS 13342772 KiB.
+- Trace/lower/compile total 13.391238188 s; warm median None s.
+
+| Phase | Seconds |
+| --- | ---: |
+| imports | 0.289921561 |
+| initialize | 0.002902376 |
+| load | 0.001384115 |
+| build | 0.881426789 |
+| forward_lower | 1.005394159 |
+| forward_compile | 4.920279969 |
+| forward | 13.069246590 |
+| sensitivity_lower | 0.083432885 |
+| sensitivity_compile | 0.462367635 |
+| sensitivity | 0.000928860 |
+| gradient_lower | 0.442187374 |
+| gradient_compile | 6.477576166 |
+| gradient | 1.908161245 |
+| host_transfer | 0.000457387 |
+
+### Candidate 9 full result
+
+- Run `c612b99b11d240b8b2b79ffe503eadc2`; verdict `validated`; official passed: True.
+- Complete first-run 28.773927882 s; process wall 114.319412598 s; peak RSS 13447092 KiB.
+- Trace/lower/compile total 13.207092863 s; warm median 14.93192152865231 s.
+
+| Phase | Seconds |
+| --- | ---: |
+| imports | 0.286767967 |
+| initialize | 0.002875233 |
+| load | 0.001402337 |
+| build | 0.824075243 |
+| forward_lower | 1.114730211 |
+| forward_compile | 5.066935195 |
+| forward | 12.525355820 |
+| sensitivity_lower | 0.086832475 |
+| sensitivity_compile | 0.379255192 |
+| sensitivity | 0.000942573 |
+| gradient_lower | 0.430522826 |
+| gradient_compile | 6.128816964 |
+| gradient | 1.925016291 |
+| host_transfer | 0.000399556 |
+
+### Candidate 9 numerical evidence and decision
+
+- Official sensitivity and finite-difference gradient checks and strict array comparison passed. All outputs and gradients finite. Reported loss remains baseline-equal at 9.793036291535532e-08.
+
+| Array | Maximum absolute error | Relative L2 error | Strict pass |
+| --- | ---: | ---: | --- |
+| carrier | 0 | 0 | True |
+| signal | 0 | 0 | True |
+| noise | 0 | 0 | True |
+| sensitivity | 0 | 0 | True |
+| powers | 0 | 0 | True |
+| gradient | 1.5178830414797062e-18 | 2.1531895610344731e-23 | True |
+| parameters | 0 | 0 | True |
+| frequencies | 0 | 0 | True |
+
+- Reject candidate 9 as a performance improvement: full first-run 28.773927882 s is 0.760463113 s above candidate 8's 28.013464769 s. Forward lowering rose to 1.114730211 s, forward compile to 5.066935195 s and gradient compile to 6.128816964 s. Warm median 14.931921529 s also exceeds candidate 8's 14.571259789 s. The broader slowdown may include environmental variability, but there is no measured gain to justify retaining inlining. Physical arrays match exactly; maximum absolute gradient error 1.5178830414797062e-18 and relative L2 error 2.153189561034473e-23. Pointwise relative maxima remain unavailable.
+
+## Candidate 10: reuse JIT wrappers for individual component branches
+
+- Candidate SHA: pending supervisor commit. Parent after candidate 9 feedback: `2829947094a53c4c1036f884e167c8e483c0bc81`.
+- Restore candidate 8's non-inline helper. Construct a module-level tuple of `jit(jax.checkpoint(function, prevent_cse=False))` wrappers in registry order, then use these in the unchanged scalar switch. The tuple contains callable wrappers only; creating it performs no physical computation or compilation. The registry is already treated as static by the existing JIT helper.
+- Hypothesis: reusable per-branch JIT wrappers may reduce repeated tracing and derivative compilation across matrix updates and keep branch derivative graphs better isolated. Candidate 8's gradient compilation remains 6.078370517 s. Extra nested call boundaries may instead increase costs; actual compiler behavior and any gains are unmeasured. Full evaluator timing decides.
+- Numerical expressions, component selection/order, checkpoint placement within selected branches, masked conjugation, dense solves, double precision, all frequencies/parameters and the official three outer JIT stages are preserved. No persistent compilation cache, precomputed answers, custom derivatives, environment changes or harness changes.
+- Syntax and AST isolation checks passed. All code outside callable-wrapper construction and the scalar helper equals candidate 8. No local simulator or benchmark execution. Full numerical evaluation remains pending.
+
 ## Current handoff / next action
 
-Best validated revision is candidate 8, `1e552d675c3795265be8af1ac23ffb61f90f30b1`, complete first-run 28.013464769 s and warm median 14.571259789 s. Physical outputs exact; maximum absolute full-gradient error 1.5178830414797062e-18.
+Best validated revision remains candidate 8, `1e552d675c3795265be8af1ac23ffb61f90f30b1`, complete first-run 28.013464769 s and warm median 14.571259789 s, approximately 21.61% below the baseline first-run median. Physical outputs exact; maximum absolute full-gradient error 1.5178830414797062e-18.
 
-Next: supervisor commits/screens candidate 9 and fully validates the exact SHA if eligible. Compare total lowering/compilation and complete first-run time against candidate 8, plus memory and full output/gradient comparison. Reject numerical regressions or increased total cost. Repeat fresh-process full measurements of the eventual best SHA for confirmation.
+Next: supervisor commits/screens candidate 10 and fully validates the exact SHA if eligible. Compare complete first-run, all compilation phases and full output/gradient comparison with candidate 8. Reject if numerical tolerances fail or total cost rises. If time expires or candidate 10 fails to improve, candidate 8 is the recommended validated fallback. Repeat fresh-process full measurements of the eventual best SHA for confirmation; this remains outstanding.
 
-Candidate-count cap is removed; remaining session time still controls exploration. Preserve session `seed-agent`, thread `01a1fe87-7574-74b2-a289-227279a3bdc8`, worktree/branch and failed history. Supervisor owns submission; no commits, SSH, benchmarks or infrastructure changes by this agent. Pointwise relative gradient diagnostics, actual solve lowering/factorization reuse and candidate 2's failing coordinates remain unfinished. No sparse solve or custom VJP has been attempted.
+Candidate-count cap is removed; remaining session time still controls exploration (371 seconds at candidate 10 start). Preserve session `seed-agent`, thread `01a1fe87-7574-74b2-a289-227279a3bdc8`, worktree/branch and failed history. Supervisor owns submission; no commits, SSH, benchmarks or infrastructure changes by this agent. Pointwise relative gradient diagnostics, actual solve lowering/factorization reuse and candidate 2's failing coordinates remain unfinished. No sparse solve or custom VJP has been attempted.
