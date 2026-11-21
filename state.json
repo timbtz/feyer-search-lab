@@ -44365,6 +44365,56 @@
         ],
         "target_evidence": []
       }
+    },
+    {
+      "seq": 25,
+      "at": 1795294507.621836,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "feedback-8010bdeb22e1a70f718fcb36f017b9c9a1c15804e5d422677fa514820728c682",
+        "executor": {
+          "kind": "supervisor",
+          "id": "claude-structure-solve"
+        },
+        "kind": "explore",
+        "status": "completed",
+        "candidate_sha": "423bcc4ad6e99b85cd651980bee541612ed2ee20",
+        "parents": [
+          "3e94580ec44609e7156f7f0acad1f2884db8b030"
+        ],
+        "target_phases": [],
+        "hypothesis": "Slicing is exact. Both of A's cotangent contributions, from the merged solve and the A^H path, are still added at top level in the same order as before. The per-frequency pad and concatenation only touch disjoint entries, so the gradient should match candidate 1 bit for bit. If XLA had not already fused the work, the change removes one full-stack strided copy in the forward pass and one full-stack pad of the cotangent in the reverse pass. I expect a small saving of at most about 0.3 s, possibly none. Nothing has been measured yet.",
+        "change_summary": "Candidate 3 (3e94580, candidate 1's code path again) passed both checks: first run 22.423 s, gradient identical to candidate 1. That gives two full samples of the merged-RHS computation, 22.495 s and 22.423 s, against the parent's single 23.840 s run. Candidate 4 follows the coordinator's lead and is untested. With the \"assemble\" scope, the loop body now splits each augmented signal block into its coefficient matrix and its RHS. The stacked coefficients (101, 751, 751) and RHS (101, 751) go straight to _solve_signal_and_noise through a new signal_rhs argument. This replaces a top-level slice of the 0.9 GB (101, 751, 752) stack. It is controlled by the trace-time constant SPLIT_SIGNAL_RHS = True; setting it to False restores the previous layout. Merged RHS and the mask conjugation path are kept, and topology, frequencies, variables and JIT stages are unchanged.",
+        "stopping_reason": null,
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d96d9188640ef34204f53ccc9612a3dff6268f52/experiments/runs/claude-structure-solve/candidate-04.json",
+        "source_digest": "8010bdeb22e1a70f718fcb36f017b9c9a1c15804e5d422677fa514820728c682",
+        "source_digest_kind": "canonical_json_sha256",
+        "feedback_ref": {
+          "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/d96d9188640ef34204f53ccc9612a3dff6268f52/experiments/runs/claude-structure-solve/candidate-04.json",
+          "artifact_digest": "8010bdeb22e1a70f718fcb36f017b9c9a1c15804e5d422677fa514820728c682",
+          "digest_kind": "canonical_json_sha256"
+        },
+        "session_id": "aaad90d2-50c7-4334-ad32-331fbe033d3c",
+        "iteration": null,
+        "checkpoint": null,
+        "next_input": null,
+        "input_receipt": null,
+        "evaluations": [
+          {
+            "job_id": "c068a2f99ce54aafbeb8dabbd6122470",
+            "candidate_sha": "423bcc4ad6e99b85cd651980bee541612ed2ee20",
+            "profile": "screen"
+          },
+          {
+            "job_id": "4ace8bcd73364c7cbde02c8dc9c1de16",
+            "candidate_sha": "423bcc4ad6e99b85cd651980bee541612ed2ee20",
+            "profile": "full"
+          }
+        ],
+        "target_evidence": []
+      }
     }
   ],
   "comparison_regime": {
@@ -44767,6 +44817,50 @@
         {
           "job_id": "0e841841f0bc491fa29b6178a908ef4c",
           "candidate_sha": "3e94580ec44609e7156f7f0acad1f2884db8b030",
+          "profile": "full"
+        }
+      ],
+      "target_evidence": []
+    },
+    "feedback-8010bdeb22e1a70f718fcb36f017b9c9a1c15804e5d422677fa514820728c682": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "feedback-8010bdeb22e1a70f718fcb36f017b9c9a1c15804e5d422677fa514820728c682",
+      "executor": {
+        "kind": "supervisor",
+        "id": "claude-structure-solve"
+      },
+      "kind": "explore",
+      "status": "completed",
+      "candidate_sha": "423bcc4ad6e99b85cd651980bee541612ed2ee20",
+      "parents": [
+        "3e94580ec44609e7156f7f0acad1f2884db8b030"
+      ],
+      "target_phases": [],
+      "hypothesis": "Slicing is exact. Both of A's cotangent contributions, from the merged solve and the A^H path, are still added at top level in the same order as before. The per-frequency pad and concatenation only touch disjoint entries, so the gradient should match candidate 1 bit for bit. If XLA had not already fused the work, the change removes one full-stack strided copy in the forward pass and one full-stack pad of the cotangent in the reverse pass. I expect a small saving of at most about 0.3 s, possibly none. Nothing has been measured yet.",
+      "change_summary": "Candidate 3 (3e94580, candidate 1's code path again) passed both checks: first run 22.423 s, gradient identical to candidate 1. That gives two full samples of the merged-RHS computation, 22.495 s and 22.423 s, against the parent's single 23.840 s run. Candidate 4 follows the coordinator's lead and is untested. With the \"assemble\" scope, the loop body now splits each augmented signal block into its coefficient matrix and its RHS. The stacked coefficients (101, 751, 751) and RHS (101, 751) go straight to _solve_signal_and_noise through a new signal_rhs argument. This replaces a top-level slice of the 0.9 GB (101, 751, 752) stack. It is controlled by the trace-time constant SPLIT_SIGNAL_RHS = True; setting it to False restores the previous layout. Merged RHS and the mask conjugation path are kept, and topology, frequencies, variables and JIT stages are unchanged.",
+      "stopping_reason": null,
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d96d9188640ef34204f53ccc9612a3dff6268f52/experiments/runs/claude-structure-solve/candidate-04.json",
+      "source_digest": "8010bdeb22e1a70f718fcb36f017b9c9a1c15804e5d422677fa514820728c682",
+      "source_digest_kind": "canonical_json_sha256",
+      "feedback_ref": {
+        "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/d96d9188640ef34204f53ccc9612a3dff6268f52/experiments/runs/claude-structure-solve/candidate-04.json",
+        "artifact_digest": "8010bdeb22e1a70f718fcb36f017b9c9a1c15804e5d422677fa514820728c682",
+        "digest_kind": "canonical_json_sha256"
+      },
+      "session_id": "aaad90d2-50c7-4334-ad32-331fbe033d3c",
+      "iteration": null,
+      "checkpoint": null,
+      "next_input": null,
+      "input_receipt": null,
+      "evaluations": [
+        {
+          "job_id": "c068a2f99ce54aafbeb8dabbd6122470",
+          "candidate_sha": "423bcc4ad6e99b85cd651980bee541612ed2ee20",
+          "profile": "screen"
+        },
+        {
+          "job_id": "4ace8bcd73364c7cbde02c8dc9c1de16",
+          "candidate_sha": "423bcc4ad6e99b85cd651980bee541612ed2ee20",
           "profile": "full"
         }
       ],
