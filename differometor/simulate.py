@@ -566,7 +566,7 @@ MERGE_SAME_MATRIX_SOLVES: bool = False
 # Ported from 423bcc4: split coefficient/RHS blocks before stacking the assembly
 # loop outputs. Combined with guarded noise reuse from 28566a64. Both direct-LU
 # and multi-RHS solvers consume the same separated arrays; arithmetic is unchanged.
-SPLIT_SIGNAL_RHS: bool = True
+SPLIT_SIGNAL_RHS: bool = False
 
 
 def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):
