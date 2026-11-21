@@ -1,8 +1,8 @@
 # Campaign layout-numerical-v2
 
-Export schema: `feyer-campaign-export-v1`. Snapshot: `75af823ce9237c6bbe51f70ceb4b0f0ee5a70708027bdf1faa226a8ffbbed39b`.
+Export schema: `feyer-campaign-export-v1`. Snapshot: `b54464a940bc81d7794990ed96121c1638d07b3d927beb8ffb0bdd1b750c855e`.
 
-[Frozen proposer context](contexts/b15f119588493165b17d2375b5148f6e92c205c2e5a657fe18a3ca011c1bcb33.json) — SHA256 `b15f119588493165b17d2375b5148f6e92c205c2e5a657fe18a3ca011c1bcb33`.
+[Frozen proposer context](contexts/8b2868f0cbdb5e70e5db39d7c41158a0001745be6e51b0ad2c4cd6a4ea44feb3.json) — SHA256 `8b2868f0cbdb5e70e5db39d7c41158a0001745be6e51b0ad2c4cd6a4ea44feb3`.
 
 This is an evidence ledger. Scientific parents describe chosen inputs to an experiment; they are not necessarily Git parents. Phase changes are observations, not proof that one edit caused the difference. A failed attempt remains part of the history.
 
@@ -23,8 +23,10 @@ graph LR
   n0["topology-seed seed valid"]
   n1["7a6936e264024fc7a629cbc5e75ec8d3 mutate valid"]
   n2["f28325fb234141beb0f0054e7161f709 mutate valid"]
+  n3["399d435fe5dc428ab5af928cdfed7757 mutate proposed"]
   n0 -->|mutate| n1
   n1 -->|mutate| n2
+  n2 -->|mutate| n3
 ```
 
 ## Candidate outcomes
@@ -34,6 +36,7 @@ graph LR
 | topology-seed | topology-001 / tune | root | e0a1dc69f4951c100fefbc9fc08a23c3c12058dc | valid | 21.9847 | d07456c28e8647289ddf32fd9676bf0d:acb6f2e3adb36a5a0d76489a61f11270265d6e92d3833b7e9241808a32cbd21d |
 | 7a6936e264024fc7a629cbc5e75ec8d3 | topology-001 / tune | topology-seed | 8427aae28bd8bb2b248e833fa416ce0563d53c9e | valid | 21.8678 | 955f9c9b082c4cb8a74af964baa7290c:46c75f8de93ce199d794f52f5ab3de4c5af0de4bc6ecef00ca8993aae2dc85f7, 48775628352f423f9d4dbe90af6b54e8:32e35e2148292f98536c412ddcb655a7d61881911219c76647d34b4ffb24ca29 |
 | f28325fb234141beb0f0054e7161f709 | topology-001 / tune | 7a6936e264024fc7a629cbc5e75ec8d3 | 3a2073ad5add8770eab0d37b55ad67cea71b448b | valid | 21.1998 | 004ac1572615488caf91628b849da147:e23d4ea50664b359224f93998019b986ccb3065f06f7e7179f7244a929e263bc, d9a90c7ee1974e64a4aebcef47572111:38345588a583bc5d8e10c81e4a51b2a962c05ec4147010931203b6e8b7f3a836 |
+| 399d435fe5dc428ab5af928cdfed7757 | topology-001 / tune | f28325fb234141beb0f0054e7161f709 | 3c899b1a4cd66564875d75a45aa69882990a1868 | proposed | unknown | none |
 
 ## Round decisions and stalled work
 
@@ -91,7 +94,7 @@ Frozen specification: `a998fa82854524d2d6272100fdc7817495162e4b5af51b45dd113f04b
 }
 ```
 
-- topology-001/tune: ready; owner coordinator; strikes 0; reason not recorded
+- topology-001/tune: active; owner coordinator; strikes 0; reason not recorded
 
 ## Candidate evidence and proposed changes
 
@@ -1362,6 +1365,99 @@ Frozen specification: `a998fa82854524d2d6272100fdc7817495162e4b5af51b45dd113f04b
 }
 ```
 
+### 399d435fe5dc428ab5af928cdfed7757
+
+```json
+{
+  "cohort_digest": null,
+  "commit_sha": "3c899b1a4cd66564875d75a45aa69882990a1868",
+  "content_sha256": "10c0103d2da47922929dde240eabcf9d04e9ec7e8adfb21729c159caad6b6433",
+  "context_sha256": null,
+  "evaluation_requests": [],
+  "evidence": [],
+  "evidence_ids": [],
+  "git_parents": null,
+  "heuristic_id": null,
+  "hypothesis": null,
+  "improved": false,
+  "kind": "mutate",
+  "lane_id": "tune",
+  "metrics": null,
+  "model_manifest": null,
+  "owner": "coordinator",
+  "owner_version": 1,
+  "parameters": {
+    "factor_mode": "off",
+    "noise_mode": "shared"
+  },
+  "parameters_after": {
+    "factor_mode": "off",
+    "noise_mode": "shared"
+  },
+  "parameters_before": null,
+  "parents": [
+    "f28325fb234141beb0f0054e7161f709"
+  ],
+  "prompt_sha256": null,
+  "proposal": {
+    "candidate_id": "399d435fe5dc428ab5af928cdfed7757",
+    "commit_sha": "3c899b1a4cd66564875d75a45aa69882990a1868",
+    "content_sha256": "10c0103d2da47922929dde240eabcf9d04e9ec7e8adfb21729c159caad6b6433",
+    "kind": "mutate",
+    "lane_id": "tune",
+    "parameters": {
+      "factor_mode": "off",
+      "noise_mode": "shared"
+    },
+    "parents": [
+      "f28325fb234141beb0f0054e7161f709"
+    ],
+    "proposal_id": "399d435fe5dc428ab5af928cdfed7757",
+    "provenance": {
+      "context": {
+        "bytes": 1809,
+        "path": "contexts/9b961a44bce14439c2d32301a647e53aef93757ad82a40c5986c8c87464a11c0.json",
+        "sha256": "9b961a44bce14439c2d32301a647e53aef93757ad82a40c5986c8c87464a11c0"
+      },
+      "context_sha256": "fb14c649a718d47d29a66f0c021f4a8d699bd999eacd3dc4947d178edc28d543",
+      "heuristic_id": "exact-topology-smac-v1",
+      "hypothesis": "Measure registered topology parameters under unchanged full correctness checks",
+      "model": "SMAC3 random forest + expected improvement",
+      "model_calls": 0,
+      "model_trained": false,
+      "origin": "local-startup",
+      "selection_origin": "local-startup",
+      "training_configurations": 3
+    },
+    "recipe": "tune",
+    "round_id": "topology-001"
+  },
+  "proposal_id": "399d435fe5dc428ab5af928cdfed7757",
+  "provenance": {
+    "context": {
+      "bytes": 1809,
+      "path": "contexts/9b961a44bce14439c2d32301a647e53aef93757ad82a40c5986c8c87464a11c0.json",
+      "sha256": "9b961a44bce14439c2d32301a647e53aef93757ad82a40c5986c8c87464a11c0"
+    },
+    "context_sha256": "fb14c649a718d47d29a66f0c021f4a8d699bd999eacd3dc4947d178edc28d543",
+    "heuristic_id": "exact-topology-smac-v1",
+    "hypothesis": "Measure registered topology parameters under unchanged full correctness checks",
+    "model": "SMAC3 random forest + expected improvement",
+    "model_calls": 0,
+    "model_trained": false,
+    "origin": "local-startup",
+    "selection_origin": "local-startup",
+    "training_configurations": 3
+  },
+  "recipe": "tune",
+  "response_sha256": null,
+  "round_id": "topology-001",
+  "target_symbols": null,
+  "uncertainty": "No repeat-confirmation or causality is inferred from this export. Inspect exact job evidence and matching cohorts.",
+  "valid": false
+}
+```
+
 ## Decision and failure trail
 
 | Sequence | Event | Actor | Detail |
@@ -1388,5 +1484,6 @@ Frozen specification: `a998fa82854524d2d6272100fdc7817495162e4b5af51b45dd113f04b
 | 20 | evaluation_bound | coordinator | {"job_id": "d9a90c7ee1974e64a4aebcef47572111", "request_id": "b0d84fd36765435cb9c4de4043298e28"} |
 | 21 | evidence_observed | coordinator | {"candidate_id": "f28325fb234141beb0f0054e7161f709", "category": "valid", "evidence_digest": "4c01e2f1d33d4f3f8f495a0a835df73708a858bbea706eef90dd0c84550e7405", "evidence_id": "d9a90c7ee1974e64a4aebcef47572111:38345588a583bc5d8e10c81e4a51b2a962c05ec4147010931203b6e8b7f3a836", "job_id": "d9a90c7ee1974e64a4aebcef47572111", "progress": {"axes": ["setup", "compilation", "forward", "sensitivity", "gradient", "transfer"], "meaningful_pareto": true, "meaningful_total": true, "policy": {"absolute": 0.02, "relative": 0.01}, "reference_best_total": 21.867799935862422, "reference_parents": ["7a6936e264024fc7a629cbc5e75ec8d3"]}, "status": "valid", "strikes": 0} |
 | 22 | decision_recorded | coordinator | {"decision_id": "399d435fe5dc428ab5af928cdfed7757", "payload": {"context": {"bytes": 1809, "path": "contexts/9b961a44bce14439c2d32301a647e53aef93757ad82a40c5986c8c87464a11c0.json", "sha256": "9b961a44bce14439c2d32301a647e53aef93757ad82a40c5986c8c87464a11c0"}, "model_trained": false, "origin": "local-startup", "selection_origin": "local-startup", "training_configurations": 3}, "payload_digest": "86234ddfeb652d1f846bb1d60fdc807b6c375a5140ea8596855ea8f0fbd1c475"} |
+| 23 | candidate_proposed | coordinator | {"candidate_id": "399d435fe5dc428ab5af928cdfed7757", "duplicate_of": null, "owner_version": 1, "proposal_digest": "1b301a4153de11fa2eeaa4bb0c8697000986089440eaad9ef3f25979011212b5", "proposal_id": "399d435fe5dc428ab5af928cdfed7757"} |
 
 Guidance may propose a new round. It cannot silently replace frozen operators, ownership, evaluation requirements or budgets. Only the coordinator can admit that round through the campaign state API. Publishing this ledger does not merge or promote candidate code.
