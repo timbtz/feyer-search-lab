@@ -66,7 +66,42 @@ between A and A^H is introduced.
 ## Candidates
 
 ### Candidate 1 — `FREQUENCY_CHUNK_SIZE = 1`
-- SHA: (assigned by supervisor)
-- Status: submitted for screen then full. No local run. Timings, memory, strict outcome unmeasured.
-- Next decision: if forward execute/RSS drop and strict passes, try k=4/8 (padding) to trade
-  per-iteration overhead; if forward/gradient regress, try k=16 or record obstruction.
+- SHA `aa4d230f4af70946be5c0f1f784eac2888c6bbe6`.
+- Screen `26280ae1f2ec423e91700cf06f2b2cbf` (request `830a514242554cca835a6bf0800bad13`): passed cheap
+  checks; first-run 21.676263 s; compile/lower 10.883 s; forward exec 8.987 s; gradient exec
+  0.689 s; peak RSS 7267128 KiB; wall 22.55 s.
+- Full `4230614b363b4a75a92f331df5e84eef` (request `4889a61d90d24fffbe2d37797f8da470`):
+  **official PASS, strict FAIL**. First-run 22.076372 s (parent 24.657326). Phases: imports
+  0.291, build 1.096 (parent 0.814; no builder change), forward lower 0.835 / compile 7.777
+  (parent 0.680 / 6.982), forward exec 9.117 (parent 11.508), gradient lower 0.183 / compile
+  1.788 (parent 0.132 / 1.913), gradient exec 0.679 (parent 1.808). Compile/lower total 10.888
+  (parent 10.233). Warm median 10.071 s (parent 13.802); warm forward median 9.385, gradient
+  0.683. Peak RSS 7270196 KiB (parent 12547788, −42%). Job wall 78.93 s (parent 104.70).
+- Comparison: carrier, signal, noise, sensitivity, powers, parameters, frequencies **exactly**
+  equal (max abs 0). Gradient relative L2 9.18e-10, max abs 5.61e-5 (on large entries, within
+  tolerance). One failing coordinate: index 161 = `boundary01.power` (laser power), reference
+  −29.61288925877842, candidate −29.612894755369226, abs 5.50e-6 vs tolerance 3.02e-6
+  (normalized 1.82; rel 1.9e-7 vs rtol 1e-7). Official FD check passed.
+- Diagnosis (source reasoning, not verified by HLO): laser power influences the loop only via
+  the carrier solution, which is a frequency-shared closure constant of the `lax.map`. Scan
+  transpose accumulates closure-constant cotangents sequentially over 101 iterations, whereas
+  the vmapped layout sums a (101, ·) cotangent with one broadcast-transpose reduction. Different
+  summation order → rounding-level difference in carrier-dependent gradients.
+- Decision: strict failure blocks validation. Timing evidence is strong (−2.58 s first run, single
+  run) so keep the direction and fix the accumulation order.
+
+### Candidate 2 — k=1, frequency-shared parameter-dependent inputs fed as scanned rows
+- Change vs candidate 1: gather `carrier[:, signal_carrier_indices]` before the loop (as the
+  vmapped body effectively did before broadcasting), `broadcast_to` it and the detector
+  `carrier_selections` to the full 101 rows outside the loop and pass them as scanned `xs`
+  (selections moved to row-major (B, D, N) and back inside the body). Reverse: cotangents are
+  stacked per frequency and summed by the broadcast transpose (one reduction over B), then flow
+  through the gather transpose — same association as the vmapped layout. `_signal_and_noise`
+  now receives `carrier_entries` and static `carrier_size` instead of `carrier`.
+  `_map_frequency_chunks` takes a tuple of row arrays (padding each identically).
+- Hypothesis: restores strict gradient agreement (coordinate 161) while keeping candidate 1's
+  forward/gradient/memory gains; extra cost is a few small broadcasts (≈ 101×N complex).
+- Remaining risk: other closure constants (`signal_matrix`, `noise_matrix` bases, index arrays)
+  do not depend on optimized parameters, so they should produce no accumulated cotangents.
+  XLA reduction order is still not guaranteed bitwise identical.
+- SHA / runs: pending.

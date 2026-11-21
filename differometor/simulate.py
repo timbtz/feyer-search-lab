@@ -391,19 +391,22 @@ def simulate(
         :, :, carrier.shape[1] : carrier.shape[1] * 2
     ].set(lower_carrier_selections)
 
-    def signal_and_noise(parameters):
+    # Carrier values that scale signal connector entries, shape (CV, M).
+    carrier_entries = carrier[:, signal_carrier_indices.flatten()]
+
+    def signal_and_noise(parameters, carrier_entries, carrier_selections):
         """Signal and noise for a block of signal-sweep rows; returns (B, SN), (D, B)."""
         return _signal_and_noise(
             parameters,
-            carrier,
-            base_carrier_selections,
+            carrier_entries,
+            carrier.shape[1],
+            carrier_selections,
             signal_matrix,
             noise_matrix,
             signal_function_input_indices,
             signal_function_indices,
             signal_output_indices,
             signal_matrix_indices,
-            signal_carrier_indices,
             signal_carrier_placing_indices,
             noise_function_input_indices,
             noise_function_indices,
@@ -413,11 +416,34 @@ def simulate(
         )
 
     chunk_size = FREQUENCY_CHUNK_SIZE
-    if chunk_size is None or carrier.shape[0] != 1 or parameters.shape[0] <= chunk_size:
+    count = parameters.shape[0]
+    if chunk_size is None or carrier.shape[0] != 1 or count <= chunk_size:
         # Full frequency vmap (original layout), also used for carrier sweeps.
-        signal, noise = signal_and_noise(parameters)
+        signal, noise = signal_and_noise(parameters, carrier_entries, base_carrier_selections)
     else:
-        signal, noise = _map_frequency_chunks(signal_and_noise, parameters, chunk_size)
+        # Broadcast frequency-shared, parameter-dependent inputs outside the loop and
+        # feed them per row. Their cotangents are then stacked per frequency and summed
+        # by one reduction (the broadcast transpose), as in the vmapped layout, instead
+        # of being accumulated sequentially inside the reverse loop.
+        row_carrier_entries = jnp.broadcast_to(carrier_entries, (count, carrier_entries.shape[1]))
+        row_carrier_selections = jnp.moveaxis(
+            jnp.broadcast_to(
+                base_carrier_selections,
+                (base_carrier_selections.shape[0], count, base_carrier_selections.shape[2]),
+            ),
+            1,
+            0,
+        )
+
+        def block_signal_and_noise(blocks):
+            block_parameters, block_entries, block_selections = blocks
+            return signal_and_noise(block_parameters, block_entries, jnp.moveaxis(block_selections, 0, 1))
+
+        signal, noise = _map_frequency_chunks(
+            block_signal_and_noise,
+            (parameters, row_carrier_entries, row_carrier_selections),
+            chunk_size,
+        )
 
     return carrier.T, signal.T, noise.squeeze()
 
@@ -430,15 +456,19 @@ def simulate(
 FREQUENCY_CHUNK_SIZE: int | None = 1
 
 
-def _map_frequency_chunks(function, parameters: jnp.ndarray, chunk_size: int):
-    """Apply `function` to sequential blocks of `chunk_size` parameter rows."""
-    count = parameters.shape[0]
+def _map_frequency_chunks(function, row_arrays: tuple, chunk_size: int):
+    """Apply `function` to sequential blocks of `chunk_size` rows of every array."""
+    count = row_arrays[0].shape[0]
     chunk_count = -(-count // chunk_size)
     padded_count = chunk_count * chunk_size
-    if padded_count != count:
-        padding = jnp.broadcast_to(parameters[-1:], (padded_count - count, parameters.shape[1]))
-        parameters = jnp.concatenate([parameters, padding], axis=0)
-    chunks = parameters.reshape(chunk_count, chunk_size, parameters.shape[1])
+
+    def to_chunks(array):
+        if padded_count != count:
+            padding = jnp.broadcast_to(array[-1:], (padded_count - count, *array.shape[1:]))
+            array = jnp.concatenate([array, padding], axis=0)
+        return array.reshape(chunk_count, chunk_size, *array.shape[1:])
+
+    chunks = tuple(to_chunks(array) for array in row_arrays)
     signal, noise = lax.map(function, chunks)
     # signal: (C, k, SN) -> (B, SN); noise: (C, D, k) -> (D, B).
     signal = signal.reshape(padded_count, signal.shape[-1])[:count]
@@ -448,7 +478,8 @@ def _map_frequency_chunks(function, parameters: jnp.ndarray, chunk_size: int):
 
 def _signal_and_noise(
     parameters,
-    carrier,
+    carrier_entries,
+    carrier_size,
     base_carrier_selections,
     signal_matrix,
     noise_matrix,
@@ -456,7 +487,6 @@ def _signal_and_noise(
     signal_function_indices,
     signal_output_indices,
     signal_matrix_indices,
-    signal_carrier_indices,
     signal_carrier_placing_indices,
     noise_function_input_indices,
     noise_function_indices,
@@ -489,7 +519,7 @@ def _signal_and_noise(
         -signal_matrix.at[:, signal_carrier_placing_indices[0], signal_carrier_placing_indices[1]].get(
             unique_indices=unique_carrier_placing_indices
         )
-        * carrier[:, signal_carrier_indices.flatten()]
+        * carrier_entries
     )
     signal_matrix = signal_matrix.at[:, signal_carrier_placing_indices[0], signal_carrier_placing_indices[1]].set(
         signal_entries,
@@ -497,8 +527,7 @@ def _signal_and_noise(
     )
 
     # Apply conjugation rules to enforce upper and lower sideband symmetry.
-    carrier_size = carrier.shape[1]
-    rows = jnp.arange(signal_matrix.shape[1])[:, None]
+    rows =jnp.arange(signal_matrix.shape[1])[:, None]
     columns = jnp.arange(signal_matrix.shape[2])[None, :]
     # The lower-sideband row blocks are adjacent; include the augmented RHS.
     # Their union and the mechanical-to-upper block are disjoint.
