@@ -71,7 +71,22 @@ Alternatives considered and deferred:
 | # | SHA | Hypothesis | Runs | Result | Decision |
 |---|-----|-----------|------|--------|----------|
 | 1 | `3db9b657f8496d40a9f195fd9864e5e048c7df5b` | Share one LU(A) across signal, A^H noise-weight and covariance solves | screen `af18c37444224d31a69ced471361ef2d`, full `cd271462a63446a997264fb26882b711` | Official pass; strict array check FAILED (3 gradient entries) | Keep as speed evidence; numerical review needed |
-| 2 | (assigned by supervisor) | Block/Schur factorization of A using structurally zero sideband cross blocks | pending | pending | pending |
+| 2 | `0ed67104f64ad82059b3465d20e56489762b4312` | Block/Schur factorization of A using structurally zero sideband cross blocks | screen `be819ed2f7d94e859c762f85a57d8665`, full `99b1182cb5bc4d178563a06507da4010` | Official pass; strict FAILED (signal, noise, sensitivity, gradient) | **Rejected** |
+| 3 | (assigned by supervisor) | Revert to candidate 1's dense shared-LU solver (repeat measurement / branch head = best config) | pending | pending | pending |
+
+### Candidate 2 measured results and rejection
+
+- First run: screen 32.139 s, full 31.239 s. Candidate 1 measured 31.429 and 31.509 s. There is no reliable first-run gain.
+- Warm median 9.534 s vs 10.876 s, a −1.34 s gain: forward 6.75 s vs 7.94 s, gradient 2.62 s vs 2.74 s.
+- Compile grew: forward compile 13.66 to 14.26 s vs 12.97 s; gradient compile 5.07 s vs 4.73 s; total trace+compile 20.75 s vs 19.66 s. The larger compile time cancelled the runtime saving in the first-run metric.
+- Peak RSS 12.25 GB.
+- Numerics got about 10–100× worse than candidate 1, which is consistent with losing global pivoting:
+  - signal relative L2 error 2.6e-6, with 5644 failing entries (max normalized error 400);
+  - noise relative L2 error 1.7e-6, 60 failing entries;
+  - sensitivity: 4 failing entries;
+  - gradient relative L2 error 1.1e-7, 9 failing entries, with idx 161 at relative 6.4e-6.
+- The official checks still passed: |Δlog sens| 5.372e-6, and the FD check passed.
+- Decision: reject. The structural-zero claim is consistent with the outputs, which were correct to about 1e-6, but the block route trades accuracy and compile time for a warm-runtime gain that the first-run metric does not reward.
 
 ### Candidate 1 measured results
 
@@ -97,4 +112,13 @@ Rough flop estimate per frequency (not measured): 2·(286³·2/3) + 2·286²·17
 
 Numerical risk: pivoting is now restricted to within blocks (B1, B2, S), so a nearly singular B1/B2 or S would amplify error. Expect larger output differences than candidate 1. The official log-sensitivity margin is 5.37e-6 of 1e-5 (dominated by the reference itself). If the screen fails the sensitivity check, or noise/gradient diffs grow by orders of magnitude, reject the candidate and revert to candidate 1.
 
-Next decision: if the screen passes, compare the noise/sensitivity/gradient arrays against the baseline and request full validation. If the forward-stage time does not drop, the HLO getrf count diagnostic decides whether the baseline was already sharing factors. If it helps, the block/Schur decomposition is the next candidate.
+## Handoff (end of the linear-algebra session)
+
+- **Best result:** candidate 1, the shared dense LU(A) with A^H solved via LU(A)^H. First run 31.43 s (screen) and 31.51 s (full), vs the 35.74 s baseline median. Official checks passed. Strict array check failed only on 3 gradient entries, max relative 1.5e-6. It is **not validated** under the lab's strict rule until the maintainer accepts that tolerance or changes the criterion.
+- Candidate 3 restores the candidate 1 solver so the branch head is the best configuration and gets a repeat measurement. The only code difference from candidate 1 is that `_lu_solve` also accepts matrix right-hand sides, and the vector path is unchanged.
+- Candidate 1 changes only the linear-algebra path, so it is likely orthogonal to the seed agent's candidate 5 (scalar dispatch and conjugation, 28.97 s). The combination must be measured, not assumed additive. `simulate.py` overlaps near the conjugation block, so the merge needs care.
+- Compile now dominates: ~13 s forward and ~4.7 s gradient out of ~31.5 s. Further linear-algebra runtime work (block, sparse) has low first-run leverage unless it also cuts compile time.
+- Open diagnostics (need queued, authorized runs): count of zgetrf calls in the baseline HLO (did CSE merge (1) and (3)?), a forward compile-time breakdown by op, and runtime nnz of the signal matrix.
+- Not pursued: sparse solves. With compile dominant and candidate 2's experience, host-callback or sparse-LU cost is unlikely to pay off in first-run time.
+
+Earlier next-decision text (historical): if the screen passes, compare the noise/sensitivity/gradient arrays against the baseline and request full validation. If the forward-stage time does not drop, the HLO getrf count diagnostic decides whether the baseline was already sharing factors. If it helps, the block/Schur decomposition is the next candidate.
