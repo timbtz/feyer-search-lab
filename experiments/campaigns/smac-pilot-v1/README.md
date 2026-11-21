@@ -1,8 +1,8 @@
 # Campaign smac-pilot-v1
 
-Export schema: `feyer-campaign-export-v1`. Snapshot: `e9d17157b770cadc83a5640b21a477236886689aadcaf2f8f339b0b6a15b6ed5`.
+Export schema: `feyer-campaign-export-v1`. Snapshot: `888f6faa037abc82ef1493b5b0c9ff1e27437e01cbe885a3094a0707b7fed7fb`.
 
-[Frozen proposer context](contexts/3205ce349e0edd11b26c0a52dc8e8a894397360a9747242d4434646f505a67a9.json) — SHA256 `3205ce349e0edd11b26c0a52dc8e8a894397360a9747242d4434646f505a67a9`.
+[Frozen proposer context](contexts/02007fee7ebaa50447629a1ab12f98b9fbfddecdeadbe91c36579bba06477c19.json) — SHA256 `02007fee7ebaa50447629a1ab12f98b9fbfddecdeadbe91c36579bba06477c19`.
 
 This is an evidence ledger. Scientific parents describe chosen inputs to an experiment; they are not necessarily Git parents. Phase changes are observations, not proof that one edit caused the difference. A failed attempt remains part of the history.
 
@@ -3476,5 +3476,7 @@ Frozen specification: `8845f4d41a65ad79387ce3c77379b2938f526d89a6b392a20a17e4ffb
 | 31 | evaluation_reserved | coordinator | {"attempt": 1, "candidate_id": "c449d36a32d740d1b6265d2c3f106539", "profile": "full", "request_id": "a908657440f84e4496913f79f032c3a3"} |
 | 32 | evaluation_bound | coordinator | {"job_id": "00a050455c7446998974d85bb501ae60", "request_id": "a908657440f84e4496913f79f032c3a3"} |
 | 33 | evidence_observed | coordinator | {"candidate_id": "c449d36a32d740d1b6265d2c3f106539", "category": "valid", "evidence_digest": "49ce48bf32bc68b91c1e495258bffaf611aea65706f08efcb84e79fe6660c1ac", "evidence_id": "00a050455c7446998974d85bb501ae60:5eac24ab30bb397a898e16903be1c1a0f95268f8dfbc358618408febd904e37d", "job_id": "00a050455c7446998974d85bb501ae60", "progress": {"axes": ["compilation", "runtime", "peak_rss_bytes"], "meaningful_pareto": false, "meaningful_total": false, "policy": {"absolute": 0.02, "relative": 0.01}, "reference_best_total": 28.09352152608335, "reference_parents": ["seed8"]}, "status": "valid", "strikes": 2} |
+| 34 | decision_recorded | coordinator | {"decision_id": "4bfbe24fcbf94b3e87e84ada98430ea0", "payload": {"plan": {"action": "mutate", "attempted_parameters": [{"checkpoint": true, "map_batch_size": null, "prevent_cse": false}, {"checkpoint": true, "map_batch_size": null, "prevent_cse": true}, {"checkpoint": true, "map_batch_size": 1, "prevent_cse": false}, {"checkpoint": true, "map_batch_size": 2, "prevent_cse": false}, {"checkpoint": true, "map_batch_size": 4, "prevent_cse": false}, {"checkpoint": false, "map_batch_size": null, "prevent_cse": false}, {"checkpoint": true, "map_batch_size": 1, "prevent_cse": true}], "base_candidate": "seed8", "dimensions": ["checkpoint", "prevent_cse", "map_batch_size"], "lane_id": "discrete", "o… [full detail in events.jsonl] |
+| 35 | decision_recorded | coordinator | {"decision_id": "82a14a89f0c54743910d7a18c9180435", "payload": {"acquisition_rank": 1, "acquisition_score": 1.6015065146098777e-05, "context": {"bytes": 8824, "path": "contexts/ba15b7d55bb250e306a01d1e529a8ce7ab31db462ba3b67f83be8bb0870bdd0f.json", "sha256": "ba15b7d55bb250e306a01d1e529a8ce7ab31db462ba3b67f83be8bb0870bdd0f"}, "fit_and_select_seconds": 1.853755036368966, "heuristic_id": "smac-ask-tell-v1", "hypothesis": "Evaluate the SMAC3 proposal under the fixed full correctness contract; speedup is unmeasured.", "metadata": {"acquisition_maximizer": "registered-finite-set", "adapter_version": "smac-ask-tell-v1", "failure_cost": 1000000.0, "history": "one median of eligible full times pe… [full detail in events.jsonl] |
 
 Guidance may propose a new round. It cannot silently replace frozen operators, ownership, evaluation requirements or budgets. Only the coordinator can admit that round through the campaign state API. Publishing this ledger does not merge or promote candidate code.
