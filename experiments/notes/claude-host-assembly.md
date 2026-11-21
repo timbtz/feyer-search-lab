@@ -66,3 +66,72 @@ conj(input) (probed: antilinear part nonzero), the other 17 are holomorphic in t
 - Dev smoke (benchmark.py, CPU 102): PASS, first run 3.141 s: imports 0.295, build 0.825, forward lower
   0.038 / compile 0.265, forward 0.540, sensitivity lower 0.026 / compile 0.207, gradient lower 0.018 /
   compile 0.211, gradient 0.711; warm median 0.425 s; FD autodiff 7.61617e-5 vs 7.61662e-5 / 7.61548e-5.
+- SHA `38e356cc2c3eea3165fbffd655262943ba31174c`. Screen `b26c6e365c2b429faa385d8c31cdb72e`: first run
+  **1.747 s**: imports 0.300, build 0.305, forward lower 0.036 / compile 0.238, forward 0.219, sensitivity
+  lower 0.026 / compile 0.178, gradient lower 0.017 / compile 0.184, gradient 0.239.
+  Full `0023e18edcd74c82879c824759364aa6`: **official PASS** (FD mb11.tuning autodiff 7.61617e-5 vs
+  7.61662e-5 / 7.61548e-5; max |log S - log ref| 5.374e-6), strict FAIL (same class as the sparse parent),
+  first run **1.814 s**, warm median 0.363 s, peak RSS 0.41 GB.
+  TIMING CONTAMINATION FLAG: both the screen and this full run overlapped my own dev load on CPU 102 (gencheck
+  during the screen, the cProfile run during the full; gradient phase 0.298 s in the full vs 0.239 s in the
+  screen). Candidate 1's screen `1df75714` also overlapped a gencheck run. A clean repeat full is queued.
+  The dev smoke's 0.825 s build was a cold-cache artifact (queue: 0.305 s).
+- Cross-setup (12 cases incl. the coordinator's random-parameter cases): vs sparse parent and vs candidate 1
+  all OK (grad relL2 <= 6.4e-10, max |dlog S| 3.2e-8 on uifo_rand3); vs pristine all four random-parameter
+  cases hold (max 4.2e-7), only rand1/rand3 flagged as for every sparse candidate.
+- jaxcompat (voyager): 7/11 ok; jvp and jacfwd raise "can't apply forward-mode autodiff (jvp) to a
+  custom_vjp function", both HVPs raise the pure-callback JVP error. Every first-order test passes.
+- Candidate 1 random-parameter cases (dev_randparams, uifo_randparams1-3): all hold vs pristine (max 4.2e-7);
+  candidate 1's JAX-autodiff gradient vs candidate 3's hand-written adjoint on those cases: relL2 <= 4.1e-15.
+- Context from the coordinator: in the first worker's paired runs, full JAX semantics cost only +0.11 s
+  (custom_linear_solve vs custom_vjp solves). Here the gap between candidate 1 (5.36 s screen / 5.70 s full)
+  and candidate 2 (1.75 s) is the XLA compile of the JAX-side assembly and solve linearization (forward +
+  gradient compile ~3.5 s in candidate 1 vs ~0.4 s), not the solves themselves.
+
+## Candidate 3: candidate 2 + direct SuperLU, NumPy products, factorization reuse
+- Profiling candidate 2 (CPU 102): the first forward call spent 0.156 s importing scipy.sparse and
+  scipy.sparse.linalg (iterative solvers, array-API layer) of the ~0.31 s first call; the backward refactored
+  all 101 signal matrices (0.047 s) and used scipy.sparse products.
+- Change (`host_pass.py` only): load SciPy's `_superlu` extension directly and call `gstrf` with exactly the
+  options `splu(A, permc_spec="COLAMD")` passes (fallback to `splu` on any failure); a 50x50 probe gave
+  bitwise-identical solutions to `splu`. Refinement and noise products use NumPy `add.reduceat` over the
+  static pattern, so no scipy.sparse import at all. The backward consumes the forward's signal factorizations
+  after a blake2b digest check of the coefficients and drops them; each forward factors afresh, so repeated
+  evaluations never reuse a factorization.
+- Dev smoke (CPU 102, PASS): first run 1.646 s: imports 0.297, build 0.294, forward lower 0.035 / compile 0.233,
+  forward 0.187, sensitivity lower 0.026 / compile 0.173, gradient lower 0.017 / compile 0.179, gradient
+  0.201; warm median 0.366 s; FD autodiff 7.61617e-5 vs 7.61623e-5 / 7.61499e-5.
+- SHA `645a388be66ba314800f5920615b864d90ef617f`. Cross-setup vs candidate 2: all 12 OK (grad relL2 <= 9.2e-10,
+  max |dlog S| 3.5e-8 on uifo_rand3; summation order of the refinement products differs). vs pristine: same
+  profile as candidate 2. jaxcompat: 7/11, identical support profile to candidate 2.
+- Queue (submitted with no dev load running): screen `f748d1b50ce44488b71fec7f907eee8c`, full
+  `3a8c596e5b984d7785045d42e1bd83cf`; candidate 2 clean repeat full `da966d2fe4af4ae2b8bb38517fa9bdc5`.
+- Queue results (no dev load during these runs):
+  - Candidate 2 clean repeat full `da966d2fe4af4ae2b8bb38517fa9bdc5`: **official PASS**, strict FAIL,
+    first run **1.793 s** (contaminated first sample 1.814 s): imports 0.300, build 0.307, forward lower 0.036 /
+    compile 0.234, forward 0.251, sensitivity lower 0.026 / compile 0.182, gradient lower 0.027 / compile
+    0.199, gradient 0.225; warm median 0.348 s.
+  - Candidate 3 screen `f748d1b50ce44488b71fec7f907eee8c`: 1.698 s. Full `3a8c596e5b984d7785045d42e1bd83cf`:
+    **official PASS** (FD autodiff 7.61617e-5 vs 7.61623e-5 / 7.61499e-5; max |log S - log ref| 5.374e-6),
+    strict FAIL, first run **1.681 s**: imports 0.302, build 0.310, forward lower 0.036 / compile 0.233,
+    forward 0.183, sensitivity lower 0.026 / compile 0.181, gradient lower 0.018 / compile 0.183, gradient
+    0.203; warm median 0.369 s; peak RSS 0.50 GB; job wall 4.36 s.
+
+## Candidate 4: compile-free host conversions in build
+- Build profile (candidate 3, CPU 102): 0.335 s, of which ~0.29 s were 32 eager XLA compilations
+  (`jnp.array(x, dtype=...)` binds convert_element_type even for matching dtypes; eager indexing in
+  `prepare_arrays`, 11 compilations from one `jnp.array([parameters[0][idx]])`). The Python builder itself
+  took ~0.09 s.
+- Change (`build.py`): the same values through NumPy (`_host_array`, `jnp.asarray`), no eager jnp ops.
+  Remaining eager compilations in the build phase: 2, both in benchmark.py's own input conversion.
+- Verification: all 572 built leaves (dev, uifo_20_5000, voyager, random uifo) bitwise identical in values,
+  dtypes and shapes to candidate 3 under a fixed PYTHONHASHSEED. Without a fixed seed, voyager's noise index
+  order differs between any two processes, including two runs of unchanged candidate 3 (pre-existing string
+  hash order in the builder, not this change). Dev benchmark arrays bitwise identical to candidate 3.
+- SHA `c4153e7d0058231e80cc56147e139279df929c07`. Dev smoke 1.388 s (build 0.066 s). Cross-setup 12/12
+  identical to candidate 3 (zero difference); jaxcompat 7/11, same profile as candidates 2-3.
+- Screen `b9b8e08d42474eb597c7254d6b87abb3`: 1.475 s. Full `11dfc8a865af4c3e8c3868f7734983f6`: **official PASS**
+  (FD autodiff 7.61617e-5 vs 7.61623e-5 / 7.61499e-5; max |log S - log ref| 5.374e-6), strict FAIL (same class),
+  first run **1.446 s**: imports 0.301, build 0.073, forward lower 0.036 / compile 0.247 / exec 0.186,
+  sensitivity lower 0.026 / compile 0.179, gradient lower 0.017 / compile 0.184 / exec 0.191; warm median
+  0.372 s; peak RSS 0.54 GB. Branch best.
