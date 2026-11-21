@@ -141,13 +141,60 @@ The time gain is expected but not measured, and probably small (well under 1 s).
 - Base: `NOISE_REUSE_MODE="broadcast"`.
 - **Hypothesis:** the covariance solve should be bitwise identical to the parent, since it uses the same LU and the same solve structure, as candidate 3 showed for the signal. So strict should match candidate 1's margin. Expected forward saving is about half of candidate 3's (one of the removed LUs), roughly 2 s. Not measured.
 
+### Results: candidate SHA `96474bdd4d83bb02c163640f63fae1c4bd7a21d4` — **VALIDATED, best strict margin**
+
+**Screen** (`ebd893f35b5a4497a8ea6e81bd8ca82b`): 22.139 s, peak RSS 8.11 GB.
+
+**Full** (`ab12c14c29354bad9aa6dc024c91f8e6`): **official PASS, strict PASS**.
+
+| Phase | Seconds |
+| --- | --- |
+| Complete first run | **22.366** |
+| Imports | 0.297 |
+| Build | 0.821 |
+| Forward lower | 0.824 |
+| Forward compile | 7.634 |
+| Forward execute | 8.609 |
+| Gradient compile | 1.962 |
+| Gradient execute | 1.475 |
+
+- Warm runs: median 10.609 s (forward 8.936 s, gradient 1.505 s).
+- Total job wall time: 88.1 s.
+- Peak RSS: 8.13 GB.
+
+**Strict comparison:**
+- Carrier, signal, noise, sensitivity and powers: **bitwise identical**.
+- Gradient: max normalized error **6.0e-7**, max absolute error 5.1e-10.
+
+**Interpretation:** the forward pass is 0.61 s faster than candidate 1 (9.22 s), less than the roughly 2 s predicted. Most of candidate 3's 4 s gain therefore came from dropping the separate `A^H` LU, or from residual and memory effects, not from the duplicated `A` LUs. RSS fell about 1.8 GB against candidate 1. This is the fastest revision in this lane with a large strict margin. Single runs, not paired repeats.
+
+## Candidate 5 (final): candidate 4 plus variant B
+- **Change:** `NOISE_FACTOR_REUSE="direct"` and `NOISE_REUSE_MODE="shared"`.
+- **Hypothesis:** the two changes affect separate parts of the computation, so their savings could add up (about −0.7 s from variant B), for an expected first run of about 21.6 s. Not measured.
+- **Gradient risk:** variant B alone used 0.949 of the strict budget. Candidate 4 is almost exact, so the combination is expected near 0.95. A pass is not guaranteed.
+- If it fails, candidate 4 (`96474bd`) remains the fallback.
+
 ### Results
-- Candidate SHA: (supervisor fills in). Pending.
+- Candidate SHA: (supervisor fills in). Pending. The session deadline may arrive before this result is recorded.
+
+## Final handoff
+- **Best fully validated revision with a robust margin:** `96474bdd4d83bb02c163640f63fae1c4bd7a21d4` (candidate 4).
+  - First run 22.366 s against the parent's 23.840 s.
+  - Bitwise forward outputs, gradient error 6e-7 normalized, RSS 8.13 GB.
+- **Validated but fragile:** `e525ee5` (candidate 2, 22.564 s, gradient 0.949).
+- **Validated, conservative:** `f3139c7` (candidate 1, 23.320 s).
+- **Failed:** `bb9a183` (candidate 3, `NOISE_FACTOR_REUSE="all"`). 18.65 s, official PASS, strict FAIL on gradient indices 33/161/180. Do not admit.
+- **Remaining uncertainty:**
+  - Every timing is a single unpaired run. Noise is about ±0.3 s.
+  - No HLO inspection was done, so why the `A^H` LU is so expensive in the forward pass (it carries about 3.4 s and 1.8 GB of residuals) is unexplained.
+  - The fallback paths have not been exercised by any test: sweeps that would make Predicate S fail, and the `None` component_groups case.
+- **Suggested next experiment:** inspect the forward pullback residuals and HLO for the noise-weight solve. Then look for a strict-safe way to avoid forming and factoring `A^H` explicitly, for example `lu_solve(trans=2)` with iterative refinement. That 4 s ceiling is the largest gain left in this lane. Also run paired repeats of candidate 4 against the parent.
 
 ## Proposed knobs (draft, not admitted)
 ```json
 {
-  "best_validated_sha": "f3139c71ae2a5c9de2b015aad7db1a730fac0e1e",
+  "best_validated_sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+  "best_validated_config": {"NOISE_ROW_REUSE": true, "NOISE_REUSE_MODE": "broadcast", "NOISE_FACTOR_REUSE": "direct"},
   "file": "differometor/simulate.py",
   "symbols": ["NOISE_ROW_REUSE", "NOISE_REUSE_MODE", "run_build_step (Predicate S -> component_groups['noise_row_reuse'])", "_assemble_signal_and_noise", "_solve_signal_and_noise"],
   "knobs": [
@@ -158,7 +205,7 @@ The time gain is expected but not measured, and probably small (well under 1 s).
      "conditions": "only read when NOISE_ROW_REUSE is effective; scope 'solve' always uses broadcast",
      "invalid": "'shared' validated (e525ee5) but strict gradient margin 0.949; avoid stacking with other numerical changes"},
     {"symbol": "NOISE_FACTOR_REUSE", "legal": ["off", "direct", "all"], "safe_default": "off",
-     "conditions": "'direct' pending candidate 4 validation; touches solves, sequence against block-elimination worker",
+     "conditions": "'direct' validated (96474bd, bitwise forward, gradient 6e-7 normalized); touches solves, sequence against block-elimination worker",
      "invalid": "'all' fails strict gradient (bb9a183); do not admit"}
   ]
 }

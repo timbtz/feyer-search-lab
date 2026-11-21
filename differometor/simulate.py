@@ -544,7 +544,7 @@ NOISE_ROW_REUSE: bool = True
 # "broadcast" (variant A; broadcast to (B, NN, NN), unchanged batched einsum;
 # candidate f3139c7 passed official + strict with bitwise forward outputs) or
 # "shared" (variant B; unbatched einsum "ij,dbj->dbi", may round differently).
-NOISE_REUSE_MODE: str = "broadcast"
+NOISE_REUSE_MODE: str = "shared"
 # Signal-matrix LU reuse: "off" (three jnp.linalg.solve calls), "direct" (one LU of
 # A shared by the signal and covariance solves; separate LU of A^H for noise
 # weights) or "all" (A's LU also for A^H; candidate 3 bb9a183, 18.65 s but FAILED
