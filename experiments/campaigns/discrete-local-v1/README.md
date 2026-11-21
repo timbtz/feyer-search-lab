@@ -1,8 +1,8 @@
 # Campaign discrete-local-v1
 
-Export schema: `feyer-campaign-export-v1`. Snapshot: `5aeeffe3933029036e6f4cbcad40f319a78fcee8d7be638896acc4207dc877a4`.
+Export schema: `feyer-campaign-export-v1`. Snapshot: `4f3bfbb59e2a892b6e2a3c0b5ee9073376f9c0d85a1d25700f494cdf67176329`.
 
-[Frozen proposer context](contexts/511d15a1c4641b309911661ff759320ed63928833d60a48986895d64413d38c0.json) — SHA256 `511d15a1c4641b309911661ff759320ed63928833d60a48986895d64413d38c0`.
+[Frozen proposer context](contexts/421c75505c3b477436365f8b44047a76b0c8f4facf379296c9c26344f8e97642.json) — SHA256 `421c75505c3b477436365f8b44047a76b0c8f4facf379296c9c26344f8e97642`.
 
 This is an evidence ledger. Scientific parents describe chosen inputs to an experiment; they are not necessarily Git parents. Phase changes are observations, not proof that one edit caused the difference. A failed attempt remains part of the history.
 
@@ -24,7 +24,7 @@ graph LR
   n1["import-42aaabf394d2d9bf5618b6802eb1e11315e85030 seed valid"]
   n2["78273c30837743b594ef628e5c0056f2 mutate valid"]
   n3["1480647fdf514cc7a7a47e78c11dbfbb mutate valid"]
-  n4["ec31cf4665ed49c38ce6e1c5b5df8708 mutate proposed"]
+  n4["ec31cf4665ed49c38ce6e1c5b5df8708 mutate screened"]
   n0 -->|mutate| n2
   n0 -->|mutate| n3
   n0 -->|mutate| n4
@@ -38,7 +38,7 @@ graph LR
 | import-42aaabf394d2d9bf5618b6802eb1e11315e85030 | round-001 / discrete | root | 42aaabf394d2d9bf5618b6802eb1e11315e85030 | valid | 28.6478 | 7f9a3863201d4908b9e2607e8b925bdc:70e1da46befd5d0fd365188a88a91391f95e2df62042e7a6687de8abbaf8c611 |
 | 78273c30837743b594ef628e5c0056f2 | round-001 / discrete | seed8 | 2994693a064e90850c710bd3b3f3317ba525f81b | valid | 36.8441 | 5b3af3628df54f778c117ffaad033a5e:34f77add4e58cd3f92f928160be72ce5d3350ed3868f51fb1e1c1a0fc5e1c9c9, cde035e7126e4e00a4eccc5192f41d86:97a7e880e414101b6593ca85de16889e7fe6e0c28c1e57ad796fb9a0660824be |
 | 1480647fdf514cc7a7a47e78c11dbfbb | round-001 / discrete | seed8 | 0955a78b6b96a3aba4bc3eeb1649b211ebf314c1 | valid | 50.1969 | f1c5134330144123bf6a90b7d712a544:663b207a2fd05652d225a8e39268e3768d8906f21c2b46fabb5257540816bac4, 8d433ae433e5496b89cb4de587c0862f:e73ec4d8e0e0b141c91c65a03e7de4e446cb51042c5f42264060bcc887a94bbf |
-| ec31cf4665ed49c38ce6e1c5b5df8708 | round-001 / discrete | seed8 | 71c96d778a8f8df5d5bbda23c6e623cf38de40f0 | proposed | unknown | none |
+| ec31cf4665ed49c38ce6e1c5b5df8708 | round-001 / discrete | seed8 | 71c96d778a8f8df5d5bbda23c6e623cf38de40f0 | screened | unknown | fdd549c784c345f8abf9d533f7a91af1:df33de04f60f1827616f91fde6e8a077dae7e9ef093e4c0bb9510900c954b1f5 |
 
 ## Round decisions and stalled work
 
@@ -2144,9 +2144,199 @@ Frozen specification: `c9eef3c088d8fc7635ca176417db487b5d2b4472ff28d94dfbae02855
   "commit_sha": "71c96d778a8f8df5d5bbda23c6e623cf38de40f0",
   "content_sha256": "81def4cea2d03e38f2ba34b0ad041837d52af1b302b57a4739f6b3470994367b",
   "context_sha256": null,
-  "evaluation_requests": [],
-  "evidence": [],
-  "evidence_ids": [],
+  "evaluation_requests": [
+    {
+      "attempt": 1,
+      "candidate_id": "ec31cf4665ed49c38ce6e1c5b5df8708",
+      "evidence_id": "fdd549c784c345f8abf9d533f7a91af1:df33de04f60f1827616f91fde6e8a077dae7e9ef093e4c0bb9510900c954b1f5",
+      "imported": false,
+      "job_id": "fdd549c784c345f8abf9d533f7a91af1",
+      "profile": "screen",
+      "request_id": "e27fc8f1ec98402f9f6c9e2fe122dc86",
+      "status": "screen"
+    }
+  ],
+  "evidence": [
+    {
+      "artifact_digest": "df33de04f60f1827616f91fde6e8a077dae7e9ef093e4c0bb9510900c954b1f5",
+      "artifact_digests": {
+        "report.json": "9a67324d47ccf8adedcadbf4de20c4ea79481132a505ed754ce260810e207fb2",
+        "result": "91e8b6461c3a508f63ea9ee1e8a450a0d692264cb83800f002b6e3cec5a04cdc"
+      },
+      "candidate_sha": "71c96d778a8f8df5d5bbda23c6e623cf38de40f0",
+      "category": "screen",
+      "checks": {
+        "official": "not_run",
+        "precision": "passed",
+        "resource": "passed",
+        "source": "passed",
+        "strict": "not_run",
+        "workload": "passed"
+      },
+      "cohort": {
+        "adapter_schema": "feyer-evolution-evidence-v1",
+        "container_limits": {
+          "cpu.max": "1600000 100000",
+          "cpuset.cpus.effective": "0-127",
+          "memory.max": "59055800320",
+          "memory.swap.max": "0"
+        },
+        "memory_policy": {
+          "budget_bytes": 32000000000,
+          "enforcement": "sampled_process_group_rss",
+          "kernel_memory_limit_enforced": false
+        },
+        "profile": "screen",
+        "protected_baseline_sha": "02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f",
+        "signature": {
+          "environment": {
+            "backend": "cpu",
+            "cpu_affinity_ids": [
+              2
+            ],
+            "cpu_model": "AMD EPYC 9334 32-Core Processor",
+            "jax_enable_x64": true,
+            "packages": {
+              "differometor": "0.0.6",
+              "jax": "0.9.0",
+              "jaxlib": "0.9.0",
+              "numpy": "2.5.5",
+              "optax": "0.2.6"
+            },
+            "persistent_compilation_cache": false,
+            "python": "3.12.15",
+            "requested_logical_cpus": 1,
+            "thread_limits": {
+              "MKL_NUM_THREADS": "1",
+              "NUMEXPR_NUM_THREADS": "1",
+              "OMP_NUM_THREADS": "1",
+              "OPENBLAS_NUM_THREADS": "1"
+            },
+            "xla_flags": null
+          },
+          "inputs": {
+            "frequency_count": 101,
+            "gradient_parameter_count": 193,
+            "reference_sha256": "726f2cfe6986cb991fa48d5a28127b9330c3dc7e69d5bd193c8748acef03adc3",
+            "setup_sha256": "ff4ba353a2a03cdce7f3e61bad729c2e00888d842c28ba9cf699f95afb87e138"
+          },
+          "timing": {
+            "benchmark": "start-munich-2026-public-differometor-uifo-v2",
+            "evaluator_sha256": "d5950bbd872e5b00ad63f0bd7081e5096fb14ba9c96c80a6854a3b714719bd4e",
+            "phase_keys": [
+              "build",
+              "forward",
+              "forward_compile",
+              "forward_lower",
+              "gradient",
+              "gradient_compile",
+              "gradient_lower",
+              "host_transfer",
+              "imports",
+              "initialize",
+              "load",
+              "sensitivity",
+              "sensitivity_compile",
+              "sensitivity_lower"
+            ],
+            "scope": {
+              "excluded": "validation and benchmark harness bookkeeping, repeated profiling, plot/report generation; interpreter launch before the first timer",
+              "forward_residuals": "saved for separately compiled reverse pass",
+              "gradient_coordinates": "physical parameter values; public grid-length tying",
+              "objective": "mean(log10(sensitivity / public_reference))",
+              "optimizer_steps": 0,
+              "total_scope": "imports, CPU initialization, input I/O, setup, all lowering/compilation, forward, sensitivity/powers/loss, reverse-mode gradient and host transfer"
+            }
+          }
+        },
+        "strict_policy": null,
+        "worker_sha256": "d3c212da0ab1215187407d9cd21dc2cbb5f88dc0b5ee7885135bf7f002d14b58"
+      },
+      "cohort_digest": "fc9228f32197f0d2653ba0de06fc01d528953444ab2039dbff6e1284cf689351",
+      "cost": {
+        "peak_rss_bytes": 14223323136,
+        "peak_rss_kib": 13889964,
+        "total_worker_wall_seconds": 60.92346237041056,
+        "wall_seconds": 60.92346237041056
+      },
+      "eligible_full": false,
+      "evidence_digest": "e4589c9714247c15be14726172250c906b0b4703c4bd1489af651f6a16f42272",
+      "evidence_id": "fdd549c784c345f8abf9d533f7a91af1:df33de04f60f1827616f91fde6e8a077dae7e9ef093e4c0bb9510900c954b1f5",
+      "execution_status": "completed",
+      "issues": [],
+      "job_id": "fdd549c784c345f8abf9d533f7a91af1",
+      "metrics": {
+        "compilation": 42.96292801015079,
+        "forward": 12.497913924977183,
+        "gradient": 2.929406374692917,
+        "peak_rss_bytes": 14223323136,
+        "runtime": 15.428542444482446,
+        "sensitivity": 0.0008484795689582825,
+        "setup": 1.0399108156561852,
+        "total": 59.43138127028942,
+        "transfer": 0.0003736652433872223
+      },
+      "phases": {
+        "build": 0.7455809954553843,
+        "forward": 12.497913924977183,
+        "forward_compile": 12.965591926127672,
+        "forward_lower": 1.7814261354506016,
+        "gradient": 2.929406374692917,
+        "gradient_compile": 26.75177795253694,
+        "gradient_lower": 0.9619779642671347,
+        "host_transfer": 0.0003736652433872223,
+        "imports": 0.2899276986718178,
+        "initialize": 0.0028882771730422974,
+        "load": 0.0015138443559408188,
+        "sensitivity": 0.0008484795689582825,
+        "sensitivity_compile": 0.40148256346583366,
+        "sensitivity_lower": 0.10067146830260754
+      },
+      "profile": "screen",
+      "resource_evidence": {
+        "budget_bytes": 32000000000,
+        "container_limits": {
+          "cpu.max": "1600000 100000",
+          "cpuset.cpus.effective": "0-127",
+          "memory.max": "59055800320",
+          "memory.swap.max": "0"
+        },
+        "limitation": "Sampled process-group RSS is not a kernel-enforced memory cap.",
+        "memory_monitoring": {
+          "budget_bytes": 32000000000,
+          "enforcement": "sampled_process_group_rss",
+          "exceeded": false,
+          "kernel_memory_limit_enforced": false,
+          "notes": "RSS sampling can miss brief peaks and counts shared pages in each process. It excludes GPU VRAM and does not reserve RAM or constrain other instance work.",
+          "sampled_process_group_peak_rss_bytes": 14224371712,
+          "samples": 236
+        }
+      },
+      "schema_version": "feyer-evolution-evidence-v1",
+      "scientific_strike": false,
+      "screen_passed": true,
+      "source_digests": {
+        "clean_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "evaluator_sha256": "2bf4249e453271d1f665c35356485739ad66a9b0327153d678a5b34d81192458",
+        "simulator_files_sha256": {
+          "differometor/__init__.py": "505d559d5a17409680a91f555882edf23f78cbb7c98ee28845018fa9bfeba7e7",
+          "differometor/build.py": "f1fdff78515500f5912907537dbedecf30c3915fa949b820bf2ad81b4c062771",
+          "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+          "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+          "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+          "differometor/simulate.py": "81def4cea2d03e38f2ba34b0ad041837d52af1b302b57a4739f6b3470994367b",
+          "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+        },
+        "worker_sha256": "d3c212da0ab1215187407d9cd21dc2cbb5f88dc0b5ee7885135bf7f002d14b58"
+      },
+      "validated_output_scope": "first_evaluation",
+      "warm_metrics": {},
+      "worker_error": null
+    }
+  ],
+  "evidence_ids": [
+    "fdd549c784c345f8abf9d533f7a91af1:df33de04f60f1827616f91fde6e8a077dae7e9ef093e4c0bb9510900c954b1f5"
+  ],
   "git_parents": null,
   "heuristic_id": null,
   "hypothesis": null,
@@ -2296,5 +2486,8 @@ Frozen specification: `c9eef3c088d8fc7635ca176417db487b5d2b4472ff28d94dfbae02855
 | 28 | decision_recorded | coordinator | {"decision_id": "2ee14c71ca4a46bab856e2a1cf1a49b3", "payload": {"plan": {"action": "mutate", "attempted_parameters": [{"checkpoint": true, "map_batch_size": null, "prevent_cse": false}, {"checkpoint": true, "map_batch_size": null, "prevent_cse": true}, {"checkpoint": true, "map_batch_size": 1, "prevent_cse": false}, {"checkpoint": true, "map_batch_size": 2, "prevent_cse": false}], "base_candidate": "seed8", "dimensions": ["checkpoint", "prevent_cse", "map_batch_size"], "lane_id": "discrete", "owner": "coordinator", "parent_candidates": ["seed8", "import-42aaabf394d2d9bf5618b6802eb1e11315e85030", "78273c30837743b594ef628e5c0056f2", "1480647fdf514cc7a7a47e78c11dbfbb"], "recipes": {"discrete… [full detail in events.jsonl] |
 | 29 | decision_recorded | coordinator | {"decision_id": "ec31cf4665ed49c38ce6e1c5b5df8708", "payload": {"acceptance": {"absolute_seconds": 0.02, "noise_guard": "maximum observed range of both candidates", "relative": 0.01}, "context": {"bytes": 2890, "path": "contexts/b9d7f0e2bfa60ccb1072a4a9c1ece852c35e711f6ff7942041da3b02d9bfcafb.json", "sha256": "b9d7f0e2bfa60ccb1072a4a9c1ece852c35e711f6ff7942041da3b02d9bfcafb"}, "heuristic_id": "discrete-search-v1-local-search", "hypothesis": "Measure registered configuration using local-search at categorical distance 1 from the noise-qualified incumbent; improvement is unmeasured.", "incumbent_candidate": "seed8", "neighborhood_radius": 1, "remaining_configurations": 11}, "payload_digest":… [full detail in events.jsonl] |
 | 30 | candidate_proposed | coordinator | {"candidate_id": "ec31cf4665ed49c38ce6e1c5b5df8708", "duplicate_of": null, "owner_version": 1, "proposal_digest": "7ddfd2f7c5a063ac19bbbe91ccd1cd731f0d7858b5042aeb1ee1ad3969cd8235", "proposal_id": "ec31cf4665ed49c38ce6e1c5b5df8708"} |
+| 31 | evaluation_reserved | coordinator | {"attempt": 1, "candidate_id": "ec31cf4665ed49c38ce6e1c5b5df8708", "profile": "screen", "request_id": "e27fc8f1ec98402f9f6c9e2fe122dc86"} |
+| 32 | evaluation_bound | coordinator | {"job_id": "fdd549c784c345f8abf9d533f7a91af1", "request_id": "e27fc8f1ec98402f9f6c9e2fe122dc86"} |
+| 33 | evidence_observed | coordinator | {"candidate_id": "ec31cf4665ed49c38ce6e1c5b5df8708", "category": "screen", "evidence_digest": "414f698649486e4ba31ea540e661643ee8a7cf4e618fbd534595043e57a13d90", "evidence_id": "fdd549c784c345f8abf9d533f7a91af1:df33de04f60f1827616f91fde6e8a077dae7e9ef093e4c0bb9510900c954b1f5", "job_id": "fdd549c784c345f8abf9d533f7a91af1", "progress": null, "status": "screened", "strikes": 2} |
 
 Guidance may propose a new round. It cannot silently replace frozen operators, ownership, evaluation requirements or budgets. Only the coordinator can admit that round through the campaign state API. Publishing this ledger does not merge or promote candidate code.
