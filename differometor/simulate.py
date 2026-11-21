@@ -527,7 +527,7 @@ def simulate(
 # gradient regression (one coordinate, rel 1.9e-7 > 1e-7) whenever the solves ran in
 # the loop. None (full vmap) and k=1 with scope "assemble" (solves kept full-vmap,
 # 23.56 s) are strictly validated.
-FREQUENCY_CHUNK_SIZE: int | None = 2
+FREQUENCY_CHUNK_SIZE: int | None = 4
 # Loop scope when chunking: "signal_noise" (assembly + solves), "solve" (solves only)
 # or "assemble" (assembly only; solves stay full-vmap).
 FREQUENCY_LOOP_SCOPE: str = "assemble"
