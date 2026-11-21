@@ -1706,6 +1706,15 @@ def pairs_to_arrays(
             if _matrix_indices_are_unique(system_matrix_indices, matrix_shapes[system]):
                 # Key presence is static pytree structure, not a traced Boolean.
                 component_groups[system]["unique_matrix_indices"] = ()
+                # The proof also establishes bounds, so normalize each coordinate
+                # once on the host and pass row-major offsets to the scatter.
+                height, width = matrix_shapes[system]
+                rows, columns = system_matrix_indices
+                rows = np.where(rows < 0, rows + height, rows)
+                columns = np.where(columns < 0, columns + width, columns)
+                component_groups[system]["flat_matrix_indices"] = jnp.array(
+                    rows * width + columns, dtype=int
+                )
 
         if signal:
             # Dummy carrier coupling values if none are required.

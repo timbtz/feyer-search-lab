@@ -117,7 +117,9 @@ def update(
         `output_rows` maps original output rows to concatenated group rows.
         `parameter_indices`, when present, supplies prepared input indices per group.
         An optional `unique_matrix_indices` key marks verified distinct destinations.
-        Omit or rebuild metadata when changing selectors, input indices or matrix destinations.
+        `flat_matrix_indices` supplies normalized, in-bounds row-major destinations.
+        Omit or rebuild metadata when changing selectors, input indices, matrix shape
+        or matrix destinations.
 
     Returns
     -------
@@ -160,6 +162,23 @@ def update(
         else:
             output_matrix = jnp.zeros((function_input_indices.shape[0], 4), dtype=jnp.complex128)
     outputs = output_matrix[output_rows, output_indices[1]]
+    if component_groups is not None and "flat_matrix_indices" in component_groups:
+        # Builder-proven unique, in-bounds offsets avoid tracing the generic
+        # two-coordinate indexing path. Update order and component values stay
+        # identical; callers without the proof retain the original scatter.
+        flattened = lax.scatter(
+            matrix.reshape(-1),
+            component_groups["flat_matrix_indices"].reshape(-1, 1),
+            outputs,
+            lax.ScatterDimensionNumbers(
+                update_window_dims=(),
+                inserted_window_dims=(0,),
+                scatter_dims_to_operand_dims=(0,),
+            ),
+            unique_indices=True,
+            mode="promise_in_bounds",
+        )
+        return flattened.reshape(matrix.shape)
     unique_indices = component_groups is not None and "unique_matrix_indices" in component_groups
     return matrix.at[matrix_indices[0], matrix_indices[1]].set(outputs, unique_indices=unique_indices)
 
