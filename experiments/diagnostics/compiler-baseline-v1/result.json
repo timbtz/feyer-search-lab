@@ -1,0 +1,111 @@
+{
+  "run_dir": "/workspace/feyer-diagnostic-v1/runs/a8e9a3cdb3554e298a385c0551370fb6",
+  "sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+  "profile": "diagnostic",
+  "cpu": 34,
+  "python": "/workspace/venv-feyer/bin/python",
+  "platform": "Linux-6.8.0-79-generic-x86_64-with-glibc2.35",
+  "official_passed": null,
+  "regression_passed": null,
+  "resource_provenance": {
+    "container_limits": {
+      "memory.max": "59055800320",
+      "memory.swap.max": "0",
+      "cpu.max": "1600000 100000",
+      "cpuset.cpus.effective": "0-127"
+    },
+    "worker_cpu_affinity_ids": [
+      34
+    ],
+    "per_job_memory_limit_enforced": false,
+    "memory_measurement": "GNU time maximum resident set size; shared cgroup limits are recorded separately"
+  },
+  "memory_budget_bytes": 16000000000,
+  "evaluator_release": "/workspace/feyer-diagnostic-v1/releases/c03ad8c54079fc68289b78f6310036787a34f150/lab",
+  "worker_sha256": "3b4f0fc85aa2a273eea14c5b43bbf5ad6c93de5a49da274f084d21ca15405b8a",
+  "baseline_sha": "02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f",
+  "artifacts": {
+    "diagnostic.json": "/workspace/feyer-diagnostic-v1/runs/a8e9a3cdb3554e298a385c0551370fb6/diagnostic.json",
+    "stdout.log": "/workspace/feyer-diagnostic-v1/runs/a8e9a3cdb3554e298a385c0551370fb6/stdout.log",
+    "time.txt": "/workspace/feyer-diagnostic-v1/runs/a8e9a3cdb3554e298a385c0551370fb6/time.txt",
+    "forward.stablehlo.txt.gz": "/workspace/feyer-diagnostic-v1/runs/a8e9a3cdb3554e298a385c0551370fb6/forward.stablehlo.txt.gz",
+    "forward.hlo.txt.gz": "/workspace/feyer-diagnostic-v1/runs/a8e9a3cdb3554e298a385c0551370fb6/forward.hlo.txt.gz",
+    "forward.optimized-hlo.txt.gz": "/workspace/feyer-diagnostic-v1/runs/a8e9a3cdb3554e298a385c0551370fb6/forward.optimized-hlo.txt.gz",
+    "sensitivity.stablehlo.txt.gz": "/workspace/feyer-diagnostic-v1/runs/a8e9a3cdb3554e298a385c0551370fb6/sensitivity.stablehlo.txt.gz",
+    "sensitivity.hlo.txt.gz": "/workspace/feyer-diagnostic-v1/runs/a8e9a3cdb3554e298a385c0551370fb6/sensitivity.hlo.txt.gz",
+    "sensitivity.optimized-hlo.txt.gz": "/workspace/feyer-diagnostic-v1/runs/a8e9a3cdb3554e298a385c0551370fb6/sensitivity.optimized-hlo.txt.gz",
+    "gradient.stablehlo.txt.gz": "/workspace/feyer-diagnostic-v1/runs/a8e9a3cdb3554e298a385c0551370fb6/gradient.stablehlo.txt.gz",
+    "gradient.hlo.txt.gz": "/workspace/feyer-diagnostic-v1/runs/a8e9a3cdb3554e298a385c0551370fb6/gradient.hlo.txt.gz",
+    "gradient.optimized-hlo.txt.gz": "/workspace/feyer-diagnostic-v1/runs/a8e9a3cdb3554e298a385c0551370fb6/gradient.optimized-hlo.txt.gz"
+  },
+  "ranking_eligible": false,
+  "command": [
+    "/usr/bin/time",
+    "-v",
+    "-o",
+    "/workspace/feyer-diagnostic-v1/runs/a8e9a3cdb3554e298a385c0551370fb6/time.txt",
+    "taskset",
+    "-c",
+    "34",
+    "/workspace/venv-feyer/bin/python",
+    "-u",
+    "/workspace/feyer-diagnostic-v1/releases/c03ad8c54079fc68289b78f6310036787a34f150/lab/diagnostic.py",
+    "--repo",
+    "/workspace/feyer-diagnostic-v1/runs/a8e9a3cdb3554e298a385c0551370fb6/code",
+    "--sha",
+    "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+    "--cpus",
+    "1",
+    "--output",
+    "/workspace/feyer-diagnostic-v1/runs/a8e9a3cdb3554e298a385c0551370fb6/diagnostic.json"
+  ],
+  "evaluator_sha256": "b4113e21458d140435c798c8ed3fe160160010a421d3e023bca506035704824c",
+  "execution_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "JAX_PLATFORMS": "cpu",
+    "JAX_ENABLE_X64": "true",
+    "JAX_ENABLE_COMPILATION_CACHE": "false",
+    "XLA_FLAGS": null,
+    "PYTHONNOUSERSITE": "1"
+  },
+  "returncode": 0,
+  "wall_seconds": 24.537348287180066,
+  "peak_rss_kib": 8107964,
+  "memory_monitoring": {
+    "budget_bytes": 16000000000,
+    "enforcement": "sampled_process_group_rss",
+    "kernel_memory_limit_enforced": false,
+    "sampled_process_group_peak_rss_bytes": 8301506560,
+    "samples": 88,
+    "exceeded": false,
+    "notes": "RSS sampling can miss brief peaks and counts shared pages in each process. It excludes GPU VRAM and does not reserve RAM or constrain other instance work."
+  },
+  "verdict": "diagnostic_completed",
+  "reported_environment": {
+    "backend": "cpu",
+    "cpu_affinity_ids": [
+      34
+    ],
+    "jax_enable_x64": true,
+    "persistent_compilation_cache": false,
+    "python": "3.12.15",
+    "cpu_model": "AMD EPYC 9334 32-Core Processor",
+    "packages": {
+      "jax": "0.9.0",
+      "jaxlib": "0.9.0",
+      "numpy": "2.5.5"
+    },
+    "xla_flags": null,
+    "thread_limits": {
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1"
+    }
+  },
+  "diagnostic_schema": "feyer-compiler-diagnostic-v1",
+  "status": "completed"
+}

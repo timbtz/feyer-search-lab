@@ -1,0 +1,1211 @@
+{
+  "schema": "feyer-compiler-diagnostic-v1",
+  "ranking_eligible": false,
+  "source": {
+    "commit": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+    "modified": false,
+    "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "simulator_files_sha256": {
+      "differometor/__init__.py": "505d559d5a17409680a91f555882edf23f78cbb7c98ee28845018fa9bfeba7e7",
+      "differometor/build.py": "12a5690f48ca736fd9f0bd5301b3b3380a5f9f0b8754cc98781f39c9d413be9b",
+      "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+      "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+      "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+      "differometor/simulate.py": "d7bacdd996e29bc33fb0abd3e6bb404ae9ce47bec2fa691d4f02d46b110884be",
+      "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+    }
+  },
+  "harness_sha256": "b4113e21458d140435c798c8ed3fe160160010a421d3e023bca506035704824c",
+  "benchmark_sha256": "d5950bbd872e5b00ad63f0bd7081e5096fb14ba9c96c80a6854a3b714719bd4e",
+  "inputs": {
+    "frequency_count": 101,
+    "gradient_parameter_count": 193,
+    "setup_sha256": "ff4ba353a2a03cdce7f3e61bad729c2e00888d842c28ba9cf699f95afb87e138",
+    "reference_sha256": "726f2cfe6986cb991fa48d5a28127b9330c3dc7e69d5bd193c8748acef03adc3"
+  },
+  "environment": {
+    "backend": "cpu",
+    "cpu_affinity_ids": [
+      34
+    ],
+    "jax_enable_x64": true,
+    "persistent_compilation_cache": false,
+    "python": "3.12.15",
+    "cpu_model": "AMD EPYC 9334 32-Core Processor",
+    "packages": {
+      "jax": "0.9.0",
+      "jaxlib": "0.9.0",
+      "numpy": "2.5.5"
+    },
+    "xla_flags": null,
+    "thread_limits": {
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1"
+    }
+  },
+  "stages": {
+    "forward": {
+      "lower_seconds": 0.8598911389708519,
+      "compile_seconds": 7.815877690911293,
+      "execute_seconds": 8.921567630022764,
+      "ir": {
+        "stablehlo": {
+          "utf8_bytes": 500450,
+          "sha256": "2e80d7ad049d06cfeec15c74a4a3d5cbef8be186b21863ed325b68094e4d442e",
+          "analyzed_bytes": 500450,
+          "truncated": false,
+          "instruction_count_in_sample": 0,
+          "opcode_counts_in_sample": {
+            "stablehlo.constant": 1184,
+            "stablehlo.broadcast_in_dim": 1156,
+            "stablehlo.multiply": 269,
+            "stablehlo.add": 183,
+            "stablehlo.dynamic_update_slice": 159,
+            "stablehlo.reshape": 153,
+            "stablehlo.divide": 150,
+            "stablehlo.compare": 138,
+            "stablehlo.select": 123,
+            "stablehlo.slice": 121,
+            "stablehlo.complex": 99,
+            "stablehlo.negate": 96,
+            "stablehlo.exponential_minus_one": 92,
+            "stablehlo.gather": 80,
+            "stablehlo.subtract": 66,
+            "stablehlo.convert": 56,
+            "stablehlo.real": 54,
+            "stablehlo.imag": 53,
+            "stablehlo.sine": 46,
+            "stablehlo.cosine": 46,
+            "stablehlo.scatter": 38,
+            "stablehlo.concatenate": 34,
+            "stablehlo.return": 31,
+            "stablehlo.exponential": 19,
+            "stablehlo.iota": 13,
+            "stablehlo.custom_call": 11,
+            "stablehlo.output_operand_alias": 11,
+            "stablehlo.transpose": 10,
+            "stablehlo.sqrt": 10,
+            "stablehlo.rsqrt": 7,
+            "stablehlo.while": 6,
+            "stablehlo.dynamic_slice": 4,
+            "stablehlo.and": 3,
+            "stablehlo.log": 1,
+            "stablehlo.or": 1,
+            "stablehlo.dot_general": 1,
+            "stablehlo.reduce": 1
+          },
+          "computation_count_in_sample": 1,
+          "largest_computations_in_sample": [
+            {
+              "name": "module @jit_forward_with_pullback attributes {mhlo.num_partitions = 1 : i32, mhlo.num_replicas = 1 : i32} {",
+              "instructions": 0
+            }
+          ],
+          "custom_call_examples": [],
+          "available": true,
+          "artifact": "forward.stablehlo.txt.gz",
+          "stored_uncompressed_bytes": 500450,
+          "artifact_sha256": "f2fe7514f5dde8444d328df1eefd990d6c614d43a8480a8844b0733ef9020963"
+        },
+        "hlo": {
+          "utf8_bytes": 476516,
+          "sha256": "c2ed24b28bb8107d09fa754366659b794923a52c92eb1c3c8fbaec551ea8d6d0",
+          "analyzed_bytes": 476516,
+          "truncated": false,
+          "instruction_count_in_sample": 6060,
+          "opcode_counts_in_sample": {
+            "multiply": 787,
+            "get-tuple-element": 757,
+            "select": 490,
+            "add": 447,
+            "compare": 446,
+            "reshape": 399,
+            "divide": 391,
+            "constant": 226,
+            "broadcast": 208,
+            "parameter": 164,
+            "dynamic-update-slice": 159,
+            "subtract": 148,
+            "complex": 145,
+            "negate": 136,
+            "slice": 111,
+            "real": 99,
+            "sqrt": 99,
+            "imag": 98,
+            "exponential-minus-one": 92,
+            "abs": 81,
+            "cosine": 72,
+            "sine": 72,
+            "and": 56,
+            "exponential": 52,
+            "convert": 48,
+            "maximum": 43,
+            "gather": 40,
+            "minimum": 36,
+            "concatenate": 32,
+            "log-plus-one": 22,
+            "scatter": 19,
+            "atan2": 11,
+            "log": 11,
+            "iota": 10,
+            "or": 10,
+            "custom-call": 8,
+            "call": 8,
+            "not": 7,
+            "is-finite": 7,
+            "rsqrt": 7,
+            "dynamic-slice": 2,
+            "transpose": 2,
+            "dot": 1,
+            "reduce": 1
+          },
+          "computation_count_in_sample": 46,
+          "largest_computations_in_sample": [
+            {
+              "name": "ENTRY main.46 {",
+              "instructions": 2448
+            },
+            {
+              "name": "closed_call_302.25 {",
+              "instructions": 2429
+            },
+            {
+              "name": "region_17.26 {",
+              "instructions": 667
+            },
+            {
+              "name": "region_20.27 {",
+              "instructions": 181
+            },
+            {
+              "name": "closed_call_377.30 {",
+              "instructions": 40
+            },
+            {
+              "name": "closed_call.10 {",
+              "instructions": 38
+            },
+            {
+              "name": "solve_405.40 {",
+              "instructions": 25
+            },
+            {
+              "name": "solve.14 {",
+              "instructions": 24
+            },
+            {
+              "name": "_lu_solve_407.39 {",
+              "instructions": 17
+            },
+            {
+              "name": "_lu_solve_419.43 {",
+              "instructions": 17
+            },
+            {
+              "name": "_lu_solve.13 {",
+              "instructions": 16
+            },
+            {
+              "name": "_lu_solve_389.35 {",
+              "instructions": 16
+            },
+            {
+              "name": "lu_solve.36 {",
+              "instructions": 10
+            },
+            {
+              "name": "lu_solve_418.44 {",
+              "instructions": 10
+            },
+            {
+              "name": "region_7.11 {",
+              "instructions": 8
+            },
+            {
+              "name": "region_21.31 {",
+              "instructions": 8
+            },
+            {
+              "name": "region_25.33 {",
+              "instructions": 8
+            },
+            {
+              "name": "region_27.37 {",
+              "instructions": 8
+            },
+            {
+              "name": "region_29.41 {",
+              "instructions": 8
+            },
+            {
+              "name": "region_10.12 {",
+              "instructions": 6
+            }
+          ],
+          "custom_call_examples": [
+            "triangular_solve.2 = c128[1,286,1]{1,2,0} custom-call(Arg_0.4, gather.17), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[1,286,286]{1,2,0}, c128[1,286,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=1, j=286, k=286, l=286, m=1, n=286, o=1}, custom>\"}, backend_config={diag = 85 : ui8, side = 76 : ui8, trans_x = 78 : ui8, uplo = 76 : ui8}",
+            "triangular_solve.3 = c128[1,286,1]{1,2,0} custom-call(Arg_0.4, triangular_solve.2), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[1,286,286]{1,2,0}, c128[1,286,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=1, j=286, k=286, l=286, m=1, n=286, o=1}, custom>\"}, backend_config={diag = 78 : ui8, side = 76 : ui8, trans_x = 78 : ui8, uplo = 85 : ui8}",
+            "lu.18 = (c128[1,286,286]{1,2,0}, s32[1,286]{1,0}, s32[1]{0}) custom-call(Arg_0.5), custom_call_target=\"lapack_zgetrf_ffi\", operand_layout_constraints={c128[1,286,286]{1,2,0}}, output_to_operand_aliasing={{0}: (0, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k])->([i, l, m], [i, n], [i]) {i=1, j=286, k=286, l=286, m=286, n=286}, custom>\"}, backend_config={}",
+            "triangular_solve.6 = c128[101,751,1]{1,2,0} custom-call(Arg_0.16, gather.58), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}, c128[101,751,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=101, j=751, k=751, l=751, m=1, n=751, o=1}, custom>\"}, backend_config={diag = 85 : ui8, side = 76 : ui8, trans_x = 78 : ui8, uplo = 76 : ui8}",
+            "triangular_solve.7 = c128[101,751,1]{1,2,0} custom-call(Arg_0.16, triangular_solve.6), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}, c128[101,751,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=101, j=751, k=751, l=751, m=1, n=751, o=1}, custom>\"}, backend_config={diag = 78 : ui8, side = 76 : ui8, trans_x = 78 : ui8, uplo = 85 : ui8}",
+            "triangular_solve.10 = c128[101,751,1]{1,2,0} custom-call(Arg_0.20, reshape_transpose.1), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}, c128[101,751,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=101, j=751, k=751, l=751, m=1, n=751, o=1}, custom>\"}, backend_config={diag = 85 : ui8, side = 76 : ui8, trans_x = 78 : ui8, uplo = 76 : ui8}",
+            "triangular_solve.11 = c128[101,751,1]{1,2,0} custom-call(Arg_0.20, triangular_solve.10), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}, c128[101,751,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=101, j=751, k=751, l=751, m=1, n=751, o=1}, custom>\"}, backend_config={diag = 78 : ui8, side = 76 : ui8, trans_x = 78 : ui8, uplo = 85 : ui8}",
+            "lu.57 = (c128[101,751,751]{1,2,0}, s32[101,751]{1,0}, s32[101]{0}) custom-call(Arg_0.21), custom_call_target=\"lapack_zgetrf_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}}, output_to_operand_aliasing={{0}: (0, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k])->([i, l, m], [i, n], [i]) {i=101, j=751, k=751, l=751, m=751, n=751}, custom>\"}, backend_config={}",
+            "triangular_solve.14 = c128[101,751,1]{1,2,0} custom-call(Arg_0.24, transpose.5), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}, c128[101,751,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=101, j=751, k=751, l=751, m=1, n=751, o=1}, custom>\"}, backend_config={diag = 85 : ui8, side = 76 : ui8, trans_x = 78 : ui8, uplo = 76 : ui8}",
+            "triangular_solve.15 = c128[101,751,1]{1,2,0} custom-call(Arg_0.24, triangular_solve.14), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}, c128[101,751,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=101, j=751, k=751, l=751, m=1, n=751, o=1}, custom>\"}, backend_config={diag = 78 : ui8, side = 76 : ui8, trans_x = 78 : ui8, uplo = 85 : ui8}",
+            "lu.71 = (c128[101,751,751]{1,2,0}, s32[101,751]{1,0}, s32[101]{0}) custom-call(slice.216), custom_call_target=\"lapack_zgetrf_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}}, output_to_operand_aliasing={{0}: (0, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k])->([i, l, m], [i, n], [i]) {i=101, j=751, k=751, l=751, m=751, n=751}, custom>\"}, backend_config={}"
+          ],
+          "available": true,
+          "artifact": "forward.hlo.txt.gz",
+          "stored_uncompressed_bytes": 476516,
+          "artifact_sha256": "0115886eec0a4ec1e2c6af150d34790cd75de6bea1883474cebe29b1eac53fcc"
+        },
+        "optimized-hlo": {
+          "utf8_bytes": 2840748,
+          "sha256": "1904ebfb3ecf60afcb4bbdd3fee8223736eea0423bdb7175b79b3359af51a79a",
+          "analyzed_bytes": 2097152,
+          "truncated": true,
+          "instruction_count_in_sample": 12638,
+          "opcode_counts_in_sample": {
+            "multiply": 1883,
+            "parameter": 1625,
+            "constant": 1470,
+            "broadcast": 1351,
+            "bitcast": 953,
+            "select": 628,
+            "add": 586,
+            "compare": 579,
+            "slice": 505,
+            "fusion": 398,
+            "complex": 337,
+            "abs": 296,
+            "real": 252,
+            "subtract": 233,
+            "get-tuple-element": 196,
+            "cosine": 172,
+            "sine": 172,
+            "dynamic-update-slice": 163,
+            "imag": 163,
+            "negate": 158,
+            "divide": 108,
+            "and": 71,
+            "minimum": 61,
+            "sqrt": 53,
+            "maximum": 31,
+            "dynamic-slice": 25,
+            "exponential": 24,
+            "exponential-minus-one": 24,
+            "concatenate": 19,
+            "or": 15,
+            "gather": 15,
+            "copy": 12,
+            "log-plus-one": 10,
+            "convert": 9,
+            "is-finite": 6,
+            "rsqrt": 6,
+            "not": 5,
+            "log": 5,
+            "atan2": 5,
+            "scatter": 4,
+            "reduce": 4,
+            "iota": 4,
+            "pad": 2
+          },
+          "computation_count_in_sample": 423,
+          "largest_computations_in_sample": [
+            {
+              "name": "%wide.region_17.26.clone.clone (wide.arg_tuple.3: (s64[], c128[101,1,751,752], c128[101,1,54], c128[101,1,54], c128[101,1,54], /*index=5*/c128[101,1,54], c128[101,1,54], c128[101,1,54], c128[101,1,54], c128[101,1,54], /*index=10*/c128[101,1",
+              "instructions": 558
+            },
+            {
+              "name": "%fused_computation.272 (param_0.629: f64[1,54], param_1.954: f64[1,54], param_2.1059: f64[1,54], param_3.1458: f64[1,54], param_4.1312: f64[1,54], param_5.1297: f64[1,54], param_6.1400: f64[1,54], param_7.1435: f64[1,54], param_8.1475: f64[",
+              "instructions": 273
+            },
+            {
+              "name": "%fused_computation.169 (param_0.208: f64[1,54], param_1.385: f64[1,54], param_2.542: f64[1,54], param_3.923: f64[1,54], param_4.795: f64[1,54], param_5.751: pred[1,54], param_6.790: f64[1,54], param_7.825: f64[1,54], param_8.883: f64[1,54],",
+              "instructions": 177
+            },
+            {
+              "name": "%fused_computation.226 (param_0.426: f64[1,54,1], param_1.692: f64[1,54,1], param_2.860: c128[1,54,7], param_3.1274: pred[1,54], param_4.1167: f64[1,54], param_5.1146: f64[1,54], param_6.1235: f64[1,54], param_7.1280: f64[1,54], param_8.136",
+              "instructions": 165
+            },
+            {
+              "name": "%fused_computation.49 (param_0.49: c128[101,1,54], param_1.99: s64[], param_2.149: f64[1,54,1], param_3.273: f64[1,54,1], param_4.244: c128[1,54,7], param_5.239: pred[1,54], param_6.256: f64[1,54], param_7.279: f64[1,54], param_8.300: f64[1",
+              "instructions": 132
+            },
+            {
+              "name": "%fused_computation.16 (param_0.16: c128[101,1,54], param_1.33: s64[], param_2.50: f64[1,54], param_3.90: f64[1,54], param_4.71: f64[1,54], param_5.59: f64[1,54], param_6.59: f64[1,54], param_7.73: pred[1,54], param_8.84: f64[1,54], param_9.",
+              "instructions": 125
+            },
+            {
+              "name": "%fused_computation.182 (param_0.255: f64[1,54], param_1.458: f64[1,54], param_2.630: f64[1,54], param_3.1030: f64[1,54], param_4.926: f64[1,54], param_5.890: f64[1,54], param_6.950: c128[1,54,1], param_7.990: f64[1,54,1], param_8.1075: f64[",
+              "instructions": 107
+            },
+            {
+              "name": "%fused_computation.213 (param_0.373: f64[1,54], param_1.625: f64[1,54], param_2.800: f64[1,54], param_3.1215: f64[1,54], param_4.1114: f64[1,54], param_5.1092: f64[1,54], param_6.1176: c128[1,54,1], param_7.1215: f64[1,54,1], param_8.1299: ",
+              "instructions": 107
+            },
+            {
+              "name": "%fused_computation.285 (param_0.676: f64[1,54], param_1.1027: f64[1,54], param_2.1147: f64[1,54], param_3.1564: f64[1,54], param_4.1444: f64[1,54], param_5.1442: f64[1,54], param_6.1570: c128[1,54,1], param_7.1605: f64[1,54,1], param_8.1662",
+              "instructions": 107
+            },
+            {
+              "name": "%fused_computation.305 (param_0.750: f64[1,54], param_1.1140: f64[1,54], param_2.1282: f64[1,54], param_3.1720: f64[1,54], param_4.1620: f64[1,54], param_5.1641: f64[1,54], param_6.1786: c128[1,54,1], param_7.1830: f64[1,54,1], param_8.1914",
+              "instructions": 107
+            },
+            {
+              "name": "%fused_computation.355 (param_0.947: f64[1,54], param_1.1412: f64[1,54], param_2.1529: f64[1,54], param_3.1985: f64[1,54], param_4.1880: f64[1,54], param_5.1919: f64[1,54], param_6.2093: c128[1,54,1], param_7.2126: f64[1,54,1], param_8.2165",
+              "instructions": 107
+            },
+            {
+              "name": "%fused_computation.177 (param_0.231: pred[1,54], param_1.419: f64[1,54], param_2.580: f64[1,54], param_3.968: f64[1,54], param_4.855: f64[1,54], param_5.822: f64[1,54], param_6.877: f64[1,54], param_7.915: f64[1,54], param_8.989: c128[1,54,",
+              "instructions": 105
+            },
+            {
+              "name": "%fused_computation.208 (param_0.349: pred[1,54], param_1.586: f64[1,54], param_2.750: f64[1,54], param_3.1153: f64[1,54], param_4.1043: f64[1,54], param_5.1024: f64[1,54], param_6.1103: f64[1,54], param_7.1140: f64[1,54], param_8.1213: c128",
+              "instructions": 105
+            },
+            {
+              "name": "%fused_computation.280 (param_0.652: pred[1,54], param_1.988: f64[1,54], param_2.1097: f64[1,54], param_3.1505: f64[1,54], param_4.1374: f64[1,54], param_5.1369: f64[1,54], param_6.1493: f64[1,54], param_7.1527: f64[1,54], param_8.1573: c12",
+              "instructions": 105
+            },
+            {
+              "name": "%fused_computation.300 (param_0.726: pred[1,54], param_1.1101: f64[1,54], param_2.1232: f64[1,54], param_3.1661: f64[1,54], param_4.1550: f64[1,54], param_5.1568: f64[1,54], param_6.1709: f64[1,54], param_7.1752: f64[1,54], param_8.1825: c1",
+              "instructions": 105
+            },
+            {
+              "name": "%fused_computation.350 (param_0.921: pred[1,54], param_1.1367: f64[1,54], param_2.1482: f64[1,54], param_3.1924: f64[1,54], param_4.1821: f64[1,54], param_5.1863: f64[1,54], param_6.2033: f64[1,54], param_7.2064: f64[1,54], param_8.2105: c1",
+              "instructions": 105
+            },
+            {
+              "name": "%fused_computation.115 (param_0.115: c128[101,1,54], param_1.231: s64[], param_2.347: f64[1,54], param_3.638: f64[1,54], param_4.552: f64[1,54], param_5.517: f64[1,54], param_6.546: f64[1,54], param_7.590: f64[1,54,1], param_8.645: f64[1,54",
+              "instructions": 104
+            },
+            {
+              "name": "%fused_computation.176 (param_0.230: f64[1,54], param_1.415: f64[1,54], param_2.572: f64[1,54], param_3.959: f64[1,54], param_4.843: f64[1,54], param_5.808: f64[1,54], param_6.858: f64[1,54], param_7.895: c128[1,54,1], param_8.968: f64[1,54",
+              "instructions": 86
+            },
+            {
+              "name": "%fused_computation.207 (param_0.348: f64[1,54], param_1.582: f64[1,54], param_2.742: f64[1,54], param_3.1144: f64[1,54], param_4.1031: f64[1,54], param_5.1010: f64[1,54], param_6.1084: f64[1,54], param_7.1120: c128[1,54,1], param_8.1192: f6",
+              "instructions": 86
+            },
+            {
+              "name": "%fused_computation.279 (param_0.651: f64[1,54], param_1.984: f64[1,54], param_2.1089: f64[1,54], param_3.1496: f64[1,54], param_4.1362: f64[1,54], param_5.1355: f64[1,54], param_6.1474: f64[1,54], param_7.1507: c128[1,54,1], param_8.1552: f",
+              "instructions": 86
+            }
+          ],
+          "custom_call_examples": [],
+          "available": true,
+          "artifact": "forward.optimized-hlo.txt.gz",
+          "stored_uncompressed_bytes": 2097152,
+          "artifact_sha256": "332fa1a0771c5d7b0e6624bc006796431d96c12e647bf91e938cecefa0bd9a8a"
+        }
+      },
+      "cost_analysis": {
+        "available": true,
+        "values": {
+          "utilization222{}": 1.0,
+          "utilization229{}": 1.0,
+          "utilization180{}": 1.0,
+          "utilization274{}": 1.0,
+          "utilization71{}": 3.0,
+          "utilization107{}": 3.0,
+          "utilization44{}": 3.0,
+          "utilization330{}": 1.0,
+          "utilization312{}": 1.0,
+          "utilization204{}": 1.0,
+          "utilization319{}": 1.0,
+          "bytes accessed11{}": 92934.0,
+          "utilization256{}": 1.0,
+          "utilization1{}": 888.0,
+          "utilization28{}": 4.0,
+          "utilization292{}": 1.0,
+          "utilization299{}": 1.0,
+          "utilization125{}": 3.0,
+          "utilization327{}": 1.0,
+          "utilization85{}": 3.0,
+          "utilization177{}": 3.0,
+          "utilization128{}": 3.0,
+          "utilization42{}": 3.0,
+          "utilization240{}": 1.0,
+          "utilization69{}": 3.0,
+          "utilization345{}": 1.0,
+          "utilization237{}": 1.0,
+          "utilization348{}": 1.0,
+          "bytes accessed2{}": 1827230976.0,
+          "utilization203{}": 1.0,
+          "utilization161{}": 3.0,
+          "utilization143{}": 3.0,
+          "bytes accessed30{}": 432.0,
+          "utilization195{}": 1.0,
+          "utilization83{}": 3.0,
+          "utilization198{}": 1.0,
+          "utilization56{}": 3.0,
+          "bytes accessed20{}": 864.0,
+          "utilization109{}": 3.0,
+          "utilization221{}": 1.0,
+          "bytes accessed29{}": 432.0,
+          "utilization40{}": 3.0,
+          "bytes accessed7{}": 48070.0,
+          "utilization273{}": 1.0,
+          "utilization17{}": 6.0,
+          "utilization102{}": 3.0,
+          "utilization255{}": 1.0,
+          "utilization258{}": 1.0,
+          "utilization311{}": 1.0,
+          "bytes accessed19{}": 1296.0,
+          "utilization136{}": 3.0,
+          "utilization97{}": 3.0,
+          "utilization172{}": 3.0,
+          "utilization179{}": 1.0,
+          "utilization291{}": 1.0,
+          "utilization322{}": 1.0,
+          "utilization214{}": 1.0,
+          "utilization75{}": 3.0,
+          "utilization329{}": 1.0,
+          "utilization304{}": 1.0,
+          "utilization154{}": 3.0,
+          "utilization61{}": 3.0,
+          "utilization120{}": 3.0,
+          "bytes accessed10{}": 61568.0,
+          "utilization284{}": 1.0,
+          "utilization18{}": 6.0,
+          "utilization340{}": 1.0,
+          "utilization117{}": 3.0,
+          "utilization98{}": 3.0,
+          "utilization266{}": 1.0,
+          "utilization232{}": 1.0,
+          "utilization190{}": 1.0,
+          "utilization32{}": 4.0,
+          "utilization46{}": 3.0,
+          "utilization337{}": 1.0,
+          "utilization0{}": 1329.0,
+          "utilization59{}": 3.0,
+          "utilization101{}": 3.0,
+          "utilization187{}": 1.0,
+          "utilization153{}": 3.0,
+          "utilization239{}": 1.0,
+          "utilization135{}": 3.0,
+          "utilization138{}": 3.0,
+          "utilization250{}": 1.0,
+          "utilization7{}": 63.0,
+          "utilization73{}": 3.0,
+          "utilization87{}": 3.0,
+          "utilization213{}": 1.0,
+          "utilization171{}": 3.0,
+          "bytes accessed27{}": 432.0,
+          "utilization30{}": 4.0,
+          "utilization265{}": 1.0,
+          "utilization321{}": 1.0,
+          "utilization268{}": 1.0,
+          "utilization303{}": 1.0,
+          "bytes accessed1{}": 1842607104.0,
+          "bytes accessed17{}": 1296.0,
+          "utilization247{}": 1.0,
+          "utilization164{}": 3.0,
+          "bytes accessed3{}": 9370760.0
+        }
+      },
+      "memory_analysis": {
+        "available": true,
+        "text": "CompiledMemoryStats(generated_code_size_in_bytes=0, argument_size_in_bytes=19553968, output_size_in_bytes=4605556418, alias_size_in_bytes=0, temp_size_in_bytes=2736111256, host_generated_code_size_in_bytes=0, host_argument_size_in_bytes=0, host_output_size_in_bytes=0, host_alias_size_in_bytes=0, host_temp_size_in_bytes=0)"
+      }
+    },
+    "sensitivity": {
+      "lower_seconds": 0.029469473287463188,
+      "compile_seconds": 0.2817918136715889,
+      "execute_seconds": 0.0009068194776773453,
+      "ir": {
+        "stablehlo": {
+          "utf8_bytes": 5891,
+          "sha256": "7751575382dc41ab6a32435b84cd07fce71781daa01404350b441c79ad619a81",
+          "analyzed_bytes": 5891,
+          "truncated": false,
+          "instruction_count_in_sample": 0,
+          "opcode_counts_in_sample": {
+            "stablehlo.broadcast_in_dim": 10,
+            "stablehlo.constant": 9,
+            "stablehlo.multiply": 6,
+            "stablehlo.divide": 5,
+            "stablehlo.add": 3,
+            "stablehlo.real": 2,
+            "stablehlo.imag": 2,
+            "stablehlo.negate": 2,
+            "stablehlo.complex": 2,
+            "stablehlo.slice": 2,
+            "stablehlo.compare": 2,
+            "stablehlo.select": 2,
+            "stablehlo.convert": 2,
+            "stablehlo.gather": 2,
+            "stablehlo.abs": 2,
+            "stablehlo.reshape": 1,
+            "stablehlo.log": 1,
+            "stablehlo.reduce": 1
+          },
+          "computation_count_in_sample": 1,
+          "largest_computations_in_sample": [
+            {
+              "name": "module @jit_sensitivity_with_pullback attributes {mhlo.num_partitions = 1 : i32, mhlo.num_replicas = 1 : i32} {",
+              "instructions": 0
+            }
+          ],
+          "custom_call_examples": [],
+          "available": true,
+          "artifact": "sensitivity.stablehlo.txt.gz",
+          "stored_uncompressed_bytes": 5891,
+          "artifact_sha256": "70059935cce3e8add1d4b47fdf3e2b1a460b7e960244de9fdb813ca3df5e3da9"
+        },
+        "hlo": {
+          "utf8_bytes": 4274,
+          "sha256": "656a1eee7e3e4fc29f9c21bdcf3124be1d792df568489da80c871006b9206b7e",
+          "analyzed_bytes": 4274,
+          "truncated": false,
+          "instruction_count_in_sample": 64,
+          "opcode_counts_in_sample": {
+            "broadcast": 9,
+            "constant": 9,
+            "parameter": 7,
+            "multiply": 6,
+            "divide": 5,
+            "reshape": 4,
+            "add": 3,
+            "real": 2,
+            "imag": 2,
+            "negate": 2,
+            "complex": 2,
+            "slice": 2,
+            "compare": 2,
+            "select": 2,
+            "convert": 2,
+            "abs": 2,
+            "gather": 1,
+            "log": 1,
+            "reduce": 1
+          },
+          "computation_count_in_sample": 2,
+          "largest_computations_in_sample": [
+            {
+              "name": "ENTRY main.2 {",
+              "instructions": 61
+            },
+            {
+              "name": "region_0.1 {",
+              "instructions": 3
+            }
+          ],
+          "custom_call_examples": [],
+          "available": true,
+          "artifact": "sensitivity.hlo.txt.gz",
+          "stored_uncompressed_bytes": 4274,
+          "artifact_sha256": "bb353d56063f30cdcfbc37b7953f7e5888e4dfd5176ca3541d05fdc2e61b8083"
+        },
+        "optimized-hlo": {
+          "utf8_bytes": 30092,
+          "sha256": "f1bf377c5d6ac9ab3dcbe1dc20ecdfe36ef4b6877a3125e8086dcf829733f33b",
+          "analyzed_bytes": 30092,
+          "truncated": false,
+          "instruction_count_in_sample": 207,
+          "opcode_counts_in_sample": {
+            "parameter": 41,
+            "constant": 25,
+            "bitcast": 22,
+            "multiply": 16,
+            "broadcast": 15,
+            "add": 13,
+            "fusion": 13,
+            "slice": 12,
+            "compare": 7,
+            "select": 7,
+            "convert": 7,
+            "abs": 6,
+            "dynamic-slice": 5,
+            "divide": 4,
+            "copy": 3,
+            "real": 2,
+            "imag": 2,
+            "negate": 2,
+            "complex": 2,
+            "reduce": 1,
+            "log": 1,
+            "reduce-window": 1
+          },
+          "computation_count_in_sample": 16,
+          "largest_computations_in_sample": [
+            {
+              "name": "%fused_computation.3 (param_0.14: s64[1], param_1.31: c128[751,101], param_2.29: c128[286,1], param_3.27: c128[286,1]) -> c128[101] {",
+              "instructions": 37
+            },
+            {
+              "name": "%fused_computation.2 (param_0.9: s64[1], param_1.16: c128[751,101], param_2.14: c128[286,1], param_3.16: c128[286,1]) -> f64[101] {",
+              "instructions": 28
+            },
+            {
+              "name": "%fused_computation.7 (param_0.24: f64[101], param_1.42: f64[101], param_2.37: s64[1], param_3.34: c128[751,101], param_4.18: c128[286,1], param_5.9: c128[286,1]) -> f64[101] {",
+              "instructions": 28
+            },
+            {
+              "name": "%fused_computation.1 (param_0.3: f64[101], param_1.6: s64[1], param_2.6: c128[751,101], param_3.7: c128[286,1], param_4.8: c128[286,1]) -> f64[101] {",
+              "instructions": 26
+            },
+            {
+              "name": "%fused_computation.8 (param_0.28: s64[1], param_1.49: c128[751,101], param_2.45: c128[286,1], param_3.43: c128[286,1]) -> f64[101] {",
+              "instructions": 24
+            },
+            {
+              "name": "ENTRY %main.2 (outputs_0_.1: c128[286,1], outputs_1_.1: c128[751,101], outputs_2_.1: f64[101], detector_ports.1: s64[1], reference.1: f64[101]) -> (f64[], c128[286,1], f64[101], c128[286,101], c128[286,1], /*index=5*/c128[286,101], s32[1,1]",
+              "instructions": 22
+            },
+            {
+              "name": "%fused_computation.4 (param_0.18: s64[1]) -> s32[1,1] {",
+              "instructions": 8
+            },
+            {
+              "name": "%fused_computation (param_0.2: c128[286,1]) -> f64[286,1] {",
+              "instructions": 6
+            },
+            {
+              "name": "%fused_computation.5 (param_0.21: f64[4]) -> f64[] {",
+              "instructions": 5
+            },
+            {
+              "name": "%fused_computation.6 (param_0.23: f64[101]) -> f64[101] {",
+              "instructions": 5
+            },
+            {
+              "name": "%fused_computation.9 (param_0.30: c128[286,1]) -> c128[286,1] {",
+              "instructions": 5
+            },
+            {
+              "name": "%region_0.1.clone (reduce_sum.0: f64[], reduce_sum.1: f64[]) -> f64[] {",
+              "instructions": 3
+            },
+            {
+              "name": "%region_0.1 (reduce_sum.3: f64[], reduce_sum.4: f64[]) -> f64[] {",
+              "instructions": 3
+            },
+            {
+              "name": "%wrapped_reduce-window_computation (param_0.31: f64[101], param_1.53: f64[]) -> f64[4] {",
+              "instructions": 3
+            },
+            {
+              "name": "%wrapped_slice_computation (param_0.32: c128[751,101]) -> c128[286,101] {",
+              "instructions": 2
+            },
+            {
+              "name": "%wrapped_slice_computation.1 (param_0.33: c128[751,101]) -> c128[286,101] {",
+              "instructions": 2
+            }
+          ],
+          "custom_call_examples": [],
+          "available": true,
+          "artifact": "sensitivity.optimized-hlo.txt.gz",
+          "stored_uncompressed_bytes": 30092,
+          "artifact_sha256": "d00580a525adaaae55dff0f9803be5c956a576cd30ae74bed5ffec1f2283da9e"
+        }
+      },
+      "cost_analysis": {
+        "available": true,
+        "values": {
+          "transcendentals": 101.0,
+          "bytes accessed": 6554564.0,
+          "bytes accessed4{}": 9152.0,
+          "bytes accessed5{}": 4576.0,
+          "utilization10{}": 1.0,
+          "bytes accessed1{}": 2781592.0,
+          "utilization6{}": 1.0,
+          "utilization8{}": 1.0,
+          "utilization11{}": 1.0,
+          "bytes accessedout{}": 943220.0,
+          "bytes accessed0{}": 942992.0,
+          "utilization4{}": 3.0,
+          "utilization9{}": 1.0,
+          "utilization13{}": 1.0,
+          "utilization2{}": 7.0,
+          "utilization5{}": 2.0,
+          "utilization7{}": 1.0,
+          "utilization0{}": 17.0,
+          "utilization12{}": 1.0,
+          "flops": 437363.0,
+          "utilization3{}": 6.0,
+          "utilization1{}": 16.0,
+          "bytes accessed2{}": 938096.0,
+          "bytes accessed3{}": 942656.0
+        }
+      },
+      "memory_analysis": {
+        "available": true,
+        "text": "CompiledMemoryStats(generated_code_size_in_bytes=0, argument_size_in_bytes=1219816, output_size_in_bytes=942380, alias_size_in_bytes=0, temp_size_in_bytes=864, host_generated_code_size_in_bytes=0, host_argument_size_in_bytes=0, host_output_size_in_bytes=0, host_alias_size_in_bytes=0, host_temp_size_in_bytes=0)"
+      }
+    },
+    "gradient": {
+      "lower_seconds": 0.19533678330481052,
+      "compile_seconds": 2.029227629303932,
+      "execute_seconds": 1.5489047430455685,
+      "ir": {
+        "stablehlo": {
+          "utf8_bytes": 296784,
+          "sha256": "443427c71eda2addf718a12e272093646f418fc4bbda4f35994a9c348e239be3",
+          "analyzed_bytes": 296784,
+          "truncated": false,
+          "instruction_count_in_sample": 0,
+          "opcode_counts_in_sample": {
+            "stablehlo.constant": 671,
+            "stablehlo.broadcast_in_dim": 342,
+            "stablehlo.multiply": 331,
+            "stablehlo.add": 203,
+            "stablehlo.reshape": 182,
+            "stablehlo.dynamic_slice": 160,
+            "stablehlo.pad": 102,
+            "stablehlo.slice": 91,
+            "stablehlo.negate": 67,
+            "stablehlo.scatter": 56,
+            "stablehlo.reduce": 46,
+            "stablehlo.divide": 39,
+            "stablehlo.return": 38,
+            "stablehlo.compare": 32,
+            "stablehlo.gather": 30,
+            "stablehlo.select": 24,
+            "stablehlo.and": 16,
+            "stablehlo.transpose": 11,
+            "stablehlo.complex": 10,
+            "stablehlo.real": 9,
+            "stablehlo.imag": 8,
+            "stablehlo.custom_call": 8,
+            "stablehlo.output_operand_alias": 8,
+            "stablehlo.dot_general": 6,
+            "stablehlo.iota": 6,
+            "stablehlo.dynamic_update_slice": 4,
+            "stablehlo.convert": 4,
+            "stablehlo.sort": 4,
+            "stablehlo.while": 3,
+            "stablehlo.subtract": 2
+          },
+          "computation_count_in_sample": 1,
+          "largest_computations_in_sample": [
+            {
+              "name": "module @jit_backward attributes {mhlo.num_partitions = 1 : i32, mhlo.num_replicas = 1 : i32} {",
+              "instructions": 0
+            }
+          ],
+          "custom_call_examples": [],
+          "available": true,
+          "artifact": "gradient.stablehlo.txt.gz",
+          "stored_uncompressed_bytes": 296784,
+          "artifact_sha256": "7fda1a5aa23feee43bf215554c41e58d27d091c32d7bf8e55edb7da6c44ee227"
+        },
+        "hlo": {
+          "utf8_bytes": 252540,
+          "sha256": "bb706ae1fbe83f4771f4ea8d3daa20bd86e4e9c57363c6a2f6635a5cd1a3be60",
+          "analyzed_bytes": 252540,
+          "truncated": false,
+          "instruction_count_in_sample": 2783,
+          "opcode_counts_in_sample": {
+            "parameter": 676,
+            "get-tuple-element": 403,
+            "multiply": 331,
+            "reshape": 330,
+            "add": 203,
+            "dynamic-slice": 160,
+            "broadcast": 103,
+            "pad": 102,
+            "constant": 101,
+            "negate": 67,
+            "reduce": 46,
+            "slice": 45,
+            "divide": 39,
+            "compare": 32,
+            "scatter": 28,
+            "select": 24,
+            "and": 16,
+            "gather": 15,
+            "complex": 10,
+            "real": 9,
+            "custom-call": 8,
+            "imag": 8,
+            "iota": 6,
+            "call": 6,
+            "dot": 6,
+            "dynamic-update-slice": 4,
+            "subtract": 2,
+            "transpose": 2,
+            "convert": 1
+          },
+          "computation_count_in_sample": 96,
+          "largest_computations_in_sample": [
+            {
+              "name": "closed_call_92.58 {",
+              "instructions": 834
+            },
+            {
+              "name": "ENTRY main.96 {",
+              "instructions": 826
+            },
+            {
+              "name": "region_14.59 {",
+              "instructions": 511
+            },
+            {
+              "name": "region_50.60 {",
+              "instructions": 181
+            },
+            {
+              "name": "closed_call.6 {",
+              "instructions": 40
+            },
+            {
+              "name": "_lu_solve.10 {",
+              "instructions": 21
+            },
+            {
+              "name": "_lu_solve_55.13 {",
+              "instructions": 21
+            },
+            {
+              "name": "_lu_solve_67.18 {",
+              "instructions": 20
+            },
+            {
+              "name": "_lu_solve_246.79 {",
+              "instructions": 20
+            },
+            {
+              "name": "lu_solve.11 {",
+              "instructions": 10
+            },
+            {
+              "name": "lu_solve_66.19 {",
+              "instructions": 10
+            },
+            {
+              "name": "solve.14 {",
+              "instructions": 9
+            },
+            {
+              "name": "region_3.7 {",
+              "instructions": 8
+            },
+            {
+              "name": "region_9.15 {",
+              "instructions": 8
+            },
+            {
+              "name": "solve_244.80 {",
+              "instructions": 8
+            },
+            {
+              "name": "region_6.8 {",
+              "instructions": 6
+            },
+            {
+              "name": "region_10.16 {",
+              "instructions": 6
+            },
+            {
+              "name": "_where.22 {",
+              "instructions": 6
+            },
+            {
+              "name": "region_7.9 {",
+              "instructions": 5
+            },
+            {
+              "name": "region_8.12 {",
+              "instructions": 5
+            }
+          ],
+          "custom_call_examples": [
+            "triangular_solve.2 = c128[101,751,1]{1,2,0} custom-call(Arg_0.4, transpose_broadcast_in_dim.1), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}, c128[101,751,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=101, j=751, k=751, l=751, m=1, n=751, o=1}, custom>\"}, backend_config={diag = 78 : ui8, side = 76 : ui8, trans_x = 84 : ui8, uplo = 85 : ui8}",
+            "triangular_solve.3 = c128[101,751,1]{1,2,0} custom-call(Arg_0.4, triangular_solve.2), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}, c128[101,751,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=101, j=751, k=751, l=751, m=1, n=751, o=1}, custom>\"}, backend_config={diag = 85 : ui8, side = 76 : ui8, trans_x = 84 : ui8, uplo = 76 : ui8}",
+            "triangular_solve.6 = c128[101,751,1]{1,2,0} custom-call(Arg_0.8, reshape_transpose_broadcast_in_dim.1), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}, c128[101,751,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=101, j=751, k=751, l=751, m=1, n=751, o=1}, custom>\"}, backend_config={diag = 78 : ui8, side = 76 : ui8, trans_x = 84 : ui8, uplo = 85 : ui8}",
+            "triangular_solve.7 = c128[101,751,1]{1,2,0} custom-call(Arg_0.8, triangular_solve.6), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}, c128[101,751,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=101, j=751, k=751, l=751, m=1, n=751, o=1}, custom>\"}, backend_config={diag = 85 : ui8, side = 76 : ui8, trans_x = 84 : ui8, uplo = 76 : ui8}",
+            "triangular_solve.10 = c128[101,751,1]{1,2,0} custom-call(Arg_0.12, broadcast_in_dim.37), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}, c128[101,751,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=101, j=751, k=751, l=751, m=1, n=751, o=1}, custom>\"}, backend_config={diag = 78 : ui8, side = 76 : ui8, trans_x = 84 : ui8, uplo = 85 : ui8}",
+            "triangular_solve.11 = c128[101,751,1]{1,2,0} custom-call(Arg_0.12, triangular_solve.10), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}, c128[101,751,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=101, j=751, k=751, l=751, m=1, n=751, o=1}, custom>\"}, backend_config={diag = 85 : ui8, side = 76 : ui8, trans_x = 84 : ui8, uplo = 76 : ui8}",
+            "triangular_solve.14 = c128[1,286,1]{1,2,0} custom-call(Arg_0.20, broadcast_in_dim.238), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[1,286,286]{1,2,0}, c128[1,286,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=1, j=286, k=286, l=286, m=1, n=286, o=1}, custom>\"}, backend_config={diag = 78 : ui8, side = 76 : ui8, trans_x = 84 : ui8, uplo = 85 : ui8}",
+            "triangular_solve.15 = c128[1,286,1]{1,2,0} custom-call(Arg_0.20, triangular_solve.14), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[1,286,286]{1,2,0}, c128[1,286,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=1, j=286, k=286, l=286, m=1, n=286, o=1}, custom>\"}, backend_config={diag = 85 : ui8, side = 76 : ui8, trans_x = 84 : ui8, uplo = 76 : ui8}"
+          ],
+          "available": true,
+          "artifact": "gradient.hlo.txt.gz",
+          "stored_uncompressed_bytes": 252540,
+          "artifact_sha256": "99dfac3b5fa36c0b7eea87d7de4fad31f7d1db064f4222ba16018e55c7ccd599"
+        },
+        "optimized-hlo": {
+          "utf8_bytes": 562221,
+          "sha256": "96626869ddb3ef1264e4b36bc7741aa645cdea23b7e2ab60cab61ef815b87d19",
+          "analyzed_bytes": 562221,
+          "truncated": false,
+          "instruction_count_in_sample": 3322,
+          "opcode_counts_in_sample": {
+            "parameter": 959,
+            "bitcast": 433,
+            "multiply": 380,
+            "constant": 209,
+            "get-tuple-element": 193,
+            "dynamic-slice": 186,
+            "add": 163,
+            "broadcast": 157,
+            "fusion": 124,
+            "pad": 103,
+            "negate": 72,
+            "slice": 43,
+            "copy": 41,
+            "compare": 39,
+            "select": 34,
+            "scatter": 22,
+            "and": 22,
+            "subtract": 19,
+            "reduce": 16,
+            "complex": 14,
+            "concatenate": 12,
+            "dynamic-update-slice": 10,
+            "divide": 10,
+            "real": 10,
+            "gather": 10,
+            "iota": 10,
+            "imag": 9,
+            "custom-call": 8,
+            "reduce-window": 6,
+            "tuple": 2,
+            "convert": 2,
+            "transpose": 2,
+            "dot": 1,
+            "while": 1
+          },
+          "computation_count_in_sample": 176,
+          "largest_computations_in_sample": [
+            {
+              "name": "ENTRY %main.96 (simulation_pullback_1__0_.1: s32[201,1], simulation_pullback_1__1_.1: pred[201], simulation_pullback_1__4_.1: s32[201,2], simulation_pullback_1__5_.1: s32[1,2], simulation_pullback_1__6_.1: pred[1,532], simulation_pullback_1",
+              "instructions": 404
+            },
+            {
+              "name": "%fused_computation.3 (param_0.10: c128[], param_1.16: c128[101,1,54], param_2.23: s64[], param_3.23: s64[], param_4.20: c128[101,1,54], param_5.19: c128[101,1,54], param_6.24: c128[101,1,54], param_7.20: c128[101,1,54], param_8.22: c128[101",
+              "instructions": 326
+            },
+            {
+              "name": "%wide.wide.region_14.59.clone.clone.clone (wide.wide.arg_tuple.5: (s64[], c128[101,1,532], c128[101,1,1004], c128[101,1,751,752], c128[101,1,54], /*index=5*/c128[101,1,54], c128[101,1,54], c128[101,1,54], c128[101,1,54], c128[101,1,54], /*i",
+              "instructions": 255
+            },
+            {
+              "name": "%fused_computation.40 (param_0.133: c128[], param_1.209: c128[1,54], param_2.257: c128[1,54], param_3.253: c128[1,54], param_4.193: c128[1,54], param_5.194: c128[1,54], param_6.187: c128[1,54], param_7.134: c128[1,54], param_8.112: c128[1,5",
+              "instructions": 248
+            },
+            {
+              "name": "%fused_computation.14 (param_0.59: c128[101,1,54], param_1.84: s64[], param_2.105: s64[], param_3.104: c128[101,1,54], param_4.91: c128[101,1,54], param_5.101: c128[101,1,54], param_6.108: c128[101,1,54], param_7.77: c128[101,1,54], param_8",
+              "instructions": 214
+            },
+            {
+              "name": "%fused_computation.13 (param_0.54: c128[101,1,54], param_1.78: s64[], param_2.98: s64[], param_3.98: c128[101,1,54], param_4.86: c128[101,1,54], param_5.94: c128[101,1,54], param_6.97: c128[101,1,54], param_7.67: c128[101,1,54], param_8.62:",
+              "instructions": 139
+            },
+            {
+              "name": "%fused_computation.5 (param_0.20: c128[101,1,71], param_1.29: s64[], param_2.40: s64[], param_3.38: c128[101,1,71], param_4.38: c128[101,1,71], param_5.36: c128[101,1,71], param_6.45: c128[101,1,71], param_7.43: c128[101,1,71], param_8.47: ",
+              "instructions": 99
+            },
+            {
+              "name": "%fused_computation.16 (param_0.67: c128[101,1,71], param_1.97: c128[101,1,71], param_2.124: c128[101,1,71], param_3.120: c128[101,1,71], param_4.101: c128[101,1,71], param_5.109: c128[101,1,71], param_6.119: c128[101,1,71], param_7.86: c128",
+              "instructions": 71
+            },
+            {
+              "name": "%fused_computation.37 (param_0.122: pred[201], param_1.195: s32[201,2], param_2.244: pred[1], param_3.237: s32[1,2], param_4.183: s32[1,2], param_5.176: s32[2], param_6.178: s32[1,2], param_7.126: pred[1,532], param_8.105: pred[1,532], para",
+              "instructions": 63
+            },
+            {
+              "name": "%fused_computation.2 (param_0.6: c128[101,1,54], param_1.11: c128[101,1,54], param_2.17: c128[101,1,54], param_3.18: c128[101,1,54], param_4.16: c128[101,1,54], param_5.13: c128[101,1,54], param_6.13: c128[101,1,54], param_7.10: c128[101,1,",
+              "instructions": 59
+            },
+            {
+              "name": "%fused_computation.46 (param_0.150: c128[1,1,286], param_1.231: s32[1], param_2.283: c128[1,1,286], param_3.267: pred[], param_4.210: c128[751], param_5.207: c128[1,1,286], param_6.207: s32[1], param_7.152: c128[286], param_8.130: c128[286,",
+              "instructions": 58
+            },
+            {
+              "name": "%fused_computation.54 (param_0.171: c128[66,4], param_1.260: c128[], param_2.317: c128[4], param_3.300: c128[4], param_4.241: c128[4], param_5.236: c128[4]) -> c128[406,1] {",
+              "instructions": 55
+            },
+            {
+              "name": "%fused_computation.4 (param_0.15: c128[101,1,71], param_1.22: c128[101,1,71], param_2.32: c128[101,1,71], param_3.31: c128[101,1,71], param_4.29: c128[101,1,71], param_5.28: c128[679,4,1], param_6.35: s64[]) -> c128[497,1,1] {",
+              "instructions": 46
+            },
+            {
+              "name": "%fused_computation.11 (param_0.44: c128[101,1,54], param_1.66: c128[101,1,54], param_2.85: c128[101,1,54], param_3.84: c128[101,1,54], param_4.76: c128[679,4,1], param_5.79: s64[]) -> c128[378,1,1] {",
+              "instructions": 41
+            },
+            {
+              "name": "%fused_computation.17 (param_0.70: c128[101,1,71], param_1.103: c128[101,1,71], param_2.130: c128[101,1,71], param_3.128: c128[101,1,71], param_4.107: c128[101,1,71], param_5.118: c128[679,4,1], param_6.130: s64[]) -> c128[1,71,3] {",
+              "instructions": 37
+            },
+            {
+              "name": "%fused_computation.18 (param_0.73: c128[101,1,71], param_1.108: c128[101,1,71], param_2.137: c128[101,1,71], param_3.138: c128[101,1,71], param_4.114: c128[679,4,1], param_5.127: s64[]) -> c128[1,71,3] {",
+              "instructions": 33
+            },
+            {
+              "name": "%fused_computation.48 (param_0.156: c128[1,101,751], param_1.241: c128[75851,1,1,1,1], param_2.297: f64[], param_3.275: f64[], param_4.215: f64[], param_5.213: f64[], param_6.213: f64[1,101], param_7.158: f64[101], param_8.136: f64[]) -> c1",
+              "instructions": 33
+            },
+            {
+              "name": "%fused_computation.8 (param_0.33: c128[101,1,71], param_1.49: c128[101,1,71], param_2.65: c128[101,1,71], param_3.58: c128[679,4,1], param_4.56: s64[]) -> c128[1,71,3] {",
+              "instructions": 30
+            },
+            {
+              "name": "%fused_computation.19 (param_0.76: c128[101,1,71], param_1.114: c128[101,1,71], param_2.143: c128[101,1,71], param_3.146: c128[679,4,1], param_4.120: c128[101,1,71], param_5.136: s64[]) -> c128[1,71,3] {",
+              "instructions": 30
+            },
+            {
+              "name": "%fused_computation.6 (param_0.25: c128[101,1,71], param_1.36: c128[101,1,71], param_2.49: c128[679,4,1], param_3.50: s64[]) -> c128[497,1,1] {",
+              "instructions": 28
+            }
+          ],
+          "custom_call_examples": [
+            "%triangular_solve.16 = c128[101,751,1]{1,2,0} custom-call(%copy.21, %bitcast_copy_fusion.18), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}, c128[101,751,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=101, j=751, k=751, l=751, m=1, n=751, o=1}, custom>\"}, metadata={op_name=\"jit(backward)/transpose(jvp(vmap()))/jit(lu_solve)/jit(_lu_solve)/vmap()/triangular_solve\" stack_frame_id=61}, backend_config={diag = 78 : ui8, side = 76 : ui8, trans_x = 84 : ui8, uplo = 85 : ui8}",
+            "%triangular_solve.17 = c128[101,751,1]{1,2,0} custom-call(%copy.21, %triangular_solve.16), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}, c128[101,751,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=101, j=751, k=751, l=751, m=1, n=751, o=1}, custom>\"}, metadata={op_name=\"jit(backward)/transpose(jvp(vmap()))/jit(lu_solve)/jit(_lu_solve)/vmap()/triangular_solve\" stack_frame_id=61}, backend_config={diag = 85 : ui8, side = 76 : ui8, trans_x = 84 : ui8, uplo = 76 : ui8}",
+            "%triangular_solve.20 = c128[101,751,1]{1,2,0} custom-call(%copy.21, %bitcast_copy_fusion.16), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}, c128[101,751,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=101, j=751, k=751, l=751, m=1, n=751, o=1}, custom>\"}, metadata={op_name=\"jit(backward)/transpose(jvp())/jit(lu_solve)/jit(_lu_solve)/vmap()/triangular_solve\" stack_frame_id=61}, backend_config={diag = 78 : ui8, side = 76 : ui8, trans_x = 84 : ui8, uplo = 85 : ui8}",
+            "%triangular_solve.21 = c128[101,751,1]{1,2,0} custom-call(%copy.21, %triangular_solve.20), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}, c128[101,751,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=101, j=751, k=751, l=751, m=1, n=751, o=1}, custom>\"}, metadata={op_name=\"jit(backward)/transpose(jvp())/jit(lu_solve)/jit(_lu_solve)/vmap()/triangular_solve\" stack_frame_id=61}, backend_config={diag = 85 : ui8, side = 76 : ui8, trans_x = 84 : ui8, uplo = 76 : ui8}",
+            "%triangular_solve.18 = c128[101,751,1]{1,2,0} custom-call(%copy.24, %bitcast_copy_fusion.17), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}, c128[101,751,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=101, j=751, k=751, l=751, m=1, n=751, o=1}, custom>\"}, metadata={op_name=\"jit(backward)/transpose(jvp(vmap(vmap(jit(solve)))))/jit(_lu_solve)/triangular_solve\" stack_frame_id=71}, backend_config={diag = 78 : ui8, side = 76 : ui8, trans_x = 84 : ui8, uplo = 85 : ui8}",
+            "%triangular_solve.19 = c128[101,751,1]{1,2,0} custom-call(%copy.24, %triangular_solve.18), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[101,751,751]{1,2,0}, c128[101,751,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=101, j=751, k=751, l=751, m=1, n=751, o=1}, custom>\"}, metadata={op_name=\"jit(backward)/transpose(jvp(vmap(vmap(jit(solve)))))/jit(_lu_solve)/triangular_solve\" stack_frame_id=71}, backend_config={diag = 85 : ui8, side = 76 : ui8, trans_x = 84 : ui8, uplo = 76 : ui8}",
+            "%triangular_solve.22 = c128[1,286,1]{1,2,0} custom-call(%copy.36, %bitcast_copy_fusion.14), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[1,286,286]{1,2,0}, c128[1,286,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=1, j=286, k=286, l=286, m=1, n=286, o=1}, custom>\"}, metadata={op_name=\"jit(backward)/transpose(jvp(vmap(jit(solve))))/jit(_lu_solve)/triangular_solve\" stack_frame_id=121}, backend_config={diag = 78 : ui8, side = 76 : ui8, trans_x = 84 : ui8, uplo = 85 : ui8}",
+            "%triangular_solve.23 = c128[1,286,1]{1,2,0} custom-call(%copy.36, %triangular_solve.22), custom_call_target=\"lapack_ztrsm_ffi\", operand_layout_constraints={c128[1,286,286]{1,2,0}, c128[1,286,1]{1,2,0}}, output_to_operand_aliasing={{}: (1, {})}, api_version=API_VERSION_TYPED_FFI, frontend_attributes={num_batch_dims=\"1\",xla.sdy.sharding_rule=\"#sdy.op_sharding_rule<([i, j, k], [i, l, m])->([i, n, o]) {i=1, j=286, k=286, l=286, m=1, n=286, o=1}, custom>\"}, metadata={op_name=\"jit(backward)/transpose(jvp(vmap(jit(solve))))/jit(_lu_solve)/triangular_solve\" stack_frame_id=121}, backend_config={diag = 85 : ui8, side = 76 : ui8, trans_x = 84 : ui8, uplo = 76 : ui8}"
+          ],
+          "available": true,
+          "artifact": "gradient.optimized-hlo.txt.gz",
+          "stored_uncompressed_bytes": 562221,
+          "artifact_sha256": "ef46ce45c84d3cd049a7fcbc1b2282552d089c51f2ed1208bccc084eb50b0f89"
+        }
+      },
+      "cost_analysis": {
+        "available": true,
+        "values": {
+          "bytes accessed39{}": 1728.0,
+          "utilization85{}": 2.0,
+          "utilization106{}": 2.0,
+          "bytes accessed41{}": 1728.0,
+          "utilization124{}": 2.0,
+          "utilization42{}": 4.0,
+          "bytes accessed51{}": 1728.0,
+          "utilization176{}": 2.0,
+          "utilization28{}": 5.0,
+          "bytes accessed12{}": 4592.0,
+          "utilization142{}": 2.0,
+          "utilization149{}": 2.0,
+          "utilization56{}": 3.0,
+          "utilization83{}": 2.0,
+          "utilization69{}": 2.0,
+          "bytes accessed32{}": 2592.0,
+          "utilization30{}": 5.0,
+          "utilization160{}": 2.0,
+          "utilization105{}": 2.0,
+          "utilization108{}": 2.0,
+          "utilization87{}": 2.0,
+          "utilization157{}": 2.0,
+          "utilization44{}": 4.0,
+          "utilization71{}": 2.0,
+          "bytes accessed7{}": 12516.0,
+          "utilization123{}": 2.0,
+          "bytes accessed22{}": 2592.0,
+          "bytes accessed52{}": 1728.0,
+          "utilization175{}": 2.0,
+          "utilization178{}": 2.0,
+          "bytes accessed42{}": 1728.0,
+          "utilization75{}": 2.0,
+          "bytes accessed": 8407457280.0,
+          "utilization114{}": 2.0,
+          "bytes accessed1{}": 976157440.0,
+          "utilization166{}": 2.0,
+          "utilization132{}": 2.0,
+          "utilization139{}": 2.0,
+          "utilization32{}": 5.0,
+          "bytes accessed21{}": 46048.0,
+          "utilization18{}": 6.0,
+          "bytes accessed31{}": 2592.0,
+          "bytes accessed11{}": 4600.0,
+          "utilization98{}": 2.0,
+          "utilization150{}": 2.0,
+          "utilization73{}": 2.0,
+          "utilization59{}": 2.0,
+          "utilization46{}": 4.0,
+          "utilization20{}": 6.0,
+          "bytes accessed30{}": 2592.0,
+          "bytes accessed50{}": 1728.0,
+          "utilization147{}": 2.0,
+          "bytes accessed40{}": 1728.0,
+          "bytes accessed2{}": 12042035.0,
+          "utilization77{}": 2.0,
+          "utilization61{}": 2.0,
+          "utilization2{}": 80.0,
+          "utilization165{}": 2.0,
+          "utilization168{}": 2.0,
+          "utilization113{}": 2.0,
+          "bytes accessed20{}": 3456.0,
+          "utilization34{}": 5.0,
+          "utilization9{}": 10.0,
+          "utilization131{}": 2.0,
+          "utilization174{}": 2.0,
+          "flops": 767906368.0,
+          "utilization65{}": 2.0,
+          "utilization140{}": 2.0,
+          "bytes accessed3{}": 1371629.0,
+          "utilization22{}": 5.0,
+          "utilization88{}": 2.0,
+          "bytes accessed4{}": 119492.0,
+          "utilization63{}": 2.0,
+          "utilization49{}": 4.0,
+          "utilization137{}": 2.0,
+          "utilization103{}": 2.0,
+          "utilization10{}": 9.0,
+          "utilization36{}": 4.0,
+          "utilization155{}": 2.0,
+          "utilization158{}": 2.0,
+          "utilization0{}": 362.0,
+          "utilization67{}": 2.0,
+          "bytes accessed9{}": 56568.0,
+          "utilization90{}": 2.0,
+          "utilization121{}": 2.0,
+          "utilization51{}": 4.0,
+          "utilization173{}": 2.0,
+          "utilization24{}": 5.0,
+          "bytes accessedout{}": 4644300800.0,
+          "utilization55{}": 4.0,
+          "utilization78{}": 2.0,
+          "utilization3{}": 41.0,
+          "utilization12{}": 7.0,
+          "utilization127{}": 2.0,
+          "utilization92{}": 2.0,
+          "utilization148{}": 2.0,
+          "utilization26{}": 5.0,
+          "utilization39{}": 4.0,
+          "utilization53{}": 4.0,
+          "utilization145{}": 2.0
+        }
+      },
+      "memory_analysis": {
+        "available": true,
+        "text": "CompiledMemoryStats(generated_code_size_in_bytes=0, argument_size_in_bytes=4584961550, output_size_in_bytes=1544, alias_size_in_bytes=0, temp_size_in_bytes=1866742184, host_generated_code_size_in_bytes=0, host_argument_size_in_bytes=0, host_output_size_in_bytes=0, host_alias_size_in_bytes=0, host_temp_size_in_bytes=0)"
+      }
+    }
+  },
+  "sanity": {
+    "output_shapes": [
+      [
+        286,
+        1
+      ],
+      [
+        751,
+        101
+      ],
+      [
+        101
+      ]
+    ],
+    "gradient_shape": [
+      193
+    ],
+    "finite": true
+  },
+  "limits": [
+    "Instrumented diagnostic timings are excluded from the benchmark objective and all rankings.",
+    "HLO instruction counts and compiler estimates are structural evidence, not native operator timings.",
+    "One first execution per stage; no warm benchmark or finite-difference validation is performed.",
+    "IR text and summaries are bounded; truncation and unavailable analyses are explicit.",
+    "Compiler cost/memory analyses are backend dependent and do not measure process peak RSS."
+  ]
+}

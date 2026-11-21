@@ -1,0 +1,74 @@
+{
+  "schema": "feyer-diagnostic-artifacts-v1",
+  "job_id": "a8e9a3cdb3554e298a385c0551370fb6",
+  "request_id": "013419629f2a4f048fc933f9b5895507",
+  "source_sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+  "runtime_commit": "c03ad8c54079fc68289b78f6310036787a34f150",
+  "ranking_eligible": false,
+  "files": {
+    "request.json": {
+      "sha256": "4cab4ce829d2222a0d64ad2ffdbef05da9fa984b05a306e8186477ddefdb3e70",
+      "bytes": 512
+    },
+    "sensitivity.stablehlo.txt.gz": {
+      "sha256": "70059935cce3e8add1d4b47fdf3e2b1a460b7e960244de9fdb813ca3df5e3da9",
+      "bytes": 1259
+    },
+    "sensitivity.optimized-hlo.txt.gz": {
+      "sha256": "d00580a525adaaae55dff0f9803be5c956a576cd30ae74bed5ffec1f2283da9e",
+      "bytes": 4006
+    },
+    "result.json": {
+      "sha256": "7c11f7bcf7427e2ac702813475d3ced34967bc1ed3f8308eda2794ea8b97d0aa",
+      "bytes": 4754
+    },
+    "prepared.json": {
+      "sha256": "df5c492c697bbc603ebedc41562e8dddf8ee467168f63602335ba6e472596a37",
+      "bytes": 310
+    },
+    "forward.stablehlo.txt.gz": {
+      "sha256": "f2fe7514f5dde8444d328df1eefd990d6c614d43a8480a8844b0733ef9020963",
+      "bytes": 45242
+    },
+    "gradient.optimized-hlo.txt.gz": {
+      "sha256": "ef46ce45c84d3cd049a7fcbc1b2282552d089c51f2ed1208bccc084eb50b0f89",
+      "bytes": 50118
+    },
+    "forward.optimized-hlo.txt.gz": {
+      "sha256": "332fa1a0771c5d7b0e6624bc006796431d96c12e647bf91e938cecefa0bd9a8a",
+      "bytes": 133822
+    },
+    "gradient.stablehlo.txt.gz": {
+      "sha256": "7fda1a5aa23feee43bf215554c41e58d27d091c32d7bf8e55edb7da6c44ee227",
+      "bytes": 27564
+    },
+    "forward.hlo.txt.gz": {
+      "sha256": "0115886eec0a4ec1e2c6af150d34790cd75de6bea1883474cebe29b1eac53fcc",
+      "bytes": 59661
+    },
+    "sensitivity.hlo.txt.gz": {
+      "sha256": "bb353d56063f30cdcfbc37b7953f7e5888e4dfd5176ca3541d05fdc2e61b8083",
+      "bytes": 1181
+    },
+    "diagnostic.json": {
+      "sha256": "deb4303d5886af5e68a5875451080c62d332daa9dcd1e7b0f1f90c0f54da4372",
+      "bytes": 63940
+    },
+    "gradient.hlo.txt.gz": {
+      "sha256": "99dfac3b5fa36c0b7eea87d7de4fad31f7d1db064f4222ba16018e55c7ccd599",
+      "bytes": 29240
+    },
+    "launch.json": {
+      "sha256": "b9b2918b7c376743048669b9c8b2e5ff639236671be695bf0f9ebcc4470f67db",
+      "bytes": 2242
+    },
+    "compact-summary.json": {
+      "sha256": "ee7ec1e91b53a70f86effad7d51213dba2f3b33d21c03af1b6cc6f803f4f70ff",
+      "bytes": 24289
+    },
+    "restored.json": {
+      "sha256": "88cbeb7a06bdf3ca5cfa79703bab6ac797827ef197cbc7d380d7e2e1f6932254",
+      "bytes": 1371
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "borrow": {
+    "at": 1795294816.8706298,
+    "old_worker_pid": 208403,
+    "old_startup": {
+      "schema": "feyer-lane-startup-v1",
+      "started_at": 1795292722.1532912,
+      "pid": 208403,
+      "config": {
+        "schema": "feyer-lane-v1",
+        "root": "/workspace/feyer-lab-lane1",
+        "primary_root": "/workspace/feyer-lab",
+        "cpu": 34,
+        "primary_cpu": 2,
+        "memory_budget_bytes": 16000000000,
+        "primary_memory_budget_bytes": 32000000000,
+        "host_reserve_bytes": 8000000000,
+        "epoch_id": "amd-two-lanes-v1"
+      },
+      "limits": {
+        "at": 1795292722.1534774,
+        "memory_limit_bytes": 59055800320,
+        "memory_current_bytes": 9670078464,
+        "cpu": 34,
+        "thread_siblings": [
+          34,
+          98
+        ],
+        "aggregate_sampled_budget_bytes": 48000000000,
+        "host_reserve_bytes": 8000000000,
+        "can_admit": true,
+        "kernel_per_job_cap": false
+      },
+      "worker_sha256": "d3c212da0ab1215187407d9cd21dc2cbb5f88dc0b5ee7885135bf7f002d14b58",
+      "launcher_sha256": "bb277a362d8a0678614863948a42175886fef3f3902131e338143305757a33f1",
+      "evaluator_release": "/workspace/feyer-lab-lane1/releases/bea601a8799aea4173c6c98287bac98ef755ef2f",
+      "stop_policy": "Create state/STOP to finish current job and stop before next claim"
+    },
+    "queue_empty": true
+  },
+  "startup": {
+    "pid": 237082,
+    "started_at": 1795294817.508052,
+    "release": "/workspace/feyer-diagnostic-v1/releases/c03ad8c54079fc68289b78f6310036787a34f150",
+    "worker_sha256": "3b4f0fc85aa2a273eea14c5b43bbf5ad6c93de5a49da274f084d21ca15405b8a",
+    "runner_sha256": "6dc408fcce75bb8b52eb9c9cadca2a8e933594e88743ca8ed04ddfd3266ee9c5",
+    "cpu_affinity": [
+      34
+    ],
+    "memory_budget_bytes": 16000000000,
+    "max_total_seconds": 600,
+    "timeout": 600,
+    "config": {
+      "schema": "feyer-lane-v1",
+      "root": "/workspace/feyer-diagnostic-v1",
+      "primary_root": "/workspace/feyer-lab",
+      "cpu": 34,
+      "primary_cpu": 2,
+      "memory_budget_bytes": 16000000000,
+      "primary_memory_budget_bytes": 32000000000,
+      "host_reserve_bytes": 8000000000,
+      "epoch_id": "compiler-diagnostic-borrow-v1"
+    }
+  }
+}

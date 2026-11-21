@@ -1,0 +1,13 @@
+{
+  "request_id": "013419629f2a4f048fc933f9b5895507",
+  "sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+  "branch": "explore/claude-noise-reuse",
+  "agent": "profiler-support",
+  "direction": "compiler-baseline-inspection",
+  "hypothesis": "Inspect bounded IR and factorization shapes of the confirmed baseline; nonranking diagnostic, not numerical validation.",
+  "profile": "diagnostic",
+  "created_at": 1795294817.707166,
+  "budget_jobs": 1,
+  "budget_seconds": 600,
+  "numerical_campaign_budget": false
+}
