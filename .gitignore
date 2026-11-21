@@ -10,3 +10,8 @@ benchmark*.pdf
 benchmark*.svg
 *.npz
 examples/results/
+.lab/
+.env
+.env.*
+!.env.example
+*.bundle
