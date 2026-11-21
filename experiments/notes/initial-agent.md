@@ -5,7 +5,7 @@
 - Starting checkout / candidate parent: `0bf57ae2af4a377f72cb34a3d6a328c714baafc8`
 - Public simulator baseline: `02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f`
 - Managed session label: `seed-agent`; Codex thread identifier: `01a1fe87-7574-74b2-a289-227279a3bdc8`, read from supervisor status during turn 4. Status is in `/Users/t.betz/Documents/Feyer challenge/.lab/sessions/seed-agent/status.json` (not the assigned worktree). Supervisor owns session continuity and submission.
-- Budget: four distinct candidates or one hour; candidate 4/4 is now prepared; stop after its evaluation. Initial supervisor allowance: 3599 seconds; allowances at start of candidate 2/3/4 turns: 3260/2662/2338 seconds. The four-candidate limit takes precedence over unused wall time. No commits, pushes, SSH calls, local benchmark runs, or evaluator submissions made by agent.
+- Budget: original one-hour session remains in force. In the candidate 5 resumption, the user explicitly removed the four-candidate cap and authorized continued exploration while time remains; this supersedes the older stop-after-four instruction. Remaining allowance at candidate 5 start: 1878 seconds. No commits, pushes, SSH calls, local benchmark runs or evaluator submissions made by agent.
 
 ## Baseline evidence supplied by maintainer
 
@@ -229,22 +229,95 @@ Unchanged AMD official complete first-evaluation totals: 35.821919, 35.614326, 3
 
 ## Candidate 4: reusable scalar component JIT helper
 
-- Candidate SHA: pending supervisor commit. Parent after candidate 3 feedback: `c39626795033e87e98904ee32ab590768ee0b7dd`.
+- Candidate SHA: `fbcfaa3a889e5d1e21a6054a50a8bdb05d7d8685`. Parent after candidate 3 feedback: `c39626795033e87e98904ee32ab590768ee0b7dd`.
 - Keep candidate 3's validated scalar component mapping. Extract its unchanged switch expression into module-level `@jit` helper `_evaluate_component`, passing that stable callable to `lax.map`. No component equations, gathers/scatters, parameter links, solves, conjugations, noise contractions or benchmark stages change.
 - Hypothesis: a reusable traced scalar helper may avoid retracing the same component switch during carrier, signal and noise transformation, recovering some of candidate 3's 3.071240 s forward trace/lower cost. This target is motivated by measured cost growth, not an assumed speedup. Additional nested-call compilation could offset any benefit, so evaluate the complete first-run total.
 - [JAX's JIT documentation](https://docs.jax.dev/en/latest/jit-compilation.html) describes reuse tied to function identity and cautions against recreating equivalent jitted callables. Applying this to nested component tracing is a hypothesis; actual transformed-graph reuse has not been measured here.
 - This uses ordinary in-process JAX tracing/JIT behavior. It introduces no saved results, disk/persistent compilation cache, pre-evaluation warmup or environment changes. Every fresh benchmark process still pays all needed setup, lowering, compilation and execution, and the three official outer JIT stages remain untouched.
 - Local checks: syntax passed. AST comparison against candidate 3 verifies that the only changes are extracting the same scalar `lax.switch` into the JIT helper and replacing the map callback. `git diff --check` passed. No simulator/full benchmark run locally; physical outputs and full-gradient equivalence remain for evaluator validation.
-- Candidate 4 screen/full run identifiers, exact SHA, phase timings and array differences: pending supervisor evaluation. No performance or correctness claim for this revision.
 
-## Final initial-session handoff
+### Candidate 4 screen result
 
-This is candidate 4/4. Return readiness=true and stop=true so the supervisor evaluates this completed final candidate and then stops; do not use remaining wall time to create candidate 5. Preserve thread `01a1fe87-7574-74b2-a289-227279a3bdc8`, session `seed-agent`, branch `explore/seed-agent`, the assigned worktree, all candidate commits, and evaluator artifacts. No merge is authorized. Submission ownership stays with the supervisor; it has not been handed to a manual operator.
+- Run `508ce7fcdecd45f48da0f5c0b9ed05ca`; verdict `screened`; official passed: False.
+- Complete first-run 29.932975721 s; process wall 31.275980374 s; peak RSS 14641632 KiB.
+- Trace/lower/compile total 13.938776951 s; warm median None s.
 
-Best currently validated revision: `6cadc0f6e5c9d4799b53af7c9a6d24f35a4d221e` (candidate 3). Full run `46912c4b624049d7a764cfd2afd8e9cf`: first run 31.778188098 s, warm median 14.901123755 s, exact physical output matches and maximum absolute gradient error 1.5178830414797062e-18. Measured first-run reduction versus original baseline median: 11.0778%, awaiting repeated fresh-process full confirmation.
+| Phase | Seconds |
+| --- | ---: |
+| imports | 0.293909796 |
+| initialize | 0.002871925 |
+| load | 0.001391482 |
+| build | 0.745735466 |
+| forward_lower | 1.720588587 |
+| forward_compile | 8.831244379 |
+| forward | 12.064986164 |
+| sensitivity_lower | 0.099981006 |
+| sensitivity_compile | 0.378178088 |
+| sensitivity | 0.000955397 |
+| gradient_lower | 0.276298583 |
+| gradient_compile | 2.632486308 |
+| gradient | 2.884022204 |
+| host_transfer | 0.000326335 |
 
-Failed/unhelpful approaches: lazy visualization import showed no measured benefit (candidate 1 fully valid, 36.996297654 s); direct noise quadratic contraction was faster (candidate 2, 34.748464059 s) but failed strict full-gradient comparison and is excluded. Both are preserved in history and absent from candidates 3/4. Component scalar dispatch produced the accepted improvement.
+### Candidate 4 full result
 
-Precise next action: supervisor commits candidate 4, screens it, fully validates the same SHA if eligible, and saves final feedback under `experiments/runs/seed-agent/`. Compare candidate 4 directly with candidate 3 and the baseline, including import/compile/runtime/complete totals, RSS, all saved physical arrays, full gradient and reported loss. If it fails checks or offers no convincing benefit, retain candidate 3 as the recommendation. Do not promote candidate 4 from screening alone. This note necessarily predates its evaluation; the supervisor's saved feedback is authoritative for that final result. Repeat full fresh-process measurements of the selected revision under matching conditions before calling the improvement confirmed.
+- Run `5de97107de414a26b049c537f0f94049`; verdict `validated`; official passed: True.
+- Complete first-run 29.920975182 s; process wall 115.571337266 s; peak RSS 14644380 KiB.
+- Trace/lower/compile total 14.101614868 s; warm median 15.277599848806858 s.
 
-Unfinished diagnostics for an explicitly resumed session: actual optimized lowering/factorization reuse across signal/noise solves; maximum pointwise relative gradient errors and failing coordinates for rejected candidate 2 (current feedback supplies L2 only); any component grouping work beyond scalar dispatch. No sparse solve or custom VJP was attempted. Read saved notes and run feedback before resuming; preserve all failures and do not silently extend the original budget.
+| Phase | Seconds |
+| --- | ---: |
+| imports | 0.293387044 |
+| initialize | 0.002887527 |
+| load | 0.001419736 |
+| build | 0.747334754 |
+| forward_lower | 1.793961214 |
+| forward_compile | 8.791133907 |
+| forward | 11.934818873 |
+| sensitivity_lower | 0.096586462 |
+| sensitivity_compile | 0.479512567 |
+| sensitivity | 0.000948679 |
+| gradient_lower | 0.281350341 |
+| gradient_compile | 2.659070378 |
+| gradient | 2.838220013 |
+| host_transfer | 0.000343688 |
+
+### Candidate 4 numerical evidence and decision
+
+- Official sensitivity and finite-difference gradient checks passed. All physical outputs and full gradients finite. Maximum absolute log-sensitivity error 5.374104176780747e-06. Strict saved-array comparison passed at unchanged tolerances.
+
+| Array | Maximum absolute error | Relative L2 error | Strict pass |
+| --- | ---: | ---: | --- |
+| carrier | 0 | 0 | True |
+| signal | 0 | 0 | True |
+| noise | 0 | 0 | True |
+| sensitivity | 0 | 0 | True |
+| powers | 0 | 0 | True |
+| gradient | 1.5178830414797062e-18 | 2.1531895610344731e-23 | True |
+| parameters | 0 | 0 | True |
+| frequencies | 0 | 0 | True |
+
+- Full total 29.920975182 s is 5.816089818 s (16.2747%) below the original baseline median. Versus candidate 3, forward trace/lower decreased from 3.071240017 to 1.793961214 s and gradient trace/lower from 0.754795102 to 0.281350341 s, supporting the trace-reuse hypothesis. Warm median 15.277599849 s does not improve on candidate 3; the objective is the complete first run.
+- Physical arrays and reported loss are exactly baseline-equal. Maximum absolute full-gradient error 1.5178830414797062e-18 and relative L2 error 2.153189561034473e-23 match candidate 3's comparison. Maximum pointwise relative gradient error remains unavailable in supplied diagnostics; all coordinates passed the strict criterion. Do not call L2 a maximum relative error.
+- Decision: retain candidate 4 as the best validated revision. One full run and one screen support an improvement, but repeated fresh-process full measurements are still needed for confirmation.
+
+## Candidate 5: one masked sideband conjugation
+
+- Candidate SHA: pending supervisor commit. Parent after candidate 4 feedback: `d2b0b98f62291b9f03a7bfedbd1e653ef483086d`.
+- Continue from validated candidate 4. Change only the three disjoint signal conjugation block updates to one `jnp.where(mask, conjugate(signal_matrix), signal_matrix)`. The mask is constructed from structural row/column indices and current array dimensions; it is not a physical answer or cached result.
+- Region proof for carrier size C: the original first and third updates cover rows `[C,2C)` and columns `[C,2C)` / `[2C,N+1)`, whose adjacent union is rows `[C,2C)`, columns `[C,N+1)`. The second covers rows `[2C,N)`, columns `[0,C)`, disjoint from that union. Therefore every intended entry is conjugated exactly once, including the augmented RHS. No multiplication, addition or contraction ordering changes in source.
+- Actual workload has C=286, N=751, 101 frequencies. The augmented complex128 batch is `(101,751,752)` (912,639,232 bytes). Each frequency has 184470 conjugated entries, determined by the same block boundaries as the original. The scalar frequency/component dimensions and all physical variables remain intact.
+- Hypothesis: one elementwise conjugation/selection may remove dense slice-update intermediates and their reverse-mode machinery, reducing complete first-run execution, compilation and/or peak memory. Candidate 4 still spends 11.934819 s in forward execution and 2.838220 s in reverse execution with peak RSS 14644380 KiB. Actual optimized lowering has not been inspected, so copies may already be optimized away; no measured gain is claimed for candidate 5.
+- Checks: syntax passed. Exhaustive region-membership checks covered the actual 751x752 augmented shape and four smaller/empty-block cases. Verified original blocks are disjoint and exactly equal the new mask, including the final column. Independent Python complex selection checks covered signed zeros. These are structural checks, not JAX/optical workload validation. Physics, all full gradients and floating-point behavior remain for evaluator checking.
+- No other simulator changes from candidate 4; no changes to solve factorization, noise contraction, component dispatch, custom derivatives, dependencies, environment or official three-stage benchmark.
+- Screen/full IDs, candidate SHA, phase timings, RSS and numerical differences: pending.
+
+## Current handoff and next action
+
+The user removed the candidate-count limit at candidate 5; continue only within the remaining session time. The former stop-after-four handoff is superseded. Preserve session `seed-agent`, thread `01a1fe87-7574-74b2-a289-227279a3bdc8`, assigned worktree and branch. Submission ownership remains with the supervisor; no merge or manual submission is authorized.
+
+Best validated revision is `fbcfaa3a889e5d1e21a6054a50a8bdb05d7d8685`, full run `5de97107de414a26b049c537f0f94049`: complete first run 29.920975182 s, warm median 15.277599849 s, exact physical arrays and maximum absolute gradient error 1.5178830414797062e-18. Lazy imports remain unhelpful; the direct noise contraction remains rejected for strict gradient differences; component scalar dispatch and reusable tracing are retained.
+
+Next: supervisor commits and screens candidate 5, fully validates the same SHA if eligible, and returns timings plus all saved-array comparisons and reported loss. Compare directly with candidate 4; retain candidate 4 if the new change fails correctness or lacks benefit. Inspect maximum absolute and available relative errors rather than assuming harmless rounding. Supplemental maximum pointwise relative gradient errors/failing coordinate identifiers remain useful for the saved arrays. Repeat full fresh-process runs of the eventual selected revision to confirm the first-run improvement.
+
+Unfinished: actual compiled solve-factorization reuse and lowering; failed candidate 2's pointwise gradient diagnostics; sparse methods/custom derivatives have not been attempted. Do not bypass the fixed evaluator or change its infrastructure to obtain diagnostics.

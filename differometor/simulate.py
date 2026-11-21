@@ -334,14 +334,15 @@ def simulate(
 
     # Apply conjugation rules to enforce upper and lower sideband symmetry.
     carrier_size = carrier.shape[1]
-    signal_matrix = signal_matrix.at[:, carrier_size : carrier_size * 2, carrier_size : carrier_size * 2].set(
-        jnp.conjugate(signal_matrix[:, carrier_size : carrier_size * 2, carrier_size : carrier_size * 2])
-    )
-    signal_matrix = signal_matrix.at[:, carrier_size * 2 :, :carrier_size].set(
-        jnp.conjugate(signal_matrix[:, carrier_size * 2 :, :carrier_size])
-    )
-    signal_matrix = signal_matrix.at[:, carrier_size : carrier_size * 2, carrier_size * 2 :].set(
-        jnp.conjugate(signal_matrix[:, carrier_size : carrier_size * 2, carrier_size * 2 :])
+    rows = jnp.arange(signal_matrix.shape[1])[:, None]
+    columns = jnp.arange(signal_matrix.shape[2])[None, :]
+    # The lower-sideband row blocks are adjacent; include the augmented RHS.
+    # Their union and the mechanical-to-upper block are disjoint.
+    conjugate_entries = (
+        (rows >= carrier_size) & (rows < 2 * carrier_size) & (columns >= carrier_size)
+    ) | ((rows >= 2 * carrier_size) & (columns < carrier_size))
+    signal_matrix = jnp.where(
+        conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix
     )
 
     signal = vmap(solve)(signal_matrix[:, :, :-1], signal_matrix[:, :, -1])
