@@ -13,19 +13,27 @@ branch, and one supervisor owns each submission stream.
   lane is an initial target, not evidence that it is running. Additional lanes
   require measured resource headroom and their own receipt.
 - The numerical owner owns `layout-numerical-v2` and branch
-  `explore/layout-round-seed`. The new authorization starts at 20:14:57 UTC and
-  ends at Unix `1795295697` (21:14:57 UTC), with **40 total jobs**, including two
-  seed checks. The campaign ceiling after those checks is 38 jobs. Do not restart
-  its clock on a lane handoff.
+  `explore/layout-round-seed`. Its actual launch receipt starts at Unix
+  `1795292429.2574458` and ends at `1795296029.2574458` (21:20:29 UTC), with
+  **40 total jobs**, including two seed checks. The profiler owner instructed the
+  fresh one-hour clock to start at actual launch; the earlier 20:14:57 UTC plan
+  had not launched. The campaign ceiling after seed checks is 38 jobs. Do not
+  restart this actual clock on a lane handoff.
 - The layout combination is assigned to the numerical owner; the earlier planned
   Astra layout assignment was withdrawn before injection. Astra and Claude retain
   their original profiler-guided work and fixed deadlines. No duplicate layout
   task or third model session is implied.
-- The planned seed combines `28566a64` with the layout-only transformation from
+- The launched seed `e0a1dc69f4951c100fefbc9fc08a23c3c12058dc` combines `28566a64` with the layout-only transformation from
   `3e94580e` to `423bcc4a`. It must obtain its own exact full/strict evidence. The
   proposed four-option menu varies noise contraction (`broadcast`, `shared`) and
   factorization (`off`, `direct`), with assembly chunk 1 and a separate adjoint
   factorization. A proposed menu or source change is not a passing seed.
+
+The local bootstrap launch receipt records PID 39262, controller commit
+`2ae00b7b0efac2b85e7928118128db92c3f75a8b`, and first screen job
+`4c29fe65a1b54b5192b51ad5775db353`. These are launch facts, not a claim that the
+process is still running or that the seed passed. Live status belongs in the
+campaign receipt and queue.
 
 CPU-2 exploratory jobs may start within this new budget while the additional lane
 is prepared. Record the actual seed SHA, menu digest, campaign ID, queue/root,
