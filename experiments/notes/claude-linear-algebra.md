@@ -70,8 +70,31 @@ Alternatives considered and deferred:
 
 | # | SHA | Hypothesis | Runs | Result | Decision |
 |---|-----|-----------|------|--------|----------|
-| 1 | (assigned by supervisor) | Share one LU(A) across signal, A^H noise-weight and covariance solves | pending | pending | pending |
+| 1 | `3db9b657f8496d40a9f195fd9864e5e048c7df5b` | Share one LU(A) across signal, A^H noise-weight and covariance solves | screen `af18c37444224d31a69ced471361ef2d`, full `cd271462a63446a997264fb26882b711` | Official pass; strict array check FAILED (3 gradient entries) | Keep as speed evidence; numerical review needed |
+| 2 | (assigned by supervisor) | Block/Schur factorization of A using structurally zero sideband cross blocks | pending | pending | pending |
+
+### Candidate 1 measured results
+
+Results from full run `cd271462…`, single runs on AMD EPYC 9334 pinned to CPU 2:
+
+- **First run 31.509 s** (screen run: 31.429 s), vs the 35.737 s baseline median: −4.2 s (−11.8%).
+- Warm runtime median 10.876 s (forward 7.94 s, gradient 2.74 s), vs the baseline warm ~15.5–15.7 s.
+- Compile: forward 12.97 s, gradient 4.73 s, trace/lower+compile 19.66 s in total. I have no baseline per-phase compile numbers in hand, so the phase-by-phase compile comparison is still open.
+- Peak RSS 12.48 GB (GNU time).
+- Official checks passed: max |Δlog sens| 5.37e-6 (limit 1e-5); FD gradient check passed for mb11.tuning.
+- Strict comparison (rtol 1e-7): carrier, signal and powers were **bitwise identical**. Noise had relative L2 error 2.2e-8 and passed. The gradient FAILED at 3 of 193 entries: idx 33 (rel 3.1e-7), idx 161 (rel 1.5e-6), idx 180 (rel 2.3e-7). Gradient relative L2 error was 3.85e-8 and loss 9.745414349309313e-08.
+- Interpretation: the expected mechanism is the pivoting change, since A^H is now solved via LU(A)^H instead of LU(A^H). The sensitive entries suggest an ill-conditioned noise path. The official FD estimates themselves disagree between step sizes at the 2.6e-3 relative level, far above these diffs. Whether 1.5e-6 relative gradient drift is acceptable is a **maintainer decision**. The candidate does not pass the lab's strict check as is.
 
 Candidate 1 implementation (`differometor/simulate.py`): adds `lu_factor`, `_lu_solve` (public `lax.linalg.triangular_solve`, trans 0/1/2) and `solve_factored` (`lax.custom_linear_solve`). `simulate` now factors `signal_matrix[:, :, :-1]` once and uses those factors for all three signal-system solves. The explicit `A^H` copy is removed. The carrier solve and the public `solve` function are unchanged. I have not executed this code locally: no runtime is available in this launcher. Possible failure modes to check in the screening run are tracing errors in the `custom_linear_solve` batching, and gradient mismatches, which would point to the transpose convention.
+
+### Candidate 2 (built on candidate 1)
+
+Source evidence for the structural zeros: `set_instructions` (`build.py:177-266`) duplicates carrier-block signal entries only diagonally (r+N, c+N). Mixed entries go to rows/columns ≥ 2N. The base is identity plus carrier copies on both diagonal blocks (`build.py:1373-1374`), and space writes are block-diagonal pairs. The squeezer cross-sideband entries (`build.py:813-825`) go only to `noise_instructions`. So `A[:N, N:2N]` and `A[N:2N, :N]` are zero for every parameter value. I have not verified this at runtime.
+
+Change: `block_factor` computes LU(B1), LU(B2) (286×286), W = P⁻¹Q (572×179), S = M − R W and LU(S) (179×179). `_block_solve` solves trans 0/1/2 via A = [[P,0],[R,S]]·[[I,W],[0,I]]. The `custom_linear_solve` wrapper, matvec and derivative structure are unchanged from candidate 1.
+
+Rough flop estimate per frequency (not measured): 2·(286³·2/3) + 2·286²·179·2 + 179·572·179 + 179³·2/3 ≈ 1.1e8 complex FMA, vs 2.8e8 for one 751 LU. Candidate 1 suggests one 751-LU batch costs about 4.5 s, so this could save roughly 2–3 s of forward time if LAPACK efficiency at the smaller sizes holds up.
+
+Numerical risk: pivoting is now restricted to within blocks (B1, B2, S), so a nearly singular B1/B2 or S would amplify error. Expect larger output differences than candidate 1. The official log-sensitivity margin is 5.37e-6 of 1e-5 (dominated by the reference itself). If the screen fails the sensitivity check, or noise/gradient diffs grow by orders of magnitude, reject the candidate and revert to candidate 1.
 
 Next decision: if the screen passes, compare the noise/sensitivity/gradient arrays against the baseline and request full validation. If the forward-stage time does not drop, the HLO getrf count diagnostic decides whether the baseline was already sharing factors. If it helps, the block/Schur decomposition is the next candidate.
