@@ -12,3 +12,10 @@ test('campaign parents are scoped and source branches do not become parent arrow
 test('planned research stays unmeasured and receives only explicit input links',()=>{
  const g=TopologyMap.build({team_search:{research_records:{r:{record_id:'r',candidate_sha:null,parents:['p'],target_phases:[],hypothesis:'Investigate',status:'proposed'}}}});const n=g.nodes.find(n=>n.planned);assert.equal(n.runs.length,0);assert.equal(n.group,'unknown');assert.deepEqual(g.edges,[{source:'p',target:'plan:r'}]);
 });
+
+test('historical and campaign grader receipts remain visible even outside current workers',()=>{
+ const g=TopologyMap.build({historical:{candidates:[{sha:'old',job_id:'oldjob',profile:'full',metrics:{total:30}}]},campaigns:[{id:'c',evidence:[{candidate_sha:'a',job_id:'j1',profile:'full',checks:{official:'passed',strict:'failed'},eligible_full:false,metrics:{total:20}}]}]});assert.equal(g.measurements.length,2);assert.equal(g.nodes.find(n=>n.id==='a').runs[0].evidence.eligible_full,false);
+});
+test('explicit stopped tasks remain visible as stop records, not inferred local optima',()=>{
+ const g=TopologyMap.build({team_search:{tasks:{t:{id:'t',status:'stalled',candidates:['a'],stopping_reason:'No qualifying total-time gain'}}}});const n=g.nodes.find(n=>n.id==='plan:task:t');assert.equal(n.records[0].status,'stalled');assert.deepEqual(n.parents,['a']);
+});
