@@ -552,21 +552,21 @@ NOISE_ROW_REUSE: bool = True
 # "broadcast" (variant A; broadcast to (B, NN, NN), unchanged batched einsum;
 # candidate f3139c7 passed official + strict with bitwise forward outputs) or
 # "shared" (variant B; unbatched einsum "ij,dbj->dbi", may round differently).
-NOISE_REUSE_MODE: str = "broadcast"
+NOISE_REUSE_MODE: str = "shared"
 # Signal-matrix LU reuse: "off" (three jnp.linalg.solve calls), "direct" (one LU of
 # A shared by the signal and covariance solves; separate LU of A^H for noise
 # weights) or "all" (A's LU also for A^H; candidate 3 bb9a183, 18.65 s but FAILED
 # strict gradient at indices 33/161/180, max normalized error 14.7).
-NOISE_FACTOR_REUSE: str = "direct"
+NOISE_FACTOR_REUSE: str = "off"
 # Coordinator combination (parents f3139c7 + 4c12600): with NOISE_FACTOR_REUSE="off",
 # solve the signal and covariance systems (both A, untransposed) as one multi-RHS
 # jnp.linalg.solve; A^H noise weights keep their separate factorization.
 # Ignored when NOISE_FACTOR_REUSE != "off". False = two separate solve calls.
-MERGE_SAME_MATRIX_SOLVES: bool = True
+MERGE_SAME_MATRIX_SOLVES: bool = False
 # Ported from 423bcc4: split coefficient/RHS blocks before stacking the assembly
 # loop outputs. Combined with guarded noise reuse from 28566a64. Both direct-LU
 # and multi-RHS solvers consume the same separated arrays; arithmetic is unchanged.
-SPLIT_SIGNAL_RHS: bool = False
+SPLIT_SIGNAL_RHS: bool = True
 
 
 def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):
