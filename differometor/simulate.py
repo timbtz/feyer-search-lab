@@ -59,6 +59,13 @@ def solve(matrix: jnp.ndarray, right_hand_side: jnp.ndarray) -> jnp.ndarray:
     return jnp.linalg.solve(matrix, right_hand_side)
 
 
+@jit
+def _evaluate_component(function_and_inputs):
+    """Reuse the scalar component trace across carrier, signal and noise updates."""
+    function_index, function_inputs = function_and_inputs
+    return lax.switch(function_index, FUNCTIONS, function_inputs)
+
+
 def update(
     parameters: jnp.ndarray,
     matrix: jnp.ndarray,
@@ -109,7 +116,7 @@ def update(
     # Keep the function selector scalar so only the selected component branch
     # executes. The outer vmap in simulate still batches frequency samples.
     output_matrix = lax.map(
-        lambda item: lax.switch(item[0], FUNCTIONS, item[1]),
+        _evaluate_component,
         (function_indices, function_inputs),
     )
     outputs = output_matrix[output_indices[0], output_indices[1]]

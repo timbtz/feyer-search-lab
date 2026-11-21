@@ -4,8 +4,8 @@
 - Assigned branch: `explore/seed-agent`
 - Starting checkout / candidate parent: `0bf57ae2af4a377f72cb34a3d6a328c714baafc8`
 - Public simulator baseline: `02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f`
-- Managed session label: `seed-agent`; conversation identifier unavailable in supplied context. Local `.lab/sessions/seed-agent/status.json` is absent. Supervisor owns session continuity and submission.
-- Budget: four distinct candidates or one hour; candidate 3/4 is now prepared. Initial supervisor allowance: 3599 seconds; allowances at start of candidate 2/3 turns: 3260/2662 seconds. No commits, pushes, SSH calls, local benchmark runs, or evaluator submissions made by agent.
+- Managed session label: `seed-agent`; Codex thread identifier: `01a1fe87-7574-74b2-a289-227279a3bdc8`, read from supervisor status during turn 4. Status is in `/Users/t.betz/Documents/Feyer challenge/.lab/sessions/seed-agent/status.json` (not the assigned worktree). Supervisor owns session continuity and submission.
+- Budget: four distinct candidates or one hour; candidate 4/4 is now prepared; stop after its evaluation. Initial supervisor allowance: 3599 seconds; allowances at start of candidate 2/3/4 turns: 3260/2662/2338 seconds. The four-candidate limit takes precedence over unused wall time. No commits, pushes, SSH calls, local benchmark runs, or evaluator submissions made by agent.
 
 ## Baseline evidence supplied by maintainer
 
@@ -154,17 +154,97 @@ Unchanged AMD official complete first-evaluation totals: 35.821919, 35.614326, 3
 
 ## Candidate 3: scalar component dispatch inside the frequency batch
 
-- Candidate SHA: pending supervisor commit. Parent after candidate 2 feedback: `9294d2b53fc7864c50a521a4426aff4b8e6d1e18`.
+- Candidate SHA: `6cadc0f6e5c9d4799b53af7c9a6d24f35a4d221e`. Parent after candidate 2 feedback: `9294d2b53fc7864c50a521a4426aff4b8e6d1e18`.
 - Scope: restore `simulate.py` baseline noise arithmetic and replace only `update`'s `vmap` over component selectors with `lax.map` over `(function_indices, function_inputs)`. Keep `lax.switch` and its 19 original component functions, output order, gathers, scatters, frequency batching, all dense solves and original covariance contraction. The initializer remains baseline-identical. No earlier experimental change is combined.
 - Code evidence: `update` currently batches the switch selector itself. [JAX switch documentation](https://docs.jax.dev/en/latest/_autosummary/jax.lax.switch.html) states that batched predicates transform conditional dispatch into selection. [JAX map documentation](https://docs.jax.dev/en/latest/_autosummary/jax.lax.map.html) describes elementwise mapping for heterogeneous control flow with the body compiled once. The component selector is shared across frequencies by the existing outer `vmap(update, in_axes=(0, None, None, None, None, None))`, so mapping over components keeps the selector scalar while retaining vectorized frequency operands. This is a source/documentation inference; the fixed evaluator's actual compiled HLO remains uninspected.
 - Hypothesis: scalar branch selection avoids evaluating unused component branches and their derivative intermediates for each component row, potentially reducing first-run compile time and memory. The baseline/candidate timings have roughly 19–21 s of lowering/compilation, making compilation work a meaningful target after the noise arithmetic rewrite failed. Loop overhead, branch residual padding or less fusion could outweigh any benefit; measure complete first-run time and do not assume improvement.
 - This changes execution structure without changing component formulas or solve/contraction formulas. Floating-point fusion and reverse accumulation may still differ, so full numerical comparison is required. No custom derivative or sparse linear algebra is introduced.
 - Local checks: syntax passed. AST comparison against the public baseline confirms the entire simulator module is identical except for the single `output_matrix` dispatch assignment in `update` (comments excluded); the package initializer is byte-for-byte baseline-identical. No local simulator/benchmark execution, dependencies, JAX settings, protected harness edits, commits or remote calls.
 - Tooling: web retrieval of tagged JAX conditionals source returned cache misses; current official API documentation was available. No version-specific lowering result is claimed from that failed retrieval.
-- Screen/full IDs, exact SHA, correctness, timings and array errors: pending supervisor evaluation.
 
-## Handoff / precise next action
+### Candidate 3 screen result
 
-Commit and screen candidate 3, then fully validate the same SHA if eligible. Inspect total first-run, all compile/execute phases, warm median, process wall and RSS. For numerical correctness, inspect every saved physical output and the full 193-element gradient, plus the loss reported separately. Maximum pointwise relative errors and failing-coordinate identifiers remain useful supplemental diagnostics because the existing comparator reports relative L2 error only; obtain them from the saved arrays in the fixed environment without editing the comparator or baseline artifacts.
+- Run `83b20dfb2f1940e8bab4f05ade4ff51a`; verdict `screened`; official passed: False.
+- Complete first-run 31.387493499 s; process wall 32.776801936 s; peak RSS 14646728 KiB.
+- Trace/lower/compile total 15.638940573 s; warm median None s.
 
-Candidate 2 is rejected, candidate 1 is accepted for correctness only, and baseline `02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f` remains the best validated measured reference at median 35.737065 s. One candidate slot remains after candidate 3. Continue only within the original one-hour/four-revision budget. Session `seed-agent`, assigned worktree and branch remain as recorded above; submission ownership remains with the supervisor. Explicit solve-factor reuse is unfinished because no actual compiled-lowering evidence has been obtained.
+| Phase | Seconds |
+| --- | ---: |
+| imports | 0.288846567 |
+| initialize | 0.002930652 |
+| load | 0.001511609 |
+| build | 0.807878079 |
+| forward_lower | 2.983854888 |
+| forward_compile | 8.851781107 |
+| forward | 11.867721779 |
+| sensitivity_lower | 0.097959684 |
+| sensitivity_compile | 0.387378829 |
+| sensitivity | 0.000875987 |
+| gradient_lower | 0.676000765 |
+| gradient_compile | 2.641965300 |
+| gradient | 2.778476266 |
+| host_transfer | 0.000311986 |
+
+### Candidate 3 full result
+
+- Run `46912c4b624049d7a764cfd2afd8e9cf`; verdict `validated`; official passed: True.
+- Complete first-run 31.778188098 s; process wall 117.069611160 s; peak RSS 14647344 KiB.
+- Trace/lower/compile total 15.922610670 s; warm median 14.901123754680157 s.
+
+| Phase | Seconds |
+| --- | ---: |
+| imports | 0.285218654 |
+| initialize | 0.002905913 |
+| load | 0.001401803 |
+| build | 0.732901813 |
+| forward_lower | 3.071240017 |
+| forward_compile | 8.871592909 |
+| forward | 12.026923176 |
+| sensitivity_lower | 0.096960152 |
+| sensitivity_compile | 0.511889745 |
+| sensitivity | 0.002805404 |
+| gradient_lower | 0.754795102 |
+| gradient_compile | 2.616132746 |
+| gradient | 2.802842442 |
+| host_transfer | 0.000578223 |
+
+### Candidate 3 full numerical evidence and decision
+
+- Official checks and strict baseline array comparison passed. All physical outputs and the 193-element gradient were finite; maximum log-sensitivity reference error 5.374104176780747e-06.
+
+| Array | Maximum absolute error | Relative L2 error | Strict pass |
+| --- | ---: | ---: | --- |
+| carrier | 0 | 0 | True |
+| signal | 0 | 0 | True |
+| noise | 0 | 0 | True |
+| sensitivity | 0 | 0 | True |
+| powers | 0 | 0 | True |
+| gradient | 1.5178830414797062e-18 | 2.1531895610344731e-23 | True |
+| parameters | 0 | 0 | True |
+| frequencies | 0 | 0 | True |
+
+- Reported loss 9.793036291535532e-08 equals the baseline report exactly. Carrier, signal, noise, sensitivity and powers have zero absolute differences, so their nonzero-reference pointwise relative errors are also zero. Gradient maximum absolute error is 1.5178830414797062e-18; relative L2 error is 2.153189561034473e-23. The maximum pointwise relative gradient error was not included in feedback; do not mislabel the L2 value. The actual comparator did check every coordinate against its unchanged tolerance.
+- Decision: keep candidate 3 as the best validated revision. Its full first-run 31.778188098 s is 3.958876902 s (11.0778%) below the original 35.737065 s baseline median. Screening at 31.387493499 s corroborates the direction. One full first-run sample does not constitute repeated full-run confirmation; warm repetitions are not repeated fresh-process first runs.
+- Mechanism evidence: versus baseline run 3, forward compile fell from 12.887612728 to 8.871592909 s and gradient compile from 4.687998043 to 2.616132746 s. Forward trace/lower increased from 1.143522039 to 3.071240017 s; gradient trace/lower from 0.299148122 to 0.754795102 s. Thus lower compiler cost outweighs extra tracing/lowering, suggesting a narrowly targeted trace-reuse follow-up.
+
+## Candidate 4: reusable scalar component JIT helper
+
+- Candidate SHA: pending supervisor commit. Parent after candidate 3 feedback: `c39626795033e87e98904ee32ab590768ee0b7dd`.
+- Keep candidate 3's validated scalar component mapping. Extract its unchanged switch expression into module-level `@jit` helper `_evaluate_component`, passing that stable callable to `lax.map`. No component equations, gathers/scatters, parameter links, solves, conjugations, noise contractions or benchmark stages change.
+- Hypothesis: a reusable traced scalar helper may avoid retracing the same component switch during carrier, signal and noise transformation, recovering some of candidate 3's 3.071240 s forward trace/lower cost. This target is motivated by measured cost growth, not an assumed speedup. Additional nested-call compilation could offset any benefit, so evaluate the complete first-run total.
+- [JAX's JIT documentation](https://docs.jax.dev/en/latest/jit-compilation.html) describes reuse tied to function identity and cautions against recreating equivalent jitted callables. Applying this to nested component tracing is a hypothesis; actual transformed-graph reuse has not been measured here.
+- This uses ordinary in-process JAX tracing/JIT behavior. It introduces no saved results, disk/persistent compilation cache, pre-evaluation warmup or environment changes. Every fresh benchmark process still pays all needed setup, lowering, compilation and execution, and the three official outer JIT stages remain untouched.
+- Local checks: syntax passed. AST comparison against candidate 3 verifies that the only changes are extracting the same scalar `lax.switch` into the JIT helper and replacing the map callback. `git diff --check` passed. No simulator/full benchmark run locally; physical outputs and full-gradient equivalence remain for evaluator validation.
+- Candidate 4 screen/full run identifiers, exact SHA, phase timings and array differences: pending supervisor evaluation. No performance or correctness claim for this revision.
+
+## Final initial-session handoff
+
+This is candidate 4/4. Return readiness=true and stop=true so the supervisor evaluates this completed final candidate and then stops; do not use remaining wall time to create candidate 5. Preserve thread `01a1fe87-7574-74b2-a289-227279a3bdc8`, session `seed-agent`, branch `explore/seed-agent`, the assigned worktree, all candidate commits, and evaluator artifacts. No merge is authorized. Submission ownership stays with the supervisor; it has not been handed to a manual operator.
+
+Best currently validated revision: `6cadc0f6e5c9d4799b53af7c9a6d24f35a4d221e` (candidate 3). Full run `46912c4b624049d7a764cfd2afd8e9cf`: first run 31.778188098 s, warm median 14.901123755 s, exact physical output matches and maximum absolute gradient error 1.5178830414797062e-18. Measured first-run reduction versus original baseline median: 11.0778%, awaiting repeated fresh-process full confirmation.
+
+Failed/unhelpful approaches: lazy visualization import showed no measured benefit (candidate 1 fully valid, 36.996297654 s); direct noise quadratic contraction was faster (candidate 2, 34.748464059 s) but failed strict full-gradient comparison and is excluded. Both are preserved in history and absent from candidates 3/4. Component scalar dispatch produced the accepted improvement.
+
+Precise next action: supervisor commits candidate 4, screens it, fully validates the same SHA if eligible, and saves final feedback under `experiments/runs/seed-agent/`. Compare candidate 4 directly with candidate 3 and the baseline, including import/compile/runtime/complete totals, RSS, all saved physical arrays, full gradient and reported loss. If it fails checks or offers no convincing benefit, retain candidate 3 as the recommendation. Do not promote candidate 4 from screening alone. This note necessarily predates its evaluation; the supervisor's saved feedback is authoritative for that final result. Repeat full fresh-process measurements of the selected revision under matching conditions before calling the improvement confirmed.
+
+Unfinished diagnostics for an explicitly resumed session: actual optimized lowering/factorization reuse across signal/noise solves; maximum pointwise relative gradient errors and failing coordinates for rejected candidate 2 (current feedback supplies L2 only); any component grouping work beyond scalar dispatch. No sparse solve or custom VJP was attempted. Read saved notes and run feedback before resuming; preserve all failures and do not silently extend the original budget.
