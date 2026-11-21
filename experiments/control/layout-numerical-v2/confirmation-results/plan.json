@@ -166,9 +166,10 @@
     },
     {
       "sha": "42d3a675e25187fd63387a4b13cf79469936668d",
-      "request_id": null,
-      "job_id": null,
-      "status": "planned"
+      "request_id": "5649b6ed978a4a9a9c626d6ba9ced5e9",
+      "job_id": "8ee20c3e0de14570abe8cb95a92020cd",
+      "status": "valid",
+      "reserved_at": 1795295378.996095
     },
     {
       "sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
