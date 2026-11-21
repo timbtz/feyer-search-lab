@@ -1,0 +1,94 @@
+{
+  "name": "claude-setup-audit",
+  "status": "publishing",
+  "agent_provider": "claude",
+  "agent_model": "claude-opus-5-5",
+  "branch": "explore/claude-setup-audit",
+  "direction": "setup-and-matrix-assembly-guidance",
+  "kind": "guidance",
+  "worktree": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/claude-setup-audit",
+  "runtime_root": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/server-agents",
+  "runtime_commit": "6a1ac0e9276913f4ee564d4806d0e9701ec1e46c",
+  "runner_path": "/Users/t.betz/Documents/Feyer challenge/.lab/scripts/claude_guidance_followup.py",
+  "runner_sha256": "8fa09bcfec7ea308bfb4c515d4f1848708d28a8f999189f3a47b100947f49e99",
+  "brief_path": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/claude-setup-audit/experiments/briefs/claude-setup-audit-followup.md",
+  "brief_sha256": "70c9a776df2577d71e764d4c478e4617d21b78c849a251631a4fb0c9a4ff5407",
+  "base_commit": "1e552d675c3795265be8af1ac23ffb61f90f30b1",
+  "scaffold_commit": "5ec2951acee418f0c3eb14ee31df8872ccb48dd2",
+  "invocation_started_at": 1795283239.545374,
+  "invocation_deadline_at": 1795286839.545374,
+  "max_turns": 1,
+  "followup_started_at": 1795283535.8530009,
+  "iteration": 2,
+  "original_receipt_commit": "cdfd88041028beff3e2785d8fefcf28e6bdd214a",
+  "authorization": "User authorized one hour total; coordinating thread instructed same-session follow-up",
+  "thread_id": "2d000df0-57f8-472c-bf84-2ceb7a769b7c",
+  "evaluation_submitted": false,
+  "updated_at": 1795283668.401407,
+  "model_completed_at": 1795283668.263284,
+  "response": {
+    "summary": "Turn 2, notes only: I added a \"Follow-up (turn 2)\" section to experiments/notes/claude-setup-audit.md. The turn-1 findings are unchanged above it. The new section:\n- traces the inputs from optimized-value insertion through linking, the carrier and signal expansions and dummy fills, to the noise vmap (simulate.py:285-399; build.py:157-162, 1636-1679, 1745-1767);\n- states a guarded check (Predicate S): the cast-to-int noise input indices must not overlap the real changing indices, read before the dummy fill;\n- tabulates counterexamples and which path each takes: squeezer db/angle sweep and mirror loss sweep fall back; laser power sweep and the benchmark reuse;\n- revises the design to a trailing `noise_parameter_rows=None` argument whose shape, (1,) or (0,), is decided at trace time, with the unchanged code as fallback;\n- corrects turn 1: summation-order differences can affect all 193 gradient coordinates and the noise, sensitivity and loss outputs, not only db/angle;\n- separates buffer sizes computed from shapes from what is likely stored, and confirms that all current callers pass the run_build_step dictionary by keyword, so the three JIT stages still work;\n- sets out a validation matrix V1\u2013V9 and a lower-risk variant A.\nNothing was executed and no savings are claimed.",
+    "hypothesis": "Under Predicate S, which holds for the benchmark's (\"f\",\"frequency\") sweep, all 101 per-frequency noise matrices are bitwise identical. Building one (751,751) matrix and contracting it with einsum('ij,dbj->dbi') is mathematically exact. It should remove the (101,751,751) complex128 forward residual (911,393,616 bytes by shape). Reading the source, that residual is very probably stored today, because the benchmark returns the pullback from the forward JIT stage. Removing it should lower peak RSS and possibly execution time. Rounding differences may still fail the strict gradient comparison on any coordinate. None of this is measured.",
+    "ready_for_evaluation": false,
+    "stop": true,
+    "notes": "The source contradicts no core assumption. The proposal stands, revised, at medium-low priority.\nKey uncertainties:\n- whether the reverse cotangent is ever built at full size;\n- whether the GEMM reordering passes strict rtol=1e-7 for every coordinate, given the near-zero loss and candidate 2's precedent.\nIf V2 fails, reject variant B; do not loosen tolerances. Variant A (evaluate the component outputs once, then broadcast them into the existing scatter) keeps the forward output bitwise unchanged but has little upside.\nRequired evidence for a later approved candidate:\n- V4: pullback leaf shapes and HLO showing the noise buffer is gone;\n- V5: at least 3 fresh-process full runs for RSS and timing;\n- V6\u2013V9: synthetic fallback and reuse sweeps outside the benchmark.\nThe design doesn't touch the update/_evaluate_component internals the other agent is working on; rebase if that agent changes update's signature. Nothing was run, committed, registered or submitted."
+  },
+  "candidate_sha": "6e7ebae52451ba0503439490d46bcd304ef0e2fa",
+  "changed_paths": [
+    "experiments/notes/claude-setup-audit.md"
+  ],
+  "validation": "not_evaluated",
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 15910,
+    "cache_read_input_tokens": 302203,
+    "output_tokens": 12892,
+    "output_tokens_details": {
+      "thinking_tokens": 5382
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 15910,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1182,
+        "cache_read_input_tokens": 105778,
+        "cache_creation_input_tokens": 6831,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 6831
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-opus-5-5": {
+      "inputTokens": 32,
+      "outputTokens": 28704,
+      "thinkingTokens": 14214,
+      "cacheReadInputTokens": 914519,
+      "cacheCreationInputTokens": 112609,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 112609,
+      "webSearchRequests": 0,
+      "costUSD": 1.6579838000000002,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "reported_total_cost_usd": 1.6579838000000002
+}
