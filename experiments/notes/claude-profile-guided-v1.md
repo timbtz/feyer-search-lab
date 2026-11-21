@@ -221,8 +221,39 @@ My LU / non-LU cost split is source inference and is unmeasured.
 - **Values and dtypes are identical** (x64 is enabled, so int → int64 and complex → complex128), and the topology is unchanged.
 - **Expected:** only the build phase changes. Outputs should be bitwise identical to 446f2fa.
 
+### Results: SHA `aa2b1ab44180af8dd1cd3a9796adb911b1a3986a` — kept (exploratory timing)
+
+**Screen** (`e1a0a71fe2d24b3cb9c12e09e788531d`): first run 21.562 s, build 0.310 s.
+
+**Full** (`35abe6287c9b4294a761a4aef65f0e54`): official PASS, strict PASS. All outputs bitwise identical; gradient max absolute error 4.5e-13, normalized 1.6e-8.
+
+| Phase | Seconds |
+| --- | --- |
+| Complete first run | 21.550 |
+| Build | **0.303** (code-equivalent parent 446f2fa: 0.396–0.397) |
+| Forward compile | 7.622 |
+| Forward execute | 8.432 |
+| Gradient compile | 1.959 |
+| Gradient execute | 1.519 |
+
+- Warm median: 10.552 s.
+- Total job wall time: 86.9 s.
+
+**Interpretation:** build fell by about 0.09 s on both screen and full; other phases are within noise. Under the parallel-epoch rule this is an exploratory observation, not a confirmed best.
+
+## Candidate 6: dict lookup for `parameter_names.index` in `pairs_to_arrays`
+
+### Hypothesis
+- **Target:** the build phase, 0.303 s in job `35abe628`.
+- **Mechanism:** the optimization-pair loop (193 pairs, some grouped) and the changing-pair loop each call `parameter_names.index`, an O(N) list scan over several hundred names.
+- **Change:** one first-occurrence dict, built once per call, gives identical indices. It raises the same `ValueError` for missing names, so the existing `try/except ValueError` fallback is preserved.
+- **Expected:**
+  - A small build reduction of a few milliseconds; it may be within noise.
+  - Outputs bitwise identical, and nothing else changes.
+- **Ceiling:** the 0.30 s build phase.
+
 ### Results
-- Pending.
+- Pending (final candidate of this session).
 
 ## Handoff
 - **Session:** claude-profile-guided-v1. Thread `a825c74d-c575-4b2c-bf1b-d3c07bcc2e26`, seed `96474bdd4d83bb02c163640f63fae1c4bd7a21d4`, deadline unix 1795294994.

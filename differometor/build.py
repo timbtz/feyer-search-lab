@@ -1647,6 +1647,18 @@ def pairs_to_arrays(
 
     signal_component_number = 0
 
+    # First-occurrence name -> index map, equivalent to parameter_names.index (which
+    # raises ValueError for missing names) without an O(N) scan per lookup.
+    name_positions = {}
+    for position, name in enumerate(parameter_names):
+        name_positions.setdefault(name, position)
+
+    def parameter_index(name):
+        try:
+            return name_positions[name]
+        except KeyError:
+            raise ValueError(f"{name!r} is not in list") from None
+
     # Compile signal update arrays by iterating through all signal instructions.
     for instruction in signal_instructions.values():
         try:
@@ -1718,14 +1730,14 @@ def pairs_to_arrays(
         if not isinstance(optimization_pair[0], list):
             optimized_component, optimized_parameter = optimization_pair
             try:
-                optimized_parameter_indices.append(parameter_names.index(f"{optimized_component}_{optimized_parameter}"))
+                optimized_parameter_indices.append(parameter_index(f"{optimized_component}_{optimized_parameter}"))
                 optimization_value_indices.append(ix)
             except ValueError:
                 pass
         else:
             for optimized_component, optimized_parameter in optimization_pair:
                 try:
-                    optimized_parameter_indices.append(parameter_names.index(f"{optimized_component}_{optimized_parameter}"))
+                    optimized_parameter_indices.append(parameter_index(f"{optimized_component}_{optimized_parameter}"))
                     optimization_value_indices.append(ix)
                 except ValueError:
                     pass
@@ -1736,9 +1748,9 @@ def pairs_to_arrays(
     # Compile changing parameter indices for sweeps.
     for changing_component, changing_parameter in changing_pairs:
         if changing_component in signal_components:
-            signal_changing_parameter_indices.append(parameter_names.index(f"{changing_component}_{changing_parameter}"))
+            signal_changing_parameter_indices.append(parameter_index(f"{changing_component}_{changing_parameter}"))
         else:
-            carrier_changing_parameter_indices.append(parameter_names.index(f"{changing_component}_{changing_parameter}"))
+            carrier_changing_parameter_indices.append(parameter_index(f"{changing_component}_{changing_parameter}"))
             append_information(parameter_instructions, carrier_arrays, changing_component, carrier_components)
 
     def combine_arrays(arrays: dict, system: str, signal: bool = False):
