@@ -144,6 +144,18 @@ class ObservatoryTests(unittest.TestCase):
         self.assertIsNone(empty['team_search_source']['error'])
         self.assertIsNone(empty['team_search_source']['source_updated_at'])
 
+    def test_comparison_context_survives_team_snapshot_without_changing_eligibility(self):
+        data = self.team_fixture()
+        context = dict(mode='concurrent', epoch=14, receipt='https://github.com/example/repo/issues/6')
+        data['comparison_regime'] = dict(context, changed_at=100)
+        data['observations']['host:job'] = dict(instance='host', comparison_context=context,
+                                               evidence=dict(job_id='job', candidate_sha='a'*40, eligible_full=True))
+        self.write_team(data)
+        value, _ = self.obs.team_snapshot(time.time())
+        self.assertEqual(value['comparison_regime'], data['comparison_regime'])
+        self.assertEqual(value['observations']['host:job']['comparison_context'], context)
+        self.assertTrue(value['observations']['host:job']['evidence']['eligible_full'])
+
     def test_local_copy_age_is_not_reset_by_browser_reads(self):
         data = self.team_fixture()
         data['events'] = [dict(at=25, command='add')]

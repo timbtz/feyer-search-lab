@@ -22,3 +22,11 @@ test('observed ledger evidence joins only the matching job and exact SHA',()=>{
 test('empty sources never invent a branch, combination, confirmation or final winner',()=>{
  const m=Progression.build({campaigns:[]});for(const k of ['research','tuning','combinations','confirmations'])assert.deepEqual(m[k],[]);
 });
+
+test('timing regime is separate from correctness and preserved on exact-job evidence',()=>{
+ const context={mode:'concurrent',epoch:14,receipt:'https://github.com/example/repo/issues/6'};
+ const d={jobs:[{id:'j',sha:'a',branch:'explore/one',profile:'full'}],team_search:{tasks:{},observations:{one:{instance:'AMD',comparison_context:context,evidence:{job_id:'j',candidate_sha:'a',eligible_full:true}}}}};
+ const r=Progression.build(d).research[0].latest;
+ assert.deepEqual(r.comparison_context,context);assert.equal(Progression.verdict(r).label,'Full pass');assert.match(Progression.timing(r.comparison_context),/Exploratory.*concurrent/);
+ assert.match(Progression.timing({mode:'unverified_timing'}),/Exploratory.*unverified/);assert.match(Progression.timing({mode:'serial'}),/confirmation required/);assert.equal(Progression.timing(), 'Timing context not recorded');
+});

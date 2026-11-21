@@ -175,14 +175,14 @@ const SearchProgression = (() => {
       if(!branches.has(j.branch)&&(!/^explore\//.test(j.branch)||campaignSHAs.has(j.sha)))continue;
       const b=branch(j.branch,titles[j.direction]||human(j.direction||j.branch));
       const o=observations.find(o=>o.evidence?.job_id===j.job_id&&o.evidence?.candidate_sha===j.sha);
-      b.records.push({...j,evidence:o?.evidence,instance:o?.instance});b.updated=Math.max(b.updated,j.created_at||0);
+      b.records.push({...j,evidence:o?.evidence,instance:o?.instance,comparison_context:o?.comparison_context||j.comparison_context});b.updated=Math.max(b.updated,j.created_at||0);
     }
     // Team tasks can be present before any worker/job has been observed.
     for(const t of tasks.filter(t=>t.kind==='explore')){
       const outputBranches=Object.values(t.candidate_branches||{}).filter(x=>typeof x==='string');
       const existing=[...branches.values()].find(b=>outputBranches.includes(b.id));
       const b=existing||branch(`task:${t.id}`,t.hypothesis||human(t.id));b.tasks.push(t);
-      for(const o of observations.filter(o=>o.task===t.id))if(!b.records.some(r=>r.job_id===o.evidence?.job_id))b.records.push({sha:o.evidence.candidate_sha,job_id:o.evidence.job_id,profile:o.evidence.profile,evidence:o.evidence,instance:o.instance,metrics:o.evidence.metrics,created_at:o.created_at||0});
+      for(const o of observations.filter(o=>o.task===t.id))if(!b.records.some(r=>r.job_id===o.evidence?.job_id))b.records.push({sha:o.evidence.candidate_sha,job_id:o.evidence.job_id,profile:o.evidence.profile,evidence:o.evidence,instance:o.instance,comparison_context:o.comparison_context,metrics:o.evidence.metrics,created_at:o.created_at||0});
     }
     for(const b of branches.values()){
       b.records.sort((a,b)=>(a.created_at||0)-(b.created_at||0));
@@ -203,7 +203,11 @@ const SearchProgression = (() => {
     if(r.profile==='screen')return {label:'Screen only',tone:'screen'};
     return {label:'Unconfirmed',tone:'pending'};
   }
-  return {build,verdict};
+  function timing(context){
+    const labels={concurrent:'Exploratory timing · concurrent',unverified_timing:'Exploratory timing · unverified',serial:'Serial timing · confirmation required'};
+    return labels[context?.mode]||'Timing context not recorded';
+  }
+  return {build,verdict,timing};
 })();
 
 if (typeof module !== 'undefined') module.exports.Progression = SearchProgression;
@@ -376,6 +380,7 @@ if (typeof module !== 'undefined') module.exports.Progression = SearchProgressio
     const target=clear('graph-detail');add(target,make('p','eyebrow',human(n.type)),make('h2','',n.title),pill(n.status||'Recorded'),make('p','graph-description',n.description||n.subtitle));
     if(n.campaign)target.append(make('p','meta-line',`Campaign: ${n.campaign}`));
     teamDetails(target,n);
+    if(n.type==='evaluation'){const o=n.record;target.append(make('p','table-note',SearchProgression.timing(o.comparison_context)));}
     if(n.type==='candidate'){
       const a=n.record;phaseFacts(target,[['Complete first run',seconds(a.metrics?.total)],['Compilation',seconds(a.metrics?.compilation)],['Runtime',seconds(a.metrics?.runtime)],['Full measurements',String(a.full_run_count??(a.profile==='full'?1:0))],['Total-time range',seconds(a.metric_ranges?.total)],['Meaningful total gain',a.progress?a.progress.meaningful_total?'Yes':'No':'Not assessed']]);
       const params=Object.entries(a.parameters||{});if(params.length)facts(target,params.map(([k,v])=>[human(k),v===null?'Default':String(v)]));
@@ -413,8 +418,9 @@ if (typeof module !== 'undefined') module.exports.Progression = SearchProgressio
     }
     if(n.type==='team-candidate'){
       const a=n.record,groups=new Map();
-      for(const o of a.observations){const e=o.evidence,k=JSON.stringify([o.instance,e.cohort_digest]);if(!groups.has(k))groups.set(k,{instance:o.instance,cohort:e.cohort_digest,values:[],invalid:false});const g=groups.get(k);if(e.eligible_full&&numeric(e.metrics?.total))g.values.push(e.metrics.total);if(e.category==='invalid_candidate')g.invalid=true;}
-      for(const g of groups.values()){const values=g.values.sort((a,b)=>a-b),count=values.length,median=count?(values[Math.floor((count-1)/2)]+values[Math.floor(count/2)])/2:null;const section=make('div','detail-section');section.append(make('h3','',g.instance));phaseFacts(section,[['Cohort',short(g.cohort)||'Unknown'],['Eligible full runs',String(count)],['Median first run',seconds(median)],['Observed range',count?`${seconds(values[0])} – ${seconds(values.at(-1))}`:'—'],['Numerical review',g.invalid?'Required':'No recorded rejection']]);target.append(section);}
+      for(const o of a.observations){const e=o.evidence,k=JSON.stringify([o.instance,e.cohort_digest,o.comparison_context?.mode,o.comparison_context?.epoch]);if(!groups.has(k))groups.set(k,{instance:o.instance,cohort:e.cohort_digest,context:o.comparison_context,values:[],invalid:false});const g=groups.get(k);if(e.eligible_full&&numeric(e.metrics?.total))g.values.push(e.metrics.total);if(e.category==='invalid_candidate')g.invalid=true;}
+      for(const o of a.observations)target.append(make('p','meta-line',`${short(o.evidence.job_id)} · ${SearchProgression.timing(o.comparison_context)}${o.comparison_context?.epoch!==undefined?' · epoch '+o.comparison_context.epoch:''}`));
+      for(const g of groups.values()){const values=g.values.sort((a,b)=>a-b),count=values.length,median=count?(values[Math.floor((count-1)/2)]+values[Math.floor(count/2)])/2:null;const section=make('div','detail-section');section.append(make('h3','',g.instance));phaseFacts(section,[['Timing status',SearchProgression.timing(g.context)],['Timing epoch',String(g.context?.epoch??'Not recorded')],['Cohort',short(g.cohort)||'Unknown'],['Eligible full runs',String(count)],['Median first run',seconds(median)],['Observed range',count?`${seconds(values[0])} – ${seconds(values.at(-1))}`:'—'],['Numerical review',g.invalid?'Required':'No recorded rejection']]);target.append(section);}
       add(target,make('p','table-note','These are separate instance/cohort observations, never a pooled score. Final comparison requires repeated candidate and parent runs under the same policy.'),commitLink(a.sha));
     }
   }
@@ -433,13 +439,13 @@ if (typeof module !== 'undefined') module.exports.Progression = SearchProgressio
       add(target,branchLink(record.id));
     }else if(type==='record'){
       const v=SearchProgression.verdict(record);add(target,make('p','eyebrow',`${human(record.profile)} evaluation`),make('h2','',`${seconds(record.metrics?.total)} first run`),pill(v.label,v.tone==='failed'?'failed':v.tone==='pass'?'valid':''),make('p','progress-detail-intro',record.hypothesis||record.idea||'Exact recorded evaluation'));
-      facts(target,[['Commit',record.sha],['Job',record.job_id],['Instance',record.instance||'See source receipt'],['Cohort',record.evidence?.cohort_digest||'Not available in this record'],['Evidence','One measurement; not a confirmed gain']]);
+      facts(target,[['Timing status',SearchProgression.timing(record.comparison_context)],['Timing epoch',String(record.comparison_context?.epoch??'Not recorded')],['Commit',record.sha],['Job',record.job_id],['Instance',record.instance||'See source receipt'],['Cohort',record.evidence?.cohort_digest||'Not available in this record'],['Evidence','One measurement; not a confirmed gain']]);
       add(target,commitLink(record.sha));
       const profile=list(S.data?.profiler_reports).find(r=>r.job_id===record.job_id);if(profile){const b=make('button','graph-action','Inspect timing profile');b.addEventListener('click',()=>{$('profiler-filter').value=record.job_id;renderProfiler();showView('profiler');});target.append(b);}
       disclosure(target,'Source receipt',record,'progress-receipt');
     }else if(type==='unassigned'){
       add(target,make('p','eyebrow','Unlinked evidence'),make('h2','','Receipts without branch metadata'),make('p','progress-detail-intro','These measurements are retained without assigning a research direction from a filename or Git ancestry.'));
-      for(const o of P.model.unassigned){const e=o.evidence,r={sha:e.candidate_sha,job_id:e.job_id,profile:e.profile,metrics:e.metrics,evidence:e,instance:o.instance};const row=make('button','evidence-row');add(row,make('span','',`${short(r.sha)} · ${o.instance}`),make('strong','',seconds(r.metrics?.total)),make('small','',SearchProgression.verdict(r).label));row.addEventListener('click',()=>inspectProgress('record',r));target.append(row);}
+      for(const o of P.model.unassigned){const e=o.evidence,r={sha:e.candidate_sha,job_id:e.job_id,profile:e.profile,metrics:e.metrics,evidence:e,instance:o.instance,comparison_context:o.comparison_context};const row=make('button','evidence-row');add(row,make('span','',`${short(r.sha)} · ${o.instance}`),make('strong','',seconds(r.metrics?.total)),make('small','',SearchProgression.verdict(r).label));row.addEventListener('click',()=>inspectProgress('record',r));target.append(row);}
     }else if(type==='tuning'){
       add(target,make('p','eyebrow','Small numerical search'),make('h2','',record.id),make('p','progress-detail-intro',`${human(record.selector)} searches the admitted implementation parameters. Each successor is evaluated against its pinned input.`));
       for(const a of record.candidates){const row=make('button','evidence-row');add(row,make('span','',Object.entries(a.parameters||{}).map(([k,v])=>`${human(k)}: ${v??'default'}`).join(' · ')||a.candidate_id),make('strong','',seconds(a.metrics?.total)),make('small','',a.valid?'Full evidence':'Unconfirmed'));row.addEventListener('click',()=>{$('graph-scope').value='campaign';S.campaign=record.id;options();render();progressMode('evidence');const id=JSON.stringify([record.id,'candidate',a.candidate_id]);selectGraphNode(id);centerNode(id);panel.hidden=true;});target.append(row);}
@@ -467,7 +473,7 @@ if (typeof module !== 'undefined') module.exports.Progression = SearchProgressio
       const trials=make('div','trial-field');trials.append(make('p','micro-label',`${b.candidates.length} revisions · time order`));const track=make('div','trial-track');
       for(const r of b.candidates){const v=SearchProgression.verdict(r),dot=make('button',`trial-dot trial-${v.tone}`);dot.setAttribute('aria-label',`${b.title}, ${short(r.sha)}, ${v.label}, ${seconds(r.metrics?.total)}`);dot.title=`${short(r.sha)} · ${v.label} · ${seconds(r.metrics?.total)}`;dot.addEventListener('click',()=>inspectProgress('record',r));track.append(dot);}trials.append(track);
       if(!b.candidates.length)trials.append(make('p','path-empty','Awaiting candidate evidence'));
-      const latest=b.latest;if(latest){const v=SearchProgression.verdict(latest),receipt=make('button','latest-receipt');add(receipt,make('span','micro-label',latest.profile==='full'?'Latest full observation':'Latest provisional observation'),make('strong','',seconds(latest.metrics?.total)),make('span',`receipt-verdict ${v.tone}`,`${v.label} · ${short(latest.sha)}`));receipt.addEventListener('click',()=>inspectProgress('record',latest));trials.append(receipt);}
+      const latest=b.latest;if(latest){const v=SearchProgression.verdict(latest),receipt=make('button','latest-receipt');add(receipt,make('span','micro-label',latest.profile==='full'?'Latest full observation':'Latest provisional observation'),make('strong','',seconds(latest.metrics?.total)),make('span',`receipt-verdict ${v.tone}`,`${v.label} · ${short(latest.sha)}`),make('span','receipt-verdict',SearchProgression.timing(latest.comparison_context)));receipt.addEventListener('click',()=>inspectProgress('record',latest));trials.append(receipt);}
       path.append(trials);const inspect=make('button','path-inspect','Explore this direction');inspect.addEventListener('click',()=>inspectProgress('branch',b));path.append(inspect);field.append(path);
     }
     if(!branches.length)field.append(make('p','empty','No research branches are connected yet. The intended search progression remains visible below.'));
@@ -545,6 +551,8 @@ if (typeof module !== 'undefined') module.exports.Progression = SearchProgressio
     const r=matching.find(r=>profileKey(r)===selectedProfile);
     if(!r){target.append(make('p','empty',reports.length?'No reports match this job or commit.':'No profiler export is connected. This does not imply zero runtime or a completed profile.'));return;}
     const heading=make('div','detail-header'),identity=make('div');add(identity,make('h3','',`Commit ${short(r.candidate_sha)} · job ${short(r.job_id)}`),make('p','',`${r.instance||'Instance not recorded'} · cohort ${short(r.cohort_digest)||'not recorded'}`));add(heading,identity,pill(r.status==='conflicting_artifacts'?'Conflicting artifacts':r.status==='invalid_report'?'Invalid timing report':r.eligible_full?'Eligible full observation':'Not full validated',r.eligible_full?'valid':''));target.append(heading);
+    const contextMatches=Object.values(S.data?.team_search?.observations||{}).filter(o=>o.evidence?.job_id===r.job_id&&o.evidence?.candidate_sha===r.candidate_sha&&(!r.instance||o.instance===r.instance));
+    target.append(make('p','meta-line',SearchProgression.timing(contextMatches.length===1?contextMatches[0].comparison_context:r.comparison_context)));
     phaseFacts(target,[['Complete first run',seconds(r.first_run_seconds)],['Recorded phase sum',seconds(r.phase_sum_seconds)],['Unattributed time',seconds(r.unattributed_seconds)],['Job wall time',seconds(r.job_wall_seconds)]]);
     target.append(make('p','table-note','This is one observed job, not a confirmed winner. Phase contributions locate measured cost; they do not identify an unmeasured source-code hotspot or predict a realized optimization gain.'));
     if(r.status==='ok'){
@@ -561,6 +569,8 @@ if (typeof module !== 'undefined') module.exports.Progression = SearchProgressio
     const focused=document.activeElement?.id;
     const opened=[...document.querySelectorAll('details[open]')].map(n=>n.dataset.key);
     const c=current(), notice=$('notice');
+    const regime=S.data?.team_search?.comparison_regime,timingNotice=$('comparison-mode');timingNotice.hidden=!regime;
+    timingNotice.textContent=regime?`Current evaluation regime: ${SearchProgression.timing(regime)}${regime.epoch!==undefined?' · epoch '+regime.epoch:''}${S.data?.team_search_source?.stale?' · stale observation':''}. Full pass describes correctness, not timing confirmation. Historical receipts keep their own context.`:'';
     const pending=list(c?.lanes).some(l=>l.inflight_candidate), errors=list(c?.alerts);
     notice.hidden=true;
     if(S.data?.demo){notice.textContent='Demo data · synthetic research and measurements for frontend development.';notice.hidden=false;}
