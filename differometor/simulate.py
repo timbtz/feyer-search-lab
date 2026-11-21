@@ -545,10 +545,11 @@ NOISE_ROW_REUSE: bool = True
 # candidate f3139c7 passed official + strict with bitwise forward outputs) or
 # "shared" (variant B; unbatched einsum "ij,dbj->dbi", may round differently).
 NOISE_REUSE_MODE: str = "broadcast"
-# Factor each signal matrix once and reuse the LU for the signal, adjoint
-# noise-weight and covariance solves (candidate 3 experiment). False keeps the
-# original three jnp.linalg.solve calls, including the separate LU of A^H.
-NOISE_FACTOR_REUSE: bool = True
+# Signal-matrix LU reuse: "off" (three jnp.linalg.solve calls), "direct" (one LU of
+# A shared by the signal and covariance solves; separate LU of A^H for noise
+# weights) or "all" (A's LU also for A^H; candidate 3 bb9a183, 18.65 s but FAILED
+# strict gradient at indices 33/161/180, max normalized error 14.7).
+NOISE_FACTOR_REUSE: str = "direct"
 
 
 def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):
@@ -677,7 +678,9 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
         (carrier_selections.shape[0], signal_matrix.shape[0], carrier_selections.shape[2]),
     )
 
-    if NOISE_FACTOR_REUSE:
+    if NOISE_FACTOR_REUSE not in ("off", "direct", "all"):
+        raise ValueError(f"Unknown NOISE_FACTOR_REUSE {NOISE_FACTOR_REUSE!r}")
+    if NOISE_FACTOR_REUSE != "off":
         # One LU per signal row, shared by the signal solve, the adjoint noise-weight
         # solve (A^H y = s via trans=2) and the covariance solve. Each solve is a
         # custom_linear_solve whose matvec depends differentiably on A, mirroring
@@ -708,7 +711,15 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
             )
 
         signal = direct_solve(signal_matrix[:, :, -1])
-        noise_weights = vmap(adjoint_solve)(carrier_selections)
+        if NOISE_FACTOR_REUSE == "all":
+            # Failed strict gradient (candidate 3, bb9a183): A^H via A's LU drifts.
+            noise_weights = vmap(adjoint_solve)(carrier_selections)
+        else:
+            # "direct": keep the original separate LU of A^H for the noise weights.
+            transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(signal_matrix[:, :, :-1]), (0, 2, 1))
+            noise_weights = vmap(vmap(solve), in_axes=(None, 0))(
+                transposed_conjugated_signal_matrix, carrier_selections
+            )
     else:
         signal = vmap(solve)(signal_matrix[:, :, :-1], signal_matrix[:, :, -1])
         # Back-propagate detector weights by solving the transposed conjugated signal system.
@@ -739,7 +750,7 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
         noise_sources = jnp.einsum("ij,dbj->dbi", noise_matrix, noise_weights)
     else:
         noise_sources = vmap(matmul_single_batch, in_axes=(None, 0))(noise_matrix, noise_weights)
-    if NOISE_FACTOR_REUSE:
+    if NOISE_FACTOR_REUSE != "off":
         covariances = vmap(direct_solve)(noise_sources)
     else:
         covariances = vmap(vmap(solve), in_axes=(None, 0))(signal_matrix[:, :, :-1], noise_sources)

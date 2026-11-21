@@ -99,7 +99,47 @@ The time gain is expected but not measured, and probably small (well under 1 s).
 - **Hypothesis:** the parent factors `A` (signal and covariance solves; XLA may or may not CSE these) and separately factors `A^H` for the noise weights. One `lax.linalg.lu(stop_gradient(A))` per row, with `lu_solve` `trans=0/1/2` inside `lax.custom_linear_solve` (the same structure as `jnp.linalg.solve`), should remove at least the `A^H` factorization: one of two or three batched 751×751 complex LUs. Expected effect is a lower forward execute time. Not measured.
 - **Base:** `NOISE_REUSE_MODE="broadcast"` (variant A). This isolates the effect from variant B's thin gradient margin.
 - **Numerical risk:** the noise weights now come from `A`'s LU through a conjugate-transpose triangular solve instead of an LU of `A^H`. Every gradient coordinate can change. Earlier in-loop solve changes failed strict at 1.9e-7.
-- **New knob:** `NOISE_FACTOR_REUSE` (bool).
+- **New knob:** `NOISE_FACTOR_REUSE` (bool at the time; now a string, see candidate 4).
+
+### Results: candidate SHA `bb9a183fd64f80e322ff90b3161edbcdfd29c4ab` — **REJECTED (strict FAIL)**
+
+**Screen** (`e8f8bf17c95f418596328d8de5ab10a3`): 18.677 s, peak RSS 6.37 GB.
+
+**Full** (`f62c5c8053f84088a013f742fbe429a3`): official PASS, **strict FAIL**. Verdict: `official_pass_numerical_review_needed`.
+
+| Phase | Seconds |
+| --- | --- |
+| Complete first run | 18.653 |
+| Forward compile | 7.628 |
+| Forward execute | **5.166** (candidate 1: 9.221) |
+| Gradient compile | 1.955 |
+| Gradient execute | 1.399 |
+
+- Warm runs: median 7.091 s.
+- Total job wall time: 62.3 s.
+- Peak RSS: 6.37 GB.
+
+**Strict comparison:**
+- Carrier, signal and powers: bitwise identical. So the replicated direct `custom_linear_solve` matches `jnp.linalg.solve` exactly.
+- Noise: max normalized error 0.644. Sensitivity: 0.644.
+- **Gradient fails at indices 33, 161 and 180:**
+
+| Index | Normalized error |
+| --- | --- |
+| 33 | 3.04 |
+| 161 | 14.66 |
+| 180 | 1.63 |
+
+  Max absolute error 2.3e-3, relative L2 error 3.9e-8.
+
+**Diagnosis:** solving `A^H y = s` through `A`'s LU (`trans=2`) instead of a separate LU of `A^H` changes noise at about 2e-8 relative. The ill-conditioned gradient coordinates (161 also failed in earlier solve experiments) amplify that. Tolerances not loosened.
+
+**What the measurement shows:** the forward pass does many separate LUs. Removing them saved about 4 s of forward time and about 3.5 GB of RSS, so XLA was apparently not CSE-ing the `A` factorizations.
+
+## Candidate 4: repair, sharing the LU only for solves on `A`
+- **Change:** `NOISE_FACTOR_REUSE="direct"`. One LU of `A` is shared by the signal and covariance `custom_linear_solve`s. The noise weights use the original `jnp.linalg.solve` on the explicitly formed `A^H`, so they get their own LU, exactly as in the parent. `"all"` keeps candidate 3's failing behaviour; `"off"` keeps candidate 1.
+- Base: `NOISE_REUSE_MODE="broadcast"`.
+- **Hypothesis:** the covariance solve should be bitwise identical to the parent, since it uses the same LU and the same solve structure, as candidate 3 showed for the signal. So strict should match candidate 1's margin. Expected forward saving is about half of candidate 3's (one of the removed LUs), roughly 2 s. Not measured.
 
 ### Results
 - Candidate SHA: (supervisor fills in). Pending.
@@ -116,7 +156,10 @@ The time gain is expected but not measured, and probably small (well under 1 s).
      "invalid": "none; guard failure falls back automatically"},
     {"symbol": "NOISE_REUSE_MODE", "legal": ["broadcast", "shared"], "safe_default": "broadcast",
      "conditions": "only read when NOISE_ROW_REUSE is effective; scope 'solve' always uses broadcast",
-     "invalid": "'shared' is unvalidated until candidate 2 passes strict"}
+     "invalid": "'shared' validated (e525ee5) but strict gradient margin 0.949; avoid stacking with other numerical changes"},
+    {"symbol": "NOISE_FACTOR_REUSE", "legal": ["off", "direct", "all"], "safe_default": "off",
+     "conditions": "'direct' pending candidate 4 validation; touches solves, sequence against block-elimination worker",
+     "invalid": "'all' fails strict gradient (bb9a183); do not admit"}
   ]
 }
 ```
