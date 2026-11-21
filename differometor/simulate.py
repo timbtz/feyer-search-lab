@@ -527,14 +527,14 @@ def simulate(
 # gradient regression (one coordinate, rel 1.9e-7 > 1e-7) whenever the solves ran in
 # the loop. None (full vmap) and k=1 with scope "assemble" (solves kept full-vmap,
 # 23.56 s) are strictly validated.
-FREQUENCY_CHUNK_SIZE: int | None = 1
+FREQUENCY_CHUNK_SIZE: int | None = 2
 # Loop scope when chunking: "signal_noise" (assembly + solves), "solve" (solves only)
 # or "assemble" (assembly only; solves stay full-vmap).
 FREQUENCY_LOOP_SCOPE: str = "assemble"
 # Build the noise source matrix once and broadcast it across signal rows when the
 # builder proved (host-side, before dummy filling) that no noise input index is a
 # real changing index. False always uses the per-row noise assembly.
-NOISE_ROW_REUSE: bool = False
+NOISE_ROW_REUSE: bool = True
 
 
 def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):
