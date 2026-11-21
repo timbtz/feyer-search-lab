@@ -44265,6 +44265,56 @@
         ],
         "target_evidence": []
       }
+    },
+    {
+      "seq": 23,
+      "at": 1795294498.783494,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "feedback-2ac2944a3f51f4e07467dc92564d65f07f0ef67eca0fa17e60c2ba80136fbb99",
+        "executor": {
+          "kind": "supervisor",
+          "id": "claude-structure-solve"
+        },
+        "kind": "explore",
+        "status": "completed",
+        "candidate_sha": "39b23e3c6e84b2a7498c7bce932a2f6ba41f227e",
+        "parents": [
+          "d09dc1d08fb046d08b3b699685d8ff780d611e87"
+        ],
+        "target_phases": [],
+        "hypothesis": "Conjugating only the two fixed blocks by slice update gives the same values. The reverse pass only copies and conjugates, with no additions, so the gradient should match candidate 1 bit for bit. Inside the per-frequency assembly loop it avoids a whole-matrix conjugate-and-select and the mask construction, in both the forward and reverse passes. I expect a small saving of at most about 0.2 s, possibly within run-to-run noise. Nothing has been measured yet.",
+        "change_summary": "Candidate 1 (4c12600) passed both the official check and the strict check in its full run: first run 22.495 s, against 23.840 s for the parent. Forward execution was 8.55 s and gradient execution 1.67 s; peak memory fell from 10.8 GB to 8.1 GB. All physical outputs matched the reference bit for bit. The largest normalized gradient error was 2.2e-6, with no failing entries. Candidate 2 adds an exact assembly change on top of candidate 1. The two fixed sideband blocks are now conjugated with slice updates, `SLICE_CONJUGATION = True` in `_assemble_signal_and_noise`, instead of a where-mask over the whole matrix. Setting the constant to False restores the old mask path. Notes now include candidate 1's runs and phase timings, and the operator proposals.",
+        "stopping_reason": null,
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d96d9188640ef34204f53ccc9612a3dff6268f52/experiments/runs/claude-structure-solve/candidate-02.json",
+        "source_digest": "2ac2944a3f51f4e07467dc92564d65f07f0ef67eca0fa17e60c2ba80136fbb99",
+        "source_digest_kind": "canonical_json_sha256",
+        "feedback_ref": {
+          "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/d96d9188640ef34204f53ccc9612a3dff6268f52/experiments/runs/claude-structure-solve/candidate-02.json",
+          "artifact_digest": "2ac2944a3f51f4e07467dc92564d65f07f0ef67eca0fa17e60c2ba80136fbb99",
+          "digest_kind": "canonical_json_sha256"
+        },
+        "session_id": "aaad90d2-50c7-4334-ad32-331fbe033d3c",
+        "iteration": null,
+        "checkpoint": null,
+        "next_input": null,
+        "input_receipt": null,
+        "evaluations": [
+          {
+            "job_id": "d45bc12dcf0a4bdcac51dac0f9bbed3f",
+            "candidate_sha": "39b23e3c6e84b2a7498c7bce932a2f6ba41f227e",
+            "profile": "screen"
+          },
+          {
+            "job_id": "4cc17640e44446f887b613d035af7125",
+            "candidate_sha": "39b23e3c6e84b2a7498c7bce932a2f6ba41f227e",
+            "profile": "full"
+          }
+        ],
+        "target_evidence": []
+      }
     }
   ],
   "comparison_regime": {
@@ -44579,6 +44629,50 @@
         {
           "job_id": "2183e6e63bcd4e9aa91e6e7313ad6107",
           "candidate_sha": "4c12600ce07d6d46518c230bae17248d9df75a39",
+          "profile": "full"
+        }
+      ],
+      "target_evidence": []
+    },
+    "feedback-2ac2944a3f51f4e07467dc92564d65f07f0ef67eca0fa17e60c2ba80136fbb99": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "feedback-2ac2944a3f51f4e07467dc92564d65f07f0ef67eca0fa17e60c2ba80136fbb99",
+      "executor": {
+        "kind": "supervisor",
+        "id": "claude-structure-solve"
+      },
+      "kind": "explore",
+      "status": "completed",
+      "candidate_sha": "39b23e3c6e84b2a7498c7bce932a2f6ba41f227e",
+      "parents": [
+        "d09dc1d08fb046d08b3b699685d8ff780d611e87"
+      ],
+      "target_phases": [],
+      "hypothesis": "Conjugating only the two fixed blocks by slice update gives the same values. The reverse pass only copies and conjugates, with no additions, so the gradient should match candidate 1 bit for bit. Inside the per-frequency assembly loop it avoids a whole-matrix conjugate-and-select and the mask construction, in both the forward and reverse passes. I expect a small saving of at most about 0.2 s, possibly within run-to-run noise. Nothing has been measured yet.",
+      "change_summary": "Candidate 1 (4c12600) passed both the official check and the strict check in its full run: first run 22.495 s, against 23.840 s for the parent. Forward execution was 8.55 s and gradient execution 1.67 s; peak memory fell from 10.8 GB to 8.1 GB. All physical outputs matched the reference bit for bit. The largest normalized gradient error was 2.2e-6, with no failing entries. Candidate 2 adds an exact assembly change on top of candidate 1. The two fixed sideband blocks are now conjugated with slice updates, `SLICE_CONJUGATION = True` in `_assemble_signal_and_noise`, instead of a where-mask over the whole matrix. Setting the constant to False restores the old mask path. Notes now include candidate 1's runs and phase timings, and the operator proposals.",
+      "stopping_reason": null,
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d96d9188640ef34204f53ccc9612a3dff6268f52/experiments/runs/claude-structure-solve/candidate-02.json",
+      "source_digest": "2ac2944a3f51f4e07467dc92564d65f07f0ef67eca0fa17e60c2ba80136fbb99",
+      "source_digest_kind": "canonical_json_sha256",
+      "feedback_ref": {
+        "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/d96d9188640ef34204f53ccc9612a3dff6268f52/experiments/runs/claude-structure-solve/candidate-02.json",
+        "artifact_digest": "2ac2944a3f51f4e07467dc92564d65f07f0ef67eca0fa17e60c2ba80136fbb99",
+        "digest_kind": "canonical_json_sha256"
+      },
+      "session_id": "aaad90d2-50c7-4334-ad32-331fbe033d3c",
+      "iteration": null,
+      "checkpoint": null,
+      "next_input": null,
+      "input_receipt": null,
+      "evaluations": [
+        {
+          "job_id": "d45bc12dcf0a4bdcac51dac0f9bbed3f",
+          "candidate_sha": "39b23e3c6e84b2a7498c7bce932a2f6ba41f227e",
+          "profile": "screen"
+        },
+        {
+          "job_id": "4cc17640e44446f887b613d035af7125",
+          "candidate_sha": "39b23e3c6e84b2a7498c7bce932a2f6ba41f227e",
           "profile": "full"
         }
       ],
