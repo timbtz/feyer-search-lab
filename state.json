@@ -1,7 +1,39 @@
 {
   "schema": "feyer-team-search-v1",
   "coordinator": "timbtz",
-  "tasks": {},
+  "tasks": {
+    "inventory-search-frontier-v1": {
+      "id": "inventory-search-frontier-v1",
+      "kind": "diagnose",
+      "priority": 10,
+      "hypothesis": "Review existing full evidence and stalled directions to identify the next disjoint exploration and compatible combination; use files only, with no benchmark submissions or agent launches.",
+      "parents": [
+        "f3139c71ae2a5c9de2b015aad7db1a730fac0e1e",
+        "4c12600ce07d6d46518c230bae17248d9df75a39"
+      ],
+      "max_candidates": 1,
+      "deadline_unix": 1795374980,
+      "notes": [
+        "This is a read-only coordination task. Its deadline is for inventory bookkeeping, not new compute authorization or an extension of any pilot. Do not reserve simulator candidates, submit jobs, launch agents, deploy workers or touch colleague hosts.",
+        "Two imported full jobs are single exploratory observations, not repeated confirmations and not current global winners. Inventory may find newer results. Preserve exact SHA/job/cohort and scientific failures; do not rank different hosts by raw seconds.",
+        "amd-tim denotes the existing 2026-11-21 EPYC 9334 instance reached by SSH alias amd-hackathon (36.150.116.206:31108), CPU 2, evaluator release 861601b9c5d31390caca420b078f09ff7ad83156. A replacement instance requires a new identity even if its SSH alias is reused.",
+        "Existing external owners retain explore/claude-noise-reuse and explore/claude-structure-solve (broker thread 01a1fead-fa5f-7a30-99d4-ba11813c1fa0), and explore/topology-smac-v1 (tuner thread 01a1ff1a-68a0-7463-a800-57b9f7f48aba). Their deadline remains 1795288990. Verify processes/jobs drained before any handoff, even after that deadline.",
+        "Reserved external work: f3139c7 noise boolean x chunk {1,2,4,8} tuning menu and f3139c7 + 4c12600 combination in noise lane. Do not duplicate or claim these branches.",
+        "Deliver an inventory of missing confirmations, numerical risks, stalled hypotheses and complementary pairs; propose exact parents and explicit budgets for coordinator admission. Colleagues AMD setup and GitHub access remain unverified."
+      ],
+      "minimum_full_runs": 3,
+      "minimum_gain_fraction": 0.03,
+      "minimum_gain_seconds": 0.02,
+      "depends_on": [],
+      "status": "ready",
+      "owner": null,
+      "instance": null,
+      "claim_id": null,
+      "candidates": [],
+      "candidate_branches": {},
+      "created_at": 1795288654.9260778
+    }
+  },
   "observations": {
     "amd-tim:5089ae06eb04473a87bc1207cb411d8c": {
       "instance": "amd-tim",
@@ -6713,6 +6745,32 @@
             }
           }
         }
+      }
+    },
+    {
+      "seq": 3,
+      "at": 1795288654.9260778,
+      "actor": "timbtz",
+      "command": "add",
+      "data": {
+        "id": "inventory-search-frontier-v1",
+        "kind": "diagnose",
+        "priority": 10,
+        "hypothesis": "Review existing full evidence and stalled directions to identify the next disjoint exploration and compatible combination; use files only, with no benchmark submissions or agent launches.",
+        "parents": [
+          "f3139c71ae2a5c9de2b015aad7db1a730fac0e1e",
+          "4c12600ce07d6d46518c230bae17248d9df75a39"
+        ],
+        "max_candidates": 1,
+        "deadline_unix": 1795374980,
+        "notes": [
+          "This is a read-only coordination task. Its deadline is for inventory bookkeeping, not new compute authorization or an extension of any pilot. Do not reserve simulator candidates, submit jobs, launch agents, deploy workers or touch colleague hosts.",
+          "Two imported full jobs are single exploratory observations, not repeated confirmations and not current global winners. Inventory may find newer results. Preserve exact SHA/job/cohort and scientific failures; do not rank different hosts by raw seconds.",
+          "amd-tim denotes the existing 2026-11-21 EPYC 9334 instance reached by SSH alias amd-hackathon (36.150.116.206:31108), CPU 2, evaluator release 861601b9c5d31390caca420b078f09ff7ad83156. A replacement instance requires a new identity even if its SSH alias is reused.",
+          "Existing external owners retain explore/claude-noise-reuse and explore/claude-structure-solve (broker thread 01a1fead-fa5f-7a30-99d4-ba11813c1fa0), and explore/topology-smac-v1 (tuner thread 01a1ff1a-68a0-7463-a800-57b9f7f48aba). Their deadline remains 1795288990. Verify processes/jobs drained before any handoff, even after that deadline.",
+          "Reserved external work: f3139c7 noise boolean x chunk {1,2,4,8} tuning menu and f3139c7 + 4c12600 combination in noise lane. Do not duplicate or claim these branches.",
+          "Deliver an inventory of missing confirmations, numerical risks, stalled hypotheses and complementary pairs; propose exact parents and explicit budgets for coordinator admission. Colleagues AMD setup and GitHub access remain unverified."
+        ]
       }
     }
   ]

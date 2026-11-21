@@ -6,13 +6,16 @@ Claims and decisions live in this branch. Timing comparisons require the same in
 
 | Task | Kind | State | Owner / instance | Parents |
 | --- | --- | --- | --- | --- |
+| inventory-search-frontier-v1 | diagnose | ready | — / — | f3139c71ae2a, 4c12600ce07d |
 
 ## Scientific lineage
 
 ```mermaid
 graph TD
+  c0["4c12600ce07d"]
+  c1["f3139c71ae2a"]
 ```
 
 Every edge records intended inputs, not proof of speedup.
 
-Recorded jobs: 2. Decisions/events: 2.
+Recorded jobs: 2. Decisions/events: 3.
