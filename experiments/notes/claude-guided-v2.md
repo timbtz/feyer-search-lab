@@ -188,5 +188,49 @@ This is my own hypothesis. It is *not* a transfer of 7d1ccc5's code, which I cou
 - **Reject if:** strict fails, or the total is slower than 19.57 s beyond noise.
 - **Source delta vs 3b80507:** simulate.py only. It adds the `ROW_SPLIT_PRUNING` flag, a reorder block in `run_build_step`, and a branch in `update`. Fallback: set the flag to False.
 
+### Results: SHA `633689f9bf054a90ca21b7b6087120cd86fa0d0e`: official PASS, strict PASS, **neutral (kept, within noise)**
+
+**Screen** (`afdab87c`): 19.530 s.
+
+**Full** (`ef7e77be`):
+- First run 19.543 s vs 19.567 s (−0.02).
+- Forward compile 6.394 vs 6.473 (−0.08); gradient compile 1.305 vs 1.289 (+0.02). Execute unchanged.
+- Warm median: 10.070 s.
+- Strict comparison: forward outputs bitwise identical; gradient max normalized error 1.6e-8.
+- **Interpretation:** the predicted direction held, but the size (~0.06 s of compile) is within run-to-run noise. Most of the slot pruning was already captured at group level.
+- **Decision:** keep as parent, since there is no regression and it is exact. Do not claim it as a gain.
+
+## Candidate 5: narrow component-value remat (`COMPONENT_VALUE_REMAT=True`). Transferred from peer 7d1ccc5
+
+### Source and attribution
+- **Source:** the coordinator delivered the exact `simulate.py` diff aa2b1ab→7d1ccc5 (diff sha256 `4a6f50c0…0a0912`).
+- **Mechanisms in that diff:**
+  1. `_component_values`: `jax.checkpoint` with a policy that saves only integer/bool index results. It covers just the component evaluation and output selection; the dense matrix scatter and carrier coupling stay outside.
+  2. `flat_matrix_indices` and `flat_output_indices` scatter/gather paths.
+  3. Carrier scaling fused into `update` through `carrier_output_positions`.
+  4. `NOISE_FACTOR_REUSE` reverted to "direct", with `direct_implicit` and `rowmap` removed.
+- **Not transferred:** items 2 and 3 need builder keys that come from peer build.py changes, which are not in the delivered diff, so they cannot be used. Item 4 is a separate, unattributed solve change, so it is left out to keep this candidate attributable.
+
+### Hypothesis
+- **Scientific parents:** 633689f (own branch: slot and row pruning, build.py improvements) and 7d1ccc5 (mechanism 1 only).
+- **Target:** forward compile (6.39 s) and gradient compile (1.30 s) in job `ef7e77be`.
+- **Evidence:**
+  - Candidate 1 rematerialized the whole per-row `block_assemble`, including the dense scatter and conjugation. Compile moved almost one-for-one: forward+gradient compile was 9.48 s vs 9.58 s for aa2b1ab.
+  - 7d1ccc5's checkpoint is narrow. It recomputes only the component arithmetic and saves integer index results. Its job `7e6ce3c3` measured forward 3.31 s + gradient 4.06 s = 7.37 s.
+  - That 7.37 s figure is confounded with its flat-index and carrier-fusion changes, so the share due to the narrow remat alone is unknown.
+- **Mechanism:**
+  - The forward vjp no longer contains the component linearization. The reverse program recomputes the component values only; the matrix scatter, solves and carrier coupling are not recomputed.
+  - Slot and row pruning still apply inside the checkpoint, so the recomputed linearization is the already-pruned one.
+- **Exactness:** remat recomputes the same primal ops, so forward outputs are expected bitwise identical. The gradient is expected identical or within reordering.
+- **Prediction:**
+  - Forward compile decreases and gradient compile increases.
+  - The net change is unknown: it improves only if the narrow scope avoids candidate 1's one-for-one transfer.
+  - Gradient execute may rise slightly because of the recomputation.
+- **Reject if:** a strict failure, or a total slower than 19.54 s beyond noise.
+- **Source delta vs 633689f:** simulate.py only.
+  - `update` now calls `_component_values`, which is the existing body moved out unchanged.
+  - Adds the `_save_assembly_indices` policy (copied from 7d1ccc5) and the `COMPONENT_VALUE_REMAT` flag.
+  - Fallback: set the flag to False.
+
 ### Results
 - Pending.

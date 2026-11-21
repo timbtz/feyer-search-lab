@@ -180,6 +180,42 @@ def update(
     Python list of callables referenced as a global is treated as static during
     tracing, which keeps the function jittable as long as the list is stable.
     """
+    if COMPONENT_VALUE_REMAT and component_groups is not None:
+        # Narrow-scope remat (mechanism transferred from peer 7d1ccc5): only the
+        # component values are recomputed in the reverse pass; integer index
+        # results are saved; the dense matrix scatter stays outside the checkpoint.
+        outputs = jax.checkpoint(
+            _component_values, prevent_cse=False, policy=_save_assembly_indices
+        )(parameters, function_input_indices, output_indices, function_indices, component_groups)
+    else:
+        outputs = _component_values(
+            parameters, function_input_indices, output_indices, function_indices, component_groups
+        )
+    unique_indices = component_groups is not None and "unique_matrix_indices" in component_groups
+    return matrix.at[matrix_indices[0], matrix_indices[1]].set(outputs, unique_indices=unique_indices)
+
+
+def _save_assembly_indices(primitive, *avals, **params):
+    """Checkpoint policy (from peer 7d1ccc5): save only discrete indexing results."""
+    if primitive.name not in (
+        "gather", "lt", "le", "gt", "ge", "eq", "ne", "add", "sub",
+        "mul", "select_n", "broadcast_in_dim", "reshape", "concatenate",
+        "convert_element_type",
+    ):
+        return False
+
+    def discrete(dtype):
+        return dtype is not None and (
+            np.issubdtype(dtype, np.integer) or np.issubdtype(dtype, np.bool_)
+        )
+
+    return bool(avals) and all(discrete(getattr(aval, "dtype", None)) for aval in avals) and (
+        primitive.name != "convert_element_type" or discrete(params.get("new_dtype"))
+    )
+
+
+def _component_values(parameters, function_input_indices, output_indices, function_indices, component_groups):
+    """Evaluate component functions and select the outputs written into the matrix."""
     output_rows = output_indices[0]
     # Keep the function selector scalar so only the selected component branch
     # executes. The outer vmap in simulate still batches frequency samples.
@@ -241,9 +277,7 @@ def update(
             output_rows = component_groups["output_rows"][output_rows]
         else:
             output_matrix = jnp.zeros((function_input_indices.shape[0], 4), dtype=jnp.complex128)
-    outputs = output_matrix[output_rows, output_indices[1]]
-    unique_indices = component_groups is not None and "unique_matrix_indices" in component_groups
-    return matrix.at[matrix_indices[0], matrix_indices[1]].set(outputs, unique_indices=unique_indices)
+    return output_matrix[output_rows, output_indices[1]]
 
 
 def expand_parameters(array: jnp.ndarray, indices: jnp.ndarray, values: jnp.ndarray) -> jnp.ndarray:
@@ -641,6 +675,10 @@ LOWER_SLOT_PRUNING: bool = True
 # optimized/linked index separately with all slots gradient-stopped. The builder
 # reorders those rows last (parameter_indices and output_rows kept consistent).
 ROW_SPLIT_PRUNING: bool = True
+# Candidate 5: checkpoint only the component-value evaluation (policy saves integer
+# index results), as in peer 7d1ccc5's `_component_values`. Differs from candidate 1,
+# which rematerialized the whole per-row assembly including the dense scatter.
+COMPONENT_VALUE_REMAT: bool = True
 # Build the noise source matrix once and broadcast it across signal rows when the
 # builder proved (host-side, before dummy filling) that no noise input index is a
 # real changing index. False always uses the per-row noise assembly.
