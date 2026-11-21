@@ -2,7 +2,7 @@
 
 `benchmark.py` exercises only `jax.jit` and first-order reverse mode (`jax.vjp`). Neither the written [judging criteria](../judging-criteria.pdf) nor the challenge talk requires other transformations or forbids NumPy or SciPy. In the talk, the organizers said that rewriting the system underneath is fine and that pre-computation and pre-compilation are allowed. They judge total runtime on "a random setup with random parameters" with Differometor's accuracy. Their "JAX looks like NumPy but is functional" remark was about the effort of speeding up JAX code, not a ban on NumPy. Differentiability is central to their use, though: the upstream workloads are `jax.jit(jax.value_and_grad(...))` optimizer loops with optax and GPU execution (`README.upstream.md`).
 
-Full transformation support is therefore **preferred, not a stated requirement**. Keep it when it is cheap. When it costs real speed, keep both variants and decide explicitly. [Organizer question 12](organizer-questions.md) asks this directly.
+Full transformation support is therefore **preferred, not a requirement**. The Feyer team confirmed this in Discord on 21 November: a SciPy sparse LU via `pure_callback` with a hand-written `custom_vjp` is fine, as long as it "takes the same inputs and produces the same outputs (including results + gradients) like Differometor" on the judging CPU ([answers](organizer-questions.md#answers)). Keep full semantics when they are cheap. When they cost real speed, the faster `custom_vjp` variant is eligible, and its limitations belong in the submission note.
 
 ## What breaks, and why
 

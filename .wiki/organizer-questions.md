@@ -8,6 +8,7 @@ These questions are drafted from the written brief, the [judging criteria](../ju
 - Final setup: "a slight variation of the supplied example" (README). In the talk: "a random setup with random parameters."
 - Correct: results match Differometor's accuracy. The written checks are |Δ log S| ≤ 1e-5 at every frequency, finite outputs, a nonzero gradient and the gradient sanity check.
 - Allowed (talk): rewriting internals, bringing prior work, pre-computation and pre-compilation, "as long as a random setup with random parameters is simulated faster." Development on AMD GPUs is fine. Evaluation is "for now" CPU.
+- Answered in Discord on 21 November: see [Answers](#answers) below.
 
 ## Questions (ready to paste)
 
@@ -56,4 +57,14 @@ Supersedes open questions 1 and 3 in the [system audit](system-audit.md).
 
 ## Answers
 
-None recorded yet.
+Recorded from the Feyer team's replies in Discord `#feyer` on 21 November 2026 (Jonathan Klimesch and priya170399, Feyer). Paraphrased; short quotes are marked.
+
+| Question | Answer | Consequence |
+| --- | --- | --- |
+| 12, interface | "anything that takes the same inputs and produces the same outputs (including results + gradients) like Differometor on the specific CPU is fine." The question was asked explicitly about a SciPy sparse LU via `jax.pure_callback` with a hand-written `jax.custom_vjp`. | Host-side code behind `custom_vjp` is allowed. Forward mode and second order are not required. The host-assembly candidates (`38e356c`, `645a388`, `c4153e7`) are eligible. |
+| 11, pre-compilation / compiler settings | Setting JAX/XLA options from the package (`jax.config` in `differometor/__init__.py`, appended `XLA_FLAGS`) is allowed and welcome if correctness holds and the speedup carries over to other optical setups. The talk also allowed pre-computation and pre-compilation for "a random setup with random parameters". | Package-level compiler settings are a legitimate lever. They must be verified on the 12-case generalization check, never set in `benchmark.py` or the shell. |
+| 13, hardware | Final evaluation uses one logical CPU, matching `--cpus 1`. JIT compilation counts toward the total. No standardized hardware is provided; the Intel CPU type is available from cloud providers such as Nebius. | Optimize single-thread first-run time; multi-core does not help. |
+| 1–3, final setup | The final evaluation uses a setup "similar to the bigger one" (the 3×3 UIFO). Upstream added `benchmark_aligo.py` (commit `83f8d2f`) only as a transfer test on a smaller setup. | Keep the UIFO-like random cases as the primary generality evidence. Use the aLIGO benchmark as an extra transfer check. |
+| 15, submission | After submission, Feyer evaluates the submissions and sends timing plots before the presentations. Teams mainly pitch their approach. | Prepare a pitch: approach, correctness evidence, transfer evidence. |
+
+Still open: 4–5 (exact harness for the final setup and number of repeats), 7–10 (how the reference is produced and how a more accurate result is judged on badly conditioned setups), 14 (memory unit). The accuracy question remains the main correctness risk for every sparse or host candidate. See the [generalization](generalization.md) arbitration.
