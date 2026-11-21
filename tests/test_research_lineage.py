@@ -124,6 +124,15 @@ class ResearchLineageTests(unittest.TestCase):
         self.assertTrue(any(e['source']=='candidate:' + A and e['target']=='candidate:' + C for e in g['edges']))
         self.assertFalse(any(n.get('status')=='menu_exhausted' for n in g['nodes']))
 
+    def test_proposed_phase_research_links_inputs_without_inventing_output(self):
+        r = {**record(), 'record_id':'planned', 'candidate_sha':None,
+             'status':'proposed', 'evaluations':[]}
+        g = build_lineage({'team_search':{'research_records':{'planned':r}}})
+        inputs = [e for e in g['edges'] if e['kind']=='research_input']
+        self.assertEqual({e['source'] for e in inputs}, {'candidate:' + A, 'candidate:' + B})
+        self.assertFalse(any(n.get('candidate_sha')==C for n in g['nodes']))
+        self.assertFalse(any(e['kind']=='hypothesis_combination' for e in g['edges']))
+
     def test_actual_consumed_feedback_receipt_links_prior_turn_only(self):
         prior = {**record(), 'feedback_ref':dict(artifact_ref='prior.json', artifact_digest='7' * 64)}
         later = {**record(), 'record_id':'later', 'candidate_sha':'e' * 40, 'parents':[C],

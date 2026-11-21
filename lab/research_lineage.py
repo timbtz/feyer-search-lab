@@ -235,6 +235,9 @@ def build_lineage(snapshot):
                 phase_id = node('phase:' + phase, 'phase', phase_key=phase)
                 edge(phase_id, identity, 'targets_phase', r['source_ref'])
             child = r.get('candidate_sha')
+            if child is None:
+                for parent in r['parents']:
+                    edge(candidate(parent), identity, 'research_input', r['source_ref'])
             if child:
                 edge(identity, candidate(child), 'membership', r['source_ref'])
                 parents(r['parents'], child, r['source_ref'], r['kind'] == 'combine')

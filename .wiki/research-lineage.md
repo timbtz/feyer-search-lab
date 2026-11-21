@@ -92,7 +92,10 @@ snapshots. The builder never reads files, runs jobs or changes state.
 
 Scientific edges are `scientific_parent` or `hypothesis_combination`; task,
 campaign and research membership are explicit. `targets_phase` links declared
-phase targets. `evaluation` links exact candidate/job/profile identities.
+phase targets. `research_input` connects declared input candidates to a proposed
+or current research record whose output SHA is still unknown; it does not create
+a fictional successor or a successful-combination edge. `evaluation` links exact
+candidate/job/profile identities.
 Cycles and unresolved parents are reported, not fabricated. Campaign parent IDs
 resolve only within their own campaign. No Git branch name alone creates ancestry.
 
