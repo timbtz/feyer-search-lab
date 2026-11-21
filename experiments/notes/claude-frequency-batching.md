@@ -104,4 +104,34 @@ between A and A^H is introduced.
 - Remaining risk: other closure constants (`signal_matrix`, `noise_matrix` bases, index arrays)
   do not depend on optimized parameters, so they should produce no accumulated cotangents.
   XLA reduction order is still not guaranteed bitwise identical.
+- SHA `aa7c3f93b89fd7149eca1a4303c817459c0db676`.
+- Screen `5a06505a3c984268bd488907a5f2df01` (request `670f0cb7a206425b82b9319d109d4ef2`): first-run
+  21.782536 s, compile/lower 10.987, forward exec 9.002, gradient exec 0.683, RSS 7272856 KiB.
+- Full `f226b47b58644cf5b408f8eb82638c42` (request `a734cf365cd04f78bac00f649730fefc`): **official
+  PASS, strict FAIL**. First-run 21.797833 s; imports 0.295, build 0.835, forward lower 0.838 /
+  compile 7.773, forward exec 9.052, gradient lower 0.188 / compile 1.861, gradient exec 0.702;
+  compile/lower total 10.908; warm median 10.068 s (forward 9.387, gradient 0.683); RSS 7311336
+  KiB; job wall 78.68 s.
+- Comparison: all physical outputs exact; gradient rel L2 9.18e-10, max abs 5.61e-5; same single
+  failure at index 161 (candidate −29.61289475536929 vs candidate 1 −29.612894755369226 — identical
+  to ~1e-14). **Hypothesis rejected**: carrier closure accumulation order is not the source.
+- Re-diagnosis: parent gradient error vs baseline was 4.55e-13 max abs; candidates 1–2 show
+  rel L2 ~9e-10 across the whole gradient, so per-frequency reverse computation differs. Since the
+  forward is bitwise identical, the difference is in reverse-only kernels (contraction transposes,
+  transposed triangular solves, cotangent scatters). Leading suspicion (unverified, no HLO):
+  with k=1 every inner batch dimension has size 1 and XLA's simplifier removes the degenerate
+  dimension, selecting a different (unbatched) dot/solve lowering than the batched parent.
+  Index 161 (laser power) is a small entry (−29.6 vs gradient norm 7e4) produced by heavy
+  cancellation, so it amplifies rounding differences most.
+
+### Candidate 3 — k=2 (padded to 102 rows)
+- Change vs candidate 2: only `FREQUENCY_CHUNK_SIZE = 2`. 51 loop iterations; the final block
+  repeats frequency 101 once and the duplicate is sliced off (≈1% extra solve work).
+- Hypothesis: a non-degenerate inner batch keeps the parent's batched kernel lowering in the
+  reverse pass, restoring strict gradient agreement, while blocks of 2 (≈18 MB per matrix copy)
+  retain most of candidate 1's cache/memory benefit. Expect forward exec slightly above 9.0 s
+  (padding), peak RSS modestly above 7.3 GB.
+- If strict still fails at the same magnitude, batching granularity per se changes reverse
+  rounding; then record that the operator is only official-check-qualified at tested values, or
+  test whether the residual difference lies in the parameter-cotangent reduction.
 - SHA / runs: pending.

@@ -453,7 +453,7 @@ def simulate(
 # evaluates bounded blocks of that many frequencies sequentially with `lax.map`;
 # a final partial block is padded by repeating the last frequency row and the
 # padded results are discarded. Read at trace time; not a traced argument.
-FREQUENCY_CHUNK_SIZE: int | None = 1
+FREQUENCY_CHUNK_SIZE: int | None = 2
 
 
 def _map_frequency_chunks(function, row_arrays: tuple, chunk_size: int):
