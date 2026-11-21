@@ -30,38 +30,40 @@ graph TD
   c5["3e94580ec446"]
   c6["423bcc4ad6e9"]
   c7["4c12600ce07d"]
-  c8["633689f9bf05"]
-  c9["7d1ccc59cef3"]
-  c10["7d6f99624be6"]
-  c11["96474bdd4d83"]
-  c12["aa2b1ab44180"]
-  c13["bb9a183fd64f"]
-  c14["d09dc1d08fb0"]
-  c15["d947905c9b73"]
-  c16["e0a1dc69f495"]
-  c17["e525ee5ee4ef"]
-  c18["f3139c71ae2a"]
-  c1 -->|explore| c9
-  c2 -->|combine| c16
-  c4 -->|explore| c8
+  c8["5b2169697d35"]
+  c9["633689f9bf05"]
+  c10["7d1ccc59cef3"]
+  c11["7d6f99624be6"]
+  c12["96474bdd4d83"]
+  c13["aa2b1ab44180"]
+  c14["bb9a183fd64f"]
+  c15["d09dc1d08fb0"]
+  c16["d947905c9b73"]
+  c17["e0a1dc69f495"]
+  c18["e525ee5ee4ef"]
+  c19["f3139c71ae2a"]
+  c1 -->|explore| c10
+  c2 -->|combine| c17
+  c4 -->|explore| c9
   c5 -->|explore| c6
-  c6 -->|combine| c16
+  c6 -->|combine| c17
   c7 -->|combine| c2
-  c12 -->|explore| c10
-  c14 -->|explore| c0
-  c14 -->|explore| c3
-  c14 -->|explore| c5
-  c14 -->|explore| c7
-  c14 -->|explore| c11
-  c14 -->|explore| c13
-  c14 -->|explore| c17
-  c14 -->|explore| c18
-  c18 -->|combine| c2
+  c13 -->|explore| c8
+  c13 -->|explore| c11
+  c15 -->|explore| c0
+  c15 -->|explore| c3
+  c15 -->|explore| c5
+  c15 -->|explore| c7
+  c15 -->|explore| c12
+  c15 -->|explore| c14
+  c15 -->|explore| c18
+  c15 -->|explore| c19
+  c19 -->|combine| c2
 ```
 
 Every edge records intended inputs, not proof of speedup.
 
-Recorded jobs: 13. Decisions/events: 39.
+Recorded jobs: 13. Decisions/events: 40.
 
 ## External research records
 
@@ -91,5 +93,6 @@ Recorded jobs: 13. Decisions/events: 39.
 | astra-group-numerical-v3 | refine | unknown | gradient_compile, forward_compile, gradient, forward | current |
 | claude-guided-v2 | explore | 633689f9bf05 | unknown | completed |
 | claude-guided-v2 | diagnose | unknown | unknown | current |
+| claude-guided-v2 | explore | 5b2169697d35 | unknown | completed |
 
 These records are evidence, not competing task claims or winner declarations.
