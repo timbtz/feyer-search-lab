@@ -60,9 +60,21 @@ def initialize(args):
         raise ValueError('Every seed observation must pass full evidence validation')
     if len({e['cohort_digest'] for e in evidence}) != 1:
         raise ValueError('Seed observations must share the same complete evaluation cohort')
-    _, model = settings(args.env_file)
+    selector = getattr(args, 'selector', 'qwen')
+    deterministic = selector != 'qwen'
+    if selector not in ('qwen', 'enumeration', 'local-search'):
+        raise ValueError('Unknown search selector')
+    model = None if deterministic else settings(args.env_file)[1]
     source = source_from_git(args.repo)
     materialize(source, DEFAULTS)
+    prior = []
+    if getattr(args, 'prior_full', None):
+        if not deterministic:
+            raise ValueError('Prior finite-space imports currently require a deterministic selector')
+        from .discrete_search import prior_observations
+        prior = prior_observations(args.prior_full, jobs[0], source, policy, normalize_job)
+        if any(e['cohort_digest'] != evidence[0]['cohort_digest'] for _, _, _, e in prior):
+            raise ValueError('Prior evidence does not match the frozen full cohort')
     if git(args.repo, 'status', '--porcelain'):
         raise ValueError('Initialize from a clean controller checkout')
     branch = 'explore/' + args.name
@@ -72,27 +84,32 @@ def initialize(args):
                     str(worktree), SEED_SHA], check=True)
     atomic_json(state / 'runtime.json', {'repo': str(worktree), 'branch': branch,
         'campaign_id': args.name, 'policy': policy, 'env_file': str(args.env_file.resolve()),
-        'host': args.host, 'root': args.root, 'publish': args.publish})
+        'host': args.host, 'root': args.root, 'publish': args.publish,
+        'selector': selector})
     campaign = Campaign(state / 'campaign.sqlite3')
     spec = {'campaign_id': args.name, 'space_version': SPACE_VERSION,
             'controller_commit': git(Path(__file__).resolve().parents[1], 'rev-parse', 'HEAD'),
             'budget': {'max_proposals': 1000, 'max_evaluations': args.max_evaluations,
-                       'max_model_calls': args.max_model_calls,
+                       'max_model_calls': 0 if deterministic else args.max_model_calls,
                        'deadline_unix': time.time() + args.minutes * 60},
             'objective': {'primary': 'total', 'direction': 'minimize',
                           'pareto_axes': ['compilation', 'runtime', 'peak_rss_bytes'],
                           'full_workload': {'frequencies': 101, 'variables': 193,
                                             'precision': 'float64/complex128'}},
+            'selector': selector,
             'model_manifest': {'qwen': {'provider': 'amd-token-factory', 'model': model},
                 'strong': {'codex': 'inherit designated Codex configuration',
                            'claude': 'claude-opus-5-5', 'automatic_launch': False}},
             'evaluation_policy': policy, 'cohort_digest': evidence[0]['cohort_digest'], 'seed_sha': SEED_SHA,
             'initial_seed_author': 'validated Codex seed8, three fresh full measurements',
             'guidance_policy': 'New operators require a strong-agent proposal and coordinator-frozen new round; no automatic budget extension'}
+    if deterministic:
+        spec['model_manifest'] = {'selection': {'implementation': 'lab.discrete_search',
+                                               'selector': selector, 'model_calls': 0}}
     token = campaign.initialize(spec, 'coordinator')
     secrets = {'coordinator': token}
     atomic_json(state / 'credentials.json', secrets, private=True)
-    for owner in ('qwen-checkpoint', 'qwen-mapping', 'qwen-joint'):
+    for owner in (() if deterministic else ('qwen-checkpoint', 'qwen-mapping', 'qwen-joint')):
         secrets[owner] = campaign.grant('coordinator', token, owner, 'qwen')
         atomic_json(state / 'credentials.json', secrets, private=True)
     round_spec = {'round_id': 'round-001', 'dimensions': DIMENSIONS,
@@ -104,13 +121,34 @@ def initialize(args):
         'budget': {'max_proposals': 1000, 'max_evaluations': args.max_evaluations},
         'materializer_version': SPACE_VERSION, 'constraints': ['not checkpoint implies not prevent_cse'],
         'seed_parameters': DEFAULTS}
+    if deterministic:
+        round_spec['recipes'] = {'discrete': {'dimensions': list(DIMENSIONS)}}
+        round_spec['lanes'] = {'discrete': {'owner': 'coordinator', 'dimensions': list(DIMENSIONS),
+            'max_proposals': len(assignments()), 'stall_limit': len(assignments())}}
+        round_spec['selector'] = selector
     campaign.add_round('coordinator', token, round_spec)
     campaign.propose('coordinator', token, {'proposal_id': 'seed8', 'candidate_id': 'seed8',
-        'round_id': 'round-001', 'lane_id': 'checkpoint', 'kind': 'seed', 'parents': [],
+        'round_id': 'round-001', 'lane_id': 'discrete' if deterministic else 'checkpoint', 'kind': 'seed', 'parents': [],
         'parameters': DEFAULTS, 'content_sha256': content_identity(source), 'commit_sha': SEED_SHA,
         'provenance': {'heuristic_id': 'import-confirmed-strong-agent-seed', 'model': spec['initial_seed_author']}})
     for item in evidence:
         campaign.observe('coordinator', token, 'seed8', item)
+    for parameters, digest, job, item in prior:
+        existing = next((c for c in campaign.snapshot()['candidates'] if c['content_sha256'] == digest), None)
+        if existing:
+            if existing['commit_sha'] != job['sha']:
+                raise ValueError('Equal content at a different commit cannot overwrite imported provenance')
+            candidate_id = existing['candidate_id']
+        else:
+            candidate_id = 'import-' + job['sha']
+            campaign.propose('coordinator', token, {'proposal_id': candidate_id,
+                'candidate_id': candidate_id, 'round_id': 'round-001', 'lane_id': 'discrete',
+                'kind': 'seed', 'parents': [], 'parameters': parameters,
+                'content_sha256': digest, 'commit_sha': job['sha'],
+                'provenance': {'heuristic_id': 'import-exact-full-evidence', 'source_job': job['id'],
+                               'source_branch': job.get('branch'), 'model_calls': 0}})
+        campaign.observe('coordinator', token, candidate_id, item)
+        atomic_json(state / 'queue-results' / (job['id'] + '.json'), job)
     atomic_json(state / 'credentials.json', secrets, private=True)
     publish(campaign, state, checkpoint='initialized')
     return {'campaign': args.name, 'state': str(state), 'branch': branch,
@@ -200,9 +238,17 @@ def finish_pending_recipe(campaign, state, secrets, runtime):
 
 
 def run(args):
+    from .evolution import BudgetExhausted
     with (args.state.resolve() / 'controller.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        return _run_owned(args)
+        try:
+            return _run_owned(args)
+        except BudgetExhausted as exc:
+            # A screen may finish at the deadline. Keep its exact evidence and
+            # pending full stage; do not launch a new job or reset the budget.
+            Campaign, *_ = components()
+            publish(Campaign(args.state / 'campaign.sqlite3'), args.state, checkpoint='budget-exhausted')
+            return {'status': 'budget_exhausted', 'reason': str(exc)}
 
 
 def _run_owned(args):
@@ -212,6 +258,9 @@ def _run_owned(args):
     secrets = json.loads((state / 'credentials.json').read_text())
     campaign = Campaign(state / 'campaign.sqlite3')
     repo = Path(runtime['repo'])
+    selector = runtime.get('selector', 'qwen')
+    if selector != campaign.snapshot()['campaign']['spec'].get('selector', 'qwen'):
+        raise ValueError('Selector differs from frozen campaign specification')
     while True:
         finish_pending_recipe(campaign, state, secrets, runtime)
         current = campaign.snapshot()
@@ -230,7 +279,8 @@ def _run_owned(args):
             return {'status': 'stopped', 'reason': 'Operator STOP file; pending work drained'}
         plan = campaign.plan('coordinator', secrets['coordinator'])
         campaign.record_decision('coordinator', secrets['coordinator'], uuid.uuid4().hex,
-                                 {'policy': 'frozen-lane-three-strike-v1', 'plan': plan})
+                                 {'policy': 'frozen-lane-three-strike-v1' if selector == 'qwen'
+                                  else 'finite-space-' + selector + '-v1', 'plan': plan})
         atomic_json(state / 'latest-plan.json', plan)
         snapshot = campaign.snapshot()
         if plan['action'] == 'wait':
@@ -242,6 +292,9 @@ def _run_owned(args):
                 return {'status': 'evaluated', 'candidate_id': pending[0]['candidate_id']}
             continue
         if plan['action'] == 'combine':
+            if selector != 'qwen':
+                publish(campaign, state, checkpoint='space-exhausted')
+                return {'status': 'space_exhausted', 'selector': selector}
             # Joint optimization is a new frozen round over the same registered
             # dimensions. No arbitrary source merge and no budget extension.
             if any(r['round_id'] == 'round-002-joint' for r in snapshot['rounds']):
@@ -279,6 +332,43 @@ def _run_owned(args):
         if not options:
             campaign.lane_exhausted('coordinator', secrets['coordinator'], plan['round_id'], plan['lane_id'])
             publish(campaign, state, checkpoint=plan['lane_id'] + '-exhausted')
+            if selector != 'qwen':
+                return {'status': 'space_exhausted', 'selector': selector}
+            continue
+        if selector != 'qwen':
+            from .discrete_search import select
+            thresholds = active_round['progress']
+            parent, parameters, decision = select(selector, parents, options,
+                relative=thresholds['relative'], absolute=thresholds['absolute'])
+            from .evolution_report import freeze_context
+            directory = repo / 'experiments' / 'campaigns' / runtime['campaign_id']
+            context = {'selector': selector, 'parent': parent['candidate_id'],
+                       'parameters': parameters, 'options': options, 'decision': decision,
+                       'observations': [{'candidate_id': c['candidate_id'],
+                            'parameters': c['parameters'], 'valid': c['valid'],
+                            'metrics': c.get('metrics')} for c in snapshot['candidates']]}
+            context_ref = freeze_context(context, directory)
+            proposal_id = uuid.uuid4().hex
+            campaign.record_decision('coordinator', secrets['coordinator'], proposal_id,
+                                     dict(decision, context=context_ref))
+            publish(campaign, state, checkpoint='deterministic-selection')
+            expected_head = git(repo, 'rev-parse', 'HEAD')
+            proposal = {'proposal_id': proposal_id, 'candidate_id': proposal_id,
+                'round_id': plan['round_id'], 'lane_id': plan['lane_id'], 'kind': 'mutate',
+                'parents': [parent['candidate_id']], 'recipe': 'discrete', 'parameters': parameters,
+                'content_sha256': content_identity(materialize(source, parameters)),
+                'provenance': dict(decision, operator_version=SPACE_VERSION,
+                    parameters_before=parent['parameters'], context=context_ref,
+                    context_sha256=context_ref['sha256'], git_parent_sha=expected_head,
+                    controller_commit=git(Path(__file__).resolve().parents[1], 'rev-parse', 'HEAD'),
+                    model_calls=0, target_symbols=['simulate._evaluate_component', 'simulate.update'])}
+            atomic_json(state / 'pending-recipe.json', {'owner': plan['owner'], 'proposal': proposal,
+                                                       'expected_head': expected_head})
+            finish_pending_recipe(campaign, state, secrets, runtime)
+            candidate = next(c for c in campaign.snapshot()['candidates'] if c['candidate_id'] == proposal_id)
+            evaluate(campaign, state, candidate, secrets, runtime)
+            if args.once:
+                return {'status': 'evaluated', 'candidate_id': proposal_id, 'selector': selector}
             continue
         exported = publish(campaign, state, checkpoint='proposal-context')
         source_context_sha = exported['context_sha256']
@@ -373,6 +463,9 @@ def main():
     init.add_argument('--minutes', type=float, default=15)
     init.add_argument('--max-evaluations', type=int, default=12)
     init.add_argument('--max-model-calls', type=int, default=8)
+    init.add_argument('--selector', choices=('qwen', 'enumeration', 'local-search'), default='qwen')
+    init.add_argument('--prior-full', type=Path, action='append', default=[],
+                      help='Import a full result for an exact registered implementation, preserving its SHA')
     init.add_argument('--host', default='amd-hackathon')
     init.add_argument('--root', default='/workspace/feyer-lab')
     init.add_argument('--publish', action='store_true')
@@ -388,7 +481,7 @@ def main():
     freeze.add_argument('--spec', type=Path, required=True)
     args = parser.parse_args()
     if args.command == 'init':
-        if args.minutes <= 0 or args.max_evaluations < 1 or args.max_model_calls < 1:
+        if args.minutes <= 0 or args.max_evaluations < 1 or args.max_model_calls < 0 or (args.selector == 'qwen' and args.max_model_calls < 1):
             raise ValueError('Positive bounded campaign budgets required')
         result = initialize(args)
     elif args.command == 'run':

@@ -23,6 +23,10 @@ PROVENANCE = ('heuristic_id', 'target_symbols', 'hypothesis', 'model_manifest',
               'context_sha256', 'prompt_sha256', 'response_sha256', 'parameters_before')
 
 
+class BudgetExhausted(RuntimeError):
+    """A new reservation would exceed the immutable campaign or round budget."""
+
+
 def canonical(value):
     return json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False)
 
@@ -159,7 +163,9 @@ class Campaign:
         for key in ('max_proposals', 'max_evaluations'):
             positive(budget[key], key)
         budget.setdefault('max_model_calls', budget['max_proposals'])
-        positive(budget['max_model_calls'], 'max_model_calls')
+        calls = budget['max_model_calls']
+        if type(calls) is not int or calls < 0:
+            raise ValueError('max_model_calls must be a nonnegative integer')
         deadline = budget['deadline_unix']
         if isinstance(deadline, bool) or not isinstance(deadline, (float, int)) or not math.isfinite(deadline) or deadline <= time.time():
             raise ValueError('Campaign requires an explicit future deadline')
@@ -218,9 +224,9 @@ class Campaign:
     def _budget(self, db, kind, round_id=None):
         budget = self._campaign(db)['spec']['budget']
         if time.time() >= budget['deadline_unix']:
-            raise RuntimeError('Campaign deadline exhausted')
+            raise BudgetExhausted('Campaign deadline exhausted')
         if self._usage(db)[kind] >= budget['max_' + kind]:
-            raise RuntimeError(f'Campaign {kind} budget exhausted')
+            raise BudgetExhausted(f'Campaign {kind} budget exhausted')
         if round_id and kind in ('proposals', 'evaluations'):
             spec = self._round(db, round_id)['spec']
             limit = spec['budget']['max_' + kind]
@@ -229,7 +235,7 @@ class Campaign:
             else:
                 used = db.execute("SELECT count(*) FROM evaluations e JOIN candidates c ON c.candidate_id=e.candidate_id WHERE c.round_id=? AND json_extract(e.state,'$.imported')=0", (round_id,)).fetchone()[0]
             if used >= limit:
-                raise RuntimeError(f'Round {kind} budget exhausted')
+                raise BudgetExhausted(f'Round {kind} budget exhausted')
 
     def add_round(self, actor, token, spec):
         spec = json.loads(canonical(spec))
@@ -284,6 +290,7 @@ class Campaign:
                     raise ValueError('Lane owns a nonempty subset of frozen dimensions')
                 lane_spec.setdefault('max_proposals', budget['max_proposals'])
                 positive(lane_spec['max_proposals'], 'lane max_proposals')
+                positive(lane_spec.get('stall_limit', 3), 'lane stall_limit')
                 base = lane_spec.get('base_candidate')
                 if base and not self._candidate(db, base)['valid']:
                     raise ValueError('Lane base candidate must be fully validated')
@@ -622,7 +629,8 @@ class Campaign:
                     lane['strikes'] = 0 if candidate['improved'] else lane['strikes'] + 1
                 if lane['inflight_candidate'] == candidate_id:
                     lane['inflight_candidate'] = None
-                    lane['status'] = 'stalled' if lane['strikes'] >= 3 else 'ready'
+                    stall_limit = self._round(db, candidate['round_id'])['spec']['lanes'][candidate['lane_id']].get('stall_limit', 3)
+                    lane['status'] = 'stalled' if lane['strikes'] >= stall_limit else 'ready'
                 if candidate['kind'] == 'seed' and candidate['valid'] and not lane['base_candidate']:
                     lane['base_candidate'] = candidate_id
                 if candidate['kind'] == 'seed' and candidate['valid']:
@@ -710,7 +718,7 @@ class Campaign:
         return dict(campaign=data['campaign'], rounds=data['rounds'], lanes=data['lanes'],
                     candidates=data['candidates'], usage=data['usage'], decisions=data['decisions'], guidance=data['guidance'],
                     event_head=data['events'][-1]['event_hash'] if data['events'] else None,
-                    policy='Full eligibility and same cohort required. Exact Pareto membership is separate from noise-qualified progress. Three distinct terminal non-improvements stall a lane; infrastructure and retries do not count.')
+                    policy='Full eligibility and same cohort required. Exact Pareto membership is separate from noise-qualified progress. The frozen lane stall_limit defaults to three terminal non-improvements; infrastructure and retries do not count.')
 
     def plan(self, actor, token):
         with self._connect() as db:
@@ -726,7 +734,8 @@ class Campaign:
         if pending:
             return dict(action='wait', round_id=round_data['round_id'], inflight=inflight, evaluations=pending)
         budget = data['campaign']['spec']['budget']
-        if time.time() >= budget['deadline_unix'] or any(data['usage'][k] >= budget['max_' + k] for k in ('proposals', 'evaluations', 'model_calls')):
+        kinds = ('proposals', 'evaluations', 'model_calls') if budget['max_model_calls'] else ('proposals', 'evaluations')
+        if time.time() >= budget['deadline_unix'] or any(data['usage'][k] >= budget['max_' + k] for k in kinds):
             return dict(action='budget_exhausted', reason='Frozen campaign deadline or resource budget reached')
         if inflight:
             return dict(action='wait', round_id=round_data['round_id'], inflight=inflight)
