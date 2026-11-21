@@ -75,6 +75,25 @@
 - Change: `SLICE_CONJUGATION = False` only; executed code path equals candidate 1 (`4c12600`).
 - Purpose: second full first-run sample for candidate 1's computation; branch head on best validated
   configuration. Expectation ≈22.5 s, gradient identical to cand. 1 (8.08e-10 max abs). Not a new idea.
+- SHA `3e94580ec44609e7156f7f0acad1f2884db8b030`. Screen `e61db6fefd344eab8d45592b009a7dcf` 22.333 s.
+  Full `0e841841f0bc491fa29b6178a908ef4c` (request `2f21c93109ea45bd92fbfa8466e405c4`): **official PASS,
+  strict PASS**. First run 22.423 s (cand. 1: 22.495); forward lower 0.837 / compile 7.661, forward exec
+  8.602, gradient compile 1.804, gradient exec 1.665; compile/lower total 11.034; warm median 10.841 s;
+  RSS 8135116 KiB; wall 89.12 s. Gradient identical to cand. 1 (max abs 8.076e-10).
+- Two full samples of the merged-RHS computation: 22.495 / 22.423 s (parent 23.840, single sample).
+
+## Candidate 4 — split coefficients/RHS inside the assembly loop (coordinator follow-up)
+- Source analysis: with scope "assemble", `_map_row_chunks` stacks the augmented (101, 751, 752)
+  signal blocks (~0.91 GB). `_solve_signal_and_noise` then takes `[:, :, :-1]` (a non-contiguous slice
+  → full copy for LU / A^H transpose) and `[:, :, -1:]`. In reverse, the slice transpose is a pad of the
+  cotangent to (101, 751, 752) before entering the reverse scan.
+- Change: `SPLIT_SIGNAL_RHS = True` — the loop body returns `M[:, :, :-1]`, `M[:, :, -1]` and noise; the
+  stacked coefficients (101, 751, 751) and RHS (101, 751) feed `_solve_signal_and_noise(…, signal_rhs)`
+  directly. Exact slicing; A cotangent contributions (merged solve + A^H path) are still summed at top
+  level exactly as before, and pad/concat into the per-row augmented cotangent happens per frequency
+  (disjoint entries, no additions) → gradient expected bitwise equal to candidate 1.
+- Hypothesis: removes one full-stack strided copy in forward and one full-stack pad in reverse (if XLA
+  had not already fused them); expected small saving (≤0.3 s), possibly zero. Unmeasured.
 - SHA / runs: pending.
 
 ## Final handoff
@@ -117,6 +136,18 @@
     "invalid_combinations": "none known",
     "candidate_sha": "39b23e3c6e84b2a7498c7bce932a2f6ba41f227e",
     "status": "validated but slower (22.794 s); do not admit — recommend fixed false"
+  },
+  {
+    "name": "split_signal_rhs",
+    "symbol": "differometor.simulate.SPLIT_SIGNAL_RHS",
+    "file": "differometor/simulate.py",
+    "function": "simulate (scope 'assemble' branch), _solve_signal_and_noise(signal_rhs=)",
+    "legal_values": [false, true],
+    "safe_default": false,
+    "conditions": "only active with FREQUENCY_CHUNK_SIZE not None and FREQUENCY_LOOP_SCOPE='assemble'; exact layout change",
+    "invalid_combinations": "no effect for other scopes",
+    "candidate_sha": "pending (candidate 4)",
+    "status": "unvalidated"
   }
 ]
 ```

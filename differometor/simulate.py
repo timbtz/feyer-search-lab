@@ -467,14 +467,30 @@ def simulate(
             # Assembly runs in the loop; solves and noise contraction stay full-vmap.
             row_carrier_entries = jnp.broadcast_to(carrier_entries, (count, carrier_entries.shape[1]))
 
-            def block_assemble(blocks):
-                block_parameters, block_entries = blocks
-                return assemble(block_parameters, block_entries)
+            if SPLIT_SIGNAL_RHS:
+                # Split the augmented (k, N, N+1) block into coefficients (k, N, N) and
+                # RHS (k, N) inside the loop, so the stacked outputs are already
+                # contiguous and no top-level slice of the (B, N, N+1) stack is needed.
+                def block_assemble(blocks):
+                    block_parameters, block_entries = blocks
+                    block_signal, block_noise = assemble(block_parameters, block_entries)
+                    return block_signal[:, :, :-1], block_signal[:, :, -1], block_noise
 
-            assembled_signal, assembled_noise = _map_row_chunks(
-                block_assemble, (parameters, row_carrier_entries), chunk_size
-            )
-            signal, noise = _solve_signal_and_noise(assembled_signal, assembled_noise, base_carrier_selections)
+                assembled_coefficients, assembled_rhs, assembled_noise = _map_row_chunks(
+                    block_assemble, (parameters, row_carrier_entries), chunk_size
+                )
+                signal, noise = _solve_signal_and_noise(
+                    assembled_coefficients, assembled_noise, base_carrier_selections, assembled_rhs
+                )
+            else:
+                def block_assemble(blocks):
+                    block_parameters, block_entries = blocks
+                    return assemble(block_parameters, block_entries)
+
+                assembled_signal, assembled_noise = _map_row_chunks(
+                    block_assemble, (parameters, row_carrier_entries), chunk_size
+                )
+                signal, noise = _solve_signal_and_noise(assembled_signal, assembled_noise, base_carrier_selections)
         else:
             raise ValueError(f"Unknown FREQUENCY_LOOP_SCOPE {FREQUENCY_LOOP_SCOPE!r}")
 
@@ -504,6 +520,10 @@ MERGE_SAME_MATRIX_SOLVES: bool = True
 # of a full-matrix where-mask. Exact (conjugation and copies only). Read at trace time.
 # Measured (cand. 2, 39b23e3): strict pass but slower (22.794 s vs 22.495 s; reverse +0.2 s).
 SLICE_CONJUGATION: bool = False
+# With scope "assemble": split the augmented signal block into coefficients and RHS inside
+# the assembly loop (exact slices) so the solves read contiguous stacked arrays instead of
+# slicing the (B, N, N+1) stack. False restores the stacked augmented layout.
+SPLIT_SIGNAL_RHS: bool = True
 
 
 def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):
@@ -627,15 +647,23 @@ def _assemble_signal_and_noise(
     return signal_matrix, noise_matrix
 
 
-def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections):
+def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections, signal_rhs=None):
     """Solve the signal and quantum-noise systems for B assembled signal rows.
 
     `signal_matrix` (B, SN, SN + 1), `noise_matrix` (B, NN, NN) and detector
     selections (D, 1 or B, SN). Returns the signal solution (B, SN) and the
-    unsqueezed noise amplitude spectral density (D, B).
+    unsqueezed noise amplitude spectral density (D, B). If `signal_rhs` (B, SN) is
+    given, `signal_matrix` is the already separated coefficient matrix (B, SN, SN).
     """
+    if signal_rhs is None:
+        coefficients = signal_matrix[:, :, :-1]
+        signal_rhs = signal_matrix[:, :, -1]
+    else:
+        coefficients = signal_matrix
+    signal_matrix = None  # only `coefficients` and `signal_rhs` are used below
+
     if not MERGE_SAME_MATRIX_SOLVES:
-        signal = vmap(solve)(signal_matrix[:, :, :-1], signal_matrix[:, :, -1])
+        signal = vmap(solve)(coefficients, signal_rhs)
 
     # --------------------
     # Quantum noise solve
@@ -643,7 +671,7 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
     carrier_selections = base_carrier_selections
 
     # Back-propagate detector weights by solving the transposed conjugated signal system.
-    transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(signal_matrix[:, :, :-1]), (0, 2, 1))
+    transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(coefficients), (0, 2, 1))
     carrier_selections = jnp.broadcast_to(
         carrier_selections,
         (carrier_selections.shape[0], transposed_conjugated_signal_matrix.shape[0], carrier_selections.shape[2]),
@@ -677,13 +705,13 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
         # frequency in the forward pass and one transpose-solve in the reverse pass.
         # Columns: [signal RHS, noise source 0, ..., noise source D-1].
         right_hand_sides = jnp.concatenate(
-            [signal_matrix[:, :, -1:], jnp.moveaxis(noise_sources, 0, 2)], axis=2
+            [signal_rhs[:, :, None], jnp.moveaxis(noise_sources, 0, 2)], axis=2
         )
-        solutions = solve(signal_matrix[:, :, :-1], right_hand_sides)
+        solutions = solve(coefficients, right_hand_sides)
         signal = solutions[:, :, 0]
         covariances = jnp.moveaxis(solutions[:, :, 1:], 2, 0)
     else:
-        covariances = vmap(vmap(solve), in_axes=(None, 0))(signal_matrix[:, :, :-1], noise_sources)
+        covariances = vmap(vmap(solve), in_axes=(None, 0))(coefficients, noise_sources)
 
     # Convert propagated covariances into amplitude spectral density.
     temporary_sum = jnp.sum(jnp.real(covariances * jnp.conjugate(carrier_selections)), axis=2)
