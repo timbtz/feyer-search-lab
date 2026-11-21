@@ -41,4 +41,4 @@ For numerical changes, compare saved carrier, signal, noise, sensitivity, powers
 
 Start a fresh Python process, use the same environment and CPU affinity, and retain double precision. The initial worker uses CPU 2 and runs serially. Keep exploratory concurrent timings separate from final sequential comparisons. Changes that interact must be evaluated again after integration rather than combining their individual speedup percentages.
 
-The initial agent session has a limit of four distinct candidate revisions or one hour, whichever is reached first. Repeated evaluations of the same revision do not create a new candidate. Finish by writing a handoff and preserving the session so it can be resumed explicitly.
+The agent session has no candidate-count limit. Its existing one-hour deadline remains in force. Repeated evaluations of the same revision do not create a new candidate. Finish by writing a handoff and preserving the session so it can be resumed explicitly.

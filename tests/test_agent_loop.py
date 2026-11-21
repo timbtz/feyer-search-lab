@@ -9,7 +9,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from lab.agent_loop import (CodexTurnError, SessionBusyError, _advance_candidate,
-                            _recover_submission, changed_paths, codex_turn,
+                            _finish_record, _recover_submission, changed_paths, codex_turn,
                             exclusive_lock, run, validate_changes, validate_response)
 
 
@@ -119,6 +119,17 @@ class AgentResumeTests(unittest.TestCase):
         self.assertEqual(self.active['feedback']['screen'], job)
         finish.assert_called_once()
 
+    def test_operator_continuation_overrides_old_final_candidate_stop(self):
+        self.active['response']['stop'] = True
+        self.active['continue_after_evaluation'] = True
+        with patch('lab.agent_loop.subprocess.run', return_value=Mock(returncode=0)), \
+             patch('lab.agent_loop._push'), patch('lab.agent_loop.git', return_value='b' * 40):
+            stopped = _finish_record(self.active, self.args, self.directory,
+                                     self.directory, self.state, self.status_file)
+        self.assertFalse(stopped)
+        self.assertFalse(self.state['stop_requested'])
+        self.assertTrue(self.active['response']['stop'])
+
     def test_no_new_job_is_submitted_after_deadline(self):
         self.assertFalse(self.advance(time.monotonic() - 1))
         self.client.submit.assert_not_called()
@@ -188,6 +199,12 @@ class AgentResumeTests(unittest.TestCase):
 
 class AgentLoopIntegrationTests(unittest.TestCase):
     def test_two_candidates_keep_one_conversation_and_versioned_feedback(self):
+        self.exercise_loop(2, 2)
+
+    def test_no_count_limit_continues_past_four_candidates(self):
+        self.exercise_loop(None, 5)
+
+    def exercise_loop(self, candidate_limit, expected_candidates):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             repo, worktree, origin = root / 'repo', root / 'worktree', root / 'origin.git'
@@ -206,7 +223,7 @@ class AgentLoopIntegrationTests(unittest.TestCase):
             git(repo, 'remote', 'add', 'origin', str(origin))
             args = SimpleNamespace(repo=repo, worktree=worktree, name='trial', branch='explore/trial',
                 direction='imports', resume=False, host='unused', github_repo='test/repo',
-                max_minutes=1, max_candidates=2, baseline_seconds=36.177949)
+                max_minutes=1, max_candidates=candidate_limit, baseline_seconds=36.177949)
             calls = []
             submitted = {}
             client = Mock()
@@ -214,7 +231,7 @@ class AgentLoopIntegrationTests(unittest.TestCase):
                 calls.append((thread, prompt))
                 (folder / 'differometor/simulate.py').write_text(f'# candidate {number}\n')
                 return 'same-thread', {'summary': f'Change {number}', 'hypothesis': 'faster',
-                    'ready_for_evaluation': True, 'stop': number == 2, 'notes': ''}
+                    'ready_for_evaluation': True, 'stop': number == expected_candidates, 'notes': ''}
             def submit(folder, branch, agent, direction, hypothesis, profile, sha):
                 job_id = f'job-{len(submitted) + 1}'
                 job = {'id': job_id, 'sha': sha, 'profile': profile, 'status': 'queued'}
@@ -230,11 +247,13 @@ class AgentLoopIntegrationTests(unittest.TestCase):
                  patch('lab.agent_loop.codex_turn', side_effect=turn), \
                  patch('lab.agent_loop.github_status'):
                 run(args)
-            self.assertEqual(len(calls), 2)
+            self.assertEqual(len(calls), expected_candidates)
+            if candidate_limit is None:
+                self.assertIn('There is no candidate-count limit', calls[4][1])
             self.assertIsNone(calls[0][0])
             self.assertEqual(calls[1][0], 'same-thread')
             self.assertIn('job-1', calls[1][1])
-            self.assertEqual(len(submitted), 4)
+            self.assertEqual(len(submitted), expected_candidates * 2)
             reports = worktree / 'experiments/runs/trial'
             first = json.loads((reports / 'candidate-01.json').read_text())
             second = json.loads((reports / 'candidate-02.json').read_text())
@@ -246,7 +265,7 @@ class AgentLoopIntegrationTests(unittest.TestCase):
             state = json.loads((repo / '.lab/sessions/trial/status.json').read_text())
             self.assertEqual(state['status'], 'complete')
             self.assertEqual(state['thread_id'], 'same-thread')
-            self.assertEqual(state['candidates'], 2)
+            self.assertEqual(state['candidates'], expected_candidates)
             self.assertIsNone(state['active_candidate'])
             with self.assertRaisesRegex(ValueError, 'already exists'):
                 run(args)

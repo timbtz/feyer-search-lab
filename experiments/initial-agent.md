@@ -59,4 +59,4 @@ Keep a note at `experiments/notes/initial-agent.md` with:
 
 ## Stop and hand off
 
-Stop after four distinct candidate revisions or one hour, whichever comes first. Do not spawn additional agents. Finish with a concise report naming the best validated revision, measured improvement or lack of improvement, numerical evidence, failed approaches and next steps. Preserve the worktree, branch, commits, notes and session so the investigation can be resumed.
+There is no candidate-count limit. Continue exploring within the existing one-hour session deadline. Do not spawn additional agents. Finish with a concise report naming the best validated revision, measured improvement or lack of improvement, numerical evidence, failed approaches and next steps. Preserve the worktree, branch, commits, notes and session so the investigation can be resumed.

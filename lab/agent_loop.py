@@ -218,7 +218,7 @@ def _finish_record(active, args, worktree, directory, state, status_file):
     for profile in ('screen', 'full'):
         if profile in feedback:
             github_status(args.github_repo, feedback[profile], target)
-    stop = active['response']['stop']
+    stop = active['response']['stop'] and not active.get('continue_after_evaluation', False)
     _save(state, status_file, feedback=feedback, candidates=active['iteration'],
           active_candidate=None, status='feedback_ready', stop_requested=stop)
     return stop
@@ -311,7 +311,7 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
     invocation_started = time.time()
     deadline = time.monotonic() + args.max_minutes * 60
     _save(state, status_file, pid=os.getpid(), branch=args.branch, worktree=str(worktree), direction=args.direction,
-          status='starting', invocation_started_at=invocation_started,
+          status='starting', candidate_limit=args.max_candidates, invocation_started_at=invocation_started,
           invocation_deadline_at=invocation_started + args.max_minutes * 60)
     try:
         if not worktree.exists():
@@ -347,7 +347,7 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
                     continue
                 if git(worktree, 'rev-parse', 'HEAD') != pending['before_sha']:
                     raise ValueError('Git history changed during the interrupted agent turn')
-            if int(state.get('candidates', 0)) >= args.max_candidates:
+            if args.max_candidates is not None and int(state.get('candidates', 0)) >= args.max_candidates:
                 _save(state, status_file, status='complete', reason='Candidate limit reached')
                 return
             if time.monotonic() >= deadline:
@@ -365,7 +365,13 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
                        'and harness unchanged. Make one focused candidate, then return the requested JSON. Returning does not discard '
                        'this conversation: you will be resumed with measured feedback. Do not spawn agents. If a previous turn was '
                        'interrupted, inspect and continue its uncommitted edits.\n')
-            prompt += f'Candidate {iteration}/{args.max_candidates}. Remaining session seconds: {max(0, int(deadline-time.monotonic()))}.\n'
+            if args.max_candidates is None:
+                prompt += (f'Candidate {iteration}. There is no candidate-count limit. The user removed the former '
+                           'four-candidate cap; this supersedes older brief, worktree rules and conversation instructions '
+                           'about that cap. Continue exploring after candidate four while time remains.\n')
+            else:
+                prompt += f'Candidate {iteration}/{args.max_candidates}.\n'
+            prompt += f'Remaining session seconds: {max(0, int(deadline-time.monotonic()))}.\n'
             if state.get('feedback'):
                 prompt += 'Evaluator feedback:\n' + json.dumps(state['feedback'], indent=2) + '\n'
             try:
@@ -417,12 +423,13 @@ def main():
     parser.add_argument('--direction',default='first-pass')
     parser.add_argument('--host',default='amd-hackathon')
     parser.add_argument('--github-repo',default='timbtz/feyer-search-lab')
-    parser.add_argument('--max-candidates',type=int,default=4)
+    parser.add_argument('--max-candidates',type=int,default=None,
+                        help='Optional candidate-count limit; omitted means no count limit')
     parser.add_argument('--max-minutes',type=float,default=60)
     parser.add_argument('--baseline-seconds',type=float,default=35.737065)
     parser.add_argument('--resume',action='store_true')
     args=parser.parse_args()
-    if args.max_candidates<1 or args.max_minutes<=0 or '/' in args.name or args.name in ('','.','..'):
+    if (args.max_candidates is not None and args.max_candidates<1) or args.max_minutes<=0 or '/' in args.name or args.name in ('','.','..'):
         parser.error('Invalid session name or budget')
     run(args)
 

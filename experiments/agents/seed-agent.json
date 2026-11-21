@@ -10,10 +10,11 @@
   "branch": "explore/seed-agent",
   "worktree": "/Users/t.betz/Documents/Feyer challenge agents/codex-seed",
   "started_at_utc": "2026-11-21T14:34:12.293538+00:00",
-  "candidate_limit": 4,
+  "candidate_limit": null,
   "new_work_deadline_minutes": 60,
   "starting_commit": "0bf57ae2af4a377f72cb34a3d6a328c714baafc8",
   "live_status": ".lab/sessions/seed-agent/status.json",
   "initial_brief": "experiments/initial-agent.md",
-  "screening_baseline_seconds": 36.177949
+  "screening_baseline_seconds": 36.177949,
+  "candidate_limit_change": "User removed the four-candidate cap; original time deadline retained."
 }

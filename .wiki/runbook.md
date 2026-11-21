@@ -64,7 +64,6 @@ python3 -m lab.agent_loop \
   --repo '/Users/t.betz/Documents/Feyer challenge' \
   --worktree '/path/to/separate-seed-worktree' \
   --branch explore/seed-agent \
-  --max-candidates 4 \
   --max-minutes 60 \
   --name seed-agent
 ```
@@ -119,8 +118,8 @@ The supervised Codex worktree will be `/Users/t.betz/Documents/Feyer challenge a
 
 The live local state is `.lab/sessions/seed-agent/status.json`; the process log is `.lab/sessions/seed-agent/supervisor.log`. Each Codex turn has a JSONL event log, stderr log and structured response in that directory. Agent transcripts stay local; measured evaluator summaries are committed under `experiments/runs/seed-agent/` and linked from GitHub commit statuses.
 
-The first session starts at most four candidates and starts no new coding turn or submission after 60 minutes. An already-submitted evaluation may finish and save feedback after that deadline. A lost connection does not cancel remote evaluation.
+There is no candidate-count limit by default. The session starts no new coding turn or submission after 60 minutes. An already-submitted evaluation may finish and save feedback after that deadline. A lost connection does not cancel remote evaluation.
 
-To resume, run the same `lab.agent_loop` command with `--resume`. It restores the saved conversation and reconciles pending jobs before new coding. Explicit resumption grants the requested new time window; the candidate count continues. Increase `--max-candidates` only when intentionally authorizing more candidates. Session and worktree locks prevent duplicate supervisors.
+To resume, run the same `lab.agent_loop` command with `--resume`. It restores the saved conversation and reconciles pending jobs before new coding. Explicit resumption grants the requested new time window; the candidate count continues. Omit `--max-candidates` for no count limit; optionally supply it to bound a different session. Session and worktree locks prevent duplicate supervisors.
 
 For the initial run use `--baseline-seconds 36.177949`, the measured screening calibration. The first successful candidate gets full validation; later candidates get full validation when screening is within 2% of that baseline or faster. This is an exploration gate, not a claim that a small timing difference is a speedup.
