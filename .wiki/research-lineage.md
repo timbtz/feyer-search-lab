@@ -55,6 +55,10 @@ Required fields are:
 `menu: {manifest_digest, legal_count, covered_count}`, with complete finite coverage.
 `completed` and `evaluated` describe record/executor progress, not validation.
 New facts append new record IDs; existing records cannot be rewritten.
+An updated assignment can include `assignment_id`, `observed_at` and `supersedes`
+pointing to an existing record. Its `record_update` control edge preserves the
+earlier proposed receipt while showing a later dispatched state; no scientific
+ancestry is inferred from this operational transition.
 
 Optional `feedback_ref`, `checkpoint` and `next_input` contain `artifact_ref` and
 `artifact_digest`. Optional `session_id` and `iteration` are copied only when known.
