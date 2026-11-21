@@ -76,6 +76,41 @@ def _evaluate_component_group(function_index, function_inputs):
     return vmap(FUNCTIONS[function_index])(function_inputs)
 
 
+class _ParameterSlots:
+    """Integer-indexable stand-in for a component's parameter vector.
+
+    Each slot is a separate scalar, so slots under `lax.stop_gradient` carry
+    symbolic-zero tangents and their derivative terms are never formed.
+    """
+
+    __slots__ = ("values",)
+
+    def __init__(self, values):
+        self.values = values
+
+    def __getitem__(self, index):
+        if isinstance(index, (int, np.integer)):
+            return self.values[index]
+        return jnp.stack(self.values)[index]
+
+
+@partial(jit, static_argnums=(0, 1), inline=True)
+def _evaluate_component_group_slots(function_index, differentiable, function_inputs):
+    """Like `_evaluate_component_group`, with constant input slots gradient-stopped.
+
+    `differentiable` is a static per-slot mask from the builder: a slot is False
+    only when no row of the group reads a parameter that depends on the optimized
+    values (optimized or linked indices), so its true derivative is exactly zero.
+    Forward values are unchanged (stop_gradient is the identity).
+    """
+    function = FUNCTIONS[function_index]
+    columns = tuple(
+        function_inputs[:, slot] if keep else lax.stop_gradient(function_inputs[:, slot])
+        for slot, keep in enumerate(differentiable)
+    )
+    return vmap(lambda *values: function(_ParameterSlots(values)))(*columns)
+
+
 def _save_assembly_indices(primitive, *avals, **params):
     """Retain only discrete indexing results; recompute complex arithmetic."""
     # JAX 0.9.0 inserts reduce_precision on saved inexact residuals, which
@@ -98,18 +133,7 @@ def _save_assembly_indices(primitive, *avals, **params):
     )
 
 
-def _save_component_residuals(primitive, *avals, **params):
-    """Retain real nonlinear results as well as discrete assembly indices."""
-    # These unary primitives preserve their input dtype. Restrict saving to
-    # real floating inputs: the checkpoint's reduce_precision insertion cannot
-    # handle complex residuals. Complex optical phases still recompute.
-    if primitive.name in ("exp", "sqrt", "sin", "cos", "sinh", "cosh", "asin"):
-        dtype = getattr(avals[0], "dtype", None) if len(avals) == 1 else None
-        return dtype is not None and np.issubdtype(dtype, np.floating)
-    return _save_assembly_indices(primitive, *avals, **params)
-
-
-@partial(jax.checkpoint, prevent_cse=False, policy=_save_component_residuals)
+@partial(jax.checkpoint, prevent_cse=False, policy=_save_assembly_indices)
 def _component_values(
     parameters,
     function_input_indices,
@@ -141,7 +165,20 @@ def _component_values(
             else:
                 input_indices = function_input_indices[rows]
             group_inputs = parameters[input_indices]
-            group_values.append(_evaluate_component_group(function_index, group_inputs))
+            diff_slots = component_groups.get("diff_slots")
+            if (
+                diff_slots is not None
+                and function_index in diff_slots
+                and group_inputs.ndim == 2
+            ):
+                differentiable = tuple(
+                    slot in diff_slots[function_index] for slot in range(group_inputs.shape[1])
+                )
+                group_values.append(
+                    _evaluate_component_group_slots(function_index, differentiable, group_inputs)
+                )
+            else:
+                group_values.append(_evaluate_component_group(function_index, group_inputs))
         if group_values:
             output_matrix = jnp.concatenate(group_values, axis=0)
             if "flat_output_indices" not in component_groups:
@@ -207,6 +244,8 @@ def update(
         An optional `unique_matrix_indices` key marks verified distinct destinations.
         `flat_matrix_indices` supplies normalized, in-bounds row-major destinations.
         `flat_output_indices` supplies composed, in-bounds component output offsets.
+        `diff_slots` optionally marks inputs dependent on optimized or linked parameters
+        for optimized-parameter differentiation; rebuild it when optimization pairs change.
         Omit or rebuild metadata when changing selectors, input/output indices, matrix shape
         or matrix destinations, including carrier coupling destinations.
     carrier_entries : jnp.ndarray | None
@@ -956,6 +995,31 @@ def run_build_step(
         noise_inputs |= {int(i) for i in np.asarray(indices).ravel()}
     if real_changing.isdisjoint(noise_inputs):
         component_groups["noise_row_reuse"] = ()
+
+    # Static differentiable-slot masks (dict keys only; empty-tuple values add no
+    # pytree leaves). A slot is differentiable when any row of the group reads an
+    # optimized index or a linking output; other slots read constants only.
+    differentiable_indices = {
+        int(i) for i in np.asarray(simulation_arrays["optimized_parameter_indices"]).ravel()
+    }
+    differentiable_indices |= {
+        int(i) for i in np.asarray(simulation_arrays["indices_to_link"]).ravel()
+    }
+    for name in ("carrier", "signal", "noise"):
+        group = component_groups.get(name)
+        if not isinstance(group, dict) or "parameter_indices" not in group:
+            continue
+        diff_slots = {}
+        for function_index, indices in group["parameter_indices"].items():
+            indices = np.asarray(indices)
+            if indices.ndim != 2:
+                continue
+            diff_slots[function_index] = {
+                slot: ()
+                for slot in range(indices.shape[1])
+                if any(int(i) in differentiable_indices for i in indices[:, slot])
+            }
+        group["diff_slots"] = diff_slots
 
     simulation_arrays["component_groups"] = component_groups
 
