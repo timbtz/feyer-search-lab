@@ -189,7 +189,7 @@ def markdown(data):
                   f"Classification: {row.get('classification')}. Observed Pareto frontier: {row['observed_pareto_frontier']}.", '',
                   f"[Code](https://github.com/timbtz/feyer-search-lab/commit/{row['sha']})", '']
         if row.get('error'): lines += [f"Validation: {row['error']}", '']
-    return '\n'.join(lines) + '\n'
+    return '\n'.join(lines).rstrip() + '\n'
 
 
 def render_html(data):
@@ -206,7 +206,7 @@ def write_report(repo, output):
         temporary.write_text(content)
         temporary.replace(output / name)
     with (output / 'phases.csv').open('w', newline='') as stream:
-        writer = csv.writer(stream)
+        writer = csv.writer(stream, lineterminator='\n')
         writer.writerow(['candidate', 'sha', 'validated', 'profile', 'phase', 'seconds', 'saved_seconds', 'classification'])
         for row in data['candidates']:
             for phase, seconds in row.get('phases', {}).items():

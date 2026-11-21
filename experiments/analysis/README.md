@@ -1,6 +1,6 @@
 # Candidate phase comparison
 
-Snapshot: 2026-11-21T15:17:58.694272+00:00
+Snapshot: 2026-11-21T15:18:43.567798+00:00
 
 Magnitude exceeds max(0.02 seconds, 3% of baseline phase median, baseline phase range). Heuristic, not statistical significance.
 
@@ -101,4 +101,3 @@ Prepared candidate 7: restore candidate 5’s masked conjugation and recompute s
 Classification: improvement_without_detected_regression. Observed Pareto frontier: True.
 
 [Code](https://github.com/timbtz/feyer-search-lab/commit/0a0c93fa8f814e0c9c2eab87117d6030a0e87b40)
-
