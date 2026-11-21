@@ -44556,6 +44556,53 @@
         ],
         "target_evidence": []
       }
+    },
+    {
+      "seq": 29,
+      "at": 1795294807.888861,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "claude-profile-guided-v1-compiler-gap-60fa572e38a6",
+        "kind": "explore",
+        "executor": {
+          "kind": "supervisor",
+          "id": "claude-profile-guided-v1"
+        },
+        "session_id": "a825c74d-c575-4b2c-bf1b-d3c07bcc2e26",
+        "status": "current",
+        "candidate_sha": null,
+        "parents": [
+          "7d6f99624be6e65451051fea0a2e0d99e177780c"
+        ],
+        "target_phases": [
+          "compilation"
+        ],
+        "hypothesis": "static structural index metadata",
+        "change_summary": "Broker-assigned compiler-gap research; no output candidate or measured gain asserted.",
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/7df2194a4460e909558f180a00da1aaf5922171f/experiments/launches/claude-profile-guided-v1-compiler-gap.json",
+        "source_digest": "60fa572e38a6a128b5af44422d4ece46cc14e230b378ac7be33e63617cdd6b6a",
+        "source_digest_kind": "canonical_json_sha256",
+        "stopping_reason": null,
+        "evaluations": [],
+        "input_receipt": {
+          "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-profile-guided-v1/turn-08-prompt-697b26e21a42f56920bb955b43ae7da2369b2ddd097fe46cfcb392458976b731.json",
+          "sha256": "697b26e21a42f56920bb955b43ae7da2369b2ddd097fe46cfcb392458976b731",
+          "turn": 8,
+          "thread_id": "a825c74d-c575-4b2c-bf1b-d3c07bcc2e26",
+          "consumed_feedback_digest": "e0806ecb60f85c54f3528dfabc4845be8300c70d7302605e8428578b334cf6f3",
+          "consumed_candidate_sha": "7d6f99624be6e65451051fea0a2e0d99e177780c"
+        },
+        "observed_at": 1795294374.61168,
+        "fixed_deadline_unix": 1795294994.3922188,
+        "target_declaration": {
+          "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/8bf6e8fbe58a0b605857659a3bff032350f0180c/experiments/briefs/compiler-gap-followup.md",
+          "source_digest": "59076ef8431198386dfe6d2ad6ef0152d92eb902cca2818dbec86faf17a5c4d0"
+        },
+        "target_evidence": [],
+        "assignment_id": "claude-profile-guided-v1-compiler-gap"
+      }
     }
   ],
   "comparison_regime": {
@@ -45129,6 +45176,47 @@
         }
       ],
       "target_evidence": []
+    },
+    "claude-profile-guided-v1-compiler-gap-60fa572e38a6": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "claude-profile-guided-v1-compiler-gap-60fa572e38a6",
+      "kind": "explore",
+      "executor": {
+        "kind": "supervisor",
+        "id": "claude-profile-guided-v1"
+      },
+      "session_id": "a825c74d-c575-4b2c-bf1b-d3c07bcc2e26",
+      "status": "current",
+      "candidate_sha": null,
+      "parents": [
+        "7d6f99624be6e65451051fea0a2e0d99e177780c"
+      ],
+      "target_phases": [
+        "compilation"
+      ],
+      "hypothesis": "static structural index metadata",
+      "change_summary": "Broker-assigned compiler-gap research; no output candidate or measured gain asserted.",
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/7df2194a4460e909558f180a00da1aaf5922171f/experiments/launches/claude-profile-guided-v1-compiler-gap.json",
+      "source_digest": "60fa572e38a6a128b5af44422d4ece46cc14e230b378ac7be33e63617cdd6b6a",
+      "source_digest_kind": "canonical_json_sha256",
+      "stopping_reason": null,
+      "evaluations": [],
+      "input_receipt": {
+        "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-profile-guided-v1/turn-08-prompt-697b26e21a42f56920bb955b43ae7da2369b2ddd097fe46cfcb392458976b731.json",
+        "sha256": "697b26e21a42f56920bb955b43ae7da2369b2ddd097fe46cfcb392458976b731",
+        "turn": 8,
+        "thread_id": "a825c74d-c575-4b2c-bf1b-d3c07bcc2e26",
+        "consumed_feedback_digest": "e0806ecb60f85c54f3528dfabc4845be8300c70d7302605e8428578b334cf6f3",
+        "consumed_candidate_sha": "7d6f99624be6e65451051fea0a2e0d99e177780c"
+      },
+      "observed_at": 1795294374.61168,
+      "fixed_deadline_unix": 1795294994.3922188,
+      "target_declaration": {
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/8bf6e8fbe58a0b605857659a3bff032350f0180c/experiments/briefs/compiler-gap-followup.md",
+        "source_digest": "59076ef8431198386dfe6d2ad6ef0152d92eb902cca2818dbec86faf17a5c4d0"
+      },
+      "target_evidence": [],
+      "assignment_id": "claude-profile-guided-v1-compiler-gap"
     }
   }
 }

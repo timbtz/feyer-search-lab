@@ -57,7 +57,7 @@ graph TD
 
 Every edge records intended inputs, not proof of speedup.
 
-Recorded jobs: 13. Decisions/events: 28.
+Recorded jobs: 13. Decisions/events: 29.
 
 ## External research records
 
@@ -76,5 +76,6 @@ Recorded jobs: 13. Decisions/events: 28.
 | layout-numerical-v2 | combine | e0a1dc69f495 | unknown | evaluated |
 | codex-profile-guided-v1 | explore | 7d1ccc59cef3 | unknown | completed |
 | claude-profile-guided-v1 | explore | 7d6f99624be6 | unknown | completed |
+| claude-profile-guided-v1 | explore | unknown | compilation | current |
 
 These records are evidence, not competing task claims or winner declarations.
