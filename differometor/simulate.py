@@ -18,6 +18,7 @@ Conventions used throughout:
 """
 
 import jax
+from functools import partial
 from time import time
 import jax.numpy as jnp
 from jax import lax, vmap, jit
@@ -60,8 +61,9 @@ def solve(matrix: jnp.ndarray, right_hand_side: jnp.ndarray) -> jnp.ndarray:
 
 
 @jit
+@partial(jax.checkpoint, prevent_cse=False)
 def _evaluate_component(function_and_inputs):
-    """Reuse the scalar component trace across carrier, signal and noise updates."""
+    """Reuse the component trace and recompute its small intermediates in reverse."""
     function_index, function_inputs = function_and_inputs
     return lax.switch(function_index, FUNCTIONS, function_inputs)
 
@@ -334,19 +336,15 @@ def simulate(
 
     # Apply conjugation rules to enforce upper and lower sideband symmetry.
     carrier_size = carrier.shape[1]
-    # Assemble disjoint row bands, retaining the augmented RHS in each band.
-    lower_sideband = jnp.concatenate(
-        (signal_matrix[:, carrier_size : 2 * carrier_size, :carrier_size],
-         jnp.conjugate(signal_matrix[:, carrier_size : 2 * carrier_size, carrier_size:])),
-        axis=2,
-    )
-    mechanical = jnp.concatenate(
-        (jnp.conjugate(signal_matrix[:, 2 * carrier_size :, :carrier_size]),
-         signal_matrix[:, 2 * carrier_size :, carrier_size:]),
-        axis=2,
-    )
-    signal_matrix = jnp.concatenate(
-        (signal_matrix[:, :carrier_size, :], lower_sideband, mechanical), axis=1
+    rows = jnp.arange(signal_matrix.shape[1])[:, None]
+    columns = jnp.arange(signal_matrix.shape[2])[None, :]
+    # The lower-sideband row blocks are adjacent; include the augmented RHS.
+    # Their union and the mechanical-to-upper block are disjoint.
+    conjugate_entries = (
+        (rows >= carrier_size) & (rows < 2 * carrier_size) & (columns >= carrier_size)
+    ) | ((rows >= 2 * carrier_size) & (columns < carrier_size))
+    signal_matrix = jnp.where(
+        conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix
     )
 
     signal = vmap(solve)(signal_matrix[:, :, :-1], signal_matrix[:, :, -1])

@@ -5,7 +5,7 @@
 - Starting checkout / candidate parent: `0bf57ae2af4a377f72cb34a3d6a328c714baafc8`
 - Public simulator baseline: `02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f`
 - Managed session label: `seed-agent`; Codex thread identifier: `01a1fe87-7574-74b2-a289-227279a3bdc8`, read from supervisor status during turn 4. Status is in `/Users/t.betz/Documents/Feyer challenge/.lab/sessions/seed-agent/status.json` (not the assigned worktree). Supervisor owns session continuity and submission.
-- Budget: original one-hour session remains in force. In the candidate 5 resumption, the user explicitly removed the four-candidate cap and authorized continued exploration while time remains; this supersedes the older stop-after-four instruction. Remaining allowances at candidate 5/6 start: 1878/1597 seconds. No commits, pushes, SSH calls, local benchmark runs or evaluator submissions made by agent.
+- Budget: original one-hour session remains in force. In the candidate 5 resumption, the user explicitly removed the four-candidate cap and authorized continued exploration while time remains; this supersedes the older stop-after-four instruction. Remaining allowances at candidate 5/6/7 start: 1878/1597/1249 seconds. No commits, pushes, SSH calls, local benchmark runs or evaluator submissions made by agent.
 
 ## Baseline evidence supplied by maintainer
 
@@ -379,19 +379,89 @@ Unchanged AMD official complete first-evaluation totals: 35.821919, 35.614326, 3
 
 ## Candidate 6: concatenate disjoint conjugation bands
 
-- Candidate SHA: pending supervisor commit. Parent after candidate 5 feedback: `239fbc54bbd852761eec1557fa4263c2982f78a2`.
+- Candidate SHA: `c4c7260e9db22591182f434eb25e6a566c2096f8`. Parent after candidate 5 feedback: `239fbc54bbd852761eec1557fa4263c2982f78a2`.
 - Continue from candidate 5, changing only the signal conjugation representation. Assemble the upper, lower-sideband and mechanical row bands with concatenation. Lower-sideband rows preserve their first C columns and conjugate remaining columns; mechanical rows conjugate the first C columns and preserve the remainder. Upper rows are unchanged. Augmented RHS is retained in all bands.
 - This is the same region partition proved for candidate 5. It removes the explicit row/column mask and full-shaped `where`, using only disjoint slices, conjugation and concatenation. All physical values, solves, source terms and derivative rules remain present; no custom derivatives, factorization changes, persistent cache or environment settings.
 - Hypothesis: block assembly may recover some of the measured forward-time increase from candidate 5 while retaining its simpler reverse operation. The compiler may fuse/optimize both representations similarly, or concatenation adjoints may introduce padding/addition costs; do not assume a gain. Compare total time, compilation, forward/reverse execution and peak RSS against candidate 5.
 - Local validation: syntax passed; exhaustive independent Python complex-array comparison against the original three sequential block updates passed for C,N=(0,1),(1,2),(1,5),(2,7),(286,751). Checked every entry and augmented RHS by packed real/imaginary double bytes. Source comparison confirms the only simulator edit from candidate 5 is the conjugation block. These are structural/algebraic checks, not JAX or full-physics validation. No local benchmark was run.
-- Exact SHA, screen/full identifiers, correctness, timings and numerical differences: pending evaluator.
+
+### Candidate 6 screen result
+
+- Run `4bb102481cef4790b835669dd1a19853`; verdict `screened`; official passed: False.
+- Complete first-run 30.743178044 s; process wall 32.274527660 s; peak RSS 16424200 KiB.
+- Trace/lower/compile total 13.852979423 s; warm median None s.
+
+| Phase | Seconds |
+| --- | ---: |
+| imports | 0.292022562 |
+| initialize | 0.002910577 |
+| load | 0.001418846 |
+| build | 1.290586296 |
+| forward_lower | 1.782123899 |
+| forward_compile | 8.776809020 |
+| forward | 11.805818496 |
+| sensitivity_lower | 0.092862731 |
+| sensitivity_compile | 0.389064722 |
+| sensitivity | 0.000914600 |
+| gradient_lower | 0.273091162 |
+| gradient_compile | 2.539027890 |
+| gradient | 3.495918488 |
+| host_transfer | 0.000608755 |
+
+### Candidate 6 full result
+
+- Run `64bad3b6563f4c51812ec748910cf82b`; verdict `validated`; official passed: True.
+- Complete first-run 30.719040321 s; process wall 117.569270374 s; peak RSS 16426900 KiB.
+- Trace/lower/compile total 13.807125986 s; warm median 15.76439224742353 s.
+
+| Phase | Seconds |
+| --- | ---: |
+| imports | 0.284838799 |
+| initialize | 0.002942998 |
+| load | 0.001573572 |
+| build | 1.275092071 |
+| forward_lower | 1.807057757 |
+| forward_compile | 8.655010697 |
+| forward | 11.700555066 |
+| sensitivity_lower | 0.099932285 |
+| sensitivity_compile | 0.478552390 |
+| sensitivity | 0.000931131 |
+| gradient_lower | 0.272820288 |
+| gradient_compile | 2.493752569 |
+| gradient | 3.645655422 |
+| host_transfer | 0.000325277 |
+
+### Candidate 6 numerical evidence and rejection
+
+- Official checks and strict baseline array comparison passed. Physical outputs and 193 gradients finite; reported loss equals baseline at 9.793036291535532e-08, maximum log-sensitivity reference error 5.374104176780747e-06.
+
+| Array | Maximum absolute error | Relative L2 error | Strict pass |
+| --- | ---: | ---: | --- |
+| carrier | 0 | 0 | True |
+| signal | 0 | 0 | True |
+| noise | 0 | 0 | True |
+| sensitivity | 0 | 0 | True |
+| powers | 0 | 0 | True |
+| gradient | 1.5178830414797062e-18 | 2.1531895610344731e-23 | True |
+| parameters | 0 | 0 | True |
+| frequencies | 0 | 0 | True |
+
+- Full first-run 30.719040321 s is 1.747212162 s slower than candidate 5. Forward is lower at 11.700555066 s, but reverse rose to 3.645655422 s from 1.838970648 s; warm median rose to 15.764392247 s. RSS rose to 16426900 KiB from 13787576 KiB. Setup also rose to 1.275092071 s with no builder code change; this may be run/environment variation and is not attributed to conjugation. The reverse-time and memory regressions persist beyond that setup difference.
+- Decision: correctness-valid but reject as performance improvement. Restore candidate 5's masked conjugation. All physical arrays match exactly; full-gradient maximum absolute error 1.5178830414797062e-18 and relative L2 error 2.153189561034473e-23. Pointwise maximum relative gradient errors were not supplied, although every coordinate passed the strict criterion.
+
+## Candidate 7: recompute scalar component intermediates in reverse
+
+- Candidate SHA: pending supervisor commit. Parent after candidate 6 feedback: `4511720c2c84da2aacf58fdbd61e6d57e5bd6f60`.
+- Restore candidate 5's validated simulator, then add `jax.checkpoint(..., prevent_cse=False)` underneath the existing JIT decorator on `_evaluate_component`. Other changes are the standard-library `partial` import and helper docstring. The function body, 19 component functions, matrix assembly/mask, all solves and original noise contraction are unchanged.
+- Hypothesis: saving only component inputs and recomputing small intermediate values inside the reverse pass may shrink conditional/scan derivative residuals and forward compilation work, reducing complete first-run time and memory. Candidate 5 spends 8.722988600 s compiling forward and has 13787576 KiB peak RSS; these justify a focused residual-storage tradeoff. Reverse arithmetic and compilation can increase, so only total measured cost decides success. No residual-size measurement or gain is claimed yet.
+- [JAX checkpoint documentation](https://docs.jax.dev/en/latest/_autosummary/jax.checkpoint.html) describes the compute-for-memory tradeoff and permits `prevent_cse=False` for use inside scan. The component helper is executed by `lax.map` (scan-based). This is a local autodiff evaluation strategy, not an XLA environment change or persistent compilation cache. It does not precompute/cache physical answers, omit gradients, checkpoint the dense solves, or change the official three outer JIT stages. JAX's existing automatic differentiation rules remain responsible for complex derivatives; no custom VJP/JVP is introduced.
+- Local checks: syntax and AST isolation passed. Compared with candidate 5, only the helper's checkpoint decorator, explanatory docstring and functools import differ. All other simulator expressions are identical. No local simulator/benchmark execution or dependency changes.
+- Candidate SHA, screen/full identifiers, phase timings, RSS and full-array numerical errors: pending evaluator.
 
 ## Current handoff / next action
 
-Candidate-count cap remains removed by the user; original session time limit remains. Session `seed-agent`, thread `01a1fe87-7574-74b2-a289-227279a3bdc8`, worktree and branch are unchanged; supervisor owns all commits and submission. Do not merge or alter infrastructure.
+Best validated measured revision remains `3c9717f9254e94d5b441401a75dbc79b7b4b4d8c`: complete first-run 28.971828159 s, warm median 14.589272164 s, exact physical outputs and maximum gradient absolute error 1.5178830414797062e-18. Candidate 6 is preserved but excluded for performance; the direct noise contraction remains excluded for numerical failure, and lazy import has no demonstrated benefit.
 
-Best validated revision: `3c9717f9254e94d5b441401a75dbc79b7b4b4d8c`, full run `77977f53f6d8415788498d3a7298cd61`, first run 28.971828159 s and warm median 14.589272164 s. Exact physical outputs; maximum absolute gradient difference 1.5178830414797062e-18. Import deferral showed no gain, and the direct quadratic noise contraction failed strict gradient checks; both remain excluded and preserved in history.
+Next: supervisor commits/screens candidate 7 and fully validates the same SHA if eligible. Measure forward/reverse compilation and execution together, memory and complete total; inspect all saved physical arrays and full gradients, plus reported loss. Keep candidate 5 if recomputation does not yield a valid total-time improvement. A faster screen alone is insufficient for promotion. Supplemental pointwise relative gradient diagnostics remain unavailable; never mislabel relative L2 errors. Repeat full fresh-process runs of the eventual selected SHA to confirm improvement.
 
-Next: commit/screen candidate 6 and fully validate the same SHA if eligible. Inspect full outputs/gradient and loss, then retain whichever validated conjugation representation has convincing complete first-run evidence. Saved comparisons provide absolute maxima and relative L2 errors; obtain maximum pointwise relative gradient errors as supplemental diagnostics when available. Repeat fresh-process full runs for the eventual selected candidate before calling the improvement confirmed.
-
-Unfinished: actual compiled solve-factorization reuse/lowering, candidate 2 failing gradient coordinate diagnostics, and further grouping of component functions. No sparse solve or custom VJP has been attempted.
+The former candidate cap is removed, but the original session time limit remains. Preserve session `seed-agent`, thread `01a1fe87-7574-74b2-a289-227279a3bdc8`, worktree, branch and failed history. Supervisor owns all commits/submissions; no merge, independent benchmark, SSH or infrastructure changes. Unfinished diagnostics include actual solve lowering/factorization reuse and candidate 2's failing gradient coordinates. No sparse solve/custom derivative was attempted.
