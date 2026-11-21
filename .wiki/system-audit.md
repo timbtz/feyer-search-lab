@@ -54,3 +54,17 @@ For a true kernel-enforced 32 GB envelope, ask AMD for a delegated cgroup or a s
 4. Do future finalists retain their speed advantage on the actual Intel judging hardware?
 
 These questions do not prevent screening or conservative local comparison. They do prevent claiming proof of general numerical correctness or identical judging hardware.
+
+## Candidate chosen for confirmation
+
+The paired repeat study freezes candidate 8, `1e552d675c3795265be8af1ac23ffb61f90f30b1`, rather than following a moving branch tip. Its simulator diff is confined to `differometor/simulate.py`: scalar component dispatch through `lax.map`, a JIT helper with branch-local rematerialization, and one equivalent mask replacing three disjoint conjugation updates. The linear solve is unchanged; no precomputed answers, reduced workload or persistent compilation cache was introduced in that diff. Candidate 11 restores the same simulator files, but its distinct commit had only completed screening when the original agent deadline expired.
+
+Automated checks supplement this source review. The root-user evaluation environment is cooperative, not an adversarial sandbox; hash checks and numerical tests alone do not prove that arbitrary submitted Python obeys every challenge rule.
+
+## Repeated measurement result
+
+Three fresh-process pairs under the audited evaluator all passed official and strict validation. Median first-run time fell from **35.720092 s to 28.093522 s**, a **21.35% reduction**, with paired reductions of **19.82–22.00%**. Baseline sampled group RSS was approximately 15.5 GB; candidate peaks were approximately 13.8 GB. All were below the monitored 32-billion-byte budget.
+
+The main gains were compilation (median 19.6300 → 12.7776 s) and gradient execution (2.9563 → 1.8829 s). Forward execution was slightly slower (12.1191 → 12.3995 s). Thus this is a favorable total-time tradeoff, not a strict Pareto improvement in every phase. It is repeated evidence on this AMD instance, not a promise about the final Intel system.
+
+See [the confirmation study](../experiments/audits/confirmation.md) for all pairs, exact commit/job IDs, resource observations and limitations. An additional audited screen of the same implementation passed with first-evaluation validation and the same monitored budget.
