@@ -5,6 +5,7 @@ import math
 import os
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import time
 
@@ -232,6 +233,22 @@ def build_frontier(entries, records=(), generated_at=None, source_provenance=Non
     return result
 
 
+def temporary_bytes(directory, data):
+    """Remove a partial temporary file if disk write or flush fails."""
+    path = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=directory, delete=False) as stream:
+            path = Path(stream.name)
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+    except BaseException:
+        if path is not None:
+            path.unlink(missing_ok=True)
+        raise
+    return path
+
+
 def write_snapshot(result, output):
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -243,11 +260,7 @@ def write_snapshot(result, output):
     if archive.exists() and archive.read_bytes() != data:
         raise ValueError('Immutable snapshot conflict')
     if not archive.exists():
-        with tempfile.NamedTemporaryFile(dir=archive.parent, delete=False) as stream:
-            temporary_archive = Path(stream.name)
-            stream.write(data)
-            stream.flush()
-            os.fsync(stream.fileno())
+        temporary_archive = temporary_bytes(archive.parent, data)
         try:
             # Atomic exclusive publication: neither partial immutable files nor
             # a second writer can replace a content-addressed artifact.
@@ -258,11 +271,38 @@ def write_snapshot(result, output):
                     raise ValueError('Immutable snapshot conflict')
         finally:
             temporary_archive.unlink()
-    with tempfile.NamedTemporaryFile(dir=output.parent, delete=False) as stream:
-        stream.write(data)
-        temporary = stream.name
-    os.replace(temporary, output)
+    temporary = temporary_bytes(output.parent, data)
+    try:
+        os.replace(temporary, output)
+    finally:
+        temporary.unlink(missing_ok=True)
     return archive
+
+
+def refresh_loop(refresh, interval=None, deadline=None, clock=time.time, sleep=time.sleep):
+    """Retry filesystem errors only in bounded watch mode; keep old good output.
+
+    Semantic errors still propagate. A retry is a new collection attempt, never
+    a rewritten timestamp on the previous snapshot.
+    """
+    if interval is None:
+        return refresh()
+    if not number(interval) or not 5 <= interval <= 60 or not number(deadline):
+        raise ValueError('Refresh needs a finite 5..60 second interval and deadline')
+    while clock() < deadline:
+        try:
+            refresh()
+        except OSError as exc:
+            try:
+                print(json.dumps({'event':'frontier_refresh_failed', 'error':str(exc),
+                    'publication_status':'unknown', 'deadline_unix':deadline}), file=sys.stderr, flush=True)
+            except OSError:
+                # The log may be on the same full filesystem. Preserve the
+                # bounded retry even when recording the failure is impossible.
+                pass
+        remaining = deadline - clock()
+        if remaining > 0:
+            sleep(min(interval, remaining))
 
 
 def main():
@@ -282,9 +322,7 @@ def main():
     if args.watch_seconds is not None and (not number(args.watch_seconds) or not 5 <= args.watch_seconds <= 60
             or not number(args.until_unix) or args.until_unix <= time.time()):
         p.error('Refresh needs an interval of 5..60 seconds and a future fixed deadline')
-    while True:
-        if args.watch_seconds is not None and time.time() >= args.until_unix:
-            break
+    def refresh():
         team = json.loads(args.team_state.read_text())
         policies = json.loads(args.policies.read_text()) if args.policies else {}
         entries, issues = collect(args.repo, team, args.instance, policies)
@@ -298,9 +336,7 @@ def main():
         archive = write_snapshot(result, args.output)
         print(json.dumps(dict(path=str(args.output), archive=str(archive), groups=len(result['groups']),
             unranked=result['unranked_count'], failures=result['failure_count'], issues=result['issues'])), flush=True)
-        if args.watch_seconds is None:
-            break
-        time.sleep(max(0, min(args.watch_seconds, args.until_unix-time.time())))
+    refresh_loop(refresh, args.watch_seconds, args.until_unix)
 
 
 if __name__ == '__main__':
