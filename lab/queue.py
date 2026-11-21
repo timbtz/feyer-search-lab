@@ -88,8 +88,8 @@ class Queue:
             raise ValueError("sha must be a full 40-character hexadecimal commit ID")
         sha = sha.lower()
         request_id = normalize_request_id(request_id)
-        if profile not in {"screen", "full"}:
-            raise ValueError("profile must be screen or full")
+        if profile not in {"screen", "full", "diagnostic"}:
+            raise ValueError("profile must be screen, full or diagnostic")
         for name, value in (("branch", branch), ("agent", agent), ("direction", direction)):
             if not isinstance(value, str) or not value.strip() or len(value) > 300 or "\0" in value:
                 raise ValueError(f"Invalid {name}")
