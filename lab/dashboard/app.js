@@ -248,6 +248,25 @@ const SearchProgression = (() => {
 
 if (typeof module !== 'undefined') module.exports.Progression = SearchProgression;
 
+/* Candidate-scoped verification is separate from scored evaluator eligibility. */
+const VerificationEvidence=(()=>{
+  function checks(run){
+    const seen=new Set(),out=[];
+    for(const record of run.research_records||[]){
+      const verification=record.verification;
+      if(!verification||record.candidate_sha!==run.sha||verification.candidate_sha!==run.sha)continue;
+      for(const check of Array.isArray(verification.checks)?verification.checks:[]){
+        if(!check.id||!check.setup||!check.method||!['passed','failed','needs_review','pending','blocked','unsupported'].includes(check.status))continue;
+        const key=JSON.stringify([record.record_id,check.id]);if(seen.has(key))continue;seen.add(key);
+        out.push({...check,record_id:record.record_id,source_ref:check.source_ref||record.source_ref});
+      }
+    }
+    return out;
+  }
+  return {checks};
+})();
+if(typeof module!=='undefined')module.exports.Verification=VerificationEvidence;
+
 /* Five objectives with measured phase drilldowns. Deltas require recorded comparators. */
 const RunMetrics=(()=>{
   const finite=x=>typeof x==='number'&&Number.isFinite(x)&&x>=0;
@@ -390,7 +409,12 @@ if(typeof module!=='undefined')module.exports.SessionGraph=SessionGraph;
   const make = (tag, cls, text) => { const n=document.createElement(tag); if(cls)n.className=cls; if(text!==undefined)n.textContent=text; return n; };
   const clear = target => { const n=typeof target==='string'?$(target):target;n.replaceChildren();return n; };
   const link = (label,url) => { const a=make('a','',label);a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a; };
-  const commitLink = sha => /^[0-9a-f]{40}$/i.test(sha||'') ? link(`Code · ${short(sha)}`,`${REPO}/commit/${sha}`) : null;
+  const commitLink = sha => {
+    if(!/^[0-9a-f]{40}$/i.test(sha||''))return null;
+    const reported=Object.values(S.data?.team_search?.research_records||{}).find(r=>r.candidate_sha===sha&&r.reported_measurement?.candidate_sha===sha)?.reported_measurement;
+    const origin=reported?.source_ref?.match(/^https:\/\/github\.com\/[^/]+\/[^/]+(?=\/)/)?.[0]||REPO;
+    return link(`Code · ${short(sha)}`,`${origin}/commit/${sha}`);
+  };
   const branchLink = branch => typeof branch==='string' && /^[\w./-]+$/.test(branch) && !branch.includes('..') ? link('Open branch on GitHub',`${REPO}/tree/${branch.split('/').map(encodeURIComponent).join('/')}`) : null;
   const add = (parent,...items) => items.filter(Boolean).forEach(x=>parent.append(x));
   const pill = (text,tone='') => make('span',`status ${tone}`,text);
@@ -605,6 +629,19 @@ if(typeof module!=='undefined')module.exports.SessionGraph=SessionGraph;
     const warm=Object.entries(r.warm_timing||{}).filter(([,v])=>numeric(v));if(warm.length){body.append(make('h4','','Warm timings · separate from first run'));for(const [key,value]of warm){const row=make('div','feedback-phase');add(row,make('span','',human(key)),make('strong','',metricTime(value)));body.append(row);}}
     const issues=[...list(r.evidence?.issues),...(r.error?[r.error]:[])];if(issues.length)body.append(make('p','feedback-errors',issues.join(' · ')));
     for(const stop of annotation.stops)body.append(make('p','feedback-note',`${human(stop.status)}${stop.reason?`: ${stop.reason}`:''}. This does not establish a local optimum.`));
+    const verification=VerificationEvidence.checks(r);
+    if(verification.length){
+      const section=make('details','verification-suite');section.append(make('summary','',`Verification by setup · ${verification.length} checks / plans`));
+      section.append(make('p','feedback-note','Each result applies to this exact candidate and its stated setup, reference and tolerance. Diagnostic timings are separate from the official first-run score. Pending checks have not run.'));
+      for(const check of verification){
+        const item=make('details','verification-check');item.dataset.testId=check.id;
+        item.append(make('summary','',`${check.setup} · ${check.name||check.id} · ${human(check.status)}`));
+        facts(item,[['Evidence',human(check.evidence_kind||'not recorded')],['Method',check.method],['Outcome',check.summary||'See detailed receipt'],['Next step',check.next_action||'No follow-up recorded']]);
+        if(check.source_ref&&/^https:\/\//.test(check.source_ref))item.append(link('Source artifact',check.source_ref));
+        disclosure(item,'Inputs, tolerances, timings and reproduction',check,`verification-${check.record_id}-${check.id}`);section.append(item);
+      }
+      body.append(section);
+    }
     const inputs=RunMetrics.parents(r),all=P.model?.measurements||[];const outputs=[...new Set(all.filter(x=>RunMetrics.parents(x).shas.includes(r.sha)).map(x=>x.sha))];
     for(const [label,shas]of [['Declared scientific inputs',inputs.shas],['Recorded derived candidates',outputs]]){
       const section=make('div','run-relations');section.append(make('h4','',label));if(!shas.length)section.append(make('p','meta-line',inputs.conflict&&label.startsWith('Declared')?'Conflicting declarations':'No link recorded'));
@@ -622,6 +659,7 @@ if(typeof module!=='undefined')module.exports.SessionGraph=SessionGraph;
     const reference=RunMetrics.reference(r,all,S.data?.historical?.baseline),values=RunMetrics.values(r);card.dataset.job=r.job_id;card.dataset.sha=r.sha;
     const heading=make('div','run-card-heading');add(heading,make('span','micro-label',`${human(r.profile)} · ${short(r.job_id)}`),make('span',`run-verdict ${v.tone}`,v.label));card.append(heading);
     const summary=annotation.summary||annotation.hypothesis||'Change summary not recorded';card.append(make('p','run-change-summary',summary));
+    const checks=VerificationEvidence.checks(r);if(checks.length)card.append(make('p','run-targets',`Verification evidence: ${checks.length} checks / plans · ${checks.filter(c=>['failed','needs_review','unsupported','blocked'].includes(c.status)).length} findings · ${checks.filter(c=>c.status==='pending').length} pending`));
     if(annotation.target_phases.length){const targets=make('p','run-targets');targets.append(make('span','micro-label','Declared targets'));for(const phase of annotation.target_phases)targets.append(make('span','run-target',RunMetrics.names[phase]||human(phase)));card.append(targets);}
     if(r.numerical_context)card.append(make('p','run-config',Object.entries(r.numerical_context.parameters||{}).map(([k,v])=>`${human(k)} ${v??'default'}`).join(' · ')));
     const change=make('details','run-change');change.append(make('summary','','Change, target & source'));const changeBody=make('div','run-change-body');
@@ -695,6 +733,8 @@ if(typeof module!=='undefined')module.exports.SessionGraph=SessionGraph;
         if(n.kind==='sweep')card.append(make('p','process-meta',`Controller: ${human(n.status)} · coverage and budget are separate`));
         if(n.kind==='session')card.append(make('p','process-meta',`${n.worker.model==='inherited / not recorded'?'Model not recorded':n.worker.model} · ${n.worker.stale?'Stale observation':S.data?.snapshot?'Saved observation':'Observed'}: ${human(n.status)}`));
       }
+      const verification=(n.members?.length?n.members:[n]).flatMap(candidate=>VerificationEvidence.checks({sha:candidate.sha,research_records:candidate.records}));
+      if(verification.length)card.append(make('p','verification-summary',`Verification · ${verification.length} checks / plans · ${verification.filter(c=>['failed','needs_review','blocked','unsupported'].includes(c.status)).length} findings · ${verification.filter(c=>c.status==='pending').length} pending`));
       if(n.workers.length)card.append(make('p','topology-worker',[...new Set(n.workers)].join(' · ')));
       if(n.latest){const v=RunMetrics.values(n.latest),verdict=SearchProgression.verdict(n.latest),ref=RunMetrics.reference(n.latest,data.measurements,S.data?.historical?.baseline),d=RunMetrics.delta(v.total,'total',ref),stats=make('div','topology-stats');add(stats,make('strong','',metricTime(v.total)),make('span',`metric-delta ${d.tone}`,metricDelta(d)),make('span',`run-verdict ${verdict.tone}`,verdict.label));card.append(stats);card.append(make('p','topology-job',`${n.runs.length} evaluation${n.runs.length===1?'':'s'} · latest ${short(n.latest.job_id)}`));
         const profile=make('details','topology-profile');profile.dataset.key='map-profile-'+n.id;profile.append(make('summary','','Profiler feedback'));const body=make('div','topology-profile-body');for(const k of RunMetrics.objectives)body.append(metricTree(k,v,ref));body.append(make('p','run-comparator',ref.label||ref.reason));profile.append(body);card.append(profile);
