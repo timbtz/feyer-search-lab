@@ -460,3 +460,64 @@ The carrier/signal/noise component expressions are unchanged byte-for-byte when 
 Validation: syntax and whitespace pass. An AST equivalence check inlined the helper body (excluding its docstring/return) back into update and restored only the previous outer checkpoint call; the resulting entire module AST exactly equals retained candidate 6. This also verifies candidate 7's conjugation change is fully removed. No JAX execution, local benchmark, new test infrastructure, environment changes, Git writes, SSH or agents. Timing and numerical validity await supervisor evaluation.
 
 Next: supervisor screen then full/all strict saved checks if eligible; compare complete first run to retained 2085ff2c9a1f30cb3effaa9281d22942219e575a, using candidate 7 only as an additional rejected observation. Reject any total regression or strict numerical failure even if gradient compilation improves. Fixed deadline remains **2026-11-21 21:09:24.088367 UTC**, session `codex-profile-guided-v1`, thread `01a1ffba-57ec-7191-8ba9-c6163633a3b3`; no candidate cap.
+
+
+## Candidate 8 evaluation — retain, mechanism prediction corrected
+
+SHA **`211f65a5f18d7b68deacc021e0d9eab874bd9df7`**, Git parent rejected candidate 7 `9aea8857d4112bca33f189d526fc3b1ecd47db58`; scientific comparison to restored candidate 6 **`2085ff2c9a1f30cb3effaa9281d22942219e575a`**.
+
+Screen **`955f6b4336da4e0883f80fb0784f2c79`**, request `ddef19383eef4154bfb4b5a85de08c43`: cheap checks passed, first **21.200507529 s**, combined compilation/lowering 9.969754411 s, job wall 22.105723562 s, RSS 7,733,300 KiB. No full/strict/spot-gradient/warm validation in screen.
+
+Full **`6c6d3774738c4ed4b2bda1b9982c5072`**, request `78119db04b294770862320f8e5916fbd`: official/strict/resource/source/workload/precision all pass, matching full cohort `10567ad0f8dcb7122b6b182e1be342313b89eef340d4070073fdf62d6342204c` and frozen evaluator/environment/reference identities. Local report and all comparison checks inspected.
+
+First run **21.024191525 s**, **-0.801737001 s** vs retained candidate 6 full `90519617eff2459a976172ff96a1ffad`. Combined trace/lower/compile **9.811069386 s**, -0.885294400 s. Forward compile fell **1.245093154 s**, but gradient compile **rose 0.411127804 s**: the proposed reverse-compile improvement did not occur. Retain based on the faster complete total, not the incorrect phase prediction. Forward execution rose 0.049169872 s. Both screen and full support further investigation, but repeat-confirmed superiority is still unestablished.
+
+Warm median **10.206162328 s**, -0.349491160 s vs candidate 6; samples 10.720117509, 10.206162328, 10.186362414 s. Job wall **86.967630729 s**, -0.095460013 s. Full RSS **7,868,596 KiB**, +11,256 KiB; sampled peak 8,058,490,880 bytes. The lower screen RSS is not a demonstrated full-job memory reduction. These metrics remain separate from the complete first-run objective.
+
+Full phases and deltas vs candidate 6, seconds:
+
+| Phase | Candidate 8 | Delta vs candidate 6 |
+| --- | ---: | ---: |
+| imports | 0.296200095 | +0.006446220 |
+| initialize | 0.002916519 | +0.000021659 |
+| load | 0.001425253 | -0.000006363 |
+| build | 0.845464747 | +0.009742083 |
+| forward_lower | 0.690188216 | -0.050510136 |
+| forward_compile | 3.321780650 | -1.245093154 |
+| forward | 8.571211124 | +0.049169872 |
+| sensitivity_lower | 0.074347351 | -0.007463463 |
+| sensitivity_compile | 0.385865269 | -0.007345196 |
+| sensitivity | 0.000938673 | +0.000039220 |
+| gradient_lower | 0.314272678 | +0.013989745 |
+| gradient_compile | 5.024615223 | +0.411127804 |
+| gradient | 1.494476205 | +0.018005561 |
+| host_transfer | 0.000489524 | +0.000139147 |
+
+Every saved-output and full-gradient check inspected (last warm scope, unchanged strict tolerance/reference):
+
+| Output | Max absolute error | Relative L2 error | Max normalized error | Failures |
+| --- | ---: | ---: | ---: | ---: |
+| carrier | 0 | 0 | 0 | 0 |
+| signal | 0 | 0 | 0 | 0 |
+| noise | 0 | 0 | 0 | 0 |
+| sensitivity | 0 | 0 | 0 | 0 |
+| powers | 0 | 0 | 0 | 0 |
+| gradient | 5.3114490583539e-10 | 7.93070107438469e-15 | 7.53524626872314e-07 | 0 |
+| parameters | 0 | 0 | 0 | 0 |
+| frequencies | 0 | 0 | 0 | 0 |
+
+All finite, all mismatch lists empty; physical outputs and exact-required parameters/frequencies unchanged. Gradient shape 193, norm 70517.10686388832. Official sensitivity error 5.374104176780747e-6 and finite-difference spot check pass. Prior rejected/failing trials remain preserved above and in branch history.
+
+## Candidate 9 — keep carrier scaling outside value checkpoint
+
+Exact parent/retained best **`211f65a5f18d7b68deacc021e0d9eab874bd9df7`**; candidate SHA/run IDs pending supervisor.
+
+Measured ranking for this exact parent, full **`6c6d3774738c4ed4b2bda1b9982c5072`**: forward execution **8.571211124 s (40.77%)**, gradient compile **5.024615223 s (23.90%)**, forward compile **3.321780650 s (15.80%)**, gradient execution **1.494476205 s (7.11%)**. Combined trace/lower/compile **9.811069386 s (46.67%)**. Native component/coupling and compiler subpass costs are unknown.
+
+One focused checkpoint-boundary change: move the existing guarded carrier-output scaling out of `_component_values` and into `update` immediately after its call. Remove the now-unused carrier argument from the private helper. The same unary minus, complex multiplication and unique small-vector scatter execute in the same order; the dense scatter remains outside. Carrier/noise updates with no coupling execute the same value helper. No policy or formula changes.
+
+Mechanism: the carrier-product transpose needs selected component values. With multiplication outside the checkpoint, autodiff may retain those small-vector outputs for that transpose instead of including carrier coupling within component recomputation. This may reduce reverse compilation/recomputation while preserving the forward compilation gain from checkpointing component internals. Extra saved residuals and changed compiler partitioning may increase forward compilation, memory or execution. Tentative gradient-compile opportunity **0–0.7 s**, unmeasured; eliminating that entire phase would save at most **5.024615223 s**, only a ceiling. The measured total must improve; no native-operation saving is inferred from expression counts.
+
+Syntax and whitespace pass. A standard-library AST check independently inlined the checkpoint helper in both parent and candidate; the complete resulting module ASTs are identical. This verifies unchanged arithmetic and ordering while isolating the boundary change, not JAX numerical correctness or performance. No simulator or benchmark run locally, no new test infrastructure, package change, Git writes, SSH or agents. Physical setup, all 101 frequencies/193 variables, double precision, three JIT stages and full output/gradient requirements remain unchanged.
+
+Next: supervisor screen and full/all strict saved checks if eligible; compare to exact parent 211f65a5f18d7b68deacc021e0d9eab874bd9df7 and reject slower totals or numerical failures even if a compile phase improves. Fixed session deadline **2026-11-21 21:09:24.088367 UTC**, session `codex-profile-guided-v1`, thread `01a1ffba-57ec-7191-8ba9-c6163633a3b3`; no candidate cap.

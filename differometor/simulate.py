@@ -105,9 +105,8 @@ def _component_values(
     output_indices,
     function_indices,
     component_groups,
-    carrier_entries,
 ):
-    """Recompute component values without rematerializing the dense assembly."""
+    """Recompute component values; carrier coupling and dense assembly stay outside."""
     output_rows = output_indices[0]
     # Keep the function selector scalar so only the selected component branch
     # executes. The outer vmap in simulate still batches frequency samples.
@@ -150,10 +149,6 @@ def _component_values(
         )
     else:
         outputs = output_matrix[output_rows, output_indices[1]]
-    if carrier_entries is not None:
-        positions = component_groups["carrier_output_positions"]
-        scaled_outputs = -outputs[positions] * carrier_entries
-        outputs = outputs.at[positions].set(scaled_outputs, unique_indices=True)
     return outputs
 
 
@@ -220,8 +215,14 @@ def update(
     """
     outputs = _component_values(
         parameters, function_input_indices, output_indices, function_indices,
-        component_groups, carrier_entries,
+        component_groups,
     )
+    # Keep the selected component values available to the carrier-product
+    # transpose without including that coupling in checkpoint recomputation.
+    if carrier_entries is not None:
+        positions = component_groups["carrier_output_positions"]
+        scaled_outputs = -outputs[positions] * carrier_entries
+        outputs = outputs.at[positions].set(scaled_outputs, unique_indices=True)
     if component_groups is not None and "flat_matrix_indices" in component_groups:
         # Builder-proven unique, in-bounds offsets avoid tracing the generic
         # two-coordinate indexing path. Update order and component values stay
