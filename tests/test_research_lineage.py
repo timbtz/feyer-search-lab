@@ -19,6 +19,15 @@ def record():
 
 
 class ResearchLineageTests(unittest.TestCase):
+    def test_queue_terminal_outcomes_do_not_remain_evaluating(self):
+        from lab.queue import TERMINAL_STATUSES
+        feedback = dict(candidate_sha=C, agent_response={'summary':'Change', 'hypothesis':'Hypothesis'})
+        for status in TERMINAL_STATUSES | {'queued', 'running'}:
+            feedback['full'] = dict(id='job-c', sha=C, profile='full', status=status)
+            converted = from_feedback(feedback, 'session', 'receipt.json')
+            self.assertEqual(converted['status'], 'completed' if status in TERMINAL_STATUSES else 'evaluating')
+            self.assertIsNone(converted['stopping_reason'])
+
     def test_feedback_retains_exact_identity_without_guessing_phase_or_stop(self):
         feedback = dict(candidate_sha=C, provenance={'parent_candidates':[A]},
             agent_response={'summary':'Change', 'hypothesis':'Compile parser then combine B', 'stop':True},
@@ -30,6 +39,12 @@ class ResearchLineageTests(unittest.TestCase):
         self.assertIsNone(r['next_input'])
         self.assertEqual(r['feedback_ref']['artifact_digest'], digest(feedback))
         self.assertEqual(r['status'], 'completed')
+        feedback['provenance'] = {'parent_candidates':[A, B], 'combined_candidates':[A, B]}
+        self.assertEqual(from_feedback(feedback, 'agent-session', 'receipt.json')['kind'], 'combine')
+        feedback['provenance']['combined_candidates'] = [A, 'd' * 40]
+        with self.assertRaises(ValueError):
+            from_feedback(feedback, 'agent-session', 'receipt.json')
+        feedback['provenance'] = {'parent_candidates':[A]}
         feedback['full']['sha'] = B
         with self.assertRaises(ValueError):
             from_feedback(feedback, 'agent-session', 'committed-feedback.json')
@@ -131,6 +146,16 @@ class ResearchLineageTests(unittest.TestCase):
         nodes = [n for n in g['nodes'] if n['kind']=='evaluation']
         self.assertEqual(len(nodes), 2)
         self.assertEqual({n['instance'] for n in nodes}, {'amd-a', 'amd-b'})
+
+    def test_malformed_campaign_candidate_does_not_hide_other_evidence(self):
+        g = build_lineage({'campaigns':[dict(id='bad-menu', candidates=[None,
+            dict(candidate_id='bad-sha', commit_sha='not-a-sha', parents=[]),
+            dict(candidate_id='bad-parent', commit_sha=B, parents=[{}]),
+            dict(candidate_id='self', commit_sha=A, parents=['self']),
+            dict(candidate_id='good', commit_sha=C, parents=[])])]})
+        self.assertTrue(g['issues'])
+        self.assertTrue(any(n.get('candidate_sha') == C for n in g['nodes']))
+        self.assertFalse(any(e['source']==e['target'] for e in g['edges']))
 
 
 if __name__ == '__main__':

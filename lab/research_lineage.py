@@ -8,6 +8,7 @@ import json
 import re
 
 from .phase_report import GROUPS
+from .queue import TERMINAL_STATUSES
 from .worker import PHASE_CATEGORIES
 
 SCHEMA = 'feyer-research-record-v1'
@@ -116,6 +117,13 @@ def from_feedback(feedback, executor_id, source_ref):
                   next_input=feedback.get('next_input'),
                   input_receipt=feedback.get('input_receipt'),
                   evaluations=[], target_evidence=feedback.get('target_evidence') or [])
+    combined = provenance.get('combined_candidates')
+    if combined is not None and not isinstance(combined, list):
+        raise ValueError('Declared combination inputs must be a list')
+    if combined:
+        if not isinstance(combined, list) or set(combined) != set(record['parents']) or len(combined) < 2:
+            raise ValueError('Declared combination inputs do not match scientific parents')
+        record['kind'] = 'combine'
     # Neither a boolean stop request nor a failed candidate proves branch exhaustion.
     for profile in ('screen', 'full'):
         job = feedback.get(profile)
@@ -124,8 +132,8 @@ def from_feedback(feedback, executor_id, source_ref):
         if not isinstance(job, dict) or job.get('sha') != record['candidate_sha'] or job.get('profile') != profile:
             raise ValueError('Feedback job identity does not match the exact candidate/profile')
         record['evaluations'].append(dict(job_id=job.get('id'), candidate_sha=job['sha'], profile=profile))
-        if job.get('status') not in ('completed', 'failed', 'cancelled'):
-            record['status'] = 'evaluating'
+        if job.get('status') not in TERMINAL_STATUSES:
+            record['status'] = 'evaluating' if job.get('status') in ('queued', 'running') else 'unknown'
     if not record['evaluations']:
         record['status'] = 'unknown'
     return validate_record(record)
@@ -326,16 +334,27 @@ def build_lineage(snapshot):
                              stopping_reason=reasons[-1] if reasons else None,
                              strikes=lane.get('strikes'), round_id=lane.get('round_id'), lane_id=lane.get('lane_id'))
             edge(identity, lane_node, 'membership', 'campaign ' + cid)
-        candidates = {c.get('candidate_id'): c for c in campaign.get('candidates', [])}
+        candidates = {}
+        for c in campaign.get('candidates') or []:
+            if isinstance(c, dict) and isinstance(c.get('candidate_id'), str):
+                candidates[c['candidate_id']] = c
+            else:
+                issues.append('Malformed campaign candidate in ' + cid)
         for c in candidates.values():
-            child = c.get('commit_sha')
-            if not exact_sha(child):
-                continue
-            edge(identity, candidate(child), 'membership', 'campaign ' + cid)
-            refs = [candidates.get(p, {}).get('commit_sha') for p in c.get('parents', [])]
-            if any(p is None for p in refs):
-                issues.append('Unresolved campaign parent in ' + cid)
-            parents([p for p in refs if p is not None], child, 'campaign ' + cid, c.get('kind') == 'combine')
+            try:
+                child = c.get('commit_sha')
+                if not exact_sha(child):
+                    raise ValueError('Missing exact campaign candidate SHA')
+                parent_ids = c.get('parents', [])
+                if not isinstance(parent_ids, list) or any(not isinstance(p, str) for p in parent_ids):
+                    raise ValueError('Malformed campaign parent IDs')
+                edge(identity, candidate(child), 'membership', 'campaign ' + cid)
+                refs = [candidates.get(p, {}).get('commit_sha') for p in parent_ids]
+                if any(p is None for p in refs):
+                    issues.append('Unresolved campaign parent in ' + cid)
+                parents([p for p in refs if p is not None], child, 'campaign ' + cid, c.get('kind') == 'combine')
+            except (ValueError, TypeError) as exc:
+                issues.append('Campaign ' + cid + ': ' + str(exc))
 
     return dict(schema='feyer-search-lineage-v1', nodes=sorted(nodes.values(), key=lambda n: n['id']),
                 edges=sorted(edges.values(), key=lambda e: (e['source'], e['target'], e['kind'])),
