@@ -12,6 +12,7 @@ The team repository is [timkireply/feyer-search-lab](https://github.com/timkirep
 - [Optimization hypotheses](hypotheses.md) records ideas to investigate without assuming they will work.
 - [Machine and baseline](baseline.md) records the measured starting point.
 - [Storage and retention](storage.md) explains what to retain and what can be recreated.
+- [Token Factory](token-factory.md) covers the Qwen API client, credentials and measured request limits.
 - [Initial agent brief](../experiments/initial-agent.md) defines the first bounded exploration session.
 
 ## Status
@@ -19,6 +20,8 @@ The team repository is [timkireply/feyer-search-lab](https://github.com/timkirep
 The AMD instance, SSH access, VS Code connection, isolated Python environment and three official baseline runs have been verified. The serial experiment queue is deployed. Unchanged code passed end-to-end screening and full validation, including strict baseline array comparison. Screening took 37.5 seconds wall time; full validation took 126.1 seconds. The initial supervised Codex session has launched in the separate `codex-seed` worktree on `explore/seed-agent`. Its live status is recorded under `.lab/sessions/seed-agent/status.json`; the launch record is [seed-agent](../experiments/agents/seed-agent.json). It inherits the existing user configuration, `gpt-6-astra` with high reasoning effort. No optimization result is implied by launch status.
 
 ## Working model
+
+The first Codex candidate completed the entire feedback cycle: committed on `explore/seed-agent`, screened, fully validated, published its results, and resumed the same Codex conversation for candidate two. Its lazy visualization import preserved all saved arrays exactly. Complete first-run time was 37.00 seconds versus the lab calibration's 36.33 seconds, so this single measurement does not demonstrate a speed gain. See the [candidate report](https://github.com/timkireply/feyer-search-lab/blob/explore/seed-agent/experiments/runs/seed-agent/candidate-01.json).
 
 One direction can outlive an agent session. One agent can produce several candidate commits. One candidate can have several evaluation runs. Keep those identities separate so a replacement agent can resume from the written findings and every timing remains attributable to exact code.
 
