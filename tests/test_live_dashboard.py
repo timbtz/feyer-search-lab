@@ -574,3 +574,57 @@ class GeneralizationSourceTests(unittest.TestCase):
         target.write_text(json.dumps(self.fixture()))
         self.path.symlink_to(target)
         self.assertFalse(Observatory(self.root).state()['generalization_source']['available'])
+
+
+class JaxCompatSourceTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        (self.root/'.lab').mkdir()
+        self.obs = Observatory(self.root)
+        self.path = self.root/'.lab/jaxcompat/report.json'
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def fixture(self):
+        tests = [dict(test='value_and_grad_jit', status='ok', reference_status='ok', max_relative_difference=1e-15),
+                 dict(test='jvp', status='unsupported', reference_status='ok',
+                      error="TypeError: can't apply forward-mode autodiff (jvp) to a custom_vjp function.")]
+        return dict(schema='feyer-jaxcompat-collection-v1', reports=[dict(
+            schema='feyer-jaxcompat-v1', candidate_sha='b'*40, label='sparse', status='incompatible',
+            setup='voyager', observed_at=100.0, tests=tests)])
+
+    def write(self, value):
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(json.dumps(value))
+
+    def test_missing_is_unavailable_and_records_are_exposed_unchanged(self):
+        state = self.obs.state()
+        self.assertEqual(state['jaxcompat_reports'], [])
+        self.assertFalse(state['jaxcompat_source']['available'])
+        self.assertIsNone(state['jaxcompat_source']['error'])
+        data = self.fixture()
+        self.write(data)
+        state = self.obs.state()
+        self.assertEqual(state['jaxcompat_reports'], data['reports'])
+        self.assertTrue(state['jaxcompat_source']['available'])
+        self.assertEqual(state['generalization_reports'], [])
+
+    def test_malformed_retains_last_good_and_symlink_rejected(self):
+        data = self.fixture()
+        self.write(data)
+        first = self.obs.state()['jaxcompat_reports']
+        for value in ([], {'schema': 'feyer-jaxcompat-collection-v1', 'reports': {}},
+                      {'schema': 'feyer-jaxcompat-collection-v1', 'reports': [dict(data['reports'][0], status='great')]},
+                      {'schema': 'feyer-jaxcompat-collection-v1', 'reports': [dict(data['reports'][0], tests=[{'test': 'x', 'status': 'maybe'}])]}):
+            with self.subTest(value=value):
+                self.write(value)
+                state = self.obs.state()
+                self.assertEqual(state['jaxcompat_reports'], first)
+                self.assertTrue(state['jaxcompat_source']['error'])
+        self.path.unlink()
+        target = self.root/'external.json'
+        target.write_text(json.dumps(data))
+        self.path.symlink_to(target)
+        self.assertFalse(Observatory(self.root).state()['jaxcompat_source']['available'])

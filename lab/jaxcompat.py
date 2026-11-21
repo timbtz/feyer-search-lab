@@ -10,6 +10,7 @@ and still break these.
 
 run:     python jaxcompat.py run --tree /path/to/repo --out result.json [--setup voyager]
 compare: python jaxcompat.py compare reference.json candidate.json
+report:  python jaxcompat.py report reference.json candidate.json --sha SHA --label NAME --output report.json
 
 Standalone (no lab imports) so it can run with the evaluator's fixed Python.
 """
@@ -150,10 +151,12 @@ def run(args):
     print("saved", args.out)
 
 
-def compare(args):
+def compare_tests(reference_path, candidate_path, tolerance):
+    """Return one row per reference test plus an overall verdict."""
+    import math
     import numpy as np
-    a = json.load(open(args.reference))["tests"]
-    b = json.load(open(args.candidate))["tests"]
+    reference, candidate = json.load(open(reference_path)), json.load(open(candidate_path))
+    a, b = reference["tests"], candidate["tests"]
 
     def leaves(x):
         if isinstance(x, dict):
@@ -165,25 +168,64 @@ def compare(args):
                 return [v for item in x for v in leaves(item)]
         return [np.asarray([x], dtype=complex)]
 
-    overall = True
+    rows, overall = [], True
     for key in a:
         ra, rb = a[key], b.get(key, dict(status="missing"))
+        row = dict(test=key, reference_status=ra["status"], reference_seconds=ra.get("seconds"),
+                   candidate_seconds=rb.get("seconds"), error=None, max_relative_difference=None)
         if rb["status"] != "ok":
             overall = False
-            print(f"{key:28s} CANDIDATE {rb['status'].upper()}  {rb.get('error', '')[:160]}  (reference: {ra['status']})")
-            continue
-        if ra["status"] != "ok":
-            print(f"{key:28s} reference {ra['status']}; candidate ok"); continue
-        la, lb = leaves(ra["value"]), leaves(rb["value"])
-        worst = 0.0
-        for x, y in zip(la, lb):
-            if x.shape != y.shape:
-                worst = float("inf"); break
-            worst = max(worst, float(np.abs(x - y).max() / max(np.abs(x).max(), 1e-300)))
-        ok = worst <= args.tolerance
-        overall &= ok
-        print(f"{key:28s} {'ok   ' if ok else 'DIFF '} max rel diff {worst:.1e}   time {ra['seconds']:.1f}s -> {rb['seconds']:.1f}s")
+            row.update(status="unsupported" if rb["status"] == "error" else rb["status"], error=rb.get("error"))
+        elif ra["status"] != "ok":
+            row.update(status="reference_unavailable")
+        else:
+            worst = 0.0
+            for x, y in zip(leaves(ra["value"]), leaves(rb["value"])):
+                if x.shape != y.shape:
+                    worst = float("inf"); break
+                worst = max(worst, float(np.abs(x - y).max() / max(np.abs(x).max(), 1e-300)))
+            ok = worst <= tolerance
+            overall &= ok
+            row.update(status="ok" if ok else "different",
+                       max_relative_difference=worst if math.isfinite(worst) else None)
+        rows.append(row)
+    return rows, overall, candidate.get("setup")
+
+
+def compare(args):
+    rows, overall, _ = compare_tests(args.reference, args.candidate, args.tolerance)
+    for r in rows:
+        if r["status"] in ("unsupported", "missing"):
+            print(f"{r['test']:28s} CANDIDATE {r['status'].upper()}  {(r['error'] or '')[:160]}  (reference: {r['reference_status']})")
+        elif r["status"] == "reference_unavailable":
+            print(f"{r['test']:28s} reference {r['reference_status']}; candidate ok")
+        else:
+            diff = r["max_relative_difference"]
+            print(f"{r['test']:28s} {'ok   ' if r['status'] == 'ok' else 'DIFF '} max rel diff "
+                  f"{'inf' if diff is None else f'{diff:.1e}'}   time {r['reference_seconds']:.1f}s -> {r['candidate_seconds']:.1f}s")
     print("OVERALL", "COMPATIBLE" if overall else "INCOMPATIBLE OR DIFFERENT")
+
+
+def report(args):
+    """Add or replace one candidate's compatibility record in a dashboard collection file."""
+    rows, overall, setup = compare_tests(args.reference, args.candidate, args.tolerance)
+    record = dict(schema="feyer-jaxcompat-v1", candidate_sha=args.sha, label=args.label, branch=args.branch,
+                  reference_sha=args.reference_sha, instance=args.instance, cpu=args.cpu, setup=setup,
+                  observed_at=time.time(), tolerance=args.tolerance,
+                  status="compatible" if overall else "incompatible", tests=rows)
+    path = os.path.abspath(args.output)
+    try:
+        collection = json.load(open(path))
+    except FileNotFoundError:
+        collection = dict(schema="feyer-jaxcompat-collection-v1", reports=[])
+    reports = [r for r in collection.get("reports", []) if r.get("candidate_sha") != args.sha] + [record]
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path + ".tmp", "w") as handle:
+        json.dump(dict(schema="feyer-jaxcompat-collection-v1", reports=reports), handle, indent=2, allow_nan=False)
+        handle.write("\n")
+    os.replace(path + ".tmp", path)
+    supported = sum(r["status"] == "ok" for r in rows)
+    print(f"{args.label}: {record['status']} ({supported}/{len(rows)} tests) -> {path}")
 
 
 if __name__ == "__main__":
@@ -194,5 +236,11 @@ if __name__ == "__main__":
     r.add_argument("--only", help="Comma-separated test names; merged into an existing --out file")
     c = sub.add_parser("compare"); c.add_argument("reference"); c.add_argument("candidate")
     c.add_argument("--tolerance", type=float, default=1e-6)
+    p = sub.add_parser("report", help="Write a dashboard record (.lab/jaxcompat/report.json)")
+    p.add_argument("reference"); p.add_argument("candidate")
+    p.add_argument("--sha", required=True); p.add_argument("--label", required=True); p.add_argument("--branch")
+    p.add_argument("--reference-sha", default="02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f")
+    p.add_argument("--instance", default="amd-hackathon"); p.add_argument("--cpu", type=int)
+    p.add_argument("--tolerance", type=float, default=1e-6); p.add_argument("--output", required=True)
     args = parser.parse_args()
-    run(args) if args.cmd == "run" else compare(args)
+    {"run": run, "compare": compare, "report": report}[args.cmd](args)

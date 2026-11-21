@@ -1,6 +1,6 @@
 # Generalization to other optical setups
 
-The challenge repository clarified on 21 November 2026 ([upstream commit `2bb437a`](https://github.com/feyerlabs/start-hack-munich-2026/commit/2bb437a223)) that **final evaluation uses a different optical setup, a slight variation of the supplied example**. The prizes rank the complete first-run total on that final setup. A candidate that is fast only on `uifo_800_3000.json`, or that relies on its sizes, detector count, frequency count or index layout, may fail or lose its gain at judging.
+The challenge repository clarified on 21 November 2026 ([upstream commit `2bb437a`](https://github.com/feyerlabs/start-hack-munich-2026/commit/2bb437a223)) that **final evaluation uses a different optical setup, a slight variation of the supplied example**. The prizes rank the complete first-run total on that final setup. In the challenge talk the organizers described the final test as "a random setup with random parameters". The `*_randparams` cases follow upstream's own protocol (`examples/uifo_optimization.py`): `setups.uifo(size=3, random=True, random_seed=…)`, with each optimized property uniform in `db [0, 10]`, `angle/tuning [-360, 360]`, `power [0, 200]`, `mass [0.01, 200]`, `length [0.1, 4000]` and `reflectivity [0, 1]`. A candidate that is fast only on `uifo_800_3000.json`, or that relies on its sizes, detector count, frequency count or index layout, may fail or lose its gain at judging.
 
 The queue evaluator still runs only the supplied development benchmark. `lab.gencheck` adds a separate cross-setup comparison against the unchanged simulator. It is evidence for review, not a replacement for the official or strict queue checks.
 
@@ -13,6 +13,8 @@ The queue evaluator still runs only the supplied development benchmark. `lab.gen
 | `uifo_20_5000` | Different saved 3×3 UIFO: balanced homodyne (two detector ports), 192 variables, 100 log-spaced frequencies |
 | `uifo_rand1`–`3` | Randomly generated 3×3 UIFOs (`setups.uifo(3, random=True, random_seed=s)`), different centers and boundaries |
 | `voyager`, `aligo` | Different published detector topologies, 45 and 29 variables |
+| `dev_randparams` | Supplied topology; every optimized property drawn uniformly from upstream `property_bounds` |
+| `uifo_randparams1`–`3` | Random 3×3 UIFO topology (seeds 101–103) **and** uniform random parameters, the upstream random-design protocol |
 
 Each case runs the benchmark's three stages: `jit(vjp(simulate))`, `jit(vjp(readout))` and `jit(backward)`. It records carrier, signal, noise, sensitivity, powers, loss, gradient and per-stage timings.
 

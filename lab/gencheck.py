@@ -25,7 +25,12 @@ os.environ.setdefault("JAX_PLATFORMS", "cpu")
 os.environ.setdefault("JAX_ENABLE_X64", "true")
 
 PROPERTIES = ["reflectivity", "tuning", "db", "angle", "power", "mass", "length"]
-ALL_CASES = ["dev", "dev_perturbed", "uifo_20_5000", "uifo_rand1", "uifo_rand2", "uifo_rand3", "voyager", "aligo"]
+ALL_CASES = ["dev", "dev_perturbed", "uifo_20_5000", "uifo_rand1", "uifo_rand2", "uifo_rand3", "voyager", "aligo",
+             "dev_randparams", "uifo_randparams1", "uifo_randparams2", "uifo_randparams3"]
+# Uniform ranges from upstream examples/uifo_optimization.py, the simulator's own random-parameter protocol.
+# The organizers judge "a random setup with random parameters".
+PROPERTY_BOUNDS = {"db": (0, 10), "angle": (-360, 360), "power": (0, 200), "tuning": (-360, 360),
+                   "mass": (0.01, 200), "length": (0.1, 4000), "reflectivity": (0, 1)}
 
 
 def run(args):
@@ -69,7 +74,28 @@ def run(args):
                         props[key] = float(value * (1 + 0.05 * rng.standard_normal()))
         return data
 
+    def random_values(pairs, seed):
+        rng = np.random.default_rng(seed)
+        values = []
+        for pair in pairs:
+            prop = (pair if isinstance(pair[0], list) else [pair])[0][1]
+            low, high = PROPERTY_BOUNDS[prop]
+            values.append(float(rng.uniform(low, high)))
+        return values
+
     def case(name):
+        if name == "dev_randparams":
+            fixture = json.load(open(os.path.join(data_dir, "uifo_800_3000.json")))
+            setup = Setup.from_data(fixture)
+            pairs = constrain_inter_grid_cell_spaces(setup.parameters, PROPERTIES)
+            freqs = np.linspace(800, 3000, 101)
+            return setup, pairs, random_values(pairs, 1001), freqs, np.ones_like(freqs)
+        if name.startswith("uifo_randparams"):
+            seed = int(name[len("uifo_randparams"):])
+            setup, component_pairs = dsetups.uifo(3, random=True, random_seed=100 + seed)
+            pairs = constrain_inter_grid_cell_spaces(component_pairs, PROPERTIES)
+            freqs = np.linspace(800, 3000, 101)
+            return setup, pairs, random_values(pairs, 2000 + seed), freqs, np.ones_like(freqs)
         if name in ("dev", "dev_perturbed"):
             fixture = json.load(open(os.path.join(data_dir, "uifo_800_3000.json")))
             reference = json.load(open(os.path.join(data_dir, "uifo_800_3000_test_data.json")))
@@ -160,6 +186,10 @@ def run(args):
             traceback.print_exc()
             results[name + "/error"] = np.asarray(repr(error))
             print(f"[{name}] ERROR {error!r}", flush=True)
+    if getattr(args, "merge", False) and os.path.exists(args.out):
+        previous = np.load(args.out, allow_pickle=False)
+        replaced = {k.split("/")[0] for k in results}
+        results = {**{k: previous[k] for k in previous.files if k.split("/")[0] not in replaced}, **results}
     np.savez_compressed(args.out, **results)
     print("saved", args.out)
 
@@ -297,6 +327,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("run"); r.add_argument("--tree", required=True); r.add_argument("--out", required=True); r.add_argument("--cases")
+    r.add_argument("--merge", action="store_true", help="Keep other cases already stored in --out")
     c = sub.add_parser("compare"); c.add_argument("reference"); c.add_argument("candidate")
     p = sub.add_parser("report", help="Write a dashboard record (.lab/generalization/report.json)")
     p.add_argument("reference"); p.add_argument("candidate")

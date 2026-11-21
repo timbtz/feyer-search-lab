@@ -105,6 +105,11 @@ The default Topology map uses compact candidate nodes and declared parent arrows
 
 The process overview now flows horizontally. Recorded agent sessions expand into candidate revisions and separate evaluation jobs. Same-agent sessions remain distinct; shared-branch ambiguity stays unassigned. Numerical menus are blue rectangles; decisions are orange circles with explicit reasons. Complete menu coverage and controller budget exhaustion remain separate. Disable Group agent sessions for the individual-candidate view. Aggregated candidate ancestry links are not evidence of model-feedback delivery.
 
-## Other setups
+## Robustness
 
-The **Other setups** tab reads `.lab/generalization/report.json` (`feyer-generalization-collection-v1`), written by `python -m lab.gencheck report`. Each record compares one exact candidate with the unchanged simulator on several optical setups and shows per-setup sensitivity, output and gradient differences and exploratory timings. A missing file means no comparison has been recorded. It does not mean a candidate generalizes. These records do not change official, strict, eligibility or Pareto status. See [Generalization to other setups](generalization.md).
+The **Robustness** tab joins two local, read-only evidence sources by exact candidate SHA:
+
+- `.lab/generalization/report.json` (`feyer-generalization-collection-v1`), written by `python -m lab.gencheck report`. It holds per-setup sensitivity, output and gradient differences and exploratory timings against the unchanged simulator on other optical setups, including random topologies with random parameters.
+- `.lab/jaxcompat/report.json` (`feyer-jaxcompat-collection-v1`), written by `python -m lab.jaxcompat report`. It records which JAX transformations (value_and_grad, vmap, jvp, jacfwd, Hessian-vector products, eager, `df.run`, checkpoint, multi-setup) the candidate supports, and how far its values differ from the unchanged simulator.
+
+Both are produced on the AMD instance and copied into `.lab/`. A missing file or record means nothing has been recorded. It does not mean a candidate is robust. These records do not change official, strict, eligibility or Pareto status. The tab links the [generalization](generalization.md), [JAX compatibility](jax-compatibility.md) and [organizer questions](organizer-questions.md) pages. The links point to `infra/generalization-check` until that branch is merged (`DOCS_REF` in `app.js`).

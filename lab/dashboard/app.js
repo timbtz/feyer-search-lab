@@ -821,20 +821,15 @@ if(typeof module!=='undefined')module.exports.SessionGraph=SessionGraph;
   $('profiler-filter').addEventListener('input',renderProfiler);
 
   let selectedGeneralization='';
-  const CASE_NAMES={dev:'Supplied example (uifo 800–3000)',dev_perturbed:'Supplied example, perturbed values',uifo_20_5000:'UIFO 20–5000, balanced homodyne',uifo_rand1:'Random 3×3 UIFO, seed 1',uifo_rand2:'Random 3×3 UIFO, seed 2',uifo_rand3:'Random 3×3 UIFO, seed 3',voyager:'Voyager',aligo:'aLIGO'};
+  // Wiki pages live on the infra branch until it is merged; switch to 'main' afterwards.
+  const DOCS_REF='infra/generalization-check';
+  const docLink=(label,page)=>link(label,`${REPO}/blob/${DOCS_REF}/.wiki/${page}`);
+  const CASE_NAMES={dev:'Supplied example (uifo 800–3000)',dev_perturbed:'Supplied example, perturbed values',uifo_20_5000:'UIFO 20–5000, balanced homodyne',uifo_rand1:'Random 3×3 UIFO, seed 1',uifo_rand2:'Random 3×3 UIFO, seed 2',uifo_rand3:'Random 3×3 UIFO, seed 3',voyager:'Voyager',aligo:'aLIGO',dev_randparams:'Supplied topology, random parameters',uifo_randparams1:'Random UIFO + random parameters, 1',uifo_randparams2:'Random UIFO + random parameters, 2',uifo_randparams3:'Random UIFO + random parameters, 3'};
+  const TEST_NAMES={value_and_grad_jit:['jit(value_and_grad)','Optimizer loop, as in upstream examples'],descent_3_steps:['3-step descent','Changing parameters; catches stale caches'],vmap_value_and_grad:['vmap(value_and_grad)','Batched parameter sets'],jvp:['jvp','Forward-mode sensitivity'],jacfwd_2:['jacfwd','Forward-mode Jacobian'],hvp_fwd_over_rev:['Hessian-vector, fwd-over-rev','Newton / curvature methods'],hvp_rev_over_rev:['Hessian-vector, rev-over-rev','Second-order reverse mode'],eager_value_and_grad:['Eager value_and_grad','Use without jit'],public_run:['df.run','Public API as in the examples'],checkpoint_grad:['checkpoint + grad','Rematerialization wrapper'],second_setup_same_process:['Second setup, same process','Re-evaluating after another build']};
   const sci=v=>!numeric(v)?'—':v===0?'0':v.toExponential(1);
-  function renderGeneralization(){
-    const reports=list(S.data?.generalization_reports),source=S.data?.generalization_source,query=$('generalization-filter').value.trim().toLowerCase();
-    const matching=reports.filter(r=>[r.candidate_sha,r.label,r.branch].join(' ').toLowerCase().includes(query)).sort((a,b)=>(stamp(b.observed_at)||0)-(stamp(a.observed_at)||0));
-    const select=clear('generalization-select'),target=clear('generalization-detail');
-    if(!matching.some(r=>r.candidate_sha===selectedGeneralization))selectedGeneralization=matching[0]?.candidate_sha||'';
-    for(const r of matching)select.append(new Option(`${short(r.candidate_sha)} · ${r.label||'unlabelled'} · ${r.status==='ok'?'all setups hold':'needs review'}`,r.candidate_sha));
-    select.value=selectedGeneralization;
-    $('generalization-source').textContent=!reports.length?`No cross-setup comparisons recorded${source?.error?` · ${source.error}`:''}`:`${reports.length} recorded comparisons · file observed ${time(source?.observed_at)}${source?.error?` · ${source.error}`:''}`;
-    const r=matching.find(r=>r.candidate_sha===selectedGeneralization);
-    if(!r){target.append(make('p','empty',reports.length?'No comparisons match this commit or label.':'Run lab.gencheck report to record a candidate. A missing record does not mean the candidate generalizes.'));return;}
-    const cases=list(r.cases),held=cases.filter(c=>c.status==='ok').length;
-    const heading=make('div','detail-header'),identity=make('div');add(identity,make('h3','',r.label||`Commit ${short(r.candidate_sha)}`),make('p','',`${r.instance||'Instance not recorded'}${numeric(r.cpu)?` · CPU ${r.cpu}`:''} · reference ${short(r.reference_sha)} · recorded ${time(r.observed_at)}`));add(heading,identity,pill(r.status==='ok'?`Holds on ${held}/${cases.length} setups`:`Review ${cases.length-held}/${cases.length} setups`,r.status==='ok'?'valid':'failed'));target.append(heading);
+  function setupsTable(target,r){
+    const cases=list(r.cases),judged=cases.filter(c=>c.status!=='reference_unavailable'),held=judged.filter(c=>c.status==='ok').length;
+    const heading=make('div','detail-header'),identity=make('div');add(identity,make('h3','','Other optical setups'),make('p','',`${r.instance||'Instance not recorded'}${numeric(r.cpu)?` · CPU ${r.cpu}`:''} · reference ${short(r.reference_sha)} · recorded ${time(r.observed_at)}`));add(heading,identity,pill(r.status==='ok'?`Holds on ${held}/${judged.length} setups`:`Review ${judged.length-held}/${judged.length} setups`,r.status==='ok'?'valid':'failed'));target.append(heading);
     const wrap=make('div','table-wrap'),table=make('table'),head=make('thead'),hr=make('tr');
     for(const title of ['Setup','Frequencies · variables','Max |Δ log S|','Max output Δ (rel.)','Gradient Δ (rel. L2)','Time, unchanged → candidate','Result'])hr.append(make('th','',title));head.append(hr);table.append(head);
     const body=make('tbody');
@@ -845,7 +840,39 @@ if(typeof module!=='undefined')module.exports.SessionGraph=SessionGraph;
       add(tr,name,make('td','number',numeric(c.frequencies)?`${c.frequencies} · ${c.design_variables}`:'—'),make('td','number',sci(c.max_abs_log_sensitivity_error)),make('td','number',sci(maxOut)),make('td','number',sci(c.gradient_relative_l2)),timeCell,result);body.append(tr);}
     table.append(body);wrap.append(table);target.append(wrap);
     target.append(make('p','table-note',`A setup holds when every output and gradient is finite, max |Δ log sensitivity| ≤ ${sci(r.thresholds?.max_abs_log_sensitivity_error)} (the official bound) and gradient relative L2 ≤ ${sci(r.thresholds?.gradient_relative_l2)}. ${r.timing_scope||''} The team's strict 1e-7 saved-array check and the official queue result remain separate evidence.`));
-    add(target,commitLink(r.candidate_sha),branchLink(r.branch));disclosure(target,'Per-stage timings and complete comparison record',r,'generalization-record');
+    disclosure(target,'Per-stage timings and complete setup comparison record',r,'generalization-record');
+  }
+  function jaxTable(target,r){
+    const tests=list(r.tests),judged=tests.filter(t=>t.status!=='reference_unavailable'),passed=judged.filter(t=>t.status==='ok').length;
+    const heading=make('div','detail-header'),identity=make('div');add(identity,make('h3','','JAX transformations'),make('p','',`${human(r.setup)} · ${r.instance||'Instance not recorded'}${numeric(r.cpu)?` · CPU ${r.cpu}`:''} · tolerance ${sci(r.tolerance)} · recorded ${time(r.observed_at)}`));add(heading,identity,pill(r.status==='compatible'?`Supports ${passed}/${judged.length}`:`Breaks ${judged.length-passed}/${judged.length}`,r.status==='compatible'?'valid':'failed'));target.append(heading);
+    const wrap=make('div','table-wrap'),table=make('table'),head=make('thead'),hr=make('tr');
+    for(const title of ['Transformation','Max Δ vs unchanged (rel.)','Time, unchanged → candidate','Result'])hr.append(make('th','',title));head.append(hr);table.append(head);
+    const body=make('tbody');
+    for(const t of tests){const tr=make('tr'),name=make('td'),[title,use]=TEST_NAMES[t.test]||[human(t.test),''];add(name,make('div','',title),make('p','cell-subtitle',t.error||use));
+      const result=make('td');result.append(pill(t.status==='ok'?'Supported':t.status==='unsupported'?'Not supported':human(t.status),t.status==='ok'?'valid':t.status==='reference_unavailable'?'':'failed'));
+      add(tr,name,make('td','number',sci(t.max_relative_difference)),make('td','number',numeric(t.candidate_seconds)?`${seconds(t.reference_seconds)} → ${seconds(t.candidate_seconds)}`:'—'),result);body.append(tr);}
+    table.append(body);wrap.append(table);target.append(wrap);
+    target.append(make('p','table-note','The scored benchmark needs only jit and first-order reverse mode. Other transformations are robustness evidence for downstream use. The organizers have not stated them as a requirement (see organizer question 12). Times include compilation of each transformed function.'));
+    disclosure(target,'Complete JAX compatibility record',r,'jaxcompat-record');
+  }
+  function renderGeneralization(){
+    const setups=list(S.data?.generalization_reports),jax=list(S.data?.jaxcompat_reports),query=$('generalization-filter').value.trim().toLowerCase();
+    const shas=new Map();for(const r of [...setups,...jax]){const prev=shas.get(r.candidate_sha);shas.set(r.candidate_sha,{sha:r.candidate_sha,label:prev?.label||r.label,branch:prev?.branch||r.branch,observed:Math.max(prev?.observed||0,stamp(r.observed_at)||0)});}
+    const matching=[...shas.values()].filter(c=>[c.sha,c.label,c.branch].join(' ').toLowerCase().includes(query)).sort((a,b)=>b.observed-a.observed);
+    const select=clear('generalization-select'),target=clear('generalization-detail');
+    if(!matching.some(c=>c.sha===selectedGeneralization))selectedGeneralization=matching[0]?.sha||'';
+    for(const c of matching){const g=setups.find(r=>r.candidate_sha===c.sha),j=jax.find(r=>r.candidate_sha===c.sha);select.append(new Option(`${short(c.sha)} · ${c.label||'unlabelled'} · setups ${g?(g.status==='ok'?'hold':'review'):'—'} · JAX ${j?(j.status==='compatible'?'full':'partial'):'—'}`,c.sha));}
+    select.value=selectedGeneralization;
+    const gs=S.data?.generalization_source,js=S.data?.jaxcompat_source;
+    $('generalization-source').textContent=`${setups.length} setup comparisons${gs?.observed_at?` (file ${time(gs.observed_at)})`:''}${gs?.error?` · ${gs.error}`:''} · ${jax.length} JAX compatibility records${js?.observed_at?` (file ${time(js.observed_at)})`:''}${js?.error?` · ${js.error}`:''}`;
+    const docs=make('p','meta-line');add(docs,docLink('Generalization method','generalization.md'),document.createTextNode(' · '),docLink('JAX compatibility method','jax-compatibility.md'),document.createTextNode(' · '),docLink('Open questions for the organizers','organizer-questions.md'));target.append(docs);
+    const c=matching.find(c=>c.sha===selectedGeneralization);
+    if(!c){target.append(make('p','empty',shas.size?'No records match this commit or label.':'Run lab.gencheck report or lab.jaxcompat report to record a candidate. A missing record does not mean the candidate is robust.'));return;}
+    const title=make('div','detail-header'),identity=make('div');add(identity,make('h3','',c.label||`Commit ${short(c.sha)}`));add(title,identity);target.append(title);
+    const g=setups.find(r=>r.candidate_sha===c.sha),j=jax.find(r=>r.candidate_sha===c.sha);
+    if(g)setupsTable(target,g);else target.append(make('p','empty','No cross-setup comparison recorded for this commit.'));
+    if(j)jaxTable(target,j);else target.append(make('p','empty','No JAX compatibility record for this commit.'));
+    add(target,commitLink(c.sha),branchLink(c.branch));
   }
   $('generalization-select').addEventListener('change',e=>{selectedGeneralization=e.target.value;renderGeneralization();});
   $('generalization-filter').addEventListener('input',renderGeneralization);

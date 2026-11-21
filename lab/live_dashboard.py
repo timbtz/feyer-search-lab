@@ -148,6 +148,35 @@ def generalization_state(value):
     return public(reports)
 
 
+JAXCOMPAT_TEST_STATUSES = ('ok', 'different', 'unsupported', 'missing', 'reference_unavailable')
+
+
+def jaxcompat_state(value):
+    """Read JAX transformation compatibility records written by `lab.jaxcompat report`.
+
+    They describe which JAX transformations a candidate supports relative to the
+    unchanged simulator. They do not change official, strict or Pareto status.
+    """
+    if not isinstance(value, dict) or value.get('schema') != 'feyer-jaxcompat-collection-v1':
+        raise ValueError('Unsupported JAX compatibility collection schema')
+    reports = value.get('reports')
+    if not isinstance(reports, list):
+        raise ValueError('Invalid JAX compatibility collection')
+    for report in reports:
+        if not isinstance(report, dict) or report.get('schema') != 'feyer-jaxcompat-v1':
+            raise ValueError('Unsupported JAX compatibility record schema')
+        if report.get('status') not in ('compatible', 'incompatible'):
+            raise ValueError('Unknown JAX compatibility record status')
+        if not isinstance(report.get('candidate_sha'), str) or not isinstance(report.get('tests'), list):
+            raise ValueError('Invalid JAX compatibility record identity')
+        for test in report['tests']:
+            if not isinstance(test, dict) or not isinstance(test.get('test'), str):
+                raise ValueError('Invalid JAX compatibility test')
+            if test.get('status') not in JAXCOMPAT_TEST_STATUSES:
+                raise ValueError('Unknown JAX compatibility test status')
+    return public(reports)
+
+
 def tail(path, size=10000):
     if not path.is_file() or path.is_symlink():
         return ''
@@ -268,6 +297,8 @@ class Observatory:
         self.profiler_data = None
         self.generalization = dict(source='.lab/generalization/report.json', observed_at=None, error=None)
         self.generalization_data = None
+        self.jaxcompat = dict(source='.lab/jaxcompat/report.json', observed_at=None, error=None)
+        self.jaxcompat_data = None
         self.cached_files = {}
         self.host, self.root = host, root
         self.stop = threading.Event()
@@ -348,28 +379,38 @@ class Observatory:
         source['stale'] = bool(source['error']) or source['observed_at'] is None or now - source['observed_at'] > PROFILER_STALE_SECONDS
         return reports if reports is not None else [], source
 
-    def generalization_snapshot(self, now):
-        path = self.lab / 'generalization' / 'report.json'
+    def collection_snapshot(self, name, relative, validator, label):
+        """Read one optional local evidence collection; keep the last good copy on error."""
+        path = self.lab / relative
+        source_attr, data_attr = name, name + '_data'
         try:
             if path.is_symlink() or path.parent.is_symlink():
-                raise ValueError('Refusing symlink generalization snapshot')
-            reports = generalization_state(self.cached_json(path))
+                raise ValueError(f'Refusing symlink {label} snapshot')
+            reports = validator(self.cached_json(path))
             observed_at = path.stat().st_mtime
             with self.lock:
-                self.generalization_data = reports
-                self.generalization.update(observed_at=observed_at, error=None)
+                setattr(self, data_attr, reports)
+                getattr(self, source_attr).update(observed_at=observed_at, error=None)
         except FileNotFoundError:
             with self.lock:
-                self.generalization['error'] = None if self.generalization_data is None else (
-                    'FileNotFoundError: generalization snapshot removed; last successful observation retained')
+                getattr(self, source_attr)['error'] = None if getattr(self, data_attr) is None else (
+                    f'FileNotFoundError: {label} snapshot removed; last successful observation retained')
         except (OSError, ValueError, TypeError) as exc:
             with self.lock:
-                self.generalization['error'] = (f'{type(exc).__name__}: local generalization snapshot unavailable; '
-                                                'last successful observation retained if available')
+                getattr(self, source_attr)['error'] = (f'{type(exc).__name__}: local {label} snapshot unavailable; '
+                                                       'last successful observation retained if available')
         with self.lock:
-            reports, source = self.generalization_data, dict(self.generalization)
+            reports, source = getattr(self, data_attr), dict(getattr(self, source_attr))
         source['available'] = reports is not None
         return reports if reports is not None else [], source
+
+    def generalization_snapshot(self, now):
+        return self.collection_snapshot('generalization', Path('generalization') / 'report.json',
+                                        generalization_state, 'generalization')
+
+    def jaxcompat_snapshot(self, now):
+        return self.collection_snapshot('jaxcompat', Path('jaxcompat') / 'report.json',
+                                        jaxcompat_state, 'JAX compatibility')
 
     def poll_remote(self):
         from .client import Client
@@ -516,6 +557,7 @@ class Observatory:
         team, team_source = self.team_snapshot(now)
         profiles, profiler_source = self.profiler_snapshot(now)
         generalization, generalization_source = self.generalization_snapshot(now)
+        jaxcompat, jaxcompat_source = self.jaxcompat_snapshot(now)
         alerts, campaigns, jobs = [], [], {}
         for path in sorted((self.lab/'campaigns').glob('*/campaign.sqlite3')):
             try:
@@ -563,6 +605,7 @@ class Observatory:
             team_search=team, team_search_source=team_source,
             profiler_reports=profiles, profiler_source=profiler_source,
             generalization_reports=generalization, generalization_source=generalization_source,
+            jaxcompat_reports=jaxcompat, jaxcompat_source=jaxcompat_source,
             read_only=True, refresh_seconds=5,
             stage_policy={'screen':'Complete physical workload, provisional checks; omits finite-difference gradient sanity check and strict saved-array comparison.',
                 'full':'Official full benchmark plus separate strict saved-array / all-gradient comparison.',
