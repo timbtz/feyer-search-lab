@@ -64,3 +64,126 @@
 ## Decision
 
 The proposal above is the one new future-round operator for coordinator review. It has not been registered or launched, and no AMD job was submitted.
+
+---
+
+## Follow-up (turn 2): feasibility challenge and corrections
+
+Same session, same one-hour budget (absolute deadline 1795286839.545374). This turn used source and mathematical reasoning only. Nothing was executed, and the simulator is unchanged. The findings above are kept as written; corrections are listed in F7.
+
+### F1. Dependency trace: when are the per-row noise inputs identical?
+
+Data flow inside `simulate`, in order:
+
+1. `parameters` has shape `(1, P)` and complex dtype (`build.py:1424`). Optimized values are inserted at `simulate.py:285-287`.
+2. Linking runs at `simulate.py:290-294`, on that single row. Linked outputs are computed once from the pre-expansion values. If a linked parameter feeds a noise function, it is identical in every expanded row, unless its index is itself a changing index, which the overlap check catches.
+3. Carrier expansion happens at `simulate.py:302` (`expand_parameters`, `simulate.py:158-162`). The row is tiled and only the `carrier_changing_parameter_indices` columns are overwritten.
+4. Signal expansion happens at `simulate.py:316`. The rows are tiled again and only the `signal_changing_parameter_indices` columns are overwritten.
+   - `prepare_arrays` raises if both kinds of changing index are real (`build.py:1745-1746`), so at most one expansion has R>1.
+   - Benchmark: carrier dummy `R_c=1`; signal `R_s=101` (`("f","frequency")`, `benchmark.py:204`). The changing index is `signal_frequency_position`, because node `f` is a `frequency` component and is therefore registered as a signal component (`build.py:642-646`).
+5. The noise update vmaps over the 101 expanded rows (`simulate.py:392-399`). Each row is gathered at `noise_function_input_indices`.
+
+**Consequence.** Two expanded rows can differ only in the real changing columns. In addition, dummy fills write `parameters[0][0]` back onto column 0 (`build.py:1750-1751, 1766-1767`), so dummy columns are value-identical across rows. Therefore:
+
+> **Predicate S (sufficient for bitwise-identical noise inputs on every row):** `set(int(i) for i in noise_function_input_indices.ravel())` ∩ (`real_carrier_changing` ∪ `real_signal_changing`) = ∅.
+
+Here `real_*` are `arrays_to_prepare[2]` and `arrays_to_prepare[3]` returned by `pairs_to_arrays` (`build.py:1676-1679`), taken **before** `prepare_arrays` inserts dummy `[0]`s.
+
+Details the check must handle:
+
+- **Padding.** `set_instructions` pads with a float `np.zeros` (`build.py:159-162`), so the vertically stacked index array is float until `jnp.array(..., dtype=int)` (`build.py:1668`). Cast to int before taking the set. Padding entries refer to index 0. Index 0 can never be a real changing index, because `parameter_names[0] == ""` and every changing-pair name contains `_` (`build.py:1610, 1612`). So padding cannot cause a false overlap, and including it in the set is harmless and conservative.
+- **Empty noise instructions.** The dummy is `[[0,0,0]]` with `dummy_function` (`build.py:1636-1641`). Predicate S holds trivially, and reusing one row is correct.
+- **Rejected alternative.** Applying the check to the dummy-filled arrays would always see index 0 on both sides. It would therefore always fall back: safe, but the operator would never fire.
+
+Predicate S is sufficient, not necessary. It is conservative: it ignores whether a component function actually *uses* the indexed input. For example, `vacuum_quantum_noise` ignores its input entirely (`components.py:754`). That conservatism is deliberate.
+
+### F2. Counterexamples and expected path for each case
+
+| Case | Real changing indices | Overlaps noise inputs? | Path |
+| --- | --- | --- | --- |
+| Benchmark: `("f","frequency")` | {signal_frequency_position} | No. Noise inputs are F (index 0), surface loss, squeezer db/angle (`build.py:788-825, 1017-1026, 1389-1398`) | **Reuse** |
+| Sweep of squeezer `db` or `angle` (squeezer is a signal component, `build.py:613-614`) | that db/angle index | **Yes** | Fallback (reuse would be **wrong physics**) |
+| Sweep of mirror/beamsplitter `loss` (carrier component) | loss index, `R_c>1` | **Yes**, `loss_position` (`build.py:1020`) | Fallback |
+| Sweep of laser `power` (carrier) | power index | No | Reuse is valid. Rows = `R_c`; carrier batch >1 |
+| Sweep of a linked parameter's *source* | source index | Only if the source index is itself a noise input | The linked target is evaluated before expansion (existing semantics) and is not swept |
+| No sweep at all | ∅ | No | Reuse; R=1, so both paths coincide |
+
+No counterexample was found in which Predicate S holds but the per-row noise matrices differ. Any future noise component that reads `signal_frequency_position`, for example a frequency-dependent loss, is caught automatically, because the frequency index is the real changing index in the benchmark.
+
+### F3. Concrete guarded design (revised)
+
+To avoid computing R on the host, encode the decision as a **shape sentinel** rather than `arange(R)`:
+
+- `run_build_step` (`simulate.py:477-493`) computes Predicate S from `arrays_to_prepare` and `noise_arrays[0]`. It then appends `noise_parameter_rows = jnp.array([0], int)` (shape `(1,)`, reuse) or `jnp.zeros((0,), int)` (shape `(0,)`, fallback) as the **last** element of `all_arrays`.
+- `simulate` gets a new trailing parameter `noise_parameter_rows=None`. Shapes are static under `jit`, so the branch below is decided at trace time and only one path is ever traced. No `lax.cond` and no second compiled branch:
+  - `None`, or shape `(0,)`: the current code, unchanged (`vmap` over all rows, `einsum("bij,bj->bi")`).
+  - Shape `(1,)`: `noise_matrix_1 = update(parameters[0], noise_matrix, ...)`, i.e. one unbatched `update` call with the same component switch and the same `.at[].set`. Then `noise_sources = jnp.einsum("ij,dbj->dbi", noise_matrix_1, noise_weights)`. The covariance solve, contraction and ASD formula are unchanged.
+- Gathering from `parameters[0]` (expanded row 0) is equivalent to gathering from the pre-expansion row on all noise inputs, by Predicate S.
+
+**Fallback behaviour:** whenever Predicate S fails, or the caller supplies no selector, the existing code runs unchanged, so its outputs and gradients are bitwise the current ones.
+
+**Rejected variant: `jnp.broadcast_to(N, (R,N,N))` in the old einsum.** The broadcast value would be the einsum operand, so JAX would save it as a residual (see F5) and the memory benefit would be lost.
+
+**Lower-risk variant A.** Evaluate the noise component outputs once, then broadcast those K outputs into the existing per-row scatter and einsum. The forward result is bitwise unchanged. It removes only the 100/101 duplicated component evaluations, not the dense buffers, so its upside is small. It is listed as a fallback design if variant B fails strict comparison.
+
+### F4. Gradient analysis (corrects the first turn)
+
+- **Mathematical equivalence.** Write N_r(θ) = N(θ) for all r, with θ including the optimized `db`/`angle`. Then dL/dθ through N is Σ_r ⟨∂L/∂N_r, dN/dθ⟩ = ⟨Σ_r ∂L/∂N_r, dN/dθ⟩. The old path applies the component VJP per row and sums the parameter cotangents through the `vmap`/`tile`/scatter transposes (`simulate.py:158-162`). The new path sums the cotangent over b inside the einsum transpose (a `(751×R)·(R×751)` contraction) and then applies one component VJP. The two are exactly equal in real arithmetic but round differently.
+- **Correction.** In turn 1 I said the differences would be confined to the db/angle coordinates. That is wrong. The noise sources also feed the covariance solve (`simulate.py:421`), and `noise_weights` depends on the signal matrix, so every design variable has a gradient path through `noise_sources`. The cotangent with respect to `noise_weights` is `Nᵀ·ct` (`ij` GEMM versus batched GEMV `bij`), which has a different accumulation order. The forward `noise` output can also differ at ULP level. **Any of the 193 coordinates, and the `noise`/`sensitivity`/loss outputs, may deviate.** Exact bitwise equality is not expected for variant B.
+- **Risk level.** The loss is near zero (9.79e-8), and candidate 2 failed strict comparison with a max |Δgradient| of 2.8e-3. Variant B's changes are pure reassociation, which is much smaller in kind than candidate 2's algebraic rewrite, but a strict failure is plausible. No custom derivative is involved; JAX's standard rules apply. If strict comparison fails, do not loosen tolerances. Reject variant B, or test variant A, whose forward output is bitwise unchanged and whose only reordering is the db/angle VJP sum.
+
+### F5. Buffer estimates vs. compiled materialization
+
+Each item below is labelled by the kind of evidence behind it:
+
+- **Shape-derived (certain as array shapes; says nothing about memory):** the per-row noise matrix and its cotangent are both `c128[101,751,751]` = 911,393,616 bytes. In the reuse path they become `c128[751,751]` = 9,024,016 bytes.
+- **Source-implied materialization (moderately strong, not compiled evidence):**
+  - The benchmark returns the pullback from the forward JIT stage (`benchmark.py:112-115, 211-212`), so every residual is an **output buffer** of the compiled forward function. Fusion cannot remove a residual.
+  - The einsum at `simulate.py:420` is bilinear, and its `noise_weights` operand has a nonzero tangent, because it depends on the signal matrix and hence on the parameters. Standard linearization therefore keeps the primal `N` operand as a residual.
+  - **Inference:** the `(101,751,751)` noise matrix is very probably stored as a forward residual today. This must be confirmed by listing the pullback's leaf shapes.
+- **Unknown:** whether the reverse cotangent `bi,bj->bij` is ever materialized at full size, or whether XLA fuses the outer product into the scatter-transpose gather. The forward scatter output is probably materialized, being the residual just mentioned, but the old code may also keep a separate base broadcast copy; that has not been inspected.
+- Candidate 2 cut peak RSS by about 1.78 GB by removing one solve path. This shows that buffers of this order of magnitude matter here, but **it is not evidence for this operator**.
+
+**Savings claim:** none. Plausible upside is up to about 0.9 GB of forward residual, plus possibly reverse temporaries, and a GEMM instead of a memory-bound batched GEMV. The time effect is unknown and probably small relative to the 12.3 s forward stage, which is dominated by the LU solves.
+
+### F6. Compatibility with callers and the three JIT stages
+
+- **Argument-count check.** `run_build_step` maps `all_arrays` positionally onto `simulate.__code__.co_varnames` (`simulate.py:483-493`). `co_argcount` includes defaulted parameters, so the new parameter must be last and its array appended last. If either is missing, the existing `ValueError` fires, which is a safe failure.
+- **Callers found.** All pass the `run_build_step` dictionary by keyword, so they pick up the new key automatically:
+  - `benchmark.py:115, 253`;
+  - `start_here.py:37-50`;
+  - `examples/voyager_optimization.py:62-82`;
+  - `examples/uifo_optimization.py:138-154`.
+  - `run_simulation_step` (`simulate.py:540-547`) uses the same dictionary.
+  - No caller passes positional arguments or uses `vmap(simulate, in_axes=...)`. The `run_with_parameter_sets` named in the module docstring does not exist in source.
+- **Other callers.** Third-party code that builds the keyword dictionary by hand keeps working through the `None` default, on the unchanged path.
+- **The three JIT stages.** The benchmark dictionary is a traced pytree argument of the forward stage (`benchmark.py:165, 211`). A new `int64[1]` leaf only adds a parameter, and its shape fixes the trace-time branch. The sensitivity stage is untouched. The gradient stage's input pullback gets different residual shapes, but there are still three stages and nothing is cached. No persistent cache and no environment flags are involved.
+- **Overlap with other agents.** The change sits in noise contraction and row selection. The noise `update` call and its scatter are reused as they are. Component assembly internals (`update`, `_evaluate_component`) are not modified. If the other agent's component-assembly implementation changes the signature or semantics of `update`, rebase onto it rather than merging changes inside it.
+
+### F7. Corrections to the turn-1 text
+
+1. Gradient risk applies to **all** coordinates and to the noise, sensitivity and loss outputs, not only db/angle (F4).
+2. `arange(R)` is replaced by a shape `(0,)` sentinel, so the host never needs R (F3).
+3. "Whether those buffers exist after XLA fusion is unverified" is refined: the forward residual is source-implied to exist because of the split VJP; the reverse temporaries remain unknown (F5).
+4. "Compile: no new branches" stands. The branch is decided by static shape and only one path is traced.
+5. The validation step "squeezer-db sweep must match old code exactly" holds because that case takes the unchanged fallback path. The reuse path needs tolerance-based comparison (F8).
+
+### F8. Minimal validation matrix for a later approved implementation
+
+| # | Check | Path | Pass criterion |
+| --- | --- | --- | --- |
+| V1 | Unchanged official full benchmark (screen, then full) | reuse | Official sensitivity and FD gradient checks pass; all outputs and gradients finite |
+| V2 | Strict saved-array comparison against seed8 `1e552d6` | reuse | carrier and signal bitwise (assembly unchanged); noise, sensitivity, powers and all 193 gradient coordinates within rtol=1e-7 + 1e-12·scale; report max pointwise abs/rel error, with db/angle coordinates and the loss called out separately |
+| V3 | Path assertion | reuse | Benchmark build emits a selector of shape `(1,)` |
+| V4 | Residual and HLO evidence | reuse vs seed8 | Pullback leaf shapes no longer contain `c128[101,751,751]`; lowered forward HLO shows `c128[751,751]` for the noise scatter; compare `compiled.memory_analysis()` if available |
+| V5 | RSS and timing | reuse vs seed8 | At least 3 fresh-process full runs each; compare peak RSS, forward/reverse execute, compile and complete first-run time. Claim gains only from these |
+| V6 | Fallback: squeezer `db` sweep (signal side) | fallback | Selector shape `(0,)`; outputs and gradient **bitwise** equal to the pre-change code |
+| V7 | Fallback: mirror `loss` sweep (carrier side, `R_c>1`) | fallback | Selector shape `(0,)`; bitwise equal |
+| V8 | Reuse with a carrier sweep: laser `power`, `R_c>1` | reuse | Selector shape `(1,)`; within strict tolerance of the old code, including gradients |
+| V9 | No-selector caller (`None`) | old | Bitwise equal to the current code |
+
+V6–V9 are synthetic checks outside the benchmark. They are deferred to an approved numerical experiment and must not alter the official benchmark. If V2 fails, reject variant B as it stands and consider variant A (F3) as a separate candidate. Do not loosen tolerances.
+
+### Turn-2 decision
+
+The proposal stands, revised: the source contradicts no core assumption, and reuse on the benchmark is justified by Predicate S. Its expected upside is mainly memory. Strict-gradient risk is real and applies to all coordinates. Priority: medium-low. Recommend one screen, then a full run if the coordinator schedules it. Not registered, not launched, nothing measured.
