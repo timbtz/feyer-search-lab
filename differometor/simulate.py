@@ -30,6 +30,7 @@ from differometor.build import build, pairs_to_arrays, prepare_arrays, LINKING_F
 from differometor.components import FUNCTIONS, UNIT_VACUUM, H_PLANCK, F0
 from differometor import components as _components
 from differometor.sparse import SparseStructure, SparseSystem, sparse_solve
+from differometor import host as _host
 
 
 jax.config.update("jax_enable_x64", True)
@@ -743,8 +744,19 @@ def _shared_component_outputs(parameters, output_indices, groups, indices):
     return output_matrix[output_rows, output_indices[1]]
 
 
+# Evaluate component functions on the host (NumPy) with a JAX-linear custom JVP
+# (`differometor.host`). Removes the XLA compilation of the component bodies;
+# first-order JAX transformations are preserved, and second-order derivatives
+# raise an explicit error. False restores the XLA evaluation below.
+HOST_COMPONENTS: bool = True
+
+
 def _evaluate_component_columns(function_index, differentiable, slots):
     """`_evaluate_component_group_slots` applied to already gathered input columns."""
+    if HOST_COMPONENTS:
+        inputs = jnp.stack([jnp.asarray(value, dtype=jnp.complex128) for value in slots], axis=-1)
+        tangent_slots = tuple(slot for slot, keep in enumerate(differentiable) if keep)
+        return _host.component_outputs(function_index, tangent_slots, inputs)
     function = FUNCTIONS[function_index]
     columns = tuple(value if keep else lax.stop_gradient(value) for value, keep in zip(slots, differentiable))
     base = _LOWER_TO_BASE.get(function) if LOWER_SLOT_PRUNING else None

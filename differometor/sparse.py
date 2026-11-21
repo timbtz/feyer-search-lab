@@ -7,17 +7,13 @@ the host while building the setup and carried through JAX transformations as
 static pytree metadata. Only the numerical values of the structural nonzeros are
 traced.
 
-`sparse_solve` factors each system with SciPy's SuperLU through
-`jax.pure_callback` and defines its reverse-mode derivative with a custom VJP:
-
-    x = op(A)^-1 b,  op(A) in {A, A^T}
-    b_bar = op(A)^-T x_bar
-    A_bar[i, j] = -b_bar[i] x[j]   (op = identity)
-    A_bar[i, j] = -b_bar[j] x[i]   (op = transpose)
-
-JAX uses the plain (non-conjugated) transpose of complex-linear maps for its
-cotangents; `A^H` systems are expressed as transposed solves of `conj(A)` so JAX
-differentiates the conjugation itself.
+`sparse_solve` is a `jax.lax.custom_linear_solve`: the matrix-vector product
+is a JAX expression of the traced values, while SciPy's SuperLU (through
+`jax.pure_callback`) performs the forward and transposed solves. JAX obtains
+every derivative by implicit differentiation from these pieces, so the solve
+supports jit, reverse and forward mode, higher order and vmap like
+`jnp.linalg.solve`. `A^H` systems are expressed as transposed solves of
+`conj(A)` so JAX differentiates the conjugation itself.
 """
 
 from __future__ import annotations
@@ -130,9 +126,24 @@ def _call(pattern, transpose, values, rhs):
     )
 
 
-@partial(jax.custom_vjp, nondiff_argnums=(0, 1))
+def _matvec(pattern: SparsePattern, transpose: bool, values, x):
+    """op(A) x for x (..., K, N), with A given by its structural values (..., nnz)."""
+    if transpose:  # (A^T x)[c] = sum over entries (r, c) of A[r, c] x[r]
+        gather, scatter = pattern.rows, pattern.cols
+    else:  # (A x)[r] = sum over entries (r, c) of A[r, c] x[c]
+        gather, scatter = pattern.cols, pattern.rows
+    contributions = values[..., None, :] * x[..., gather]
+    return jnp.zeros(x.shape, dtype=jnp.complex128).at[..., scatter].add(contributions)
+
+
 def sparse_solve(pattern: SparsePattern, transpose: bool, values, rhs):
     """Solve op(A) x = b for sparse A with several right-hand sides.
+
+    `lax.custom_linear_solve` keeps this an ordinary JAX linear solve: the
+    matrix-vector product is a JAX expression of the traced values, and SuperLU
+    only performs the solves (`solve` and `transpose_solve`). JAX derives every
+    derivative from these by implicit differentiation, so jit, grad/vjp,
+    jvp/jacfwd, second order and vmap work as for `jnp.linalg.solve`.
 
     Parameters
     ----------
@@ -150,26 +161,16 @@ def sparse_solve(pattern: SparsePattern, transpose: bool, values, rhs):
     jnp.ndarray
         Solutions with shape (L, K, N), complex128.
     """
-    return _call(pattern, transpose, values, rhs)
-
-
-def _sparse_solve_fwd(pattern, transpose, values, rhs):
-    solution = _call(pattern, transpose, values, rhs)
-    return solution, (values, solution)
-
-
-def _sparse_solve_bwd(pattern, transpose, residuals, solution_bar):
-    values, solution = residuals
-    rhs_bar = _call(pattern, not transpose, values, solution_bar)
-    if transpose:
-        left, right = pattern.cols, pattern.rows
-    else:
-        left, right = pattern.rows, pattern.cols
-    values_bar = -jnp.einsum("lkn,lkn->ln", rhs_bar[..., left], solution[..., right])
-    return values_bar.astype(values.dtype), rhs_bar
-
-
-sparse_solve.defvjp(_sparse_solve_fwd, _sparse_solve_bwd)
+    values = values.astype(jnp.complex128)
+    rhs = rhs.astype(jnp.complex128)
+    shape = jnp.broadcast_shapes(values.shape[:-1], rhs.shape[:-2]) + rhs.shape[-2:]
+    rhs = jnp.broadcast_to(rhs, shape)
+    return jax.lax.custom_linear_solve(
+        partial(_matvec, pattern, transpose, values),
+        rhs,
+        solve=lambda _, b: _call(pattern, transpose, values, b),
+        transpose_solve=lambda _, b: _call(pattern, not transpose, values, b),
+    )
 
 
 class SparseSystem:
