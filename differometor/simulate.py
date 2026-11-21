@@ -60,34 +60,22 @@ def solve(matrix: jnp.ndarray, right_hand_side: jnp.ndarray) -> jnp.ndarray:
     return jnp.linalg.solve(matrix, right_hand_side)
 
 
-def solve_with_factors(matrix, factors, right_hand_side, adjoint=False):
+def solve_with_factors(matrix, factors, right_hand_side):
     """Solve with reusable LU factors and differentiate the defining equation.
 
     Factors are computed from stop-gradient matrices within each simulation.
     ``custom_linear_solve`` differentiates A x = b, including the dependence on
     A, without differentiating the pivoting algorithm. JAX's transpose rule is
-    a plain transpose even for complex arrays, hence the explicit conjugations
-    in the transpose solver for an adjoint system.
+    a plain transpose even for complex arrays.
     """
-    if adjoint:
-        system = jnp.conjugate(matrix.T)
+    def solve_rhs(_, rhs):
+        return lu_solve(factors, rhs, trans=0)
 
-        def solve_rhs(_, rhs):
-            return lu_solve(factors, rhs, trans=2)
-
-        def transpose_solve_rhs(_, rhs):
-            return jnp.conjugate(lu_solve(factors, jnp.conjugate(rhs), trans=0))
-    else:
-        system = matrix
-
-        def solve_rhs(_, rhs):
-            return lu_solve(factors, rhs, trans=0)
-
-        def transpose_solve_rhs(_, rhs):
-            return lu_solve(factors, rhs, trans=1)
+    def transpose_solve_rhs(_, rhs):
+        return lu_solve(factors, rhs, trans=1)
 
     return lax.custom_linear_solve(
-        lambda vector: system @ vector,
+        lambda vector: matrix @ vector,
         right_hand_side.astype(jnp.complex128),
         solve=solve_rhs,
         transpose_solve=transpose_solve_rhs,
@@ -376,8 +364,8 @@ def simulate(
 
     signal_system = signal_matrix[:, :, :-1]
     signal_factors = vmap(lu_factor)(lax.stop_gradient(signal_system))
-    signal = vmap(solve_with_factors, in_axes=(0, 0, 0, None))(
-        signal_system, signal_factors, signal_matrix[:, :, -1], False
+    signal = vmap(solve_with_factors)(
+        signal_system, signal_factors, signal_matrix[:, :, -1]
     )
 
     # --------------------
@@ -417,9 +405,12 @@ def simulate(
         carrier_selections,
         (carrier_selections.shape[0], signal_system.shape[0], carrier_selections.shape[2]),
     )
-    solve_frequency_batch = vmap(solve_with_factors, in_axes=(0, 0, 0, None))
-    noise_weights = vmap(solve_frequency_batch, in_axes=(None, None, 0, None))(
-        signal_system, signal_factors, carrier_selections, True
+    # Factor the adjoint independently to retain the original pivoting and
+    # rounding for this sensitive optical system. Only identical systems share
+    # factors; an algebraically equivalent adjoint solve can alter gradients.
+    adjoint_system = jnp.transpose(jnp.conjugate(signal_system), (0, 2, 1))
+    noise_weights = vmap(vmap(solve), in_axes=(None, 0))(
+        adjoint_system, carrier_selections
     )
 
     # Update noise source matrix (may depend on current parameters).
@@ -452,8 +443,8 @@ def simulate(
 
     # Project noise sources into the system and propagate through the signal matrix.
     noise_sources = vmap(matmul_single_batch, in_axes=(None, 0))(noise_matrix, noise_weights)
-    covariances = vmap(solve_frequency_batch, in_axes=(None, None, 0, None))(
-        signal_system, signal_factors, noise_sources, False
+    covariances = vmap(vmap(solve_with_factors), in_axes=(None, None, 0))(
+        signal_system, signal_factors, noise_sources
     )
 
     # Convert propagated covariances into amplitude spectral density.

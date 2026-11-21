@@ -77,3 +77,42 @@ strict saved-array checks are required, with neither replacing the other.
 
 Local checks: Python AST parsing and git diff --check passed. JAX remains
 unavailable locally, so no numerical run was made. Await supervisor evaluation.
+
+### Candidate 2 evaluator outcome: strict gradient failure
+
+SHA `332711932fd574654d7c126c08214963dfa936de`; screen
+`6e229f962370431d80ea2dbeb30ca7ce` passed its limited checks, first run
+23.858653 s. Full run `f35960545cc84aa590113a7e4373a099` passed the official
+benchmark but FAILED the separate strict gradient comparison. First run
+24.163514 s, warm median 10.550067 s, job wall 83.661997 s, peak RSS
+11,787,536 KiB. Forward execution 7.966104 s, forward compile 8.131370 s,
+gradient execution 2.927165 s, gradient compile 2.605498 s.
+
+Official maximum log sensitivity error 5.374693557769206e-6. Gradient norm
+70517.10415767653. Spot check AD 7.616168789635325e-5, finite differences
+7.615022986170543e-5 and 7.634971240986935e-5, both passed.
+Strict comparison: carrier, signal, powers, parameters, frequencies exact.
+Noise max absolute error 6.47193338752091e-17, relative L2 2.2428226645922417e-8;
+sensitivity max absolute error 9.264707375859949e-33, relative L2
+3.533068791353602e-9; both passed (max normalized errors approximately 0.6445).
+Gradient max absolute error 0.002276105820783414, relative L2
+3.852202505287248e-8; three failures at indices 33, 161, 180. Their absolute
+errors were 2.108833427882928e-5, 4.4243855700898393e-5, 3.3806126520374846e-7;
+normalized errors 3.038587, 14.655745, 1.626675. This candidate is not accepted
+as numerically equivalent despite passing official checks and running faster.
+
+## Candidate 3: preserve independent adjoint factorization
+
+Repair candidate 2 by restoring the original `solve` on the conjugate transpose.
+Keep explicit LU reuse only between the signal and covariance solves, which use
+identical matrices. Simplify the factor-aware solver to ordinary solves and
+their plain-transpose AD solves. Candidate 2's exact signal and carrier outputs
+support focusing the repair on the adjoint pathway; this remains a hypothesis.
+
+Expected result (unmeasured): restore strict agreement while potentially keeping
+some factor-reuse benefit. The removed adjoint reuse may surrender most of
+candidate 2's speedup; measurement must determine that. Candidate 1 remains the
+last fully validated candidate. All checks and workloads remain unchanged.
+
+Local checks: AST parsing and git diff --check passed. No local numerical check
+or benchmark; supervisor evaluation pending.
