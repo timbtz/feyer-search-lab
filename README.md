@@ -35,13 +35,14 @@ graph TD
   c10["aa2b1ab44180"]
   c11["bb9a183fd64f"]
   c12["d09dc1d08fb0"]
-  c13["e0a1dc69f495"]
-  c14["e525ee5ee4ef"]
-  c15["f3139c71ae2a"]
+  c13["d947905c9b73"]
+  c14["e0a1dc69f495"]
+  c15["e525ee5ee4ef"]
+  c16["f3139c71ae2a"]
   c1 -->|explore| c7
-  c2 -->|combine| c13
+  c2 -->|combine| c14
   c4 -->|explore| c5
-  c5 -->|combine| c13
+  c5 -->|combine| c14
   c6 -->|combine| c2
   c10 -->|explore| c8
   c12 -->|explore| c0
@@ -50,14 +51,14 @@ graph TD
   c12 -->|explore| c6
   c12 -->|explore| c9
   c12 -->|explore| c11
-  c12 -->|explore| c14
   c12 -->|explore| c15
-  c15 -->|combine| c2
+  c12 -->|explore| c16
+  c16 -->|combine| c2
 ```
 
 Every edge records intended inputs, not proof of speedup.
 
-Recorded jobs: 13. Decisions/events: 36.
+Recorded jobs: 13. Decisions/events: 37.
 
 ## External research records
 
@@ -84,5 +85,6 @@ Recorded jobs: 13. Decisions/events: 36.
 | astra-independent-v1 | explore | unknown | unknown | current |
 | claude-guided-v2 | combine | unknown | setup, compilation | current |
 | astra-guided-v2 | explore | unknown | compilation, forward, gradient | current |
+| astra-group-numerical-v3 | refine | unknown | gradient_compile, forward_compile, gradient, forward | current |
 
 These records are evidence, not competing task claims or winner declarations.

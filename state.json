@@ -44991,6 +44991,66 @@
         "freshness_upgrade_pending": true,
         "assignment_id": "astra-guided-v2"
       }
+    },
+    {
+      "seq": 37,
+      "at": 1795298088.0551481,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "astra-group-numerical-v3-launch-90f0a3e17ac5",
+        "kind": "refine",
+        "status": "current",
+        "executor": {
+          "kind": "campaign",
+          "id": "astra-group-numerical-v3"
+        },
+        "candidate_sha": null,
+        "parents": [
+          "d947905c9b73e310257235cf00cb065c31572ecd"
+        ],
+        "target_phases": [
+          "gradient_compile",
+          "forward_compile",
+          "gradient",
+          "forward"
+        ],
+        "hypothesis": "Explore the six source-reviewed group-inline and checkpoint settings.",
+        "change_summary": "Fresh numerical window with an exact seed and frozen six-choice menu; no menu exhaustion or confirmed gain inferred.",
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/0624a77bf07dc27d955783fe48468e58f67e382b/experiments/control/astra-numerical-v3/group-receipts/plan.json",
+        "source_digest": "90f0a3e17ac5b3eb9aa5f8c2a8ffe3409c9f29d2cbe8bc5cc792d6dde8b322a3",
+        "source_digest_kind": "canonical-json-sha256",
+        "evaluations": [],
+        "target_evidence": [
+          {
+            "job_id": "15ca7b7e27964b7c94b545d4b95849b8",
+            "candidate_sha": "d947905c9b73e310257235cf00cb065c31572ecd",
+            "profile": "full"
+          }
+        ],
+        "frozen_menu": {
+          "manifest_digest": "e5bdfa32e6c07a1a588e3bb84059a47e02162e8edf95bbbc9c192bd4a0581045",
+          "legal_count": 6,
+          "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/0624a77bf07dc27d955783fe48468e58f67e382b/experiments/control/astra-numerical-v3/group-manifest.json",
+          "source_digest": "e5bdfa32e6c07a1a588e3bb84059a47e02162e8edf95bbbc9c192bd4a0581045"
+        },
+        "started_at": 1795296671.935345,
+        "global_window_started_at": 1795296282.878179,
+        "fixed_deadline_unix": 1795299882.878179,
+        "max_total_jobs": 40,
+        "initial_allocation_ceiling": 12,
+        "policy_context": {
+          "worker_sha256": "d3c212da0ab1215187407d9cd21dc2cbb5f88dc0b5ee7885135bf7f002d14b58",
+          "evaluator_sha256": "d5950bbd872e5b00ad63f0bd7081e5096fb14ba9c96c80a6854a3b714719bd4e",
+          "comparison_evaluator_sha256": "1bc9b39fe0023afc3db93211b9e3d6cd37ed2b13ee281f142749c2237a16ea8f",
+          "reference_arrays_sha256": "c3f6cba045f8b41f488dc19c960f5056b5f2e75cfa64f9a687b52f2a9ba2751e",
+          "memory_budget_bytes": 16000000000,
+          "cpu": 34
+        },
+        "launch_ref": "https://github.com/timbtz/feyer-search-lab/blob/0624a77bf07dc27d955783fe48468e58f67e382b/experiments/control/astra-numerical-v3/group-receipts/launch.json",
+        "launch_digest": "442c001ef4db283bebc7ff8c3c6a4faccc32fd632a75081dc6d85700c193fd04"
+      }
     }
   ],
   "comparison_regime": {
@@ -45951,6 +46011,60 @@
       "branch": "explore/astra-guided-v2",
       "freshness_upgrade_pending": true,
       "assignment_id": "astra-guided-v2"
+    },
+    "astra-group-numerical-v3-launch-90f0a3e17ac5": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "astra-group-numerical-v3-launch-90f0a3e17ac5",
+      "kind": "refine",
+      "status": "current",
+      "executor": {
+        "kind": "campaign",
+        "id": "astra-group-numerical-v3"
+      },
+      "candidate_sha": null,
+      "parents": [
+        "d947905c9b73e310257235cf00cb065c31572ecd"
+      ],
+      "target_phases": [
+        "gradient_compile",
+        "forward_compile",
+        "gradient",
+        "forward"
+      ],
+      "hypothesis": "Explore the six source-reviewed group-inline and checkpoint settings.",
+      "change_summary": "Fresh numerical window with an exact seed and frozen six-choice menu; no menu exhaustion or confirmed gain inferred.",
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/0624a77bf07dc27d955783fe48468e58f67e382b/experiments/control/astra-numerical-v3/group-receipts/plan.json",
+      "source_digest": "90f0a3e17ac5b3eb9aa5f8c2a8ffe3409c9f29d2cbe8bc5cc792d6dde8b322a3",
+      "source_digest_kind": "canonical-json-sha256",
+      "evaluations": [],
+      "target_evidence": [
+        {
+          "job_id": "15ca7b7e27964b7c94b545d4b95849b8",
+          "candidate_sha": "d947905c9b73e310257235cf00cb065c31572ecd",
+          "profile": "full"
+        }
+      ],
+      "frozen_menu": {
+        "manifest_digest": "e5bdfa32e6c07a1a588e3bb84059a47e02162e8edf95bbbc9c192bd4a0581045",
+        "legal_count": 6,
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/0624a77bf07dc27d955783fe48468e58f67e382b/experiments/control/astra-numerical-v3/group-manifest.json",
+        "source_digest": "e5bdfa32e6c07a1a588e3bb84059a47e02162e8edf95bbbc9c192bd4a0581045"
+      },
+      "started_at": 1795296671.935345,
+      "global_window_started_at": 1795296282.878179,
+      "fixed_deadline_unix": 1795299882.878179,
+      "max_total_jobs": 40,
+      "initial_allocation_ceiling": 12,
+      "policy_context": {
+        "worker_sha256": "d3c212da0ab1215187407d9cd21dc2cbb5f88dc0b5ee7885135bf7f002d14b58",
+        "evaluator_sha256": "d5950bbd872e5b00ad63f0bd7081e5096fb14ba9c96c80a6854a3b714719bd4e",
+        "comparison_evaluator_sha256": "1bc9b39fe0023afc3db93211b9e3d6cd37ed2b13ee281f142749c2237a16ea8f",
+        "reference_arrays_sha256": "c3f6cba045f8b41f488dc19c960f5056b5f2e75cfa64f9a687b52f2a9ba2751e",
+        "memory_budget_bytes": 16000000000,
+        "cpu": 34
+      },
+      "launch_ref": "https://github.com/timbtz/feyer-search-lab/blob/0624a77bf07dc27d955783fe48468e58f67e382b/experiments/control/astra-numerical-v3/group-receipts/launch.json",
+      "launch_digest": "442c001ef4db283bebc7ff8c3c6a4faccc32fd632a75081dc6d85700c193fd04"
     }
   }
 }
