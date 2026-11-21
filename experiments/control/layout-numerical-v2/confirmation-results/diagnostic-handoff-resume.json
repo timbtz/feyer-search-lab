@@ -1,0 +1,46 @@
+{
+  "verified_at": 1795294978.464019,
+  "restoration": {
+    "at": 1795294847.0162656,
+    "startup": {
+      "schema": "feyer-lane-startup-v1",
+      "started_at": 1795294846.9468613,
+      "pid": 237151,
+      "config": {
+        "schema": "feyer-lane-v1",
+        "root": "/workspace/feyer-lab-lane1",
+        "primary_root": "/workspace/feyer-lab",
+        "cpu": 34,
+        "primary_cpu": 2,
+        "memory_budget_bytes": 16000000000,
+        "primary_memory_budget_bytes": 32000000000,
+        "host_reserve_bytes": 8000000000,
+        "epoch_id": "amd-two-lanes-v1"
+      },
+      "limits": {
+        "at": 1795294846.9470465,
+        "memory_limit_bytes": 59055800320,
+        "memory_current_bytes": 4484866048,
+        "cpu": 34,
+        "thread_siblings": [
+          34,
+          98
+        ],
+        "aggregate_sampled_budget_bytes": 48000000000,
+        "host_reserve_bytes": 8000000000,
+        "can_admit": true,
+        "kernel_per_job_cap": false
+      },
+      "worker_sha256": "d3c212da0ab1215187407d9cd21dc2cbb5f88dc0b5ee7885135bf7f002d14b58",
+      "launcher_sha256": "bb277a362d8a0678614863948a42175886fef3f3902131e338143305757a33f1",
+      "evaluator_release": "/workspace/feyer-lab-lane1/releases/bea601a8799aea4173c6c98287bac98ef755ef2f",
+      "stop_policy": "Create state/STOP to finish current job and stop before next claim"
+    },
+    "original_release": "/workspace/feyer-lab-lane1/releases/bea601a8799aea4173c6c98287bac98ef755ef2f",
+    "queue_unchanged": true
+  },
+  "controller_pid": 54735,
+  "deadline_unix": 1795296029.2574458,
+  "action": "resume same controller with SIGCONT",
+  "budget_extension": false
+}
