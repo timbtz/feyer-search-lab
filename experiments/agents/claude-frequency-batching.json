@@ -1,0 +1,31 @@
+{
+  "agent_id": "claude-frequency-batching",
+  "provider": "claude",
+  "model": "claude-opus-5-5",
+  "branch": "explore/claude-frequency-batching",
+  "direction": "frequency-solve-batching",
+  "starting_revision": "6dc993a06cf2de5ae2ae3afa83304a46b2ead4d0",
+  "parent_candidates": [
+    "6dc993a06cf2de5ae2ae3afa83304a46b2ead4d0"
+  ],
+  "combined_candidates": [],
+  "approach_tags": [
+    "frequency-batching",
+    "dense-solve-scheduling"
+  ],
+  "touched_components": [
+    "simulate.simulate",
+    "simulate.solve"
+  ],
+  "budget_minutes": 60,
+  "candidate_limit": null,
+  "worktree": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/claude-frequency-batching",
+  "execution_host": "local Mac; evaluation on AMD",
+  "brief_path": "experiments/briefs/claude-frequency-batching.md",
+  "brief_sha256": "d8dfc60b822821ecc0c8b6ba285783207fb53ad4f1c900eaa0ec28a81db4b378",
+  "baseline_seconds": 24.657326162,
+  "operator_admission": "Proposed new versioned dimension; existing frozen campaigns unchanged",
+  "runtime_commit": "6a1ac0e9276913f4ee564d4806d0e9701ec1e46c",
+  "context_path": "experiments/context/frequency-batching-search.json",
+  "context_sha256": "33cbc27365e7b27eb4c509950f3eff7008c39f164d0d26db91ffa4b759924714"
+}
