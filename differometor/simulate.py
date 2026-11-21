@@ -106,7 +106,12 @@ def update(
     tracing, which keeps the function jittable as long as the list is stable.
     """
     function_inputs = parameters[function_input_indices]
-    output_matrix = vmap(lambda i, x: lax.switch(i, FUNCTIONS, x))(function_indices, function_inputs)
+    # Keep the function selector scalar so only the selected component branch
+    # executes. The outer vmap in simulate still batches frequency samples.
+    output_matrix = lax.map(
+        lambda item: lax.switch(item[0], FUNCTIONS, item[1]),
+        (function_indices, function_inputs),
+    )
     outputs = output_matrix[output_indices[0], output_indices[1]]
     return matrix.at[matrix_indices[0], matrix_indices[1]].set(outputs)
 
@@ -402,13 +407,12 @@ def simulate(
         """
         return jnp.einsum("bij,bj->bi", matrix_batch, vector_batch)
 
-    # Project noise sources using the adjoint detector weights.
+    # Project noise sources into the system and propagate through the signal matrix.
     noise_sources = vmap(matmul_single_batch, in_axes=(None, 0))(noise_matrix, noise_weights)
+    covariances = vmap(vmap(solve), in_axes=(None, 0))(signal_matrix[:, :, :-1], noise_sources)
 
-    # With A^H w = d, d^H A^-1 N w = w^H N w. Contracting with the
-    # existing adjoint weights avoids a second solve for each detector.
-    # This identity does not require the noise matrix N to be Hermitian.
-    temporary_sum = jnp.sum(jnp.real(noise_sources * jnp.conjugate(noise_weights)), axis=2)
+    # Convert propagated covariances into amplitude spectral density.
+    temporary_sum = jnp.sum(jnp.real(covariances * jnp.conjugate(carrier_selections)), axis=2)
     noise = jnp.sqrt(2 * temporary_sum * UNIT_VACUUM * H_PLANCK * F0 * 0.25)
 
     return carrier.T, signal.T, noise.squeeze()

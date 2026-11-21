@@ -5,7 +5,7 @@
 - Starting checkout / candidate parent: `0bf57ae2af4a377f72cb34a3d6a328c714baafc8`
 - Public simulator baseline: `02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f`
 - Managed session label: `seed-agent`; conversation identifier unavailable in supplied context. Local `.lab/sessions/seed-agent/status.json` is absent. Supervisor owns session continuity and submission.
-- Budget: four distinct candidates or one hour; candidate 2/4 is now prepared. Initial supervisor allowance: 3599 seconds; allowance at start of candidate 2 turn: 3260 seconds. No commits, pushes, SSH calls, local benchmark runs, or evaluator submissions made by agent.
+- Budget: four distinct candidates or one hour; candidate 3/4 is now prepared. Initial supervisor allowance: 3599 seconds; allowances at start of candidate 2/3 turns: 3260/2662 seconds. No commits, pushes, SSH calls, local benchmark runs, or evaluator submissions made by agent.
 
 ## Baseline evidence supplied by maintainer
 
@@ -76,7 +76,7 @@ Unchanged AMD official complete first-evaluation totals: 35.821919, 35.614326, 3
 
 ## Candidate 2: contract noise directly with existing adjoint weights
 
-- Candidate SHA: pending supervisor commit. Current parent checkout after supervisor feedback commit: `ad2e4e6b7b44c24a1ea6c8c5e276012573d9eccd`.
+- Candidate SHA: `7f3cf9c316ce87a98afccb402bffc34e4ff71532`. Parent checkout after supervisor feedback commit: `ad2e4e6b7b44c24a1ea6c8c5e276012573d9eccd`.
 - Attribution: `differometor/__init__.py` restored byte-for-byte from the public baseline. The only simulator difference from that baseline is the noise contraction in `differometor/simulate.py`; the rejected import experiment is not combined with it.
 - Actual workload dimensions established from saved output shapes, the fixture and builder: carrier 286 unknowns with one carrier sample; signal 751 unknowns at 101 frequencies. The fixture contains one non-auxiliary `qnoised` and no `qhd`, hence D=1. Builder selection vectors are `(1, 1, 751)`, broadcast selections/weights/sources are `(1, 101, 751)`, signal augmented matrices are `(101, 751, 752)`, and both signal/noise coefficients are `(101, 751, 751)`. Dimensions are traced from source and actual fixture/output evidence, not collected from live intermediate arrays.
 - The detector `vmap` shares the coefficient matrix, but D=1 means there are no multiple detector right-hand sides to consolidate in this benchmark. The signal solve and final noise covariance solve use the same A; the adjoint noise solve uses A^H.
@@ -85,10 +85,86 @@ Unchanged AMD official complete first-evaluation totals: 35.821919, 35.614326, 3
 - Hypothesis: removing that primal solve and its automatic-differentiation work reduces lowering/compilation, execution and saved residual costs even if A's LU is already shared. This is not a claim of one fewer LU or a measured speedup. Measured candidate 1 forward/gradient execution (12.145592/2.959628 s) and compilation (13.498422/5.032317 s) justify testing work removal in this path.
 - No custom derivative, sparse solve, environment change, reduced frequency/parameter workload, or benchmark change. JAX differentiates the rewritten ordinary operations using its existing rules.
 - Independent local algebra check used Python complex arithmetic with pivoted Gaussian elimination on 50 deterministic nonsingular complex 3x3 systems, including non-Hermitian N. Maximum old/new scalar absolute difference: 5.551115123125783e-17. Central finite differences across all real and imaginary coordinates of A, N and d (2100 coordinate checks, step 1e-4) differed by at most 8.326672684688674e-13. Syntax checks passed. This checks the conjugation identity, not JAX autodiff, conditioning of the optical system or the official workload.
-- Screen/full IDs, exact candidate SHA, timings and all physical/gradient array errors: pending. Reject or revise if strict comparisons fail; algebraic equivalence does not guarantee acceptable floating-point errors.
+
+### Candidate 2 screen result
+
+- Run `c778afc254774a8fa06a48d537060e5f`; status `completed`; official passed: False.
+- Complete first-run 34.559248321 s; process wall 36.025392322 s; peak RSS 13364528 KiB.
+- Trace/lower/compile total 19.521495372 s; warm median None s.
+
+| Phase | Seconds |
+| --- | ---: |
+| imports | 0.291708481 |
+| initialize | 0.002907399 |
+| load | 0.001493745 |
+| build | 0.747528672 |
+| forward_lower | 1.157311449 |
+| forward_compile | 12.823296536 |
+| forward | 11.260637188 |
+| sensitivity_lower | 0.101338428 |
+| sensitivity_compile | 0.537749220 |
+| sensitivity | 0.000859711 |
+| gradient_lower | 0.289564095 |
+| gradient_compile | 4.612235645 |
+| gradient | 2.732303066 |
+| host_transfer | 0.000314686 |
+
+### Candidate 2 full result
+
+- Run `a7b341dc0cc64363922bcb3023a14537`; status `failed`; official passed: True.
+- Complete first-run 34.748464059 s; process wall 119.565854659 s; peak RSS 13357656 KiB.
+- Trace/lower/compile total 19.660805035 s; warm median 14.104938676580787 s.
+
+| Phase | Seconds |
+| --- | ---: |
+| imports | 0.288974404 |
+| initialize | 0.002927929 |
+| load | 0.001416976 |
+| build | 0.765081676 |
+| forward_lower | 1.190503992 |
+| forward_compile | 12.884684827 |
+| forward | 11.235905420 |
+| sensitivity_lower | 0.108191963 |
+| sensitivity_compile | 0.534301264 |
+| sensitivity | 0.000866069 |
+| gradient_lower | 0.294474423 |
+| gradient_compile | 4.648648566 |
+| gradient | 2.792177545 |
+| host_transfer | 0.000309005 |
+
+### Candidate 2 full numerical evidence and rejection
+
+- Official sensitivity and finite-difference spot checks passed, with all outputs and 193 gradients finite. Strict saved-array comparison failed for the gradient. This is a failed candidate, not a validated gain.
+
+| Array | Maximum absolute error | Relative L2 error | Strict pass |
+| --- | ---: | ---: | --- |
+| carrier | 0 | 0 | True |
+| signal | 0 | 0 | True |
+| noise | 6.6304434647240634e-17 | 2.3786730429782625e-08 | True |
+| sensitivity | 1.0651435375336739e-32 | 3.6026312910397894e-09 | True |
+| powers | 0 | 0 | True |
+| gradient | 0.0027978513389825821 | 4.7520976418174943e-08 | False |
+| parameters | 0 | 0 | True |
+| frequencies | 0 | 0 | True |
+
+- Strict criterion remains rtol=1e-7 plus 1e-12 times reference-array scale. The gradient's relative L2 error 4.752097641817494e-08 does not imply each coordinate passes; at least one fails the elementwise criterion. Maximum absolute gradient difference is 0.002797851338982582. The feedback does not contain maximum pointwise relative errors or failing coordinate identifiers, and the remote saved arrays are not locally present. Do not reinterpret the L2 number as a pointwise maximum or harmless rounding.
+- Reported loss changed from 9.793036291535532e-08 to 9.869846767993566e-08: absolute difference 7.681047645803422e-10, relative difference 0.00784337708667783. This near-zero objective magnifies relative loss differences. Loss is not in the saved NPZ comparator's keys.
+- Full first-run time 34.748464059 s is 0.988600941 s (2.77%) below the baseline median, and warm median is 14.104938677 s; these are timings of a rejected candidate. Peak RSS fell from candidate 1's 15140604 to 13357656 KiB. Do not promote the candidate despite runtime/memory savings.
+- Decision: preserve failed revision/run history and restore the original covariance solve and contraction. Do not weaken tolerances or add a special derivative to force agreement. Best accepted measured reference remains the unchanged baseline; candidate 1 is correctness-validated but slower.
+
+## Candidate 3: scalar component dispatch inside the frequency batch
+
+- Candidate SHA: pending supervisor commit. Parent after candidate 2 feedback: `9294d2b53fc7864c50a521a4426aff4b8e6d1e18`.
+- Scope: restore `simulate.py` baseline noise arithmetic and replace only `update`'s `vmap` over component selectors with `lax.map` over `(function_indices, function_inputs)`. Keep `lax.switch` and its 19 original component functions, output order, gathers, scatters, frequency batching, all dense solves and original covariance contraction. The initializer remains baseline-identical. No earlier experimental change is combined.
+- Code evidence: `update` currently batches the switch selector itself. [JAX switch documentation](https://docs.jax.dev/en/latest/_autosummary/jax.lax.switch.html) states that batched predicates transform conditional dispatch into selection. [JAX map documentation](https://docs.jax.dev/en/latest/_autosummary/jax.lax.map.html) describes elementwise mapping for heterogeneous control flow with the body compiled once. The component selector is shared across frequencies by the existing outer `vmap(update, in_axes=(0, None, None, None, None, None))`, so mapping over components keeps the selector scalar while retaining vectorized frequency operands. This is a source/documentation inference; the fixed evaluator's actual compiled HLO remains uninspected.
+- Hypothesis: scalar branch selection avoids evaluating unused component branches and their derivative intermediates for each component row, potentially reducing first-run compile time and memory. The baseline/candidate timings have roughly 19–21 s of lowering/compilation, making compilation work a meaningful target after the noise arithmetic rewrite failed. Loop overhead, branch residual padding or less fusion could outweigh any benefit; measure complete first-run time and do not assume improvement.
+- This changes execution structure without changing component formulas or solve/contraction formulas. Floating-point fusion and reverse accumulation may still differ, so full numerical comparison is required. No custom derivative or sparse linear algebra is introduced.
+- Local checks: syntax passed. AST comparison against the public baseline confirms the entire simulator module is identical except for the single `output_matrix` dispatch assignment in `update` (comments excluded); the package initializer is byte-for-byte baseline-identical. No local simulator/benchmark execution, dependencies, JAX settings, protected harness edits, commits or remote calls.
+- Tooling: web retrieval of tagged JAX conditionals source returned cache misses; current official API documentation was available. No version-specific lowering result is claimed from that failed retrieval.
+- Screen/full IDs, exact SHA, correctness, timings and array errors: pending supervisor evaluation.
 
 ## Handoff / precise next action
 
-Supervisor should commit and screen candidate 2, then fully validate that same SHA if eligible. Return all phase timings, RSS, full official check results, saved-array comparison and reported loss. Inspect carrier, signal, noise, sensitivity, powers and all 193 gradients. The existing comparison records maximum absolute and relative L2 errors, not maximum pointwise relative error; a numerical candidate also needs maximum pointwise relative errors (with explicit zero-reference handling) from the saved arrays, and loss comparison against the baseline report. Do not modify the protected comparator to obtain those supplemental diagnostics.
+Commit and screen candidate 3, then fully validate the same SHA if eligible. Inspect total first-run, all compile/execute phases, warm median, process wall and RSS. For numerical correctness, inspect every saved physical output and the full 193-element gradient, plus the loss reported separately. Maximum pointwise relative errors and failing-coordinate identifiers remain useful supplemental diagnostics because the existing comparator reports relative L2 error only; obtain them from the saved arrays in the fixed environment without editing the comparator or baseline artifacts.
 
-Actual compiled lowering remains an open diagnostic for any later explicit factorization-reuse proposal. Candidate 2 is justified independently by eliminating a solve via an exact scalar identity. If candidate 2 fails numerical checks, preserve its failure and inspect the affected arrays before choosing the next revision. The original baseline remains best validated; no improvement has yet been measured. Submission ownership remains with the supervisor, and the worktree/branch/session label above remain unchanged.
+Candidate 2 is rejected, candidate 1 is accepted for correctness only, and baseline `02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f` remains the best validated measured reference at median 35.737065 s. One candidate slot remains after candidate 3. Continue only within the original one-hour/four-revision budget. Session `seed-agent`, assigned worktree and branch remain as recorded above; submission ownership remains with the supervisor. Explicit solve-factor reuse is unfinished because no actual compiled-lowering evidence has been obtained.
