@@ -44014,6 +44014,56 @@
         ],
         "target_evidence": []
       }
+    },
+    {
+      "seq": 18,
+      "at": 1795294476.169394,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "feedback-d245f5258572e2f71133b3a6e0018d60ba41de83236f102749722bfad16d564a",
+        "executor": {
+          "kind": "supervisor",
+          "id": "claude-noise-reuse"
+        },
+        "kind": "explore",
+        "status": "completed",
+        "candidate_sha": "bb9a183fd64f80e322ff90b3161edbcdfd29c4ab",
+        "parents": [
+          "d09dc1d08fb046d08b3b699685d8ff780d611e87"
+        ],
+        "target_phases": [],
+        "hypothesis": "The forward pass factors A for the signal and covariance solves (XLA may CSE these) and separately factors A^H for the noise weights. Reusing A's LU with a conjugate-transpose triangular solve should remove at least one batched 751x751 complex LU of 101 rows. Expected effect is a forward execute time reduced by up to about a third of the LU work, not measured. The noise weights come from a different factorization, so the strict gradient check may fail.",
+        "change_summary": "Candidate 3 (not executed; this session cannot run code): shared LU factorization on the noise path, on top of variant A. New knob NOISE_FACTOR_REUSE=True in differometor/simulate.py:_solve_signal_and_noise. One jax.lax.linalg.lu(stop_gradient(A)) per signal row is reused by three lax.custom_linear_solve calls: the signal solve (trans 0/1), the adjoint noise-weight solve A^H y = s (trans=2; its transpose solves conj(A) z = x as conj(lu_solve(conj x, 0))) and the covariance solve. This replaces the separate LU of the transposed-conjugated matrix. NOISE_REUSE_MODE is set back to \"broadcast\" (variant A) to isolate the effect from variant B's thin gradient margin. Candidate 2 (e525ee5) full run ab7f50a0 passed official and strict: 22.564 s first run, peak RSS 9.03 GB (candidate 1: 9.93 GB), but strict gradient max normalized error 0.949 of 1.0. Notes updated.",
+        "stopping_reason": null,
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-03.json",
+        "source_digest": "d245f5258572e2f71133b3a6e0018d60ba41de83236f102749722bfad16d564a",
+        "source_digest_kind": "canonical_json_sha256",
+        "feedback_ref": {
+          "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-03.json",
+          "artifact_digest": "d245f5258572e2f71133b3a6e0018d60ba41de83236f102749722bfad16d564a",
+          "digest_kind": "canonical_json_sha256"
+        },
+        "session_id": "c3962834-70b7-4d37-bcd1-ac7a66ece4cd",
+        "iteration": null,
+        "checkpoint": null,
+        "next_input": null,
+        "input_receipt": null,
+        "evaluations": [
+          {
+            "job_id": "e8f8bf17c95f418596328d8de5ab10a3",
+            "candidate_sha": "bb9a183fd64f80e322ff90b3161edbcdfd29c4ab",
+            "profile": "screen"
+          },
+          {
+            "job_id": "f62c5c8053f84088a013f742fbe429a3",
+            "candidate_sha": "bb9a183fd64f80e322ff90b3161edbcdfd29c4ab",
+            "profile": "full"
+          }
+        ],
+        "target_evidence": []
+      }
     }
   ],
   "comparison_regime": {
@@ -44107,6 +44157,50 @@
         {
           "job_id": "ab7f50a0967e446db98e716cf8ea088a",
           "candidate_sha": "e525ee5ee4efabeeee9b3188b906fa560c0990a2",
+          "profile": "full"
+        }
+      ],
+      "target_evidence": []
+    },
+    "feedback-d245f5258572e2f71133b3a6e0018d60ba41de83236f102749722bfad16d564a": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "feedback-d245f5258572e2f71133b3a6e0018d60ba41de83236f102749722bfad16d564a",
+      "executor": {
+        "kind": "supervisor",
+        "id": "claude-noise-reuse"
+      },
+      "kind": "explore",
+      "status": "completed",
+      "candidate_sha": "bb9a183fd64f80e322ff90b3161edbcdfd29c4ab",
+      "parents": [
+        "d09dc1d08fb046d08b3b699685d8ff780d611e87"
+      ],
+      "target_phases": [],
+      "hypothesis": "The forward pass factors A for the signal and covariance solves (XLA may CSE these) and separately factors A^H for the noise weights. Reusing A's LU with a conjugate-transpose triangular solve should remove at least one batched 751x751 complex LU of 101 rows. Expected effect is a forward execute time reduced by up to about a third of the LU work, not measured. The noise weights come from a different factorization, so the strict gradient check may fail.",
+      "change_summary": "Candidate 3 (not executed; this session cannot run code): shared LU factorization on the noise path, on top of variant A. New knob NOISE_FACTOR_REUSE=True in differometor/simulate.py:_solve_signal_and_noise. One jax.lax.linalg.lu(stop_gradient(A)) per signal row is reused by three lax.custom_linear_solve calls: the signal solve (trans 0/1), the adjoint noise-weight solve A^H y = s (trans=2; its transpose solves conj(A) z = x as conj(lu_solve(conj x, 0))) and the covariance solve. This replaces the separate LU of the transposed-conjugated matrix. NOISE_REUSE_MODE is set back to \"broadcast\" (variant A) to isolate the effect from variant B's thin gradient margin. Candidate 2 (e525ee5) full run ab7f50a0 passed official and strict: 22.564 s first run, peak RSS 9.03 GB (candidate 1: 9.93 GB), but strict gradient max normalized error 0.949 of 1.0. Notes updated.",
+      "stopping_reason": null,
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-03.json",
+      "source_digest": "d245f5258572e2f71133b3a6e0018d60ba41de83236f102749722bfad16d564a",
+      "source_digest_kind": "canonical_json_sha256",
+      "feedback_ref": {
+        "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-03.json",
+        "artifact_digest": "d245f5258572e2f71133b3a6e0018d60ba41de83236f102749722bfad16d564a",
+        "digest_kind": "canonical_json_sha256"
+      },
+      "session_id": "c3962834-70b7-4d37-bcd1-ac7a66ece4cd",
+      "iteration": null,
+      "checkpoint": null,
+      "next_input": null,
+      "input_receipt": null,
+      "evaluations": [
+        {
+          "job_id": "e8f8bf17c95f418596328d8de5ab10a3",
+          "candidate_sha": "bb9a183fd64f80e322ff90b3161edbcdfd29c4ab",
+          "profile": "screen"
+        },
+        {
+          "job_id": "f62c5c8053f84088a013f742fbe429a3",
+          "candidate_sha": "bb9a183fd64f80e322ff90b3161edbcdfd29c4ab",
           "profile": "full"
         }
       ],
