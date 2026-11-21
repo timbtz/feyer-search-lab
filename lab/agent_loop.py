@@ -364,6 +364,8 @@ def evidence_only_feedback(feedback, *, name, branch, direction, candidate_sha):
 
 SHARED_EVIDENCE_SCHEMA = 'feyer-search-frontier-v1'
 SHARED_EVIDENCE_MAX_BYTES = 256 * 1024
+SHARED_EVIDENCE_MAX_AGE_SECONDS = 300
+SHARED_EVIDENCE_FUTURE_SKEW_SECONDS = 30
 
 
 def snapshot_shared_evidence(path, directory):
@@ -394,6 +396,10 @@ def snapshot_shared_evidence(path, directory):
     generated = value.get('generated_at')
     if type(generated) not in (int, float) or not math.isfinite(generated) or generated <= 0:
         raise ValueError('Shared evidence requires a positive finite generated_at timestamp')
+    now = time.time()
+    age = now - generated
+    if age > SHARED_EVIDENCE_MAX_AGE_SECONDS or age < -SHARED_EVIDENCE_FUTURE_SKEW_SECONDS:
+        raise ValueError('Shared evidence is stale or exceeds the allowed future clock skew')
     content_digest = value.get('content_digest')
     if not isinstance(content_digest, str) or re.fullmatch(r'[0-9a-f]{64}', content_digest) is None:
         raise ValueError('Shared evidence requires a valid content_digest')
@@ -420,7 +426,9 @@ def snapshot_shared_evidence(path, directory):
         temporary.replace(snapshot)
     return text, {'schema': value['schema'], 'source_path': str(path),
                   'snapshot_ref': str(snapshot), 'sha256': digest, 'bytes': len(raw),
-                  'generated_at': generated, 'read_at': time.time(),
+                  'generated_at': generated, 'read_at': now, 'age_seconds': age,
+                  'freshness_policy': {'max_age_seconds': SHARED_EVIDENCE_MAX_AGE_SECONDS,
+                                       'future_skew_seconds': SHARED_EVIDENCE_FUTURE_SKEW_SECONDS},
                   'content_digest': content_digest,
                   'source_provenance': copy.deepcopy(value['source_provenance'])}
 

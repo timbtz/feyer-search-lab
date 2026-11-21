@@ -3,6 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 import tempfile
+import time
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -11,8 +12,9 @@ from lab.agent_loop import (_run_locked, SHARED_EVIDENCE_MAX_BYTES, SHARED_EVIDE
                             snapshot_shared_evidence)
 
 
-def frontier(number=1):
-    value = dict(schema=SHARED_EVIDENCE_SCHEMA, generated_at=1000. + number,
+def frontier(number=1, generated_at=None):
+    value = dict(schema=SHARED_EVIDENCE_SCHEMA,
+                generated_at=int(time.time()) if generated_at is None else generated_at,
                 source_provenance={'team_digest': 'a'*64, 'policy_digest': 'b'*64,
                                    'evidence_digest': 'c'*64, 'collector': 'trusted-local-artifacts-v1',
                                    'instance': 'amd'},
@@ -33,17 +35,40 @@ class SharedEvidenceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             path = root/'frontier.json'
-            raw = (json.dumps(frontier(), indent=3) + '\n').encode()
+            value = frontier()
+            raw = (json.dumps(value, indent=3) + '\n').encode()
             path.write_bytes(raw)
             text, receipt = snapshot_shared_evidence(path, root/'session')
             self.assertEqual(text.encode(), raw)
             self.assertEqual(receipt['sha256'], hashlib.sha256(raw).hexdigest())
-            self.assertEqual(receipt['generated_at'], 1001.)
-            self.assertEqual(receipt['content_digest'], frontier()['content_digest'])
+            self.assertEqual(receipt['generated_at'], value['generated_at'])
+            self.assertEqual(receipt['content_digest'], value['content_digest'])
             self.assertEqual(receipt['source_provenance'], frontier()['source_provenance'])
             self.assertEqual(receipt['source_path'], str(path))
             self.assertEqual(Path(receipt['snapshot_ref']).read_bytes(), raw)
             self.assertIn('raw-job-1', text)
+
+    def test_freshness_boundaries_and_receipt_use_one_clock_read(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root/'frontier.json'
+            for age in (-30, 0, 300):
+                with self.subTest(age=age):
+                    path.write_text(json.dumps(frontier(generated_at=1000-age)))
+                    with patch('lab.agent_loop.time.time', return_value=1000) as clock:
+                        _, receipt = snapshot_shared_evidence(path, root/'session')
+                    clock.assert_called_once_with()
+                    self.assertEqual(receipt['read_at'], 1000)
+                    self.assertEqual(receipt['age_seconds'], age)
+                    self.assertEqual(receipt['freshness_policy'],
+                                     {'max_age_seconds': 300, 'future_skew_seconds': 30})
+            for age in (-30.001, 300.001):
+                with self.subTest(age=age):
+                    path.write_text(json.dumps(frontier(generated_at=1000-age)))
+                    with patch('lab.agent_loop.time.time', return_value=1000):
+                        with self.assertRaisesRegex(ValueError, 'stale|clock skew'):
+                            snapshot_shared_evidence(path, root/'rejected')
+            self.assertFalse((root/'rejected').exists())
 
     def test_bad_json_schema_nonfinite_duplicate_and_oversize_fail_closed(self):
         malformed = [b'{', b'[]', b'{"schema":NaN}', b'{"x":1,"x":2}',
