@@ -29,6 +29,13 @@ Use an isolated Python 3.12 environment with `ops/smac/requirements.lock`, setti
 on the Mac; the existing trusted client submits exact commits to the unchanged
 serial AMD queue. No AMD or shared dependency changes are needed.
 
+A separately approved evaluator lane requires `--policy-context PATH`, containing
+the coordinator's expected CPU, memory ceiling and, when known, checker identities.
+The seed must pass under that explicit policy. The frozen policy is then used for
+every history import and subsequent result; CPU-2 timings cannot train a CPU-34
+campaign. Omitting the flag retains the default CPU-2 behavior. A lane handoff is
+a new campaign and source/evidence freeze, never an in-place edit to a live round.
+
 ```
 python -m lab.topology_run init --name topology-smac-v1 \
   --state /absolute/path/.lab/campaigns/topology-smac-v1 \

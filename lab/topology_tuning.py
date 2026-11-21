@@ -106,13 +106,13 @@ def render(manifest, parameters):
     return result
 
 
-def observations(manifest, jobs, seed_job):
+def observations(manifest, jobs, seed_job, policy_context=None):
     """Only source-identical, same-cohort full evidence may train this topology."""
     validate_manifest(manifest)
-    seed = normalize_job(seed_job, expected_sha=manifest['parent_sha'])
+    seed = normalize_job(seed_job, expected_sha=manifest['parent_sha'], policy_context=policy_context)
     if not seed['eligible_full']:
         raise ValueError('Parent requires an eligible exact full official and strict pass')
-    policy = policy_from_job(seed_job)
+    policy = policy_from_job(seed_job, policy_context=policy_context)
     seed = normalize_job(seed_job, expected_sha=manifest['parent_sha'], policy_context=policy)
     base_hashes = {p: digest(s) for p, s in manifest['base_sources'].items()}
     if seed_job['report.json']['source']['simulator_files_sha256'] != base_hashes:
