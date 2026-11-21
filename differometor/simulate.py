@@ -70,6 +70,12 @@ def _evaluate_component(function_and_inputs):
     return lax.switch(function_index, branches, function_inputs)
 
 
+@partial(jit, static_argnums=(0,), inline=True)
+def _evaluate_component_group(function_index, function_inputs):
+    """Vectorize one component type without batching a dynamic branch selector."""
+    return vmap(FUNCTIONS[function_index])(function_inputs)
+
+
 def _save_assembly_indices(primitive, *avals, **params):
     """Retain only discrete indexing results; recompute complex arithmetic."""
     # JAX 0.9.0 inserts reduce_precision on saved inexact residuals, which
@@ -92,13 +98,7 @@ def _save_assembly_indices(primitive, *avals, **params):
     )
 
 
-@partial(jit, static_argnums=(0,), inline=True)
-@partial(jax.checkpoint, static_argnums=(0,), prevent_cse=False, policy=_save_assembly_indices)
-def _evaluate_component_group(function_index, function_inputs):
-    """Recompute one component type, retaining its gathered inputs outside."""
-    return vmap(FUNCTIONS[function_index])(function_inputs)
-
-
+@partial(jax.checkpoint, prevent_cse=False, policy=_save_assembly_indices)
 def _component_values(
     parameters,
     function_input_indices,
@@ -106,7 +106,7 @@ def _component_values(
     function_indices,
     component_groups,
 ):
-    """Checkpoint component groups; keep gathers and output routing outside."""
+    """Recompute component values; carrier coupling and dense assembly stay outside."""
     output_rows = output_indices[0]
     # Keep the function selector scalar so only the selected component branch
     # executes. The outer vmap in simulate still batches frequency samples.
@@ -588,9 +588,13 @@ def simulate(
             def block_assemble(blocks):
                 block_parameters, block_entries = blocks
                 block_signal_matrix, block_noise_matrix = assemble(block_parameters, block_entries)
+                # Stack coefficients and RHS separately so the solves do not
+                # slice a full frequency batch of augmented matrices. Assembly
+                # arithmetic and its component checkpoint remain unchanged.
+                split_signal = (block_signal_matrix[:, :, :-1], block_signal_matrix[:, :, -1])
                 if reuse_noise:
-                    return (block_signal_matrix,)
-                return block_signal_matrix, block_noise_matrix
+                    return split_signal
+                return (*split_signal, block_noise_matrix)
 
             # Component values checkpoint internally; dense assembly and solves
             # remain outside recomputation. The official JIT stages are unchanged.
@@ -599,9 +603,11 @@ def simulate(
                 (parameters, row_carrier_entries),
                 chunk_size,
             )
-            assembled_signal = assembled[0]
-            assembled_noise = broadcast_noise(assembled[1] if len(assembled) > 1 else None)
-            signal, noise = _solve_signal_and_noise(assembled_signal, assembled_noise, base_carrier_selections)
+            assembled_signal, assembled_rhs = assembled[:2]
+            assembled_noise = broadcast_noise(assembled[2] if len(assembled) > 2 else None)
+            signal, noise = _solve_signal_and_noise(
+                assembled_signal, assembled_noise, base_carrier_selections, assembled_rhs
+            )
         else:
             raise ValueError(f"Unknown FREQUENCY_LOOP_SCOPE {FREQUENCY_LOOP_SCOPE!r}")
 
@@ -759,13 +765,20 @@ def _assemble_signal_and_noise(
     return signal_matrix, noise_matrix
 
 
-def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections):
+def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections, signal_rhs=None):
     """Solve the signal and quantum-noise systems for B assembled signal rows.
 
     `signal_matrix` (B, SN, SN + 1), `noise_matrix` (B, NN, NN) and detector
     selections (D, 1 or B, SN). Returns the signal solution (B, SN) and the
-    unsqueezed noise amplitude spectral density (D, B).
+    unsqueezed noise amplitude spectral density (D, B). With signal_rhs (B, SN),
+    signal_matrix contains only the coefficients (B, SN, SN).
     """
+    if signal_rhs is None:
+        coefficients = signal_matrix[:, :, :-1]
+        signal_rhs = signal_matrix[:, :, -1]
+    else:
+        coefficients = signal_matrix
+
     carrier_selections = base_carrier_selections
     carrier_selections = jnp.broadcast_to(
         carrier_selections,
@@ -779,7 +792,7 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
         # solve (A^H y = s via trans=2) and the covariance solve. Each solve is a
         # custom_linear_solve whose matvec depends differentiably on A, mirroring
         # jnp.linalg.solve's structure (factorization of stop_gradient(A)).
-        system = signal_matrix[:, :, :-1].astype(jnp.complex128)
+        system = coefficients.astype(jnp.complex128)
         lu_matrix, lu_pivots, _ = jax.lax.linalg.lu(lax.stop_gradient(system))
         factors = (lu_matrix, lu_pivots)
 
@@ -804,20 +817,20 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
                 transpose_solve=lambda _, x: jnp.conjugate(lu_apply(jnp.conjugate(x), 0)),
             )
 
-        signal = direct_solve(signal_matrix[:, :, -1])
+        signal = direct_solve(signal_rhs)
         if NOISE_FACTOR_REUSE == "all":
             # Failed strict gradient (candidate 3, bb9a183): A^H via A's LU drifts.
             noise_weights = vmap(adjoint_solve)(carrier_selections)
         else:
             # "direct": keep the original separate LU of A^H for the noise weights.
-            transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(signal_matrix[:, :, :-1]), (0, 2, 1))
+            transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(coefficients), (0, 2, 1))
             noise_weights = vmap(vmap(solve), in_axes=(None, 0))(
                 transposed_conjugated_signal_matrix, carrier_selections
             )
     else:
-        signal = vmap(solve)(signal_matrix[:, :, :-1], signal_matrix[:, :, -1])
+        signal = vmap(solve)(coefficients, signal_rhs)
         # Back-propagate detector weights by solving the transposed conjugated signal system.
-        transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(signal_matrix[:, :, :-1]), (0, 2, 1))
+        transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(coefficients), (0, 2, 1))
         noise_weights = vmap(vmap(solve), in_axes=(None, 0))(transposed_conjugated_signal_matrix, carrier_selections)
 
     def matmul_single_batch(matrix_batch: jnp.ndarray, vector_batch: jnp.ndarray) -> jnp.ndarray:
@@ -847,7 +860,7 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
     if NOISE_FACTOR_REUSE != "off":
         covariances = vmap(direct_solve)(noise_sources)
     else:
-        covariances = vmap(vmap(solve), in_axes=(None, 0))(signal_matrix[:, :, :-1], noise_sources)
+        covariances = vmap(vmap(solve), in_axes=(None, 0))(coefficients, noise_sources)
 
     # Convert propagated covariances into amplitude spectral density.
     temporary_sum = jnp.sum(jnp.real(covariances * jnp.conjugate(carrier_selections)), axis=2)
