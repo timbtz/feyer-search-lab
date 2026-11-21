@@ -126,6 +126,16 @@ def apply(state, command, actor, data, now=None):
     state = copy.deepcopy(state)
     actor = name(actor)
     now = time.time() if now is None else now
+    if command == 'research-batch':
+        if actor != state['coordinator']:
+            raise ValueError('Only the coordinator imports external research records')
+        if not isinstance(data, list) or not data or len(data) > 500:
+            raise ValueError('Research batch must contain 1 to 500 records')
+        output = []
+        for record in data:
+            state, imported = apply(state, 'research', actor, record, now=now)
+            output.append(imported)
+        return state, output
     if command == 'research':
         if actor != state['coordinator']:
             raise ValueError('Only the coordinator imports external research records')
@@ -458,6 +468,8 @@ def main(argv=None):
     source.add_argument('--feedback', type=Path)
     research.add_argument('--executor')
     research.add_argument('--source-ref')
+    batch = sub.add_parser('research-batch', help='Atomically import reviewed research records')
+    batch.add_argument('--spec', required=True, type=Path)
     regime = sub.add_parser('comparison-regime')
     regime.add_argument('--mode', choices=('serial', 'concurrent'), required=True)
     regime.add_argument('--reason', required=True)
@@ -487,6 +499,7 @@ def main(argv=None):
     else:
         data = {}
         if args.command == 'add': data = json.loads(args.spec.read_text())
+        elif args.command == 'research-batch': data = json.loads(args.spec.read_text())
         elif args.command == 'research':
             if args.spec:
                 data = json.loads(args.spec.read_text())

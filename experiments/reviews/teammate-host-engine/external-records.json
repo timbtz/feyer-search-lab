@@ -1,0 +1,415 @@
+[
+  {
+    "schema": "feyer-research-record-v1",
+    "record_id": "teammate-baseline",
+    "executor": {
+      "kind": "manual",
+      "id": "akshat-host-engine"
+    },
+    "kind": "explore",
+    "status": "evaluated",
+    "candidate_sha": "807323ff9ecb54449744334f34ac4a283abffe48",
+    "parents": [],
+    "target_phases": [],
+    "hypothesis": "unmodified upstream",
+    "change_summary": "baseline: unmodified upstream",
+    "source_ref": "https://github.com/akshat-bhat/Feyer/blob/de67f012553d00621fc25404ddecde33e2318493/results/results.csv",
+    "source_digest": "6c9f0d0fdcde48df56f57b0c7d5bf06faf3df9bef9b3648a68de81f6bcd4e5bd",
+    "source_digest_kind": "file_bytes_sha256",
+    "evaluations": [],
+    "iteration": 1,
+    "feedback_ref": {
+      "artifact_ref": "https://github.com/akshat-bhat/Feyer/blob/de67f012553d00621fc25404ddecde33e2318493/results/results.csv",
+      "artifact_digest": "6c9f0d0fdcde48df56f57b0c7d5bf06faf3df9bef9b3648a68de81f6bcd4e5bd"
+    },
+    "reported_measurement": {
+      "candidate_sha": "807323ff9ecb54449744334f34ac4a283abffe48",
+      "source_ref": "https://github.com/akshat-bhat/Feyer/blob/de67f012553d00621fc25404ddecde33e2318493/results/results.csv",
+      "source_digest": "6c9f0d0fdcde48df56f57b0c7d5bf06faf3df9bef9b3648a68de81f6bcd4e5bd",
+      "sample_count": 3,
+      "observed_at": 1795292542.0,
+      "instance": "akshat-amd-source-report",
+      "metrics": {
+        "total": 35.815832836553454,
+        "compilation": 19.516995031386614,
+        "setup": 1.0074703302234411,
+        "forward": 12.288138799369335,
+        "sensitivity": 0.0008956547826528549,
+        "gradient": 3.0032425578683615,
+        "transfer": 0.0005491077899932861
+      },
+      "phases": {
+        "imports": 0.274414474144578,
+        "initialize": 0.0037319157272577286,
+        "load": 0.0014638081192970276,
+        "build": 0.7278601322323084,
+        "forward_lower": 1.1379729006439447,
+        "forward_compile": 12.908685393631458,
+        "forward": 12.288138799369335,
+        "sensitivity_lower": 0.10418775118887424,
+        "sensitivity_compile": 0.5798288248479366,
+        "sensitivity": 0.0008956547826528549,
+        "gradient_lower": 0.29135788790881634,
+        "gradient_compile": 4.640004083514214,
+        "gradient": 3.0032425578683615,
+        "host_transfer": 0.0005491077899932861
+      },
+      "warm_timing": {
+        "runtime_median": 15.458927204832435
+      },
+      "range_seconds": [
+        35.737014988437295,
+        37.56007388792932
+      ],
+      "reported_official_pass": true,
+      "reported_arrays_pass": true,
+      "comparison_policy": {
+        "rtol": 1e-06,
+        "scale_atol": 1e-09,
+        "norm_rtol": 1e-06
+      },
+      "limits": [
+        "Source-authored aggregate; not a trusted lab evaluation.",
+        "Phase medians need not sum to the median total.",
+        "Only final and baseline representative full reports are in source; intermediate ledger rows are summaries.",
+        "No independent timing comparison across instances."
+      ]
+    }
+  },
+  {
+    "schema": "feyer-research-record-v1",
+    "record_id": "teammate-t5-host-engine",
+    "executor": {
+      "kind": "manual",
+      "id": "akshat-host-engine"
+    },
+    "kind": "refine",
+    "status": "evaluated",
+    "candidate_sha": "8bed84c959199df9ee82a07a9949bf097fcc3b05",
+    "parents": [
+      "807323ff9ecb54449744334f34ac4a283abffe48"
+    ],
+    "target_phases": [
+      "compilation",
+      "forward",
+      "gradient",
+      "setup"
+    ],
+    "hypothesis": "sparse SuperLU + NumPy jaxpr interpreter host engine",
+    "change_summary": "T5-host-engine: sparse SuperLU + NumPy jaxpr interpreter host engine",
+    "source_ref": "https://github.com/akshat-bhat/Feyer/blob/de67f012553d00621fc25404ddecde33e2318493/results/results.csv",
+    "source_digest": "6c9f0d0fdcde48df56f57b0c7d5bf06faf3df9bef9b3648a68de81f6bcd4e5bd",
+    "source_digest_kind": "file_bytes_sha256",
+    "evaluations": [],
+    "iteration": 2,
+    "feedback_ref": {
+      "artifact_ref": "https://github.com/akshat-bhat/Feyer/blob/de67f012553d00621fc25404ddecde33e2318493/results/results.csv",
+      "artifact_digest": "6c9f0d0fdcde48df56f57b0c7d5bf06faf3df9bef9b3648a68de81f6bcd4e5bd"
+    },
+    "reported_measurement": {
+      "candidate_sha": "8bed84c959199df9ee82a07a9949bf097fcc3b05",
+      "source_ref": "https://github.com/akshat-bhat/Feyer/blob/de67f012553d00621fc25404ddecde33e2318493/results/results.csv",
+      "source_digest": "6c9f0d0fdcde48df56f57b0c7d5bf06faf3df9bef9b3648a68de81f6bcd4e5bd",
+      "sample_count": 3,
+      "observed_at": 1795294352.0,
+      "instance": "akshat-amd-source-report",
+      "metrics": {
+        "total": 1.74326297827065,
+        "compilation": 0.3949952106922865,
+        "setup": 1.0831319317221642,
+        "forward": 0.21787815541028976,
+        "sensitivity": 0.0004709288477897644,
+        "gradient": 0.04391123726963997,
+        "transfer": 0.00017903558909893036
+      },
+      "phases": {
+        "imports": 0.26707049272954464,
+        "initialize": 0.0036587435752153397,
+        "load": 0.0015479587018489838,
+        "build": 0.8108547367155552,
+        "forward_lower": 0.003638908267021179,
+        "forward_compile": 0.005488304421305656,
+        "forward": 0.21787815541028976,
+        "sensitivity_lower": 0.0460723340511322,
+        "sensitivity_compile": 0.18080933578312397,
+        "sensitivity": 0.0004709288477897644,
+        "gradient_lower": 0.010558422654867172,
+        "gradient_compile": 0.15068889781832695,
+        "gradient": 0.04391123726963997,
+        "host_transfer": 0.00017903558909893036
+      },
+      "warm_timing": {
+        "runtime_median": 0.16546816937625408
+      },
+      "range_seconds": [
+        1.7301594875752926,
+        1.7463989164680243
+      ],
+      "reported_official_pass": true,
+      "reported_arrays_pass": true,
+      "comparison_policy": {
+        "rtol": 1e-06,
+        "scale_atol": 1e-09,
+        "norm_rtol": 1e-06
+      },
+      "limits": [
+        "Source-authored aggregate; not a trusted lab evaluation.",
+        "Phase medians need not sum to the median total.",
+        "Only final and baseline representative full reports are in source; intermediate ledger rows are summaries.",
+        "No independent timing comparison across instances."
+      ]
+    }
+  },
+  {
+    "schema": "feyer-research-record-v1",
+    "record_id": "teammate-t5b-numpy-build-detectors",
+    "executor": {
+      "kind": "manual",
+      "id": "akshat-host-engine"
+    },
+    "kind": "refine",
+    "status": "evaluated",
+    "candidate_sha": "f5f2b5bda7b66ba28e5f8dd9b6fd86a4fb22e081",
+    "parents": [
+      "8bed84c959199df9ee82a07a9949bf097fcc3b05"
+    ],
+    "target_phases": [
+      "compilation",
+      "forward",
+      "gradient",
+      "setup"
+    ],
+    "hypothesis": "+numpy build, direct SuperLU, callback detectors",
+    "change_summary": "T5b-numpy-build-detectors: +numpy build, direct SuperLU, callback detectors",
+    "source_ref": "https://github.com/akshat-bhat/Feyer/blob/de67f012553d00621fc25404ddecde33e2318493/results/results.csv",
+    "source_digest": "6c9f0d0fdcde48df56f57b0c7d5bf06faf3df9bef9b3648a68de81f6bcd4e5bd",
+    "source_digest_kind": "file_bytes_sha256",
+    "evaluations": [],
+    "iteration": 3,
+    "feedback_ref": {
+      "artifact_ref": "https://github.com/akshat-bhat/Feyer/blob/de67f012553d00621fc25404ddecde33e2318493/results/results.csv",
+      "artifact_digest": "6c9f0d0fdcde48df56f57b0c7d5bf06faf3df9bef9b3648a68de81f6bcd4e5bd"
+    },
+    "reported_measurement": {
+      "candidate_sha": "f5f2b5bda7b66ba28e5f8dd9b6fd86a4fb22e081",
+      "source_ref": "https://github.com/akshat-bhat/Feyer/blob/de67f012553d00621fc25404ddecde33e2318493/results/results.csv",
+      "source_digest": "6c9f0d0fdcde48df56f57b0c7d5bf06faf3df9bef9b3648a68de81f6bcd4e5bd",
+      "sample_count": 3,
+      "observed_at": 1795294952.0,
+      "instance": "akshat-amd-source-report",
+      "metrics": {
+        "total": 0.8149934038519859,
+        "compilation": 0.2275371253490448,
+        "setup": 0.4131960067898035,
+        "forward": 0.1304169874638319,
+        "sensitivity": 0.0010176114737987518,
+        "gradient": 0.04325065016746521,
+        "transfer": 0.00018141977488994598
+      },
+      "phases": {
+        "imports": 0.2684727367013693,
+        "initialize": 0.0036597158759832382,
+        "load": 0.0014572180807590485,
+        "build": 0.13960633613169193,
+        "forward_lower": 0.003624826669692993,
+        "forward_compile": 0.004698591306805611,
+        "forward": 0.1304169874638319,
+        "sensitivity_lower": 0.018868504092097282,
+        "sensitivity_compile": 0.13208087347447872,
+        "sensitivity": 0.0010176114737987518,
+        "gradient_lower": 0.007984910160303116,
+        "gradient_compile": 0.06233467161655426,
+        "gradient": 0.04325065016746521,
+        "host_transfer": 0.00018141977488994598
+      },
+      "warm_timing": {
+        "runtime_median": 0.14671711437404156
+      },
+      "range_seconds": [
+        0.8120983392000198,
+        0.8186237271875143
+      ],
+      "reported_official_pass": true,
+      "reported_arrays_pass": true,
+      "comparison_policy": {
+        "rtol": 1e-06,
+        "scale_atol": 1e-09,
+        "norm_rtol": 1e-06
+      },
+      "limits": [
+        "Source-authored aggregate; not a trusted lab evaluation.",
+        "Phase medians need not sum to the median total.",
+        "Only final and baseline representative full reports are in source; intermediate ledger rows are summaries.",
+        "No independent timing comparison across instances."
+      ]
+    }
+  },
+  {
+    "schema": "feyer-research-record-v1",
+    "record_id": "teammate-t6-polish-refined",
+    "executor": {
+      "kind": "manual",
+      "id": "akshat-host-engine"
+    },
+    "kind": "refine",
+    "status": "evaluated",
+    "candidate_sha": "6b3e9fb1874280bf2b113fb12af9e6bab300f2a8",
+    "parents": [
+      "f5f2b5bda7b66ba28e5f8dd9b6fd86a4fb22e081"
+    ],
+    "target_phases": [
+      "compilation",
+      "forward",
+      "gradient",
+      "setup"
+    ],
+    "hypothesis": "+active-input Jacobians, own forward-mode rules, SuperLU relax/panel, 1-step iterative refinement",
+    "change_summary": "T6-polish-refined: +active-input Jacobians, own forward-mode rules, SuperLU relax/panel, 1-step iterative refinement",
+    "source_ref": "https://github.com/akshat-bhat/Feyer/blob/de67f012553d00621fc25404ddecde33e2318493/results/results.csv",
+    "source_digest": "6c9f0d0fdcde48df56f57b0c7d5bf06faf3df9bef9b3648a68de81f6bcd4e5bd",
+    "source_digest_kind": "file_bytes_sha256",
+    "evaluations": [],
+    "iteration": 4,
+    "feedback_ref": {
+      "artifact_ref": "https://github.com/akshat-bhat/Feyer/blob/de67f012553d00621fc25404ddecde33e2318493/results/results.csv",
+      "artifact_digest": "6c9f0d0fdcde48df56f57b0c7d5bf06faf3df9bef9b3648a68de81f6bcd4e5bd"
+    },
+    "reported_measurement": {
+      "candidate_sha": "6b3e9fb1874280bf2b113fb12af9e6bab300f2a8",
+      "source_ref": "https://github.com/akshat-bhat/Feyer/blob/de67f012553d00621fc25404ddecde33e2318493/results/results.csv",
+      "source_digest": "6c9f0d0fdcde48df56f57b0c7d5bf06faf3df9bef9b3648a68de81f6bcd4e5bd",
+      "sample_count": 3,
+      "observed_at": 1795296257.0,
+      "instance": "akshat-amd-source-report",
+      "metrics": {
+        "total": 0.7373857572674751,
+        "compilation": 0.2268895898014307,
+        "setup": 0.3713069409132004,
+        "forward": 0.09641080163419247,
+        "sensitivity": 0.0010914113372564316,
+        "gradient": 0.03989305533468723,
+        "transfer": 0.0001777801662683487
+      },
+      "phases": {
+        "imports": 0.2672565057873726,
+        "initialize": 0.0036406051367521286,
+        "load": 0.0014747679233551025,
+        "build": 0.09893506206572056,
+        "forward_lower": 0.00416179932653904,
+        "forward_compile": 0.005487298592925072,
+        "forward": 0.09641080163419247,
+        "sensitivity_lower": 0.019359691068530083,
+        "sensitivity_compile": 0.13230349123477936,
+        "sensitivity": 0.0010914113372564316,
+        "gradient_lower": 0.007989551872015,
+        "gradient_compile": 0.05729841999709606,
+        "gradient": 0.03989305533468723,
+        "host_transfer": 0.0001777801662683487
+      },
+      "warm_timing": {
+        "runtime_median": 0.12092949636280537
+      },
+      "range_seconds": [
+        0.735561229288578,
+        0.7382235210388899
+      ],
+      "reported_official_pass": true,
+      "reported_arrays_pass": true,
+      "comparison_policy": {
+        "rtol": 1e-06,
+        "scale_atol": 1e-09,
+        "norm_rtol": 1e-06
+      },
+      "limits": [
+        "Source-authored aggregate; not a trusted lab evaluation.",
+        "Phase medians need not sum to the median total.",
+        "Only final and baseline representative full reports are in source; intermediate ledger rows are summaries.",
+        "No independent timing comparison across instances."
+      ]
+    }
+  },
+  {
+    "schema": "feyer-research-record-v1",
+    "record_id": "teammate-t7-generalize",
+    "executor": {
+      "kind": "manual",
+      "id": "akshat-host-engine"
+    },
+    "kind": "refine",
+    "status": "evaluated",
+    "candidate_sha": "8d39af76ffce6d3e92e949c621ceac8e578f6b05",
+    "parents": [
+      "6b3e9fb1874280bf2b113fb12af9e6bab300f2a8"
+    ],
+    "target_phases": [
+      "compilation",
+      "forward",
+      "gradient",
+      "setup"
+    ],
+    "hypothesis": "interpreter coverage check + JAX fallback, NaN on singular systems",
+    "change_summary": "T7-generalize: interpreter coverage check + JAX fallback, NaN on singular systems",
+    "source_ref": "https://github.com/akshat-bhat/Feyer/blob/de67f012553d00621fc25404ddecde33e2318493/results/results.csv",
+    "source_digest": "6c9f0d0fdcde48df56f57b0c7d5bf06faf3df9bef9b3648a68de81f6bcd4e5bd",
+    "source_digest_kind": "file_bytes_sha256",
+    "evaluations": [],
+    "iteration": 5,
+    "feedback_ref": {
+      "artifact_ref": "https://github.com/akshat-bhat/Feyer/blob/de67f012553d00621fc25404ddecde33e2318493/results/results.csv",
+      "artifact_digest": "6c9f0d0fdcde48df56f57b0c7d5bf06faf3df9bef9b3648a68de81f6bcd4e5bd"
+    },
+    "reported_measurement": {
+      "candidate_sha": "8d39af76ffce6d3e92e949c621ceac8e578f6b05",
+      "source_ref": "https://github.com/akshat-bhat/Feyer/blob/de67f012553d00621fc25404ddecde33e2318493/results/results.csv",
+      "source_digest": "6c9f0d0fdcde48df56f57b0c7d5bf06faf3df9bef9b3648a68de81f6bcd4e5bd",
+      "sample_count": 3,
+      "observed_at": 1795297632.0,
+      "instance": "akshat-amd-source-report",
+      "metrics": {
+        "total": 0.7434498276561499,
+        "compilation": 0.22758717648684978,
+        "setup": 0.37067904509603977,
+        "forward": 0.09800533577799797,
+        "sensitivity": 0.0010866820812225342,
+        "gradient": 0.040460504591464996,
+        "transfer": 0.00017658062279224396
+      },
+      "phases": {
+        "imports": 0.2667942959815264,
+        "initialize": 0.0036653969436883926,
+        "load": 0.0015448201447725296,
+        "build": 0.09867453202605247,
+        "forward_lower": 0.004169104620814323,
+        "forward_compile": 0.005492003634572029,
+        "forward": 0.09800533577799797,
+        "sensitivity_lower": 0.01925414428114891,
+        "sensitivity_compile": 0.1324392482638359,
+        "sensitivity": 0.0010866820812225342,
+        "gradient_lower": 0.007949749007821083,
+        "gradient_compile": 0.05910369008779526,
+        "gradient": 0.040460504591464996,
+        "host_transfer": 0.00017658062279224396
+      },
+      "warm_timing": {
+        "runtime_median": 0.12042487598955631
+      },
+      "range_seconds": [
+        0.7363482564687729,
+        0.7460521515458822
+      ],
+      "reported_official_pass": true,
+      "reported_arrays_pass": true,
+      "comparison_policy": {
+        "rtol": 1e-06,
+        "scale_atol": 1e-09,
+        "norm_rtol": 1e-06
+      },
+      "limits": [
+        "Source-authored aggregate; not a trusted lab evaluation.",
+        "Phase medians need not sum to the median total.",
+        "Only final and baseline representative full reports are in source; intermediate ledger rows are summaries.",
+        "No independent timing comparison across instances."
+      ]
+    }
+  }
+]

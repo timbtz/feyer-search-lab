@@ -1,0 +1,16 @@
+$ python scripts/check_setups.py      (AMD EPYC 9334, 1 core; 60 frequencies 10 Hz - 5 kHz)
+new engine vs original dense implementation; |dlog sens| = max |log sensitivity difference|,
+carrier/signal/noise = max abs difference / max abs value, grad = relative norm difference of the gradient
+
+voyager/space_modulation           ok   |dlog sens| 4.7e-13  carrier 0.0e+00 signal 2.5e-09 noise 3.2e-13  grad(48) 2.0e-13  time 9.9s -> 0.23s
+aligo/space_modulation             ok   |dlog sens| 6.7e-11  carrier 0.0e+00 signal 7.6e-11 noise 5.9e-13  grad(30) 3.9e-11  time 9.6s -> 0.15s
+uifo-2x2-random/space_modulation   ok   |dlog sens| 1.1e-10  carrier 2.5e-16 signal 3.6e-10 noise 5.4e-12  grad(105) 5.4e-12  time 11.3s -> 0.21s
+voyager/amplitude_modulation       ok*  |dlog sens| 4.0e-06  carrier 0.0e+00 signal 1.0e-10 noise 1.5e-13  grad(48) 4.0e-07  time 9.8s -> 0.19s
+aligo/amplitude_modulation         ok   |dlog sens| 5.2e-08  carrier 0.0e+00 signal 7.0e-11 noise 3.2e-13  grad(30) 8.7e-08  time 9.8s -> 0.15s
+uifo-2x2-random/amplitude_modulation ok   |dlog sens| 5.0e-10  carrier 2.5e-16 signal 4.1e-15 noise 3.7e-16  grad(105) 6.3e-11  time 10.4s -> 0.21s
+voyager/frequency_modulation       ok*  |dlog sens| 1.5e-01  carrier 0.0e+00 signal 4.3e-09 noise 2.6e-13  grad(48) 2.9e-04  time 9.2s -> 0.18s
+aligo/frequency_modulation         ok   |dlog sens| 2.0e-08  carrier 0.0e+00 signal 2.2e-09 noise 3.5e-13  grad(30) 3.0e-10  time 8.5s -> 0.14s
+uifo-2x2-random/frequency_modulation ok   |dlog sens| 2.8e-09  carrier 2.5e-16 signal 3.8e-15 noise 3.7e-16  grad(105) 3.0e-10  time 9.7s -> 0.21s
+uifo_20_5000.json                  ok   |dlog sens| 6.4e-10  carrier 1.0e-14 signal 1.8e-10 noise 2.2e-10  grad(197) 5.0e-10  time 15.4s -> 0.25s
+(* reference-limited: the original code is less accurate than the new engine here; see scripts/roundoff_study.py)
+SETUPS PASS

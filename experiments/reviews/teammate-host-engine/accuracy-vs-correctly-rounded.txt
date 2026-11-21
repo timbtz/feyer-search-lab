@@ -1,0 +1,5 @@
+voyager/space_modulation           original 3.8e-13  dense 4.4e-13  sparse 4.2e-03  sparse+ref 5.8e-13
+voyager/amplitude_modulation       original 4.2e-06  dense 5.7e-07  sparse 1.8e-06  sparse+ref 2.9e-07
+voyager/frequency_modulation       original 1.5e-01  dense 1.5e-02  sparse 2.3e-02  sparse+ref 9.2e-03
+uifo_20_5000.json                  original 4.4e-11  dense 4.4e-12  sparse 4.5e-05  sparse+ref 6.4e-10
+benchmark uifo_800_3000            original 3.2e-08  dense 6.8e-10  sparse 9.8e-07  sparse+ref 3.9e-10

@@ -1,0 +1,13 @@
+Does the speedup carry over to other optical setups?  (final evaluation uses "a slight variation of the supplied example")
+
+$ python scripts/benchmark_setup.py --cpus 1 [options] --save-arrays X.npz     # benchmark.py's exact timing scope, fresh process
+$ python scripts/compare.py ours.npz --baseline original.npz                   # every array, every entry
+AMD EPYC 9334, one logical CPU; "original" = unmodified upstream simulator (commit 807323f), "ours" = this submission.
+
+Setup (101 frequencies)                               original    ours      speedup   validation (both)   all arrays vs original
+A  supplied example, design values perturbed, seed 1  35.797 s    0.753 s   47.5x     PASS                PASS  (gradient norm diff 6.2e-12)
+B  perturbed, seed 2, 500-4000 Hz                     35.872 s    0.755 s   47.5x     PASS                PASS  (gradient norm diff 8.4e-13)
+C  uifo_20_5000.json, 20-5000 Hz, 192 variables       36.681 s    0.778 s   47.1x     PASS                PASS  (gradient norm diff 3.6e-9)
+
+Validation = finite outputs, positive sensitivity, non-zero gradient, benchmark.py's two-step central-difference check.
+Variations perturb every optimizable property strictly inside its physical bounds (values on a bound, e.g. R = 1, are kept).
