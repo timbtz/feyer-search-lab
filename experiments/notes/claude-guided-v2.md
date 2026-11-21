@@ -148,5 +148,45 @@ This is my own hypothesis. It is *not* a transfer of 7d1ccc5's code, which I cou
 - **Reject if:** any forward difference, strict failure, or a slower total than 19.77 s beyond noise.
 - **Source delta vs 10a311f:** simulate.py only. It adds `_LOWER_TO_BASE`, a branch in `_evaluate_component_group_slots`, and the `LOWER_SLOT_PRUNING` flag. Fallback: set the flag to False.
 
+### Results: SHA `3b805077bb5c61d85115faf38af243cc001d0fee`: official PASS, strict PASS, **kept (new branch best)**
+
+**Screen** (`44aca418`): 19.596 s. Provisional.
+
+**Full** (`57ef1df7`):
+
+| Phase | Candidate 3 | 10a311f (`3a030c65`) | Change |
+| --- | --- | --- | --- |
+| Complete first run | **19.567** | 19.766 | **−0.20** |
+| Forward lower | 0.712 | 0.731 | −0.02 |
+| Forward compile | 6.473 | 6.620 | −0.15 |
+| Forward execute | 8.403 | 8.395 | +0.01 |
+| Sensitivity lower | 0.079 | 0.172 | −0.09 (harness-side; likely noise) |
+| Gradient lower | 0.166 | 0.132 | +0.03 |
+| Gradient compile | 1.289 | 1.318 | −0.03 |
+| Gradient execute | 1.514 | 1.506 | +0.01 |
+
+- Warm median: 10.164 s. Job wall time: 84.7 s.
+- Strict comparison: all forward outputs bitwise identical; gradient max normalized error 1.6e-8, unchanged.
+- The prediction (≤0.3 s from compile) held: about 0.18 s of compile was saved. This is one observation, and part of the gain is within noise.
+- This is the lowest full-valid total observed in cohort `10567ad0` so far (astra 3581734: 19.70). It is unconfirmed and needs a quiet serial confirmation.
+- **Decision:** keep. Candidate 4 builds on it.
+
+## Candidate 4: row-level split of constant rows (`ROW_SPLIT_PRUNING=True`)
+
+### Hypothesis
+- **Target:** forward compile (6.47 s) and gradient compile (1.29 s) in job `57ef1df7`.
+- **Mechanism:**
+  - The slot masks are per group. If any one row reads an optimized index in a slot, every row's input in that slot is differentiable. For example, `surface` reflectivity and tuning are optimized for some mirrors but not for others, and `space` length is optimized for only some spaces.
+  - On the host, the builder now reorders each mixed group as [rows reading any optimized/linked index, all-constant rows]. It does this stably and applies the same permutation to `parameter_indices` and `output_rows`.
+  - The split count is stored as a static dict key.
+  - `update` evaluates the constant rows with every slot gradient-stopped, so they produce no linearization residuals or transposes.
+- **Exactness:**
+  - Each row runs the same elementwise computation on the same inputs, and the output selection is remapped exactly.
+  - Forward outputs are expected bitwise identical. That assumes XLA's elementwise kernels give per-element identical results at a different batch size; this is unverified, but strict rtol 1e-7 covers it.
+  - The gradient is expected identical or within reordering.
+- **Prediction:** forward and gradient compile decrease by an unknown amount, depending on how many rows are constant; probably 0.1–0.5 s. Execute is unchanged or slightly lower; there are two vmaps per mixed group instead of one.
+- **Reject if:** strict fails, or the total is slower than 19.57 s beyond noise.
+- **Source delta vs 3b80507:** simulate.py only. It adds the `ROW_SPLIT_PRUNING` flag, a reorder block in `run_build_step`, and a branch in `update`. Fallback: set the flag to False.
+
 ### Results
 - Pending.

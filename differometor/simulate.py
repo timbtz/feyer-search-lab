@@ -213,9 +213,27 @@ def update(
                 differentiable = tuple(
                     slot in diff_slots[function_index] for slot in range(group_inputs.shape[1])
                 )
-                group_values.append(
-                    _evaluate_component_group_slots(function_index, differentiable, group_inputs)
-                )
+                row_split = component_groups.get("row_split", {})
+                if ROW_SPLIT_PRUNING and function_index in row_split:
+                    # Builder ordered this group's rows as [rows reading any
+                    # optimized/linked index, all-constant rows] and remapped
+                    # output_rows accordingly; the constant rows get no tangent.
+                    count = next(iter(row_split[function_index]))
+                    constant = (False,) * len(differentiable)
+                    group_values.append(
+                        _evaluate_component_group_slots(
+                            function_index, differentiable, group_inputs[:count]
+                        )
+                    )
+                    group_values.append(
+                        _evaluate_component_group_slots(
+                            function_index, constant, group_inputs[count:]
+                        )
+                    )
+                else:
+                    group_values.append(
+                        _evaluate_component_group_slots(function_index, differentiable, group_inputs)
+                    )
             else:
                 group_values.append(_evaluate_component_group(function_index, group_inputs))
         if group_values:
@@ -619,6 +637,10 @@ COMPONENT_SLOT_PRUNING: bool = True
 # Candidate 3: extend slot pruning to the *_lower variants by calling the base
 # function with slot 0 negated instead of re-stacking a dense parameter vector.
 LOWER_SLOT_PRUNING: bool = True
+# Candidate 4: within each component group, evaluate rows that read no
+# optimized/linked index separately with all slots gradient-stopped. The builder
+# reorders those rows last (parameter_indices and output_rows kept consistent).
+ROW_SPLIT_PRUNING: bool = True
 # Build the noise source matrix once and broadcast it across signal rows when the
 # builder proved (host-side, before dummy filling) that no noise input index is a
 # real changing index. False always uses the per-row noise assembly.
@@ -980,6 +1002,35 @@ def run_build_step(
                 if any(int(i) in differentiable_indices for i in indices[:, slot])
             }
         group["diff_slots"] = diff_slots
+
+        if not ROW_SPLIT_PRUNING or "function_rows" not in group or "output_rows" not in group:
+            continue
+        # Reorder each mixed group as [differentiable rows, constant rows] (stable),
+        # keeping parameter_indices and output_rows consistent. The split count is
+        # stored as a static dict key (no pytree leaves).
+        output_rows = np.asarray(group["output_rows"]).copy()
+        row_split = {}
+        offset = 0
+        for function_index in sorted(group["function_rows"]):
+            size = int(np.asarray(group["function_rows"][function_index]).shape[0])
+            indices = np.asarray(group["parameter_indices"].get(function_index, np.zeros((0,))))
+            if indices.ndim == 2 and indices.shape[0] == size and function_index in diff_slots:
+                live = np.array(
+                    [any(int(i) in differentiable_indices for i in row) for row in indices], dtype=bool
+                )
+                count = int(live.sum())
+                if 0 < count < size:
+                    order = np.concatenate([np.flatnonzero(live), np.flatnonzero(~live)])
+                    new_position = np.empty(size, dtype=np.int64)
+                    new_position[order] = np.arange(size)
+                    in_group = (output_rows >= offset) & (output_rows < offset + size)
+                    output_rows[in_group] = offset + new_position[output_rows[in_group] - offset]
+                    group["parameter_indices"][function_index] = jnp.asarray(indices[order])
+                    row_split[function_index] = {count: ()}
+            offset += size
+        if row_split:
+            group["output_rows"] = jnp.asarray(output_rows.astype(np.asarray(group["output_rows"]).dtype))
+            group["row_split"] = row_split
 
     simulation_arrays["component_groups"] = component_groups
 
