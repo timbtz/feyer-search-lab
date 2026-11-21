@@ -98,71 +98,16 @@ def _save_assembly_indices(primitive, *avals, **params):
     )
 
 
-def update(
-    parameters: jnp.ndarray,
-    matrix: jnp.ndarray,
-    function_input_indices: jnp.ndarray,
-    output_indices: tuple[jnp.ndarray, jnp.ndarray],
-    matrix_indices: tuple[jnp.ndarray, jnp.ndarray],
-    function_indices: jnp.ndarray,
-    component_groups: dict | None = None,
-    carrier_entries: jnp.ndarray | None = None,
-    conjugate_outputs: jnp.ndarray | None = None,
-) -> jnp.ndarray:
-    """
-    Update selected entries of a system matrix by evaluating component functions.
-
-    This function takes a parameter vector, selects the subset that serves as
-    inputs to component transfer functions, evaluates those functions, selects
-    certain outputs, and writes them into `matrix` at specified indices.
-
-    Parameters
-    ----------
-    parameters : jnp.ndarray
-        Parameter values for one simulation instance, shape (P,).
-    matrix : jnp.ndarray
-        Base matrix to update, shape (N, N + 1) for augmented systems, or (N, N).
-        The function writes entries in-place (functionally) using `.at[...].set(...)`.
-    function_input_indices : jnp.ndarray
-        Indices into `parameters` selecting inputs to the component functions,
-        shape (K,).
-    output_indices : tuple[jnp.ndarray, jnp.ndarray]
-        Pair of index arrays selecting entries from the evaluated output matrix.
-        Each element has shape (M,). Together they define M output positions.
-    matrix_indices : tuple[jnp.ndarray, jnp.ndarray]
-        Pair of index arrays selecting where to write into `matrix`.
-        Each element has shape (M,).
-    function_indices : jnp.ndarray
-        Indices selecting which function to use for each input, shape (K,).
-        Values index into the global `FUNCTIONS` list.
-    component_groups : dict | None
-        Optional builder-produced structural partition of the function rows.
-        `function_rows` has static function-ID keys and original input-row arrays;
-        `output_rows` maps original output rows to concatenated group rows.
-        `parameter_indices`, when present, supplies prepared input indices per group.
-        An optional `unique_matrix_indices` key marks verified distinct destinations.
-        `flat_matrix_indices` supplies normalized, in-bounds row-major destinations.
-        `flat_output_indices` supplies composed, in-bounds component output offsets.
-        Omit or rebuild metadata when changing selectors, input/output indices, matrix shape
-        or matrix destinations, including carrier coupling destinations.
-    carrier_entries : jnp.ndarray | None
-        Optional carrier factors, used only with builder-proven
-        `carrier_output_positions` to scale component values before matrix assembly.
-    conjugate_outputs : jnp.ndarray | None
-        Optional mask applied after carrier scaling. The caller must apply the
-        same destination-based conjugation to the base matrix before this update.
-
-    Returns
-    -------
-    updated_matrix : jnp.ndarray
-        Matrix with updated entries, same shape as `matrix`.
-
-    Notes
-    -----
-    `lax.switch` selects functions from the global `FUNCTIONS` list. In JAX, a
-    Python list of callables referenced as a global is treated as static during
-    tracing, which keeps the function jittable as long as the list is stable.
-    """
+@partial(jax.checkpoint, prevent_cse=False, policy=_save_assembly_indices)
+def _component_values(
+    parameters,
+    function_input_indices,
+    output_indices,
+    function_indices,
+    component_groups,
+    carrier_entries,
+):
+    """Recompute component values without rematerializing the dense assembly."""
     output_rows = output_indices[0]
     # Keep the function selector scalar so only the selected component branch
     # executes. The outer vmap in simulate still batches frequency samples.
@@ -209,8 +154,74 @@ def update(
         positions = component_groups["carrier_output_positions"]
         scaled_outputs = -outputs[positions] * carrier_entries
         outputs = outputs.at[positions].set(scaled_outputs, unique_indices=True)
-    if conjugate_outputs is not None:
-        outputs = jnp.where(conjugate_outputs, jnp.conjugate(outputs), outputs)
+    return outputs
+
+
+def update(
+    parameters: jnp.ndarray,
+    matrix: jnp.ndarray,
+    function_input_indices: jnp.ndarray,
+    output_indices: tuple[jnp.ndarray, jnp.ndarray],
+    matrix_indices: tuple[jnp.ndarray, jnp.ndarray],
+    function_indices: jnp.ndarray,
+    component_groups: dict | None = None,
+    carrier_entries: jnp.ndarray | None = None,
+) -> jnp.ndarray:
+    """
+    Update selected entries of a system matrix by evaluating component functions.
+
+    This function takes a parameter vector, selects the subset that serves as
+    inputs to component transfer functions, evaluates those functions, selects
+    certain outputs, and writes them into `matrix` at specified indices.
+
+    Parameters
+    ----------
+    parameters : jnp.ndarray
+        Parameter values for one simulation instance, shape (P,).
+    matrix : jnp.ndarray
+        Base matrix to update, shape (N, N + 1) for augmented systems, or (N, N).
+        The function writes entries in-place (functionally) using `.at[...].set(...)`.
+    function_input_indices : jnp.ndarray
+        Indices into `parameters` selecting inputs to the component functions,
+        shape (K,).
+    output_indices : tuple[jnp.ndarray, jnp.ndarray]
+        Pair of index arrays selecting entries from the evaluated output matrix.
+        Each element has shape (M,). Together they define M output positions.
+    matrix_indices : tuple[jnp.ndarray, jnp.ndarray]
+        Pair of index arrays selecting where to write into `matrix`.
+        Each element has shape (M,).
+    function_indices : jnp.ndarray
+        Indices selecting which function to use for each input, shape (K,).
+        Values index into the global `FUNCTIONS` list.
+    component_groups : dict | None
+        Optional builder-produced structural partition of the function rows.
+        `function_rows` has static function-ID keys and original input-row arrays;
+        `output_rows` maps original output rows to concatenated group rows.
+        `parameter_indices`, when present, supplies prepared input indices per group.
+        An optional `unique_matrix_indices` key marks verified distinct destinations.
+        `flat_matrix_indices` supplies normalized, in-bounds row-major destinations.
+        `flat_output_indices` supplies composed, in-bounds component output offsets.
+        Omit or rebuild metadata when changing selectors, input/output indices, matrix shape
+        or matrix destinations, including carrier coupling destinations.
+    carrier_entries : jnp.ndarray | None
+        Optional carrier factors, used only with builder-proven
+        `carrier_output_positions` to scale component values before matrix assembly.
+
+    Returns
+    -------
+    updated_matrix : jnp.ndarray
+        Matrix with updated entries, same shape as `matrix`.
+
+    Notes
+    -----
+    `lax.switch` selects functions from the global `FUNCTIONS` list. In JAX, a
+    Python list of callables referenced as a global is treated as static during
+    tracing, which keeps the function jittable as long as the list is stable.
+    """
+    outputs = _component_values(
+        parameters, function_input_indices, output_indices, function_indices,
+        component_groups, carrier_entries,
+    )
     if component_groups is not None and "flat_matrix_indices" in component_groups:
         # Builder-proven unique, in-bounds offsets avoid tracing the generic
         # two-coordinate indexing path. Update order and component values stay
@@ -580,15 +591,10 @@ def simulate(
                     return (block_signal_matrix,)
                 return block_signal_matrix, block_noise_matrix
 
-            # Recompute assembly intermediates during reverse mode rather than
-            # retaining them for every frequency. Solves remain outside this
-            # checkpoint, and the official compilation stages stay unchanged.
+            # Component values checkpoint internally; dense assembly and solves
+            # remain outside recomputation. The official JIT stages are unchanged.
             assembled = _map_row_chunks(
-                jax.checkpoint(
-                    block_assemble,
-                    prevent_cse=False,
-                    policy=_save_assembly_indices,
-                ),
+                block_assemble,
                 (parameters, row_carrier_entries),
                 chunk_size,
             )
@@ -691,24 +697,11 @@ def _assemble_signal_and_noise(
     """
     signal_groups = None if component_groups is None else component_groups["signal"]
     fuse_carrier_scaling = signal_groups is not None and "carrier_output_positions" in signal_groups
-    # Apply the same destination mask to the base and its replacement values.
-    # With all carrier scaling fused into those values, no later dense update
-    # remains that would require conjugation after the component scatter.
-    rows = jnp.arange(signal_matrix.shape[0])[:, None]
-    columns = jnp.arange(signal_matrix.shape[1])[None, :]
-    conjugate_entries = (
-        (rows >= carrier_size) & (rows < 2 * carrier_size) & (columns >= carrier_size)
-    ) | ((rows >= 2 * carrier_size) & (columns < carrier_size))
-    fuse_conjugation = fuse_carrier_scaling and "flat_matrix_indices" in signal_groups
-    conjugate_outputs = None
-    if fuse_conjugation:
-        conjugate_outputs = conjugate_entries.reshape(-1)[signal_groups["flat_matrix_indices"]]
-        signal_matrix = jnp.where(conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix)
     scaling_entries = (
         jnp.broadcast_to(carrier_entries, (parameters.shape[0], carrier_entries.shape[1]))
         if fuse_carrier_scaling else None
     )
-    signal_matrix = vmap(update, in_axes=(0, None, None, None, None, None, None, 0 if fuse_carrier_scaling else None, None))(
+    signal_matrix = vmap(update, in_axes=(0, None, None, None, None, None, None, 0 if fuse_carrier_scaling else None))(
         parameters,
         signal_matrix,
         signal_function_input_indices,
@@ -717,7 +710,6 @@ def _assemble_signal_and_noise(
         signal_function_indices,
         signal_groups,
         scaling_entries,
-        conjugate_outputs,
     )
 
     # Scale signal connector entries by the carrier solution at the respective spaces.
@@ -738,12 +730,17 @@ def _assemble_signal_and_noise(
             unique_indices=unique_carrier_placing_indices,
         )
 
-    # Generic path: conjugate after all component and carrier updates, including
-    # the augmented RHS and the disjoint mechanical-to-upper block.
-    if not fuse_conjugation:
-        signal_matrix = jnp.where(
-            conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix
-        )
+    # Apply conjugation rules to enforce upper and lower sideband symmetry.
+    rows = jnp.arange(signal_matrix.shape[1])[:, None]
+    columns = jnp.arange(signal_matrix.shape[2])[None, :]
+    # The lower-sideband row blocks are adjacent; include the augmented RHS.
+    # Their union and the mechanical-to-upper block are disjoint.
+    conjugate_entries = (
+        (rows >= carrier_size) & (rows < 2 * carrier_size) & (columns >= carrier_size)
+    ) | ((rows >= 2 * carrier_size) & (columns < carrier_size))
+    signal_matrix = jnp.where(
+        conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix
+    )
 
     # Update noise source matrix (may depend on current parameters).
     # None: the caller builds one shared noise matrix (guarded row reuse).

@@ -399,3 +399,64 @@ This differs from the earlier rejected concatenation-of-dense-bands trial in `in
 Validation: all simulator modules parse, `git diff --check` passes, and AST comparison against exact HEAD confirms only `update` and `_assemble_signal_and_noise` change. Sixty deterministic standard-library complex assembly cases match bitwise between dense post-update conjugation and pre-scatter conjugation, including signed zeros, arbitrary complex base entries, empty replacements, reordered unique destinations, varying carrier-coupling subsets, augmented RHS and sideband/mechanical boundaries. This validates the algebra, not JAX autodiff, runtime or full physics. No local simulator/benchmark, new test infrastructure, environment changes, Git writes, SSH or agents.
 
 Next: supervisor screen then official full and every saved-output/gradient comparison if eligible, against exact parent 2085ff2c9a1f30cb3effaa9281d22942219e575a. Reject numerical failures or total regressions regardless of phase improvements. Continue within original deadline **2026-11-21 21:09:24.088367 UTC**, session `codex-profile-guided-v1`, thread `01a1ffba-57ec-7191-8ba9-c6163633a3b3`; no candidate cap.
+
+
+## Candidate 7 evaluation — correct, reject as an improvement
+
+SHA **`9aea8857d4112bca33f189d526fc3b1ecd47db58`**, exact parent **`2085ff2c9a1f30cb3effaa9281d22942219e575a`**.
+
+Screen **`835eb61cc64b463f8c0c8ee6ede3324a`**, request `3725a915d16a48f3b06b6ec09ab9f2d3`: cheap checks pass, first run **22.070021179 s**, +0.195885340 s vs parent screen. Compilation 10.942151032 s, wall 22.924253017 s, RSS 7,840,752 KiB. Screening alone is provisional.
+
+Full **`a9d15d75b3354adab3f3f67c1ae7791d`**, request `40b00876bdca40c4aac134129d4e4ee0`: official/strict/resource/source/workload/precision all pass, same full cohort `10567ad0f8dcb7122b6b182e1be342313b89eef340d4070073fdf62d6342204c` and frozen evaluator/environment/reference identities. Complete first run **21.854730275 s**, **+0.028801749 s** vs parent full `90519617eff2459a976172ff96a1ffad`; compilation **10.719883697 s**, +0.023519911 s. Warm median **10.591965076 s**, +0.036311587 s; samples 10.591965076, 10.584103035, 10.712424567 s. Job wall **87.395450907 s**, +0.332360165 s. RSS **7,852,612 KiB**, -4,728 KiB; sampled peak 8,042,123,264 bytes. Small differences may be variation, but no total improvement supports retaining the added complexity. Restore candidate 6 for the next scientific comparison; preserve candidate 7 in branch history and these notes.
+
+The exact candidate's largest phases remain forward execution **8.538123004 s (39.07%)**, gradient compile **4.667640183 s (21.36%)**, forward compile **4.594758270 s (21.02%)**. No native conjugation cost or hoisting behavior was measured. The small gradient execution reduction cannot excuse the slower total.
+
+All full first-run phases and deltas, seconds:
+
+| Phase | Candidate 7 | Delta vs candidate 6 |
+| --- | ---: | ---: |
+| imports | 0.293754565 | +0.004000690 |
+| initialize | 0.002875317 | -0.000019543 |
+| load | 0.001476394 | +0.000044778 |
+| build | 0.825002600 | -0.010720065 |
+| forward_lower | 0.737738654 | -0.002959698 |
+| forward_compile | 4.594758270 | +0.027884467 |
+| forward | 8.538123004 | +0.016081752 |
+| sensitivity_lower | 0.081078460 | -0.000732353 |
+| sensitivity_compile | 0.350599863 | -0.042610602 |
+| sensitivity | 0.000870259 | -0.000029193 |
+| gradient_lower | 0.288068267 | -0.012214666 |
+| gradient_compile | 4.667640183 | +0.054152764 |
+| gradient | 1.472424271 | -0.004046373 |
+| host_transfer | 0.000320168 | -0.000030208 |
+
+All saved checks inspected from local comparison and supplied feedback, last warm scope:
+
+| Output | Max absolute error | Relative L2 error | Max normalized error | Failures |
+| --- | ---: | ---: | ---: | ---: |
+| carrier | 0 | 0 | 0 | 0 |
+| signal | 0 | 0 | 0 | 0 |
+| noise | 0 | 0 | 0 | 0 |
+| sensitivity | 0 | 0 | 0 | 0 |
+| powers | 0 | 0 | 0 | 0 |
+| gradient | 5.3114490583539e-10 | 7.93070107438469e-15 | 7.53524626872314e-07 | 0 |
+| parameters | 0 | 0 | 0 | 0 |
+| frequencies | 0 | 0 | 0 | 0 |
+
+All finite; all mismatch indices/details empty. Physical outputs, parameters and frequencies exact, full gradient shape 193 and norm 70517.10686388832. Official sensitivity max log error 5.374104176780747e-6 and spot finite difference pass. No numerical failure is hidden by the performance rejection.
+
+## Candidate 8 — checkpoint component values, outside dense assembly
+
+Git parent **`9aea8857d4112bca33f189d526fc3b1ecd47db58`**; restored scientific parent and retained best **`2085ff2c9a1f30cb3effaa9281d22942219e575a`**. Candidate 8 SHA and evaluator IDs pending supervisor.
+
+Measured target for the restored parent: full **`90519617eff2459a976172ff96a1ffad`**, gradient compile **4.613487419 s (21.14%)**, forward compile **4.566873804 s (20.92%)**, forward execution **8.522041252 s (39.05%)**, total **21.825928526 s**. Compilation/lowering together 10.696363786 s (49.01%). Latest rejected candidate 7 has similar phase ranking as recorded above. Earlier candidate 3 moved roughly 2.8 s of compilation from forward to gradient with whole-assembly checkpointing; that motivates a smaller recomputation boundary, without attributing a native cost.
+
+Focused change relative to restored candidate 6: extract the unchanged component evaluation, output selection and carrier scaling into `_component_values`, checkpoint it with the existing discrete-index policy and `prevent_cse=False`, and remove the enclosing assembly-body checkpoint. `update` still scatters the returned vector using the same destinations and ordering. The frequency loop, dense scatter, dense sideband conjugation and solves are outside the new checkpoint. The same helper now checkpoints carrier and noise value calculations as well as signal values; it remains inside the existing official JIT stages and adds no separately timed/eager stage.
+
+Hypothesis: retaining the linear assembly residuals while recomputing only value generation may shrink the reverse compilation graph, preserving some forward residual savings. Tentative gradient-compile opportunity **0–1 s**, unmeasured, bounded above by the entire 4.613487419 s phase. Forward compile may rise toward its pre-checkpoint cost, and carrier/noise checkpointing may increase compilation or execution; memory may rise. Those costs can outweigh the proposed saving. This is a manually chosen checkpoint boundary based on the measured phase tradeoff, not a search over frozen frequency/chunk/solve options. The index-only policy avoids the previously failed complex residual saving route; no new policy or precision workaround.
+
+The carrier/signal/noise component expressions are unchanged byte-for-byte when extracted, including fallback dispatch, grouped evaluation, flat output selection and carrier scaling order. All 101 frequencies, 193 physical variables/values, double precision, full outputs and gradients remain required. No solve algorithm, source contraction, harness, official three-stage split, parameter representation or external candidate changes.
+
+Validation: syntax and whitespace pass. An AST equivalence check inlined the helper body (excluding its docstring/return) back into update and restored only the previous outer checkpoint call; the resulting entire module AST exactly equals retained candidate 6. This also verifies candidate 7's conjugation change is fully removed. No JAX execution, local benchmark, new test infrastructure, environment changes, Git writes, SSH or agents. Timing and numerical validity await supervisor evaluation.
+
+Next: supervisor screen then full/all strict saved checks if eligible; compare complete first run to retained 2085ff2c9a1f30cb3effaa9281d22942219e575a, using candidate 7 only as an additional rejected observation. Reject any total regression or strict numerical failure even if gradient compilation improves. Fixed deadline remains **2026-11-21 21:09:24.088367 UTC**, session `codex-profile-guided-v1`, thread `01a1ffba-57ec-7191-8ba9-c6163633a3b3`; no candidate cap.
