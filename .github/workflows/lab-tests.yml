@@ -1,5 +1,6 @@
 name: Experiment infrastructure checks
 on:
+  workflow_dispatch:
   push:
     paths: ['lab/**', 'tests/**', '.github/workflows/lab-tests.yml']
   pull_request:
