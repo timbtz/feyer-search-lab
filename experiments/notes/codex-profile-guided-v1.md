@@ -177,3 +177,72 @@ Historical distinction: initial-agent outer dynamic-switch checkpointing reduced
 Validation: Python AST parsing passes. AST comparison against exact HEAD confirms `simulate` is the only changed function and removing this one checkpoint call makes the entire module AST identical to parent. Diff whitespace check passes. No JAX execution, local benchmark, new tests/infrastructure, diagnostic workload, dependency or environment changes. All output/gradient validation remains the supervisor's responsibility.
 
 Next action: screen then unchanged official full plus every strict saved-array/full-gradient check. Compare all 14 phases, complete first run, warm, memory and job wall against candidate 2, candidate 1 and seed. If checkpointing only transfers cost into reverse or worsens total, revert it in the next attributable trial. If compilation remains opaque after this experiment, request a coordinator-owned compile/retained-residual diagnostic for the retained exact SHA; do not launch one here or alter JIT boundaries to measure it.
+
+
+## Candidate 3 evaluation — compile cost transferred, memory lower
+
+SHA **`d7f257ab82f0615b14f059adcddfc7512da8cf50`**, parent `9802a087d5857e6af6f3ec60129c4b71bdf686ca`.
+
+Screen `071440eeea5d4a78b10057c3eaeb6cfe`, request `55f58616c072440ca7e122be23059031`, source `feedback.screen`: screened, complete first run **22.283322811 s** (**+0.094089916 s** vs parent screen), lowering/compilation **11.074611560 s**, worker wall **23.110357001 s**, peak RSS **7,839,940 KiB**. No warm or official/strict checks in screen.
+
+Full **`a62229a57daa4377ba04657b7acd7ac6`**, request `ad82eda1fe61489e9a2d3bd97ea32f38`, source `feedback.full`: official/strict/resource/source/workload/precision all PASS. Same matching full cohort `10567ad0f8dcb7122b6b182e1be342313b89eef340d4070073fdf62d6342204c`, screen cohort `fc9228f32197f0d2653ba0de06fc01d528953444ab2039dbff6e1284cf689351`, profiler schemas and frozen evaluator/worker/comparator/reference identities as previously recorded.
+
+First run **22.083933394 s**, delta **-0.077620286 s** vs exact parent, **-0.095198771 s** vs candidate 1, **-0.281617319 s** vs seed observation. Combined lowering/compilation **10.927632799 s**, **+0.012366619 s** vs parent. Forward compile fell **2.767476119 s**, gradient compile rose **2.851995368 s**; this is a clear phase tradeoff, not a compilation-total win. Warm median **10.257479681 s**, **-0.329506446 s**; samples 10.593750972, 10.257479681, 10.158658564 s. Warm phase medians: forward 8.578575810, sensitivity 0.177825121, gradient 1.472895076, transfer 0.000236155 s. Job wall **87.626995686 s**, **-0.026748350 s**; queue wait is separate and also consumes session budget.
+
+GNU time RSS **7,863,388 KiB**, **-246,636 KiB** (252,555,264 bytes) vs parent. Sampled process-group peak **8,053,157,888 bytes**; below budget. This measured RSS reduction is consistent with less residual retention, but no per-intermediate memory attribution is established.
+
+All 14 phase times and deltas vs parent full, seconds:
+
+| Phase | Candidate 3 | Delta vs candidate 2 |
+| --- | ---: | ---: |
+| imports | 0.290852660 | -0.002061121 |
+| initialize | 0.002898568 | +0.000016898 |
+| load | 0.001430526 | -0.000006987 |
+| build | 0.830803964 | -0.000935895 |
+| forward_lower | 0.749325944 | -0.072377844 |
+| forward_compile | 4.674956920 | -2.767476119 |
+| forward | 8.552457424 | -0.091780121 |
+| sensitivity_lower | 0.075409615 | -0.017151427 |
+| sensitivity_compile | 0.350440787 | -0.110872306 |
+| sensitivity | 0.000877740 | -0.000088921 |
+| gradient_lower | 0.321495112 | +0.128248947 |
+| gradient_compile | 4.756004421 | +2.851995368 |
+| gradient | 1.476577375 | +0.004794009 |
+| host_transfer | 0.000402337 | +0.000075232 |
+
+Every strict saved-array check inspected (last warm scope, unchanged tolerances/reference):
+
+| Check | Passed | Max absolute error | Relative L2 | Max normalized error | Failing count |
+| --- | --- | ---: | ---: | ---: | ---: |
+| carrier | True | 0 | 0 | 0 | 0 |
+| signal | True | 0 | 0 | 0 | 0 |
+| noise | True | 0 | 0 | 0 | 0 |
+| sensitivity | True | 0 | 0 | 0 | 0 |
+| powers | True | 0 | 0 | 0 | 0 |
+| gradient | True | 5.3114490583539009e-10 | 7.9307010743846852e-15 | 7.5352462687231427e-07 | 0 |
+| parameters | True | 0 | 0 | 0 | 0 |
+| frequencies | True | 0 | 0 | 0 | 0 |
+
+All finite; empty failing indices and mismatch details; no truncation. Parameters and frequencies meet exact checks. All 193 gradient entries retained; max normalized error **7.535246268723143e-7** is far from boundary 1. Forward outputs remain exact to reference. The small gradient difference increased from the parent's 6.039550882495327e-7 normalized error; no tolerance was relaxed. Official log-sensitivity error `5.374104176780747e-6` and finite-difference check pass, unchanged shapes/dtypes. This full-array result, not the spot check alone, establishes eligibility.
+
+Decision: **retain provisionally as lowest observed eligible full**, not robust first-run improvement. Screen is slower, full only 78 ms faster, and compilation aggregate slightly slower. The memory reduction and large, opposite compile-phase shifts justify one selective-retention follow-up. Candidate 2 remains the validated non-checkpoint fallback; seed the repeat-established fallback.
+
+Re-ranked bottlenecks: forward **8.552457424 s (38.73%)**, **gradient compile 4.756004421 s (21.54%)**, forward compile **4.674956920 s (21.17%)**, gradient **1.476577375 s (6.69%)**, build 0.830803964 s, forward lower 0.749325944 s. Next target follows the newly enlarged reverse compilation phase rather than chasing the old 7.4 s forward-compile number.
+
+## Candidate 4 — selectively retain nonlinear component intermediates
+
+Session `01a1ffba-57ec-7191-8ba9-c6163633a3b3`, unchanged absolute deadline **2026-11-21 21:09:24.088367 UTC**; resumed with 2653 seconds remaining. Exact parent and lowest observed eligible retained candidate **`d7f257ab82f0615b14f059adcddfc7512da8cf50`**. Candidate SHA/run IDs pending supervisor. No candidate-count cap.
+
+Measured target: **full** job **`a62229a57daa4377ba04657b7acd7ac6`**, **gradient compile 4.756004421 s (21.54%)** of **22.083933394 s** complete first run. Its growth of 2.851995368 s over candidate 2 nearly cancels the forward compile reduction. This is measured phase evidence; internal transcendental-operation cost and compiler attribution remain unknown.
+
+One focused change: supply a selective saving policy to the existing assembly-body checkpoint. Permit retention of `exp`, `sqrt`, `sin`, `cos`, `sinh`, `cosh`, and `asin` primitive outputs, and leave other primitives under recomputation. Source inspection locates these nonlinear scalar/vector operations in component formulas; dense scatters, indexing and matrix conjugation are not selected. No physical formulas or component parameter values change. This is a manually reasoned policy based on the measured checkpoint tradeoff, not enumeration/SMAC or a new frozen search round.
+
+Hypothesis: retaining nonlinear component residuals may simplify the reverse recomputation graph and reduce gradient compilation, while still avoiding retention of dense assembly intermediates. Forward compilation and memory can rise, and the compiler may already simplify the recomputation; only complete first-run time determines benefit. Tentative **0–1 s reverse-compile opportunity**, unmeasured; the entire measured **4.756004421 s** phase is the ceiling for eliminating that phase alone, not an achievable prediction. Reverse execution may also change. No operator runtime inferred from source counts.
+
+Implementation: new pure `_save_component_nonlinear(primitive, *avals, **params)` policy; pass it to the existing `jax.checkpoint(block_assemble, prevent_cse=False)`. Same checkpoint scope, all 101 frequencies, 193 physical variables/values, matrices, full solves, noise contractions, double precision and three official JIT stages. Distinct from Claude's contraction scheduling; no external candidate combined.
+
+Risk: saved versus recomputed intermediates can alter compiler fusion and gradient rounding; must recheck all outputs and full gradient. The parent has ample strict margin but that is not a substitute for validation. Policy selection is by primitive name and has no workload-value-dependent branch or cache.
+
+Checks: syntax and AST isolation pass; removing only the policy definition and keyword restores parent module AST exactly. Whitespace check passes. No simulator execution, benchmark, profiler, new test infrastructure, environment change, Git publication or additional agents. A broad read-only search for installed JAX source was cancelled without results; no package imported or modified.
+
+Next: supervisor screen/full and strict arrays, compare all phase deltas, total, warm, memory and wall with exact parent and non-checkpoint candidate 2. Reject total regressions regardless of gradient-compile reduction. If no net gain is found, request coordinator-owned attribution of the retained SHA's forward/reverse compilation and residual shapes; no independent diagnostic is authorized or launched here. Continue while the fixed deadline permits, including beyond candidate four.

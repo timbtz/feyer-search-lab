@@ -76,6 +76,11 @@ def _evaluate_component_group(function_index, function_inputs):
     return vmap(FUNCTIONS[function_index])(function_inputs)
 
 
+def _save_component_nonlinear(primitive, *avals, **params):
+    """Retain nonlinear component intermediates, recomputing assembly indexing."""
+    return primitive.name in ("exp", "sqrt", "sin", "cos", "sinh", "cosh", "asin")
+
+
 def update(
     parameters: jnp.ndarray,
     matrix: jnp.ndarray,
@@ -543,7 +548,11 @@ def simulate(
             # retaining them for every frequency. Solves remain outside this
             # checkpoint, and the official compilation stages stay unchanged.
             assembled = _map_row_chunks(
-                jax.checkpoint(block_assemble, prevent_cse=False),
+                jax.checkpoint(
+                    block_assemble,
+                    prevent_cse=False,
+                    policy=_save_component_nonlinear,
+                ),
                 (parameters, row_carrier_entries),
                 chunk_size,
             )
