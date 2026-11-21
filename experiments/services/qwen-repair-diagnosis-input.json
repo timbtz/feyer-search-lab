@@ -1,0 +1,9 @@
+{
+  "source_audit": ".lab/audits/numerical.md",
+  "candidate_sha": "7f3cf9c316ce87a98afccb402bffc34e4ff71532",
+  "job_id": "a7b341dc0cc64363922bcb3023a14537",
+  "task": "Diagnose this actual historical evaluator failure; propose a repair, do not execute it. Candidate 7f3cf9c316ce87a98afccb402bffc34e4ff71532, job a7b341dc0cc64363922bcb3023a14537. Official full benchmark PASS, internal strict comparison FAIL in 3 of 193 gradients. Example: boundary01.power reference -29.61288925877842, candidate -29.612926349352314; absolute error 3.70905739e-5, allowed 3.01887458e-6. Other failing coordinates mb13.reflectivity and m03.reflectivity. All carrier/signal outputs identical; noise/sensitivity differ slightly within tolerance. Original baseline gradients repeat bitwise across 3 runs. Candidate replaces final noise solve/contraction d^H solve(A,Nw) by w^H N w, with A^H w=d. Algebra is equivalent in exact arithmetic; no residual/conditioning/high-precision evidence is available. This is CPU evaluation on AMD-hosted Linux, float64/complex128. All 101 frequencies/193 variables and existing full/strict checks must stay unchanged.\nReturn JSON only, at most 140 words: classification, hypothesis, proposed_code_repair, required_checks (array), proven_cause (boolean). Distinguish official pass from strict failure. Do not change tolerances, benchmark, reference arrays or physical requirements. A proposal is not a measured repair. Prefer one minimal repair over a speculative solver rewrite.",
+  "max_tokens": 3072,
+  "reasoning_effort": "low",
+  "max_seconds": 150
+}

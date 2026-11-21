@@ -64,6 +64,116 @@ class TokenFactory:
                             'max_tokens': max_tokens, 'reasoning_effort': reasoning_effort,
                             'temperature': 0})
 
+    def chat_stream(self, messages, max_tokens=4096, reasoning_effort='low',
+                    response_format=None, max_seconds=300):
+        """Read one SSE completion without retries or executing model output.
+
+        Reasoning consumes max_tokens too. Keep its text out of the result.
+        self.timeout limits a blocked read; max_seconds is checked between reads.
+        A supervisor must enforce any strict wall-clock deadline externally.
+        A 200 response alone is not success: inspect usable_completion and, for
+        structured tasks, independently validate the returned content/schema.
+        """
+        if max_tokens < 1 or max_seconds <= 0:
+            raise ValueError('Token and duration limits must be positive')
+        payload = {'model': self.model, 'messages': messages, 'stream': True,
+                   'max_tokens': max_tokens, 'reasoning_effort': reasoning_effort,
+                   'temperature': 0}
+        if response_format is not None:
+            payload['response_format'] = response_format
+        request = Request(BASE_URL + '/chat/completions', data=json.dumps(payload).encode(),
+                          headers={'Authorization': 'Bearer ' + self.key,
+                                   'Content-Type': 'application/json',
+                                   'Accept': 'text/event-stream'})
+        started = time.monotonic()
+        result = {'status': None, 'headers': {}, 'stream_done': False,
+                  'first_event_seconds': None, 'first_content_seconds': None,
+                  'reasoning_characters': 0, 'usable_completion': False}
+        content, finish_reason, usage = [], None, None
+        response = None
+
+        def consume(lines):
+            nonlocal finish_reason, usage
+            raw = '\n'.join(lines)
+            if raw == '[DONE]':
+                result['stream_done'] = True
+                return
+            event = json.loads(raw)
+            if not isinstance(event, dict):
+                raise ValueError('SSE payload is not an object')
+            if result['first_event_seconds'] is None:
+                result['first_event_seconds'] = time.monotonic() - started
+            if event.get('error'):
+                raise ValueError('Provider stream error: ' + str(event['error']))
+            if event.get('usage') is not None:
+                usage = event['usage']
+            for choice in event.get('choices', []):
+                if not isinstance(choice, dict):
+                    raise ValueError('SSE choice is not an object')
+                if choice.get('index', 0) != 0:
+                    continue
+                finish_reason = choice.get('finish_reason') or finish_reason
+                delta = choice.get('delta') or {}
+                if not isinstance(delta, dict):
+                    raise ValueError('SSE delta is not an object')
+                value = delta.get('content') or ''
+                if not isinstance(value, str):
+                    raise ValueError('SSE content is not text')
+                if value:
+                    if result['first_content_seconds'] is None:
+                        result['first_content_seconds'] = time.monotonic() - started
+                    content.append(value)
+                result['reasoning_characters'] += len(
+                    delta.get('reasoning') or delta.get('reasoning_content') or '')
+
+        try:
+            try:
+                response = urlopen(request, timeout=min(self.timeout, max_seconds))
+            except HTTPError as error:
+                response = error
+            with response:
+                result['status'] = response.status
+                result['headers'] = {k.lower(): v for k, v in response.headers.items()
+                                     if 'ratelimit' in k.lower() or 'rate-limit' in k.lower()
+                                     or k.lower() in ('retry-after', 'x-request-id')}
+                if response.status != 200:
+                    raise ValueError('HTTP ' + str(response.status) + ': ' +
+                                     response.read(1000).decode(errors='replace'))
+                if 'text/event-stream' not in response.headers.get('Content-Type', '').lower():
+                    raise ValueError('Expected text/event-stream response')
+                lines, size = [], 0
+                while not result['stream_done']:
+                    if time.monotonic() - started >= max_seconds:
+                        raise TimeoutError('Streaming duration limit reached')
+                    raw = response.readline(65537)
+                    if time.monotonic() - started >= max_seconds:
+                        raise TimeoutError('Streaming duration limit reached')
+                    if not raw:
+                        if lines:
+                            consume(lines)
+                        break
+                    size += len(raw)
+                    if len(raw) > 65536 or size > 4 * 1024 * 1024:
+                        raise ValueError('Streaming response exceeds byte limit')
+                    line = raw.decode('utf-8').rstrip('\r\n')
+                    if not line:
+                        if lines:
+                            consume(lines)
+                            lines = []
+                    elif line.startswith('data:'):
+                        lines.append(line[5:].lstrip(' '))
+                if not result['stream_done']:
+                    raise ValueError('Stream ended before [DONE]')
+        except (OSError, ValueError, TypeError, KeyError) as error:
+            result['error'] = str(error).replace(self.key, '[redacted]')[:500]
+        result['latency_seconds'] = time.monotonic() - started
+        result['data'] = {'choices': [{'message': {'content': ''.join(content)},
+                                       'finish_reason': finish_reason}], 'usage': usage}
+        result['usable_completion'] = (result['status'] == 200 and result['stream_done']
+                                       and finish_reason == 'stop' and bool(''.join(content).strip())
+                                       and not result.get('error'))
+        return json.loads(json.dumps(result).replace(self.key, '[redacted]'))
+
 
 def summarize_response(response):
     data=response.get('data', {})
