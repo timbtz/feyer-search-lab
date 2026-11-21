@@ -238,6 +238,23 @@ report['benchmark']='start-munich-2026-public-differometor-uifo-v2'
             with self.subTest(mutation=mutation), self.assertRaises(ValueError):
                 self.worker._validate_report(report, 'screen')
 
+    def test_accepts_only_reviewed_package_xla_flags(self):
+        accepted = ["--xla_backend_optimization_level=0 --xla_cpu_use_fusion_emitters=false",
+                    "--xla_cpu_use_fusion_emitters=false"]
+        for flags in accepted:
+            with self.subTest(flags=flags):
+                report = valid_report()
+                report["environment"]["xla_flags"] = flags
+                self.worker._validate_report(report, 'screen')
+        rejected = ["", "--xla_force_host_platform_device_count=8",
+                    "--xla_backend_optimization_level=0 --xla_cpu_enable_fast_math=true", 3]
+        for flags in rejected:
+            with self.subTest(flags=flags):
+                report = valid_report()
+                report["environment"]["xla_flags"] = flags
+                with self.assertRaisesRegex(ValueError, "unexpected OpenMP or XLA"):
+                    self.worker._validate_report(report, 'screen')
+
     def test_environment_removes_inherited_jax_and_xla_overrides(self):
         with patch.dict('os.environ', {'JAX_DISABLE_JIT': 'true', 'XLA_FLAGS': '--unexpected',
                                       'JAX_COMPILATION_CACHE_DIR': '/tmp/cache'}):

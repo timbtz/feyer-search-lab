@@ -29,6 +29,25 @@ PHASE_CATEGORIES = {
     "host_transfer": "output",
 }
 THREAD_VARIABLES = ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS")
+# XLA flags a candidate package may set for itself. The Feyer organizers allowed
+# package-level JAX/XLA settings that preserve correctness and transfer to other
+# optical setups (Discord, 21 November 2026). _environment() strips XLA_FLAGS from
+# the launch environment, so any value in a report was set by the evaluated
+# package. Only these reviewed flags are accepted; anything else still fails.
+ALLOWED_PACKAGE_XLA_FLAGS = frozenset({
+    "--xla_backend_optimization_level=0",
+    "--xla_cpu_use_fusion_emitters=false",
+})
+
+
+def package_xla_flags_allowed(value):
+    """True when no flags are set, or every flag is in the reviewed allowlist."""
+    if value is None:
+        return True
+    if not isinstance(value, str):
+        return False
+    flags = value.split()
+    return bool(flags) and set(flags) <= ALLOWED_PACKAGE_XLA_FLAGS
 FIXTURE_SHA256 = "ff4ba353a2a03cdce7f3e61bad729c2e00888d842c28ba9cf699f95afb87e138"
 REFERENCE_SHA256 = "726f2cfe6986cb991fa48d5a28127b9330c3dc7e69d5bd193c8748acef03adc3"
 
@@ -223,7 +242,7 @@ class Worker:
             raise ValueError("Report does not identify one requested and effective logical CPU")
         if environment.get("thread_limits") != {name: "1" for name in THREAD_VARIABLES}:
             raise ValueError("Report numerical-library thread limits differ from one")
-        if environment.get("omp_num_threads") != "1" or environment.get("xla_flags") is not None:
+        if environment.get("omp_num_threads") != "1" or not package_xla_flags_allowed(environment.get("xla_flags")):
             raise ValueError("Report has unexpected OpenMP or XLA configuration")
         if not str(environment.get("python", "")).startswith("3.12."):
             raise ValueError("Report did not use Python 3.12")
