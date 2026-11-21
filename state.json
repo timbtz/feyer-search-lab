@@ -44451,6 +44451,56 @@
         ],
         "target_evidence": []
       }
+    },
+    {
+      "seq": 27,
+      "at": 1795294797.590206,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "feedback-bd18aa9a9a52666336f0f0d510e7dd9803a6c46b87fac40af864c9dafc8cb32c",
+        "executor": {
+          "kind": "supervisor",
+          "id": "codex-profile-guided-v1"
+        },
+        "kind": "explore",
+        "status": "completed",
+        "candidate_sha": "7d1ccc59cef3d7436870bb0e6c941dbde4c30770",
+        "parents": [
+          "211f65a5f18d7b68deacc021e0d9eab874bd9df7"
+        ],
+        "target_phases": [],
+        "hypothesis": "Parent 211f65a5f18d7b68deacc021e0d9eab874bd9df7, full job 6c6d3774738c4ed4b2bda1b9982c5072: forward execution took 8.571211 s, gradient compilation 5.024615 s and forward compilation 3.321781 s. Retaining component outputs for carrier-scaling derivatives may reduce reverse compilation. Tentative saving: 0\u20130.7 s, unmeasured; extra residual storage or forward costs may outweigh it.",
+        "change_summary": "Candidate 9 moves carrier scaling outside the component-value checkpoint, preserving its arithmetic and order.",
+        "stopping_reason": null,
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/43b6ed2b405bb9befe3eadf9c6337fa844a4f4c1/experiments/runs/codex-profile-guided-v1/candidate-09.json",
+        "source_digest": "bd18aa9a9a52666336f0f0d510e7dd9803a6c46b87fac40af864c9dafc8cb32c",
+        "source_digest_kind": "canonical_json_sha256",
+        "feedback_ref": {
+          "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/43b6ed2b405bb9befe3eadf9c6337fa844a4f4c1/experiments/runs/codex-profile-guided-v1/candidate-09.json",
+          "artifact_digest": "bd18aa9a9a52666336f0f0d510e7dd9803a6c46b87fac40af864c9dafc8cb32c",
+          "digest_kind": "canonical_json_sha256"
+        },
+        "session_id": "01a1ffba-57ec-7191-8ba9-c6163633a3b3",
+        "iteration": null,
+        "checkpoint": null,
+        "next_input": null,
+        "input_receipt": null,
+        "evaluations": [
+          {
+            "job_id": "7bfe34a8ab02485cbf05596393569dc5",
+            "candidate_sha": "7d1ccc59cef3d7436870bb0e6c941dbde4c30770",
+            "profile": "screen"
+          },
+          {
+            "job_id": "7e6ce3c3bf5148af93351918fda06e22",
+            "candidate_sha": "7d1ccc59cef3d7436870bb0e6c941dbde4c30770",
+            "profile": "full"
+          }
+        ],
+        "target_evidence": []
+      }
     }
   ],
   "comparison_regime": {
@@ -44927,6 +44977,50 @@
         {
           "job_id": "d07456c28e8647289ddf32fd9676bf0d",
           "candidate_sha": "e0a1dc69f4951c100fefbc9fc08a23c3c12058dc",
+          "profile": "full"
+        }
+      ],
+      "target_evidence": []
+    },
+    "feedback-bd18aa9a9a52666336f0f0d510e7dd9803a6c46b87fac40af864c9dafc8cb32c": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "feedback-bd18aa9a9a52666336f0f0d510e7dd9803a6c46b87fac40af864c9dafc8cb32c",
+      "executor": {
+        "kind": "supervisor",
+        "id": "codex-profile-guided-v1"
+      },
+      "kind": "explore",
+      "status": "completed",
+      "candidate_sha": "7d1ccc59cef3d7436870bb0e6c941dbde4c30770",
+      "parents": [
+        "211f65a5f18d7b68deacc021e0d9eab874bd9df7"
+      ],
+      "target_phases": [],
+      "hypothesis": "Parent 211f65a5f18d7b68deacc021e0d9eab874bd9df7, full job 6c6d3774738c4ed4b2bda1b9982c5072: forward execution took 8.571211 s, gradient compilation 5.024615 s and forward compilation 3.321781 s. Retaining component outputs for carrier-scaling derivatives may reduce reverse compilation. Tentative saving: 0\u20130.7 s, unmeasured; extra residual storage or forward costs may outweigh it.",
+      "change_summary": "Candidate 9 moves carrier scaling outside the component-value checkpoint, preserving its arithmetic and order.",
+      "stopping_reason": null,
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/43b6ed2b405bb9befe3eadf9c6337fa844a4f4c1/experiments/runs/codex-profile-guided-v1/candidate-09.json",
+      "source_digest": "bd18aa9a9a52666336f0f0d510e7dd9803a6c46b87fac40af864c9dafc8cb32c",
+      "source_digest_kind": "canonical_json_sha256",
+      "feedback_ref": {
+        "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/43b6ed2b405bb9befe3eadf9c6337fa844a4f4c1/experiments/runs/codex-profile-guided-v1/candidate-09.json",
+        "artifact_digest": "bd18aa9a9a52666336f0f0d510e7dd9803a6c46b87fac40af864c9dafc8cb32c",
+        "digest_kind": "canonical_json_sha256"
+      },
+      "session_id": "01a1ffba-57ec-7191-8ba9-c6163633a3b3",
+      "iteration": null,
+      "checkpoint": null,
+      "next_input": null,
+      "input_receipt": null,
+      "evaluations": [
+        {
+          "job_id": "7bfe34a8ab02485cbf05596393569dc5",
+          "candidate_sha": "7d1ccc59cef3d7436870bb0e6c941dbde4c30770",
+          "profile": "screen"
+        },
+        {
+          "job_id": "7e6ce3c3bf5148af93351918fda06e22",
+          "candidate_sha": "7d1ccc59cef3d7436870bb0e6c941dbde4c30770",
           "profile": "full"
         }
       ],
