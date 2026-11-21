@@ -43,6 +43,7 @@ graph TD
   c18["e0a1dc69f495"]
   c19["e525ee5ee4ef"]
   c20["f3139c71ae2a"]
+  c1 -->|explore| c5
   c2 -->|explore| c11
   c3 -->|combine| c18
   c5 -->|explore| c10
@@ -65,7 +66,7 @@ graph TD
 
 Every edge records intended inputs, not proof of speedup.
 
-Recorded jobs: 13. Decisions/events: 41.
+Recorded jobs: 13. Decisions/events: 42.
 
 ## External research records
 
@@ -97,5 +98,6 @@ Recorded jobs: 13. Decisions/events: 41.
 | claude-guided-v2 | diagnose | unknown | unknown | current |
 | claude-guided-v2 | explore | 5b2169697d35 | unknown | completed |
 | claude-guided-v2 | explore | 10a311f6dbe4 | unknown | completed |
+| claude-guided-v2 | explore | 3b805077bb5c | unknown | completed |
 
 These records are evidence, not competing task claims or winner declarations.

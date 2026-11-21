@@ -45360,6 +45360,87 @@
         ],
         "target_evidence": []
       }
+    },
+    {
+      "seq": 42,
+      "at": 1795298146.410058,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "feedback-f188b6777904d6920f17b1b695a7f1031ac9c074f03b297a4cd59b7379640ecf",
+        "executor": {
+          "kind": "supervisor",
+          "id": "claude-guided-v2"
+        },
+        "kind": "explore",
+        "status": "completed",
+        "candidate_sha": "3b805077bb5c61d85115faf38af243cc001d0fee",
+        "parents": [
+          "10a311f6dbe4e8b71fa98654d015493ab8b3ef27"
+        ],
+        "target_phases": [],
+        "hypothesis": "Target phases: forward compile (6.62 s) and gradient compile (1.32 s) in job 3a030c65 (10a311f). Mechanism: space_lower, space_modulation_lower and laser_frequency_modulation_lower rebuild their inputs with jnp.array before calling the base function. The rebuild turns candidate 2's symbolic-zero tangents for constant slots (frequency, refractive index) back into dense tangents, so the vjp still forms their derivative residuals and transposes. Calling the base function directly on separate scalars, with slot 0 negated, keeps the zeros symbolic. Exactness: the same scalars reach the same base function, so forward outputs should be bitwise identical and the gradient identical or within reordering. Prediction: forward and gradient compile both decrease slightly, likely \u22640.3 s combined; execute is unchanged. Reject on any forward difference, a strict failure, or a total slower than 19.77 s beyond noise.",
+        "change_summary": "Candidate 2 (10a311f, COMPONENT_SLOT_PRUNING) passed official and strict checks in full job 3a030c65 and is kept as the new branch best. The first run took 19.766 s, against 21.550 s for parent aa2b1ab (job 35abe628). Forward compile dropped by 1.00 s (7.62 to 6.62), gradient compile by 0.64 s (1.96 to 1.32), and both lower phases by about 0.05 s each; execute times were unchanged. Forward outputs were bitwise identical, and the gradient's max normalized error was 1.6e-8, the same as the parent. Candidate 3 extends the pruning to the *_lower component variants. These rebuilt a dense parameter vector with jnp.array([-p0, p1, p2]), which brought back dense tangents. They now call the base function directly through _ParameterSlots with slot 0 negated, so the values are identical. Only simulate.py changed; setting LOWER_SLOT_PRUNING=False restores 10a311f.",
+        "stopping_reason": null,
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/ae180410c4375fff1ca3f755fb057ffc0641db75/experiments/runs/claude-guided-v2/candidate-03.json",
+        "source_digest": "f188b6777904d6920f17b1b695a7f1031ac9c074f03b297a4cd59b7379640ecf",
+        "source_digest_kind": "canonical_json_sha256",
+        "feedback_ref": {
+          "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/ae180410c4375fff1ca3f755fb057ffc0641db75/experiments/runs/claude-guided-v2/candidate-03.json",
+          "artifact_digest": "f188b6777904d6920f17b1b695a7f1031ac9c074f03b297a4cd59b7379640ecf",
+          "digest_kind": "canonical_json_sha256"
+        },
+        "session_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+        "iteration": null,
+        "checkpoint": null,
+        "next_input": null,
+        "input_receipt": {
+          "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-guided-v2/turn-03-prompt-ae2922bc3df3bafcd12734a224b6d1cba57c8fe8ad83deead24d0e443e755e61.json",
+          "sha256": "ae2922bc3df3bafcd12734a224b6d1cba57c8fe8ad83deead24d0e443e755e61",
+          "turn": 3,
+          "thread_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+          "feedback_mode": "guided",
+          "shared_evidence": {
+            "schema": "feyer-search-frontier-v1",
+            "source_path": "/Users/t.betz/Documents/Feyer challenge/.lab/frontier/current.json",
+            "snapshot_ref": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-guided-v2/shared-evidence/a7129a18ec3ce6e1c7bd30179986acd5a7f840187679ba516edfe602a1c16e85.json",
+            "sha256": "a7129a18ec3ce6e1c7bd30179986acd5a7f840187679ba516edfe602a1c16e85",
+            "bytes": 97539,
+            "generated_at": 1795296866.722959,
+            "read_at": 1795296885.383331,
+            "age_seconds": 18.660372018814087,
+            "freshness_policy": {
+              "max_age_seconds": 300,
+              "future_skew_seconds": 30
+            },
+            "content_digest": "373bc9500a49668833265670efc7c01c0b888745ab2e2052d6a86669d67fdae3",
+            "source_provenance": {
+              "team_digest": "922c284037a5d8f7be5e5b299abffb478d7441b59b987196ed74184b846da99d",
+              "policy_digest": "54fffa2b291a30d2d20eb7b881da57f3f127ed0d3559330d7d5685838532e01c",
+              "policy_source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d3e5e4de995914819631acdf9980c00fd95a47b3/experiments/deployments/amd-two-lanes-v1.json",
+              "evidence_digest": "3c30600c500b9bca0bd216aeba021c88e239bf700b6cd157f72d98a98d413632",
+              "collector": "trusted-local-artifacts-v1",
+              "instance": "amd-tim"
+            }
+          },
+          "consumed_feedback_digest": "82d4ff940ca80f8dbd5683edd8d95d66178d0f22821b3a29e7307f8be1b96235",
+          "consumed_candidate_sha": "10a311f6dbe4e8b71fa98654d015493ab8b3ef27"
+        },
+        "evaluations": [
+          {
+            "job_id": "44aca4188dd34b918eb9ef7fddadde93",
+            "candidate_sha": "3b805077bb5c61d85115faf38af243cc001d0fee",
+            "profile": "screen"
+          },
+          {
+            "job_id": "57ef1df7269d4b56acf28bcd89958873",
+            "candidate_sha": "3b805077bb5c61d85115faf38af243cc001d0fee",
+            "profile": "full"
+          }
+        ],
+        "target_evidence": []
+      }
     }
   ],
   "comparison_regime": {
@@ -46655,6 +46736,81 @@
         {
           "job_id": "3a030c65057c4134ae07d46f012d674a",
           "candidate_sha": "10a311f6dbe4e8b71fa98654d015493ab8b3ef27",
+          "profile": "full"
+        }
+      ],
+      "target_evidence": []
+    },
+    "feedback-f188b6777904d6920f17b1b695a7f1031ac9c074f03b297a4cd59b7379640ecf": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "feedback-f188b6777904d6920f17b1b695a7f1031ac9c074f03b297a4cd59b7379640ecf",
+      "executor": {
+        "kind": "supervisor",
+        "id": "claude-guided-v2"
+      },
+      "kind": "explore",
+      "status": "completed",
+      "candidate_sha": "3b805077bb5c61d85115faf38af243cc001d0fee",
+      "parents": [
+        "10a311f6dbe4e8b71fa98654d015493ab8b3ef27"
+      ],
+      "target_phases": [],
+      "hypothesis": "Target phases: forward compile (6.62 s) and gradient compile (1.32 s) in job 3a030c65 (10a311f). Mechanism: space_lower, space_modulation_lower and laser_frequency_modulation_lower rebuild their inputs with jnp.array before calling the base function. The rebuild turns candidate 2's symbolic-zero tangents for constant slots (frequency, refractive index) back into dense tangents, so the vjp still forms their derivative residuals and transposes. Calling the base function directly on separate scalars, with slot 0 negated, keeps the zeros symbolic. Exactness: the same scalars reach the same base function, so forward outputs should be bitwise identical and the gradient identical or within reordering. Prediction: forward and gradient compile both decrease slightly, likely \u22640.3 s combined; execute is unchanged. Reject on any forward difference, a strict failure, or a total slower than 19.77 s beyond noise.",
+      "change_summary": "Candidate 2 (10a311f, COMPONENT_SLOT_PRUNING) passed official and strict checks in full job 3a030c65 and is kept as the new branch best. The first run took 19.766 s, against 21.550 s for parent aa2b1ab (job 35abe628). Forward compile dropped by 1.00 s (7.62 to 6.62), gradient compile by 0.64 s (1.96 to 1.32), and both lower phases by about 0.05 s each; execute times were unchanged. Forward outputs were bitwise identical, and the gradient's max normalized error was 1.6e-8, the same as the parent. Candidate 3 extends the pruning to the *_lower component variants. These rebuilt a dense parameter vector with jnp.array([-p0, p1, p2]), which brought back dense tangents. They now call the base function directly through _ParameterSlots with slot 0 negated, so the values are identical. Only simulate.py changed; setting LOWER_SLOT_PRUNING=False restores 10a311f.",
+      "stopping_reason": null,
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/ae180410c4375fff1ca3f755fb057ffc0641db75/experiments/runs/claude-guided-v2/candidate-03.json",
+      "source_digest": "f188b6777904d6920f17b1b695a7f1031ac9c074f03b297a4cd59b7379640ecf",
+      "source_digest_kind": "canonical_json_sha256",
+      "feedback_ref": {
+        "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/ae180410c4375fff1ca3f755fb057ffc0641db75/experiments/runs/claude-guided-v2/candidate-03.json",
+        "artifact_digest": "f188b6777904d6920f17b1b695a7f1031ac9c074f03b297a4cd59b7379640ecf",
+        "digest_kind": "canonical_json_sha256"
+      },
+      "session_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+      "iteration": null,
+      "checkpoint": null,
+      "next_input": null,
+      "input_receipt": {
+        "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-guided-v2/turn-03-prompt-ae2922bc3df3bafcd12734a224b6d1cba57c8fe8ad83deead24d0e443e755e61.json",
+        "sha256": "ae2922bc3df3bafcd12734a224b6d1cba57c8fe8ad83deead24d0e443e755e61",
+        "turn": 3,
+        "thread_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+        "feedback_mode": "guided",
+        "shared_evidence": {
+          "schema": "feyer-search-frontier-v1",
+          "source_path": "/Users/t.betz/Documents/Feyer challenge/.lab/frontier/current.json",
+          "snapshot_ref": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-guided-v2/shared-evidence/a7129a18ec3ce6e1c7bd30179986acd5a7f840187679ba516edfe602a1c16e85.json",
+          "sha256": "a7129a18ec3ce6e1c7bd30179986acd5a7f840187679ba516edfe602a1c16e85",
+          "bytes": 97539,
+          "generated_at": 1795296866.722959,
+          "read_at": 1795296885.383331,
+          "age_seconds": 18.660372018814087,
+          "freshness_policy": {
+            "max_age_seconds": 300,
+            "future_skew_seconds": 30
+          },
+          "content_digest": "373bc9500a49668833265670efc7c01c0b888745ab2e2052d6a86669d67fdae3",
+          "source_provenance": {
+            "team_digest": "922c284037a5d8f7be5e5b299abffb478d7441b59b987196ed74184b846da99d",
+            "policy_digest": "54fffa2b291a30d2d20eb7b881da57f3f127ed0d3559330d7d5685838532e01c",
+            "policy_source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d3e5e4de995914819631acdf9980c00fd95a47b3/experiments/deployments/amd-two-lanes-v1.json",
+            "evidence_digest": "3c30600c500b9bca0bd216aeba021c88e239bf700b6cd157f72d98a98d413632",
+            "collector": "trusted-local-artifacts-v1",
+            "instance": "amd-tim"
+          }
+        },
+        "consumed_feedback_digest": "82d4ff940ca80f8dbd5683edd8d95d66178d0f22821b3a29e7307f8be1b96235",
+        "consumed_candidate_sha": "10a311f6dbe4e8b71fa98654d015493ab8b3ef27"
+      },
+      "evaluations": [
+        {
+          "job_id": "44aca4188dd34b918eb9ef7fddadde93",
+          "candidate_sha": "3b805077bb5c61d85115faf38af243cc001d0fee",
+          "profile": "screen"
+        },
+        {
+          "job_id": "57ef1df7269d4b56acf28bcd89958873",
+          "candidate_sha": "3b805077bb5c61d85115faf38af243cc001d0fee",
           "profile": "full"
         }
       ],
