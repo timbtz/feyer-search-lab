@@ -203,7 +203,7 @@ graph TD
 
 Every edge records intended inputs, not proof of speedup.
 
-Recorded jobs: 13. Decisions/events: 119.
+Recorded jobs: 14. Decisions/events: 120.
 
 ## External research records
 
