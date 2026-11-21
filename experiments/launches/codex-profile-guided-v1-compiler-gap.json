@@ -5,8 +5,8 @@
   "actor": "codex-profile-guided-v1",
   "branch": "explore/codex-profile-guided-v1",
   "worktree": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/codex-profile-guided-v1",
-  "status": "awaiting_current_evaluation",
-  "observed_at": 1795294374.613261,
+  "status": "dispatched",
+  "observed_at": 1795294510.4445639,
   "pid": 62165,
   "runtime_commit": "8bf6e8fbe58a0b605857659a3bff032350f0180c",
   "fixed_deadline_unix": 1795295364.088367,
@@ -14,9 +14,22 @@
   "parent_candidate_sha": "7d1ccc59cef3d7436870bb0e6c941dbde4c30770",
   "brief_path": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/compiler-followup-runtime-v1/experiments/briefs/compiler-gap-followup.md",
   "brief_sha256": "59076ef8431198386dfe6d2ad6ef0152d92eb902cca2818dbec86faf17a5c4d0",
-  "input_receipt": null,
-  "actual_model": null,
+  "input_receipt": {
+    "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/codex-profile-guided-v1/turn-10-prompt-ca7cf42c2173492a4a18935596a8843260b967c285338b8de308a8d8e7370f58.json",
+    "sha256": "ca7cf42c2173492a4a18935596a8843260b967c285338b8de308a8d8e7370f58",
+    "turn": 10,
+    "thread_id": "01a1ffba-57ec-7191-8ba9-c6163633a3b3",
+    "consumed_feedback_digest": "bd18aa9a9a52666336f0f0d510e7dd9803a6c46b87fac40af864c9dafc8cb32c",
+    "consumed_candidate_sha": "7d1ccc59cef3d7436870bb0e6c941dbde4c30770"
+  },
+  "actual_model": "gpt-6-astra",
   "requested_model": "gpt-6-astra",
   "reasoning_effort": "high",
-  "note": "Same session and original deadline. Current remote jobs preserved. Astra actual model requires next-turn rollout verification."
+  "note": "Next model turn received the larger-hypothesis brief after the previous full evaluation; same session/deadline and pinned Astra high verified in rollout turn_context.",
+  "model_verification": {
+    "timestamp": "2026-11-21T20:53:30.565Z",
+    "model": "gpt-6-astra",
+    "effort": "high",
+    "cwd": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/codex-profile-guided-v1"
+  }
 }
