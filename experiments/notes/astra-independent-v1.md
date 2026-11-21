@@ -151,3 +151,38 @@ Local validation: Python AST parsing, git diff --check, and nine pure-Python
 complex block-partition equivalence cases passed (including empty mechanical
 blocks and the RHS column). JAX/full numerical validation awaits supervisor;
 no benchmark was run locally.
+
+### Candidate 4 evaluator outcome: validated, no useful improvement measured
+
+SHA `7f6d9c37beef8ad3e1209bf7160e0cfaf3016f57`. Screen
+`a014c5cf7a8946318bee77cb3fac4f98`: 27.039955 s, limited checks passed.
+Full `0146f2484ed14734966ce11c1ebd9a31`: official and strict checks passed.
+First run 27.233055 s, warm median 14.269739 s, job wall 109.374635 s,
+peak RSS 13,575,144 KiB. Forward lower/compile/execute
+0.815944 / 8.133374 / 10.952354 s; gradient lower/compile/execute
+0.211202 / 2.500873 / 3.019066 s. Numerical metrics identical to candidate 3:
+max official log sensitivity error 5.374104176780747e-6, successful gradient
+spot check, all saved physical outputs exact; strict gradient max absolute
+error 2.6020852139652106e-18 and relative L2 error 3.69040600052152e-23.
+The hypothesized memory improvement did not materialize: peak RSS rose, first
+run was essentially unchanged, and reverse execution was slower in this run.
+
+## Candidate 5: map complete frequency calculations
+
+Move signal matrix assembly, signal solve, independent adjoint solve, noise
+matrix update, covariance solve, and noise projection into a `lax.map` body.
+Keep carrier computation and detector selection assembly outside the map, then
+broadcast those inputs over all frequency rows. Each map iteration performs
+the complete original equations at one frequency. Outputs are stacked back in
+the original ordering. No frequency is omitted, and ordinary JAX AD preserves
+the residuals for the official separately compiled reverse pass.
+
+Hypothesis (unmeasured): transient dense matrix operations on one frequency
+instead of 101 batched matrices reduce memory traffic and lower compile cost.
+The LU algorithm and independently factored adjoint are unchanged. Execution
+grouping can still alter fusion/reduction rounding; official and strict checks
+are required. This is a scheduling change, not a reduced physical model.
+
+Local checks: AST and git diff --check passed; inspected the complete diff for
+matching matrix indices, carrier broadcasting, detector axes, and output
+transposes. Numerical evaluation awaits the supervisor; no local benchmark.

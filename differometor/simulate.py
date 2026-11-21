@@ -331,54 +331,6 @@ def simulate(
     # Signal solve
     # --------------------
     parameters = expand_parameters(parameters, signal_changing_parameter_indices, signal_changing_values)
-    signal_matrix = vmap(update, in_axes=(0, None, None, None, None, None))(
-        parameters,
-        signal_matrix,
-        signal_function_input_indices,
-        signal_output_indices,
-        signal_matrix_indices,
-        signal_function_indices,
-    )
-
-    # Scale signal connector entries by the carrier solution at the respective spaces.
-    # The minus sign matches the sign convention used by the referenced modeling tools.
-    signal_entries = (
-        -signal_matrix[:, signal_carrier_placing_indices[0], signal_carrier_placing_indices[1]]
-        * carrier[:, signal_carrier_indices.flatten()]
-    )
-    signal_matrix = signal_matrix.at[:, signal_carrier_placing_indices[0], signal_carrier_placing_indices[1]].set(
-        signal_entries
-    )
-
-    # Apply conjugation rules to enforce upper and lower sideband symmetry.
-    carrier_size = carrier.shape[1]
-    # The two conjugated blocks in the middle row are adjacent (including the
-    # RHS column). Assemble disjoint blocks rather than scattering three large
-    # slices into full matrices and retaining those updates for reverse AD.
-    middle_rows = jnp.concatenate(
-        (
-            signal_matrix[:, carrier_size : carrier_size * 2, :carrier_size],
-            jnp.conjugate(signal_matrix[:, carrier_size : carrier_size * 2, carrier_size:]),
-        ),
-        axis=2,
-    )
-    bottom_rows = jnp.concatenate(
-        (
-            jnp.conjugate(signal_matrix[:, carrier_size * 2 :, :carrier_size]),
-            signal_matrix[:, carrier_size * 2 :, carrier_size:],
-        ),
-        axis=2,
-    )
-    signal_matrix = jnp.concatenate(
-        (signal_matrix[:, :carrier_size, :], middle_rows, bottom_rows), axis=1
-    )
-
-    signal_system = signal_matrix[:, :, :-1]
-    signal_factors = vmap(lu_factor)(lax.stop_gradient(signal_system))
-    signal = vmap(solve_with_factors)(
-        signal_system, signal_factors, signal_matrix[:, :, -1]
-    )
-
     # --------------------
     # Quantum noise solve
     # --------------------
@@ -411,58 +363,69 @@ def simulate(
         :, :, carrier.shape[1] : carrier.shape[1] * 2
     ].set(lower_carrier_selections)
 
-    # Back-propagate detector weights by solving the transposed conjugated signal system.
-    carrier_selections = jnp.broadcast_to(
+    # Each frequency is independent after the carrier field is known. Map the
+    # complete calculation so transient dense matrices stay local to one step;
+    # JAX retains the residuals required by the separately compiled reverse pass.
+    frequency_count = parameters.shape[0]
+    carrier_rows = jnp.broadcast_to(carrier, (frequency_count, carrier.shape[1]))
+    selections = jnp.broadcast_to(
         carrier_selections,
-        (carrier_selections.shape[0], signal_system.shape[0], carrier_selections.shape[2]),
-    )
-    # Factor the adjoint independently to retain the original pivoting and
-    # rounding for this sensitive optical system. Only identical systems share
-    # factors; an algebraically equivalent adjoint solve can alter gradients.
-    adjoint_system = jnp.transpose(jnp.conjugate(signal_system), (0, 2, 1))
-    noise_weights = vmap(vmap(solve), in_axes=(None, 0))(
-        adjoint_system, carrier_selections
-    )
+        (carrier_selections.shape[0], frequency_count, carrier_selections.shape[2]),
+    ).transpose(1, 0, 2)
+    carrier_size = carrier.shape[1]
 
-    # Update noise source matrix (may depend on current parameters).
-    noise_matrix = vmap(update, in_axes=(0, None, None, None, None, None))(
-        parameters,
-        noise_matrix,
-        noise_function_input_indices,
-        noise_output_indices,
-        noise_system_matrix_indices,
-        noise_function_indices,
-    )
+    def frequency_step(inputs):
+        parameter_row, carrier_row, selection_rows = inputs
+        matrix = update(
+            parameter_row,
+            signal_matrix,
+            signal_function_input_indices,
+            signal_output_indices,
+            signal_matrix_indices,
+            signal_function_indices,
+        )
+        rows, columns = signal_carrier_placing_indices
+        entries = -matrix[rows, columns] * carrier_row[signal_carrier_indices.flatten()]
+        matrix = matrix.at[rows, columns].set(entries)
 
-    def matmul_single_batch(matrix_batch: jnp.ndarray, vector_batch: jnp.ndarray) -> jnp.ndarray:
-        """
-        Multiply a batch of matrices with a batch of vectors.
+        middle_rows = jnp.concatenate(
+            (matrix[carrier_size : carrier_size * 2, :carrier_size],
+             jnp.conjugate(matrix[carrier_size : carrier_size * 2, carrier_size:])),
+            axis=1,
+        )
+        bottom_rows = jnp.concatenate(
+            (jnp.conjugate(matrix[carrier_size * 2 :, :carrier_size]),
+             matrix[carrier_size * 2 :, carrier_size:]),
+            axis=1,
+        )
+        matrix = jnp.concatenate((matrix[:carrier_size], middle_rows, bottom_rows), axis=0)
+        system = matrix[:, :-1]
+        factors = lu_factor(lax.stop_gradient(system))
+        signal_row = solve_with_factors(system, factors, matrix[:, -1])
 
-        Parameters
-        ----------
-        matrix_batch : jnp.ndarray
-            Shape (B, N, N).
-        vector_batch : jnp.ndarray
-            Shape (B, N).
+        # Preserve independent adjoint factorization and its numerical behavior.
+        adjoint_system = jnp.conjugate(system.T)
+        weights = vmap(solve, in_axes=(None, 0))(adjoint_system, selection_rows)
+        sources_matrix = update(
+            parameter_row,
+            noise_matrix,
+            noise_function_input_indices,
+            noise_output_indices,
+            noise_system_matrix_indices,
+            noise_function_indices,
+        )
+        sources = vmap(lambda vector: sources_matrix @ vector)(weights)
+        covariances = vmap(solve_with_factors, in_axes=(None, None, 0))(
+            system, factors, sources
+        )
+        temporary_sum = jnp.sum(
+            jnp.real(covariances * jnp.conjugate(selection_rows)), axis=1
+        )
+        noise_row = jnp.sqrt(2 * temporary_sum * UNIT_VACUUM * H_PLANCK * F0 * 0.25)
+        return signal_row, noise_row
 
-        Returns
-        -------
-        product : jnp.ndarray
-            Shape (B, N).
-        """
-        return jnp.einsum("bij,bj->bi", matrix_batch, vector_batch)
-
-    # Project noise sources into the system and propagate through the signal matrix.
-    noise_sources = vmap(matmul_single_batch, in_axes=(None, 0))(noise_matrix, noise_weights)
-    covariances = vmap(vmap(solve_with_factors), in_axes=(None, None, 0))(
-        signal_system, signal_factors, noise_sources
-    )
-
-    # Convert propagated covariances into amplitude spectral density.
-    temporary_sum = jnp.sum(jnp.real(covariances * jnp.conjugate(carrier_selections)), axis=2)
-    noise = jnp.sqrt(2 * temporary_sum * UNIT_VACUUM * H_PLANCK * F0 * 0.25)
-
-    return carrier.T, signal.T, noise.squeeze()
+    signal, noise = lax.map(frequency_step, (parameters, carrier_rows, selections))
+    return carrier.T, signal.T, noise.T.squeeze()
 
 
 def run_build_step(
