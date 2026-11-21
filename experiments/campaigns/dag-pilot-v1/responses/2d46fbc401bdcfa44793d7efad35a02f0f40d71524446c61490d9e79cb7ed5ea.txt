@@ -1,0 +1,75 @@
+{
+  "actor": "hetzner-codex-1",
+  "actual_model": "gpt-6-astra",
+  "actual_model_note": "Recorded in this Codex session turn_context metadata",
+  "artifacts": {
+    "response": {
+      "path": "experiments/worker-results/076fb719980748409ecf0c5ab4d1d53b/response.json",
+      "sha256": "1ca42699384ee18beacb90c9b4071ac1a21de658704776ac689fc64c4caf946e"
+    }
+  },
+  "assignment_commit": "8449118e42be7e1c3ea101d593c684c65375756e",
+  "brief_commit_sha": "66a1c0dfa68351ba70416aaf4212c5b6266c256c",
+  "brief_sha256": "08a79ffc2c552a15f7375214fdb7fc10f27060c8e5aa3f45b3b9c39e7daf822b",
+  "campaign_id": "dag-pilot-v1",
+  "changed_paths": [
+    "experiments/notes/hetzner-guidance-001.md"
+  ],
+  "claim_version": 1,
+  "commit_sha": "12d49da142a0c079fdd05cb7ed421ddc795a4936",
+  "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "context_commit_sha": "d31f52d1d686334aea71558437db69e6eac0878b",
+  "context_sha256": "83ad5453fe05d5804bde25d432a241d9f3e651b04c8ab90986ebe0e58b82670c",
+  "deadline_unix": 1795282371.977746,
+  "elapsed_seconds": 268.6625442504883,
+  "heuristic_id": "scalar-component-scan-unroll-v1",
+  "hypothesis": "Small scalar scan unroll factors may reduce loop overhead while increasing compilation cost or memory; no speedup is measured.",
+  "kind": "guidance",
+  "parameters_after": {},
+  "parameters_before": {},
+  "parent_candidates": [
+    {
+      "candidate_id": "seed8",
+      "commit_sha": "1e552d675c3795265be8af1ac23ffb61f90f30b1"
+    }
+  ],
+  "provider": {
+    "model": null,
+    "model_policy": "inherit-designated-config",
+    "name": "codex",
+    "reasoning": "xhigh"
+  },
+  "publication": {
+    "branch": "explore/hetzner/guidance-001",
+    "commit_sha": "9669e6daf7e448cee3042ddeb1b0e9780ff6e578",
+    "path": "experiments/worker-results/076fb719980748409ecf0c5ab4d1d53b/receipt.json"
+  },
+  "ready_for_evaluation": false,
+  "resolved_model": "gpt-6-astra",
+  "resolved_reasoning": "xhigh",
+  "response": {
+    "heuristic_id": "scalar-component-scan-unroll-v1",
+    "hypothesis": "Small scalar scan unroll factors may reduce loop overhead while increasing compilation cost or memory; no speedup is measured.",
+    "notes": "The note includes source citations, seed evidence, implementation scope, phase tradeoffs and correctness checks. Simulator digest is unchanged. No benchmarks ran. Guidance turn complete; stop=true.",
+    "parameters_after_json": "{}",
+    "parameters_before_json": "{}",
+    "ready_for_evaluation": false,
+    "summary": "Wrote experiments/notes/hetzner-guidance-001.md proposing future component scan-unroll values {1,2,4}."
+  },
+  "round_id": "round-001",
+  "round_spec_sha256": "340b0328994b565ff10f277a62029154eed8346995b6ccec5a616e87bf465efe",
+  "runtime_commit": "a6bdede271ffd6bcd52d31f2d7d591ea6f500a66",
+  "schema_version": "feyer-dag-proposal-v1",
+  "session_id": "01a1ff24-5e64-7972-bf6f-7bf6bd0edb09",
+  "status": "complete",
+  "task_id": "076fb719980748409ecf0c5ab4d1d53b",
+  "task_sha256": "3edb042ceeb7413237d5d2490ccbb6df17ffbcd037eea6626aa0b730123d05ae",
+  "usage": {
+    "cache_write_input_tokens": 0,
+    "cached_input_tokens": 386176,
+    "input_tokens": 446187,
+    "output_tokens": 8815,
+    "reasoning_output_tokens": 4794
+  },
+  "validation": "not_evaluated"
+}
