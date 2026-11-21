@@ -1,9 +1,0 @@
-# One-turn guidance: the next finite search operator
-
-This is a single authorized guidance task for campaign dag-pilot-v1. Work only in your assigned branch and write experiments/notes/hetzner-guidance-001.md. Do not edit simulator code, dependencies, benchmarks, infrastructure or any other agent's files. Do not run benchmarks, install packages, make Git commits, call GitHub/SSH, or spawn agents. The native supervisor handles publication; the coordinator owns all evaluation and campaign decisions.
-
-Your parent is the confirmed seed8, 1e552d675c3795265be8af1ac23ffb61f90f30b1. Read the immutable campaign context supplied in the prompt and inspect differometor/simulate.py. The current pilot explores fifteen pre-registered configurations spanning checkpoint placement, prevent_cse, and map batch size. It must preserve all 101 frequencies, all 193 variables, double precision and the unchanged three benchmark JIT stages. The physical parameters are fixed required inputs, not axes to remove from the workload.
-
-Provide source evidence for one next operator worth registering in a future round, or explain why existing operators should first be measured more carefully. Distinguish source-derived hypotheses from measured evidence. State implementation compatibility, likely phase tradeoffs and the necessary correctness checks. Avoid simply repeating an unvalidated shared-LU numerical rewrite. Do not modify this round's frozen fifteen choices or assume additive speedups.
-
-This is guidance, not a candidate: return ready_for_evaluation=false. Return parameters_before_json and parameters_after_json as JSON objects encoded as strings; use {} where no precise registered parameter assignment applies. Pick a descriptive heuristic_id. Preserve the task deadline; one turn only. A concise, actionable research note is the deliverable.
