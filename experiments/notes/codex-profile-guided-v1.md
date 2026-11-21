@@ -580,3 +580,58 @@ Hypothesis: reducing the scan output from a dense matrix to its replacement vect
 Validation: all simulator modules parse; whitespace check passes. AST helper inlining exactly reconstructs parent update and _assemble_signal_and_noise, and all other pre-existing functions except simulate are unchanged. Sixty deterministic standard-library complex cases verify row/chunk assembly movement bitwise, including empty/reordered updates, carrier subsets, conjugation boundaries, augmented RHS and padded final chunks. These do not establish JAX differentiation or full physical correctness. No local simulator/benchmark, environment change, Git write, SSH or agents.
 
 Next: supervisor screen then full/all saved output and gradient checks if eligible; compare complete total with exact parent above. Preserve this trial even if rejected; fallback is candidate 9. Fixed deadline **2026-11-21 21:09:24.088367 UTC**, session codex-profile-guided-v1, thread 01a1ffba-57ec-7191-8ba9-c6163633a3b3; no candidate cap. Other-team timing reports have unspecified boundaries and are not evidence for this candidate.
+
+
+## Candidate 10 measured feedback — rejected as an improvement
+
+SHA **43b6ed2b405bb9befe3eadf9c6337fa844a4f4c1**, parent/retained best **7d1ccc59cef3d7436870bb0e6c941dbde4c30770**. Screen **dfcebee9939946c09b4c6a44202bd23c**, request 71d91d5f5e4c4d259889b209b4b6231c: passed cheap checks, first **21.221506925 s**, compilation/lowering **8.934680689 s**, wall **22.171546532 s**, peak RSS **8,677,068 KiB**. No full checks in screen.
+
+Full **00213b7da29844b19badaf6ae9977e33**, request 9a6d1e1c63734fbbad79793410c5574b: official and strict checks all pass in the same full cohort, workload, precision and environment. Local report and every saved comparison inspected. First **21.045638137 s**, **+0.987920512 s** vs candidate 9 full 7e6ce3c3bf5148af93351918fda06e22. Combined lowering/compilation **8.778081870 s**, only **-0.040333478 s**; forward execution **+1.128730621 s**, reverse execution **-0.109016357 s**. The proposed compilation gain was negligible and execution regressed; smaller scan outputs did not yield a faster complete run.
+
+Warm median **11.784797845 s** (+1.022583403 s), samples 11.838794097, 11.784797845, 11.354175931 s. Full wall **92.168122940 s** (+6.100441616 s). RSS **8,732,028 KiB** (+930,364 KiB), sampled peak 8,942,645,248 bytes. No resource breach. Timing categories remain separate. Native scatter, conjugation, solve and compiler costs are not isolated by the phase report.
+
+| Phase | Candidate 10 seconds | Delta vs candidate 9 |
+| --- | ---: | ---: |
+| imports | 0.292112093 | +0.000662182 |
+| initialize | 0.002949901 | -0.000015333 |
+| load | 0.001418388 | -0.000097014 |
+| build | 0.831388175 | +0.007889099 |
+| forward_lower | 0.641114425 | -0.047247075 |
+| forward_compile | 3.405337701 | +0.090817897 |
+| forward | 9.729208652 | +1.128730621 |
+| sensitivity_lower | 0.074469769 | -0.003635611 |
+| sensitivity_compile | 0.357763937 | -0.023747358 |
+| sensitivity | 0.000895610 | -0.000002690 |
+| gradient_lower | 0.293457409 | -0.003802998 |
+| gradient_compile | 4.005938629 | -0.052718332 |
+| gradient | 1.409014592 | -0.109016357 |
+| host_transfer | 0.000568856 | +0.000103481 |
+
+Saved last-warm comparisons at unchanged rtol=1e-7 and scale_atol=1e-12:
+
+| Output | Absolute error | Relative L2 error | Normalized error | Failures |
+| --- | ---: | ---: | ---: | ---: |
+| carrier | 0 | 0 | 0 | 0 |
+| signal | 0 | 0 | 0 | 0 |
+| noise | 0 | 0 | 0 | 0 |
+| sensitivity | 0 | 0 | 0 | 0 |
+| powers | 0 | 0 | 0 | 0 |
+| gradient | 5.0931703299284e-10 | 7.57652928017493e-15 | 6.03955088249533e-07 | 0 |
+| parameters | 0 | 0 | 0 | 0 |
+| frequencies | 0 | 0 | 0 | 0 |
+
+All finite, every mismatch list empty; physical outputs and exact-required parameter/frequency checks match reference exactly. Full gradient has all 193 coordinates, norm 70517.10686388829. Official FD check passes, log-sensitivity error 5.374104176780747e-6, reported loss 9.793036291535532e-8. Keep candidate 10 in history as a numerically valid performance regression. Candidate 9 remains the retained best; candidate 10 is only the experimental parent for the isolated follow-up below.
+
+## Candidate 11 — conjugate sparse values and unbatched base before scatter
+
+Implementation parent **43b6ed2b405bb9befe3eadf9c6337fa844a4f4c1**; retained acceptance comparator **7d1ccc59cef3d7436870bb0e6c941dbde4c30770** at 20.057717625 s. Candidate SHA/run IDs pending supervisor. Same session, 536 seconds remaining on resumption.
+
+Exact implementation-parent full **00213b7da29844b19badaf6ae9977e33** ranks forward execution **9.729208652 s (46.23%)**, gradient compile **4.005938629 s (19.03%)**, forward compile **3.405337701 s (16.18%)**, reverse execution **1.409014592 s (6.70%)**. Combined lowering/compilation **8.778081870 s (41.71%)**. Candidate 10 increased forward execution and RSS when dense assembly moved outside the scan. This suggests investigating batched materialization, but does not prove which operator caused the regression.
+
+One attributable change relative to candidate 10: move entrywise sideband conjugation through the unique scatter. Conjugate the unbatched base once, gather the same mask at the builder-proven flat destinations, and conjugate the replacement vectors after their carrier scaling. Then perform the existing batched scatter. The entrywise identity C(scatter(B,I,v)) = scatter(C(B),I,C[I](v)) preserves every base and replacement entry. Generic/duplicate/per-frequency-noise fallbacks keep dense post-update conjugation. Extract the unchanged mask formula into one helper; no new structural metadata, solver, numerical option or checkpoint change.
+
+Hypothesis: avoid conjugation over the full dense batch and its reverse graph, potentially reducing forward execution/materialization and compiler work. Primary expected phase change is forward execution; tentative saving **0–1.5 s relative to candidate 10**, unmeasured. Any benefit must exceed candidate 10's 0.987920512 s total deficit to beat retained candidate 9. Extra mask gather or compiler fusion changes may offset savings. Similar conjugation movement in candidate 7 with the earlier dense-loop topology gave no total improvement (+0.028802 s); this follow-up tests it only in the distinct batched-outside-loop topology. No claim that this operation accounts for the measured regression.
+
+Validation: all simulator files parse and whitespace checks pass. AST isolation confirms only simulate and the extracted conjugation helper change; the generic mask expression and where operands match the parent AST. 120 deterministic standard-library complex cases pass bitwise for forward assembly and the replacement-vector transpose identity, including signed zeros, empty selections, arbitrary complex bases, carrier subsets, reordered unique writes and augmented RHS. An initial AST validation script used incorrect statement offsets and failed its assertion; corrected offsets pass without an implementation change. These are algebra/source checks, not JAX numerical or performance validation. No local simulator or benchmark ran.
+
+All 101 frequencies, all 193 design variables, physical updates, precision, separate adjoint pivoting, full-vmap solves and official three JIT stages stay fixed. No static-index work borrowed from Claude. Supervisor should evaluate screen/full and all strict saved checks, compare both experimental parent and retained candidate 9, and reject any total regression or numerical failure. If rejected, restore candidate 9 for subsequent work; this trial remains in history. Fixed deadline **2026-11-21 21:09:24.088367 UTC**, session codex-profile-guided-v1, thread 01a1ffba-57ec-7191-8ba9-c6163633a3b3; no candidate cap or budget extension.

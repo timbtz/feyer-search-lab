@@ -621,10 +621,16 @@ def simulate(
                 values, = _map_row_chunks(
                     block_values, (parameters, row_carrier_entries), chunk_size,
                 )
+                # Conjugation is entrywise: apply it to the base once and to
+                # replacement values after carrier scaling, before broadcasting
+                # and scattering. Avoid a conjugation over the dense batch.
+                conjugate_entries = _signal_conjugation_mask(signal_matrix.shape, carrier.shape[1])
+                base_signal = jnp.where(conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix)
+                conjugate_values = conjugate_entries.reshape(-1)[signal_groups["flat_matrix_indices"]]
+                values = jnp.where(conjugate_values, jnp.conjugate(values), values)
                 assembled_signal = vmap(_scatter_component_values, in_axes=(0, None, None, None))(
-                    values, signal_matrix, signal_matrix_indices, signal_groups,
+                    values, base_signal, signal_matrix_indices, signal_groups,
                 )
-                assembled_signal = _conjugate_signal_matrix(assembled_signal, carrier.shape[1])
                 assembled_noise = broadcast_noise(None)
             else:
                 # Preserve generic/duplicate-index and per-frequency noise paths.
@@ -715,20 +721,19 @@ def _map_frequency_chunks(function, row_arrays: tuple, chunk_size: int):
     return signal, noise
 
 
-def _conjugate_signal_matrix(signal_matrix, carrier_size):
-    # Apply conjugation rules to enforce upper and lower sideband symmetry.
-    rows = jnp.arange(signal_matrix.shape[1])[:, None]
-    columns = jnp.arange(signal_matrix.shape[2])[None, :]
-    # The lower-sideband row blocks are adjacent; include the augmented RHS.
-    # Their union and the mechanical-to-upper block are disjoint.
-    conjugate_entries = (
+def _signal_conjugation_mask(matrix_shape, carrier_size):
+    """Sideband and mechanical conjugation regions, including augmented RHS."""
+    rows = jnp.arange(matrix_shape[0])[:, None]
+    columns = jnp.arange(matrix_shape[1])[None, :]
+    return (
         (rows >= carrier_size) & (rows < 2 * carrier_size) & (columns >= carrier_size)
     ) | ((rows >= 2 * carrier_size) & (columns < carrier_size))
-    signal_matrix = jnp.where(
-        conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix
-    )
 
-    return signal_matrix
+
+def _conjugate_signal_matrix(signal_matrix, carrier_size):
+    conjugate_entries = _signal_conjugation_mask(signal_matrix.shape[1:], carrier_size)
+    return jnp.where(conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix)
+
 
 
 def _assemble_signal_and_noise(
