@@ -200,6 +200,13 @@ const SearchProgression = (() => {
       for(const o of observations.filter(o=>o.task===t.id))if(!b.records.some(r=>r.job_id===o.evidence?.job_id))b.records.push({sha:o.evidence.candidate_sha,job_id:o.evidence.job_id,profile:o.evidence.profile,evidence:o.evidence,instance:o.instance,comparison_context:o.comparison_context,metrics:o.evidence.metrics,created_at:o.created_at||0});
     }
     const researchRecords=Object.values(data.team_search?.research_records||{});
+    // Author-reported aggregates retain their own identity and never become evaluator jobs.
+    for(const record of researchRecords){
+      const m=record.reported_measurement;
+      if(!m||m.candidate_sha!==record.candidate_sha||!/^[0-9a-f]{40}$/.test(m.candidate_sha)||!m.source_ref||!m.source_digest)continue;
+      const b=branch(`external:${record.executor?.id||record.record_id}`,`External reports · ${record.executor?.id||record.record_id}`);
+      b.records.push({sha:m.candidate_sha,job_id:`external:${record.record_id}`,profile:'external_report',external_report:true,metrics:m.metrics||{},phases:m.phases||{},warm_timing:m.warm_timing||{},created_at:m.observed_at||0,instance:m.instance||null,comparison_context:{mode:'unverified_timing'},official_check:'not_independently_verified',strict_check:'not_independently_verified',reported_measurement:m,research_records:[record]});
+    }
     for(const b of branches.values()){
       for(const r of b.records){r.research_records=researchRecords.filter(x=>x.candidate_sha===r.sha);r.research_tasks=tasks.filter(t=>list(t.candidates).includes(r.sha));
         for(const c of list(data.campaigns)){const evaluation=list(c.evaluations).find(e=>e.job_id===r.job_id&&e.profile===r.profile);const candidate=evaluation&&list(c.candidates).find(a=>a.candidate_id===evaluation.candidate_id&&a.commit_sha===r.sha);if(candidate){const parents=list(candidate.parents).map(id=>list(c.candidates).find(a=>a.candidate_id===id)?.commit_sha);r.numerical_context={campaign_id:c.id,parameters:candidate.parameters,provenance:candidate.provenance,parents:parents.every(Boolean)?parents:[],unresolved_parent:parents.some(p=>!p),selector:c.selector};break;}}
@@ -218,6 +225,7 @@ const SearchProgression = (() => {
     return {research,tuning,tasks,measurements:[...measurements.values()],combinations:tasks.filter(t=>t.kind==='combine'),confirmations:tasks.filter(t=>t.kind==='confirm'),ready:SearchDAG.readyTasks(data.team_search),unassigned:observations.filter(o=>jobs.get(o.evidence?.job_id)?.sha!==o.evidence?.candidate_sha&&!o.task)};
   }
   function verdict(r){
+    if(r.external_report||r.profile==='external_report')return {label:'External report · unverified',tone:'pending'};
     if(r.evidence?.category==='invalid_candidate'||r.official_check==='failed'||r.strict_check==='failed')return {label:'Check failed',tone:'failed'};
     if(r.resource_evidence?.budget_exceeded===true)return {label:'Resource limit',tone:'failed'};
     if(r.profile==='full'&&(r.evidence?r.evidence.eligible_full===true:(r.official_check==='passed'&&r.strict_check==='passed')))return {label:'Full pass',tone:'pass'};
@@ -590,6 +598,7 @@ if(typeof module!=='undefined')module.exports.SessionGraph=SessionGraph;
   function runFeedback(r,reference){
     const wrapper=make('details','run-feedback');wrapper.append(make('summary','','Recorded feedback & checkpoints'));const body=make('div','run-feedback-body'),profile=list(S.data?.profiler_reports).find(p=>p.job_id===r.job_id&&p.candidate_sha===r.sha),values=RunMetrics.values(r),annotation=RunMetrics.annotation(r);
     body.append(make('p','feedback-note','Recorded evaluation feedback. Delivery to a subsequent model is only shown when a receipt explicitly records it.'));
+    if(r.external_report){body.append(make('p','feedback-note',`Author-reported aggregate from ${r.reported_measurement?.sample_count??'unknown'} fresh processes. Phase medians may not sum to the median total. Reported checks use the source author's policy; this record cannot establish lab eligibility or a ranked speedup.`));disclosure(body,'External measurement source and reported checks',r.reported_measurement,`external-${r.job_id}`);}
     facts(body,[['Official',r.evidence?.checks?.official||r.official_check||'Unknown'],['Strict',r.evidence?.checks?.strict||r.strict_check||'Unknown'],['Eligibility',SearchProgression.verdict(r).label],['First run',metricTime(values.total)],['Job wall',metricTime(profile?.job_wall_seconds)],['Instance',r.instance||'Not recorded'],['Cohort',short(r.evidence?.cohort_digest)||'Not recorded'],['Timing',SearchProgression.timing(r.comparison_context)],['Epoch',String(r.comparison_context?.epoch??'Not recorded')],['Reference',reference.label||reference.reason]]);
     const phases=Object.entries(r.phases||{}).filter(([,v])=>numeric(v)).sort((a,b)=>b[1]-a[1]);
     if(phases.length){body.append(make('h4','','Measured phase costs'));for(const [key,value]of phases){const row=make('div','feedback-phase');add(row,make('span','',RunMetrics.names[key]||human(key)),make('strong','',metricTime(value)),make('span','',values.total>0?`${(100*value/values.total).toFixed(1)}%`:''));body.append(row);}}
