@@ -34,8 +34,24 @@ to match phase conventions and signs.
 
 from __future__ import annotations
 
+import jax
 import jax.numpy as jnp
 import numpy as np
+
+
+def _array_module(*values):
+    """
+    `numpy` for plain host values, `jax.numpy` for JAX arrays and tracers.
+
+    The setup builder evaluates some component helpers on Python floats. Running
+    those through `jax.numpy` dispatches (and compiles) one tiny XLA program per
+    operation; NumPy computes the same formulas immediately. Traced and
+    differentiated code always receives JAX values and keeps using `jax.numpy`.
+    """
+    for value in values:
+        if isinstance(value, jax.Array):
+            return jnp
+    return np
 
 
 # -----------------------------------------------------------------------------
@@ -119,7 +135,8 @@ def standardize_output(output: list) -> jnp.ndarray:
     output_length = len(output)
     if output_length < 4:
         output.extend([0] * (4 - output_length))
-    return jnp.array(output, dtype=jnp.complex128)
+    xp = _array_module(*output)
+    return xp.array(output, dtype=xp.complex128)
 
 
 # -----------------------------------------------------------------------------
@@ -198,7 +215,8 @@ def space(parameters: jnp.ndarray) -> jnp.ndarray:
     The leading minus sign matches the referenced Finesse implementation:
     finesse > components > modal > space.pyx > space_fill_optical_2_optical
     """
-    phi = -jnp.exp(-1j * 2 * jnp.pi * parameters[0] * parameters[1] * parameters[2] / C_LIGHT)
+    xp = _array_module(parameters)
+    phi = -xp.exp(-1j * 2 * xp.pi * parameters[0] * parameters[1] * parameters[2] / C_LIGHT)
     return standardize_output([phi])
 
 
@@ -825,7 +843,41 @@ def power_detector(solution: jnp.ndarray) -> jnp.ndarray:
     Uses the scaling:
         0.5 * EPSILON_0C * |field|^2
     """
+    if isinstance(solution, jax.core.Tracer):
+        return _power_detector_traced(solution)
     return 0.5 * EPSILON_0C * jnp.abs(solution) ** 2
+
+
+def _power_spec(solution):
+    real_dtype = jnp.finfo(jnp.result_type(solution)).dtype if jnp.issubdtype(
+        jnp.result_type(solution), jnp.inexact) else jnp.float64
+    return jax.ShapeDtypeStruct(solution.shape, real_dtype)
+
+
+@jax.custom_vjp
+def _power_detector_traced(solution):
+    spec = _power_spec(solution)
+    return jax.pure_callback(
+        lambda s: (0.5 * EPSILON_0C * np.abs(np.asarray(s)) ** 2).astype(spec.dtype),
+        spec, solution, vmap_method="sequential")
+
+
+def _power_detector_forward(solution):
+    return _power_detector_traced(solution), solution
+
+
+def _power_detector_backward(solution, power_bar):
+    # p = 0.5 * eps * |s|^2:  dp = eps * Re(conj(s) ds)  ->  s_bar = eps * p_bar * conj(s)
+    def host(solution, power_bar):
+        solution = np.asarray(solution)
+        bar = EPSILON_0C * np.asarray(power_bar) * np.conj(solution)
+        return (bar if np.iscomplexobj(solution) else np.real(bar)).astype(solution.dtype)
+
+    spec = jax.ShapeDtypeStruct(solution.shape, solution.dtype)
+    return (jax.pure_callback(host, spec, solution, power_bar, vmap_method="sequential"),)
+
+
+_power_detector_traced.defvjp(_power_detector_forward, _power_detector_backward)
 
 
 def signal_detector(carrier: jnp.ndarray, signal: jnp.ndarray) -> jnp.ndarray:
@@ -850,10 +902,69 @@ def signal_detector(carrier: jnp.ndarray, signal: jnp.ndarray) -> jnp.ndarray:
     -----
     Matches:
     finesse > detectors > compute > power.pyx > c_pd1_AC_output
+
+    Under tracing (`jax.jit`, `jax.grad`, ...) this runs as one host callback with
+    a hand-written reverse rule (first-order derivatives only). The traced
+    elementwise version costs more XLA compile time than the whole simulation
+    now does; the result is identical. Eager calls use `jax.numpy` directly.
     """
+    if isinstance(carrier, jax.core.Tracer) or isinstance(signal, jax.core.Tracer):
+        return _signal_detector_traced(carrier, signal)
     upper_sideband = jnp.conj(carrier) * signal[: carrier.shape[0]]
     lower_sideband = carrier * signal[carrier.shape[0] : carrier.shape[0] * 2]
     return upper_sideband + lower_sideband
+
+
+def _signal_detector_host(carrier, signal):
+    carrier, signal = np.asarray(carrier), np.asarray(signal)
+    n = carrier.shape[0]
+    return np.conj(carrier) * signal[:n] + carrier * signal[n : 2 * n]
+
+
+def _sum_to_shape(value: np.ndarray, shape: tuple) -> np.ndarray:
+    """Reverse of NumPy broadcasting: sum `value` down to `shape`."""
+    extra = value.ndim - len(shape)
+    value = value.sum(axis=tuple(range(extra))) if extra else value
+    axes = tuple(i for i, size in enumerate(shape) if size == 1 and value.shape[i] != 1)
+    return value.sum(axis=axes, keepdims=True) if axes else value
+
+
+def _signal_detector_spec(carrier, signal):
+    n = carrier.shape[0]
+    shape = np.broadcast_shapes(carrier.shape, (min(n, signal.shape[0]),) + signal.shape[1:])
+    return jax.ShapeDtypeStruct(shape, jnp.result_type(carrier, signal))
+
+
+@jax.custom_vjp
+def _signal_detector_traced(carrier, signal):
+    return jax.pure_callback(
+        lambda c, s: _signal_detector_host(c, s).astype(np.result_type(c, s), copy=False),
+        _signal_detector_spec(carrier, signal), carrier, signal, vmap_method="sequential")
+
+
+def _signal_detector_forward(carrier, signal):
+    return _signal_detector_traced(carrier, signal), (carrier, signal)
+
+
+def _signal_detector_backward(residuals, output_bar):
+    carrier, signal = residuals
+
+    def host(carrier, signal, output_bar):
+        carrier, signal, output_bar = np.asarray(carrier), np.asarray(signal), np.asarray(output_bar)
+        n = carrier.shape[0]
+        upper, lower = signal[:n], signal[n : 2 * n]
+        # y = conj(c) * upper + c * lower  (JAX cotangent convention: c_bar pairs as Re(sum(c_bar * dc)))
+        carrier_bar = _sum_to_shape(np.conj(output_bar * upper) + output_bar * lower, carrier.shape)
+        signal_bar = np.zeros(signal.shape, dtype=np.result_type(signal, output_bar))
+        signal_bar[:n] = _sum_to_shape(output_bar * np.conj(carrier), upper.shape)
+        signal_bar[n : 2 * n] = _sum_to_shape(output_bar * carrier, lower.shape)
+        return carrier_bar.astype(carrier.dtype), signal_bar.astype(signal.dtype)
+
+    specs = (jax.ShapeDtypeStruct(carrier.shape, carrier.dtype), jax.ShapeDtypeStruct(signal.shape, signal.dtype))
+    return jax.pure_callback(host, specs, carrier, signal, output_bar, vmap_method="sequential")
+
+
+_signal_detector_traced.defvjp(_signal_detector_forward, _signal_detector_backward)
 
 
 # -----------------------------------------------------------------------------
@@ -1148,7 +1259,8 @@ def incidence_angle_left(alpha: float) -> jnp.ndarray:
     beamsplitter workspace convention in:
     finesse > components > modal > beamsplitter.pyx > BeamsplitterWorkspace
     """
-    return jnp.cos(jnp.radians(alpha))
+    xp = _array_module(alpha)
+    return xp.cos(xp.radians(alpha))
 
 
 def incidence_angle_right(alpha: float, refractive_index_left: float, refractive_index_right: float) -> jnp.ndarray:
@@ -1180,8 +1292,9 @@ def incidence_angle_right(alpha: float, refractive_index_left: float, refractive
     Related documentation:
     https://finesse.ifosim.org/docs/latest/physics/plane-waves/beam_splitter.html#beamsplitter-phase
     """
-    return jnp.cos(
-        jnp.arcsin(refractive_index_left / refractive_index_right * jnp.sin(jnp.radians(alpha)))
+    xp = _array_module(alpha, refractive_index_left, refractive_index_right)
+    return xp.cos(
+        xp.arcsin(refractive_index_left / refractive_index_right * xp.sin(xp.radians(alpha)))
     )
 
 
@@ -1212,7 +1325,8 @@ def phase_shift(tuning: float, frequency: float, refractive_index: float) -> jnp
     - finesse > components > modal > mirror.pyx > mirror_fill_optical_2_optical
     - finesse > components > modal > beamsplitter.pyx > beamsplitter_fill_optical_2_optical
     """
-    return 2 * jnp.radians(tuning) * refractive_index * (1 + frequency / F0)
+    xp = _array_module(tuning, frequency, refractive_index)
+    return 2 * xp.radians(tuning) * refractive_index * (1 + frequency / F0)
 
 
 def reflectivity_left(
@@ -1243,7 +1357,8 @@ def reflectivity_left(
     jax.numpy.ndarray
         Complex scalar reflection coefficient.
     """
-    return -jnp.sqrt(reflectivity) * jnp.exp(
+    xp = _array_module(reflectivity, tuning, frequency, refractive_index_left, alpha)
+    return -xp.sqrt(reflectivity) * xp.exp(
         1j * phase_shift(tuning, frequency, refractive_index_left) * incidence_angle_left(alpha)
     )
 
@@ -1284,7 +1399,8 @@ def reflectivity_right(
     The right-side incidence angle projection is computed with Snell's law and
     applied to the phase.
     """
-    return -jnp.sqrt(reflectivity) * jnp.exp(
+    xp = _array_module(reflectivity, tuning, frequency, refractive_index_left, refractive_index_right, alpha)
+    return -xp.sqrt(reflectivity) * xp.exp(
         -1j
         * phase_shift(tuning, frequency, refractive_index_right)
         * incidence_angle_right(alpha, refractive_index_right, refractive_index_left)
@@ -1331,7 +1447,8 @@ def transmissivity(
     right_term = phase_shift(tuning, frequency, refractive_index_right) * incidence_angle_right(
         alpha, refractive_index_left, refractive_index_right
     )
-    return -jnp.sqrt(transmissivity) * jnp.exp(1j * (jnp.pi / 2 + 0.5 * (left_term - right_term)))
+    xp = _array_module(transmissivity, tuning, frequency, refractive_index_left, refractive_index_right, alpha)
+    return -xp.sqrt(transmissivity) * xp.exp(1j * (xp.pi / 2 + 0.5 * (left_term - right_term)))
 
 
 # -----------------------------------------------------------------------------

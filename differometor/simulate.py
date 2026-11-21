@@ -150,6 +150,46 @@ def expand_parameters(array: jnp.ndarray, indices: jnp.ndarray, values: jnp.ndar
 
 
 def simulate(
+    optimized_parameters: jnp.ndarray,
+    plan,
+    parameters: jnp.ndarray,
+    carrier_changing_values: jnp.ndarray,
+    signal_changing_values: jnp.ndarray,
+    carrier_matrix: jnp.ndarray,
+    signal_values: jnp.ndarray,
+    noise_values: jnp.ndarray,
+    noise_selection_vectors: jnp.ndarray,
+) -> tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
+    """
+    Run one full simulation pass: carrier, signal, and quantum noise.
+
+    Takes the keyword arguments produced by `run_build_step` (a static
+    `SimulationPlan` plus numeric arrays) and returns the same outputs as
+    `simulate_reference`, the original dense implementation:
+
+    carrier : (CN, CV)   carrier solution
+    signal  : (SN, SV)   signal solution
+    noise   : (SV,)      quantum noise amplitude spectral density (squeezed over detectors)
+
+    The signal system is solved with a sparse LU per frequency (shared by the signal
+    and noise solves); see `differometor.sparse` for details.
+    """
+    from differometor.sparse import simulate_sparse
+
+    return simulate_sparse(
+        optimized_parameters,
+        plan,
+        parameters,
+        carrier_changing_values,
+        signal_changing_values,
+        carrier_matrix,
+        signal_values,
+        noise_values,
+        noise_selection_vectors,
+    )
+
+
+def simulate_reference(
     # prepared arrays
     optimized_parameters: jnp.ndarray,
     optimized_parameter_indices: jnp.ndarray,
@@ -456,7 +496,40 @@ def run_build_step(
 
     Notes
     -----
-    The returned dictionary keys are derived from the `simulate` function signature.
+    The returned dictionary holds the keyword arguments of `simulate`. Use
+    `run_build_step_reference` for the arguments of `simulate_reference`.
+    """
+    from differometor.sparse import make_simulation_arrays
+
+    start = time()
+
+    instructions, matrices, metadata = build(setup)
+    arrays_to_prepare, carrier_arrays, signal_arrays, noise_arrays = pairs_to_arrays(
+        *instructions, optimization_pairs, changing_pairs
+    )
+    prepared_arrays = prepare_arrays(*arrays_to_prepare, changing_values, parameters=matrices[0])
+    simulation_arrays = make_simulation_arrays(prepared_arrays, matrices, carrier_arrays, signal_arrays, noise_arrays)
+
+    if timeit:
+        for array in simulation_arrays.values():
+            jax.block_until_ready(array)
+        return time() - start, (simulation_arrays, metadata)
+
+    return simulation_arrays, *metadata
+
+
+def run_build_step_reference(
+    setup: Setup,
+    changing_pairs: list | None = None,
+    changing_values: jnp.ndarray | None = None,
+    optimization_pairs: list | None = None,
+    timeit: bool = False,
+) -> tuple:
+    """
+    Build a `Setup` into the keyword arguments of `simulate_reference`.
+
+    Same parameters and return structure as `run_build_step`; the dictionary keys
+    are derived from the `simulate_reference` function signature.
     """
     start = time()
 
@@ -466,8 +539,8 @@ def run_build_step(
     )
     prepared_arrays = prepare_arrays(*arrays_to_prepare, changing_values, parameters=matrices[0])
 
-    arg_count = simulate.__code__.co_argcount
-    arg_names = simulate.__code__.co_varnames[:arg_count]
+    arg_count = simulate_reference.__code__.co_argcount
+    arg_names = simulate_reference.__code__.co_varnames[:arg_count]
 
     all_arrays = (*prepared_arrays, *matrices, *carrier_arrays, *signal_arrays, *noise_arrays)
     if len(arg_names) != len(all_arrays):
@@ -476,7 +549,9 @@ def run_build_step(
             f"simulate expects {len(arg_names)} arguments, but build produced {len(all_arrays)} arrays."
         )
 
-    simulation_arrays = {arg_names[i]: array for i, array in enumerate(all_arrays)}
+    simulation_arrays = {
+        arg_names[i]: None if array is None else jnp.asarray(array) for i, array in enumerate(all_arrays)
+    }
 
     if timeit:
         for array in simulation_arrays.values():
