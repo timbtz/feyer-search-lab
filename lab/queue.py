@@ -1,6 +1,8 @@
 """Durable local queue; all evaluator inputs are immutable Git commit IDs."""
 from __future__ import annotations
 
+import contextlib
+import fcntl
 import json
 import re
 import sqlite3
@@ -12,6 +14,32 @@ from pathlib import Path
 TERMINAL_STATUSES = frozenset({"completed", "failed", "timed_out", "interrupted", "rejected"})
 SHA_RE = re.compile(r"^[0-9a-fA-F]{40}$")
 REQUEST_FIELDS = ('sha', 'branch', 'agent', 'direction', 'hypothesis', 'profile')
+INITIALIZATION_TIMEOUT_SECONDS = 30
+
+
+@contextlib.contextmanager
+def initialization_lock(state_dir, timeout=INITIALIZATION_TIMEOUT_SECONDS):
+    """Serialize journal setup and migrations before opening SQLite connections.
+
+    SQLite's busy handler does not reliably wait when concurrent connections
+    change a legacy database's journal mode. This lock is separate from the
+    evaluator's worker lock and is held only during Queue construction.
+    """
+    deadline = time.monotonic() + timeout
+    with (Path(state_dir) / 'queue-init.lock').open('a+') as lock:
+        while True:
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutError('Queue initialization is busy; retry after the current initializer finishes')
+                time.sleep(min(.01, remaining))
+        try:
+            yield
+        finally:
+            fcntl.flock(lock, fcntl.LOCK_UN)
 
 
 def normalize_request_id(value):
@@ -31,7 +59,9 @@ class Queue:
         self.repo_path = Path(repo_path).resolve()
         self.state_dir.mkdir(parents=True, exist_ok=True)
         self.db_path = self.state_dir / "queue.sqlite3"
-        with self._connect() as db:
+        # Close the connection before releasing the process-wide constructor
+        # lock. The DB transaction still owns migration commit/rollback.
+        with initialization_lock(self.state_dir), contextlib.closing(self._connect()) as db, db:
             db.execute("PRAGMA journal_mode=WAL")
             db.executescript("""
                 CREATE TABLE IF NOT EXISTS jobs (
