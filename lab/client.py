@@ -15,6 +15,30 @@ BASELINE_SHA = '02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f'
 TERMINAL = {'completed', 'failed', 'timed_out', 'interrupted', 'rejected'}
 
 
+def sync_ledger(client, directory):
+    """Read completed queue jobs into a local ledger, without submitting any work."""
+    directory = Path(directory)
+    directory.mkdir(parents=True, exist_ok=True)
+    jobs = client.request({'action': 'list', 'limit': 10000})
+    saved = 0
+    for item in jobs:
+        if item['status'] not in TERMINAL:
+            continue
+        if not re.fullmatch(r'[0-9a-f]{32}', item['id']):
+            raise ValueError('Invalid queue job ID')
+        path = directory / (item['id'] + '.json')
+        if path.exists():
+            cached = json.loads(path.read_text())
+            if cached.get('updated_at') == item.get('updated_at') and cached.get('status') == item['status']:
+                continue
+        job = client.request({'action': 'show', 'id': item['id']})
+        temporary = path.with_suffix('.json.tmp')
+        temporary.write_text(json.dumps(job, indent=2, allow_nan=False) + '\n')
+        temporary.replace(path)
+        saved += 1
+    return {'saved': saved, 'listed': len(jobs), 'truncated': len(jobs) == 10000}
+
+
 def git(repo, *args):
     return subprocess.check_output(['git', '-C', str(repo), *args], text=True).strip()
 

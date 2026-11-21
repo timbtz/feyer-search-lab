@@ -9,7 +9,7 @@ body{font:15px system-ui,sans-serif;margin:28px auto;max-width:1280px;padding:0 
 <p class="muted">Only full official + strict-array passes on matching hardware enter the frontier. A green point belongs to the observed six-phase frontier; blue is validated but dominated; gray is excluded. Memory and warm runtime are recorded separately. Tiny timing differences can affect frontier membership.</p>
 <label>X axis <select id="x"></select></label><label>Y axis <select id="y"></select></label><button onclick="location.reload()">Refresh snapshot</button>
 <svg id="plot" viewBox="0 0 1000 360" role="img" aria-label="Candidate phase timing scatter plot"></svg>
-<h2>Candidate ledger</h2><p class="muted">Seconds; lower is better. Click a row or point for all 14 phases. Improvement labels require a change larger than max(20 ms, 3% of the baseline phase, baseline phase range). These are provisional flags, not confidence intervals.</p>
+<h2>Candidate evaluation ledger</h2><p class="muted">Each full run remains a separate measurement, including repeated runs of one commit. Official and internal strict checks are separate. Seconds; lower is better. Click a row or point for all 14 phases. Improvement labels require a change larger than max(20 ms, 3% of the baseline phase, baseline phase range). These are provisional flags, not confidence intervals.</p>
 <div class="scroll"><table><thead id="head"></thead><tbody id="rows"></tbody></table></div>
 <h2>Selected candidate</h2><div id="details"></div>
 <script id="data" type="application/json">__DATA__</script>
@@ -17,14 +17,17 @@ body{font:15px system-ui,sans-serif;margin:28px auto;max-width:1280px;padding:0 
 const data=JSON.parse(document.getElementById('data').textContent), dims=['total',...data.pareto_objectives], $=id=>document.getElementById(id);
 const cell=(tag,text)=>{const e=document.createElement(tag);e.textContent=text;return e};
 const fmt=n=>typeof n==='number'?n.toFixed(4):'—';
-$('stamp').textContent=`Snapshot ${data.generated_at} · ${data.candidates.length} candidates · baseline: ${data.baseline.runs} independent runs`;
+$('stamp').textContent=`Snapshot ${data.generated_at} · ${data.candidates.length} candidate evaluations · baseline: ${data.baseline.runs} independent runs`;
 for(const id of ['x','y'])for(const d of dims){const o=cell('option',d);o.value=d;$(id).append(o)}
 $('x').value='compilation';$('y').value='forward';
-const header=document.createElement('tr');for(const title of ['Candidate','Validation',...dims,'Observed improvements','Regressions'])header.append(cell('th',title));$('head').append(header);
+const header=document.createElement('tr');for(const title of ['Candidate evaluation','Official / strict',...dims,'Observed improvements','Regressions'])header.append(cell('th',title));$('head').append(header);
 function addRow(name,valid,values,improvements,regressions,row){const tr=document.createElement('tr');for(const v of [name,valid,...dims.map(k=>fmt(values[k])),improvements,regressions])tr.append(cell('td',v));if(row)tr.onclick=()=>select(row);$('rows').append(tr)}
 addRow('Baseline phase medians','Reference',Object.fromEntries(Object.entries(data.baseline.metrics).map(([k,v])=>[k,v.median])),'—','—');
-for(const row of data.candidates)addRow(row.name,row.validated?(row.comparable?'PASS':'Different environment'):'Not validated',row.metrics||{},(row.improved||[]).join(', ')||'none',(row.regressed||[]).join(', ')||'none',row);
+for(const row of data.candidates)addRow(row.name,`${row.official_check} / ${row.strict_check}${row.comparable===false?' (not comparable)':''}`,row.metrics||{},(row.improved||[]).join(', ')||'none',(row.regressed||[]).join(', ')||'none',row);
 function select(row){const target=$('details');target.replaceChildren();target.append(cell('h3',row.name),cell('p',row.idea),cell('p',`SHA ${row.sha} · ${row.classification} · observed frontier: ${row.observed_pareto_frontier}`));
+ target.append(cell('p',`Job ${row.job_id} · execution: ${row.execution_status} · official: ${row.official_check} · internal strict: ${row.strict_check}`));
+ const resource=row.resource_evidence||{};target.append(cell('p',`Memory evidence: ${resource.enforcement||'unknown historical'}; budget ${resource.budget_bytes==null?'unknown':(resource.budget_bytes/1e9)+' GB'}; kernel cap enforced: ${resource.kernel_memory_limit_enforced==null?'unknown':resource.kernel_memory_limit_enforced}. Peak RSS: ${resource.gnu_time_peak_rss_bytes==null?'unknown':(resource.gnu_time_peak_rss_bytes/2**30).toFixed(2)+' GiB'}. Sampled RSS is not a kernel memory cap.`));
+ if(row.screen_job_ids?.length)target.append(cell('p',`Related screen jobs: ${row.screen_job_ids.join(', ')}. ${row.screen_pairing}`));
  const link=cell('a','Open candidate code');link.href=`https://github.com/timbtz/feyer-search-lab/commit/${row.sha}`;target.append(link);
  if(row.parent_candidate)target.append(cell('p',`Previous evaluated ancestor: ${row.parent_candidate.slice(0,12)}. Changes versus that ancestor are measured differences, not causal proof.`));
  if(row.error){const e=cell('p',row.error);e.id='error';target.append(e)}

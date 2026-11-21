@@ -233,7 +233,7 @@ def main():
 
     # Validation only: no timers below contribute to the benchmark total.
     del simulation_pullback, readout_pullback
-    print("Validating outputs, reference sensitivity and finite-difference gradient...", flush=True)
+    print("Validating finite outputs, reference sensitivity and nonzero gradient; finite-difference check is not run in screening...", flush=True)
     host_outputs, host_sensitivity, host_powers, host_loss, host_gradient = host
     if host_gradient.dtype != np.float64:
         raise ValueError("Expected double-precision gradients")

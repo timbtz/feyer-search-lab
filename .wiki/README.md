@@ -15,6 +15,7 @@ The team repository is [timbtz/feyer-search-lab](https://github.com/timbtz/feyer
 - [Token Factory](token-factory.md) covers the Qwen API client, credentials and measured request limits.
 - [Phase exploration](phase-exploration.md) explains candidate comparisons, the interactive viewer and observed Pareto tradeoffs.
 - [A second interactive agent](second-agent.md) explains isolated worktrees and conversation forks.
+- [System audit](system-audit.md) records correctness/resource decisions, fixes and unresolved organizer questions.
 - [Initial agent brief](../experiments/initial-agent.md) defines the first bounded exploration session.
 
 ## Status

@@ -5,13 +5,38 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from lab.queue import Queue
-from lab.worker import Worker, WorkerBusyError, peak_rss_kib
+from lab.worker import (Worker, WorkerBusyError, peak_rss_kib, PHASE_CATEGORIES,
+                        THREAD_VARIABLES, FIXTURE_SHA256, REFERENCE_SHA256, resource_snapshot)
 
 
 def git(path, *args):
     return subprocess.check_output(["git", "-C", str(path), *args], text=True, stderr=subprocess.PIPE).strip()
+
+
+def valid_report(profile="screen"):
+    phases = [{"key": key, "category": category, "seconds": 1.0}
+              for key, category in PHASE_CATEGORIES.items()]
+    return {"benchmark": "feyer-lab-screen-v1" if profile == "screen" else "start-munich-2026-public-differometor-uifo-v2",
+            "source": {"commit": "a" * 40, "modified": False},
+            "starter_sha256": "b" * 64,
+            "timing_seconds": {"end_to_end": 14.0, "trace_lower_and_compile": 6.0},
+            "phases": phases,
+            "inputs": {"frequency_count": 101, "gradient_parameter_count": 193,
+                       "setup_sha256": FIXTURE_SHA256, "reference_sha256": REFERENCE_SHA256},
+            "environment": {"backend": "cpu", "jax_enable_x64": True,
+                            "persistent_compilation_cache": False, "cpu_affinity_ids": [2],
+                            "cpu_affinity_count": 1, "requested_logical_cpus": 1,
+                            "thread_limits": {key: "1" for key in THREAD_VARIABLES},
+                            "omp_num_threads": "1", "xla_flags": None, "python": "3.12.15"},
+            "validation": {"passed": True, "all_outputs_and_gradients_finite": True,
+                           "upstream_sensitivity_check_passed": True, "gradient_check": {"passed": True},
+                           "output_shapes": {"carrier": [286, 1], "signal": [751, 101], "noise": [101]},
+                           "gradient_shape": [193], "gradient_norm": 1.0, "loss": 0.0,
+                           "max_absolute_log_sensitivity_error": 1e-6,
+                           "output_dtypes": {"carrier": "complex128", "signal": "complex128", "noise": "float64"}}}
 
 
 class FakeWorker(Worker):
@@ -45,7 +70,7 @@ class WorkerTests(unittest.TestCase):
 import json, sys
 from pathlib import Path
 run=Path(sys.argv[1])
-report={'timing_seconds':{'end_to_end':1.25},'inputs':{'frequency_count':101,'gradient_parameter_count':193},'environment':{'backend':'cpu','jax_enable_x64':True,'persistent_compilation_cache':False,'cpu_affinity_ids':[2]},'validation':{'passed':True,'output_dtypes':{'carrier':'complex128','signal':'complex128','noise':'float64'}}}
+report=make_report()
 (run/'report.json').write_text(json.dumps(report))
 (run/'time.txt').write_text('Maximum resident set size (kbytes): 12345\\n')
 print('evaluation completed')
@@ -58,7 +83,13 @@ print('evaluation completed')
         self.temp.cleanup()
 
     def write_evaluator(self, source):
-        (self.evaluators / "fake.py").write_text(source)
+        prefix = "import json,hashlib,subprocess\nfrom pathlib import Path\n"
+        prefix += "def make_report():\n"
+        prefix += f"    report=json.loads({json.dumps(valid_report())!r})\n"
+        prefix += "    report['source']['commit']=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()\n"
+        prefix += "    report['starter_sha256']=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()\n"
+        prefix += "    return report\n"
+        (self.evaluators / "fake.py").write_text(prefix + source)
 
     def submit(self, profile="screen"):
         return self.queue.enqueue(git(self.repo, "rev-parse", "HEAD"), "main", "a", "direction", profile=profile)
@@ -129,9 +160,17 @@ time.sleep(60)
         self.submit()
         result = self.worker.run_once()
         self.assertEqual(result["status"], "failed")
-        self.assertIn("timing", result["error"])
+        self.assertIn("benchmark", result["error"])
 
     def test_full_requires_all_official_validation_flags(self):
+        self.write_evaluator("""
+import json,sys
+from pathlib import Path
+report=make_report()
+report['benchmark']='start-munich-2026-public-differometor-uifo-v2'
+report['validation']['gradient_check']['passed']=False
+(Path(sys.argv[1])/'report.json').write_text(json.dumps(report))
+""")
         self.submit(profile="full")
         self.assertEqual(self.worker.run_once()["status"], "failed")
 
@@ -140,10 +179,11 @@ time.sleep(60)
 import json,sys
 from pathlib import Path
 run=Path(sys.argv[1])
-report={'timing_seconds':{'end_to_end':1.0},'inputs':{'frequency_count':101,'gradient_parameter_count':193},'environment':{'backend':'cpu','jax_enable_x64':True,'persistent_compilation_cache':False,'cpu_affinity_ids':[2]},'validation':{'all_outputs_and_gradients_finite':True,'upstream_sensitivity_check_passed':True,'gradient_check':{'passed':True},'output_dtypes':{'carrier':'complex128','signal':'complex128','noise':'float64'}}}
+report=make_report()
+report['benchmark']='start-munich-2026-public-differometor-uifo-v2'
 (run/'report.json').write_text(json.dumps(report))
 """)
-        (self.evaluators / "compare_arrays.py").write_text("raise SystemExit(1)\n")
+        (self.evaluators / "compare_arrays.py").write_text("import sys; from pathlib import Path; Path(sys.argv[sys.argv.index('--output')+1]).write_text('{\"passed\": false}'); raise SystemExit(1)\n")
         reference = self.root / "reference.npz"
         reference.touch()
         self.worker.reference_arrays = reference
@@ -152,15 +192,12 @@ report={'timing_seconds':{'end_to_end':1.0},'inputs':{'frequency_count':101,'gra
         result = self.worker.run_once()
         self.assertEqual(result["status"], "failed")
         self.assertTrue(result["result"]["official_passed"])
+        self.assertFalse(result["result"]["regression_passed"])
+        self.assertEqual(result["result"]["verdict"], "official_pass_numerical_review_needed")
         self.assertEqual(result["result"]["comparison"]["returncode"], 1)
 
     def test_rejects_smaller_workloads_and_changed_cpu_or_precision(self):
-        report = {'timing_seconds': {'end_to_end': 1},
-                  'inputs': {'frequency_count': 101, 'gradient_parameter_count': 193},
-                  'environment': {'backend': 'cpu', 'jax_enable_x64': True,
-                                  'persistent_compilation_cache': False, 'cpu_affinity_ids': [2]},
-                  'validation': {'passed': True, 'output_dtypes': {
-                      'carrier': 'complex128', 'signal': 'complex128', 'noise': 'float64'}}}
+        report = valid_report()
         for section, field, invalid in [('inputs', 'frequency_count', 3),
                                          ('inputs', 'gradient_parameter_count', 1),
                                          ('environment', 'cpu_affinity_ids', [2, 3]),
@@ -171,6 +208,82 @@ report={'timing_seconds':{'end_to_end':1.0},'inputs':{'frequency_count':101,'gra
             modified[section][field] = invalid
             with self.subTest(field=field), self.assertRaises(ValueError):
                 self.worker._validate_report(modified, 'screen')
+
+    def test_rejects_wrong_sha_dirty_source_and_evaluator_digest(self):
+        for field, value in (("commit", "c" * 40), ("modified", True)):
+            report = valid_report()
+            report['source'][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                self.worker._validate_report(report, 'screen', expected_sha='a' * 40)
+        with self.assertRaisesRegex(ValueError, 'digest'):
+            self.worker._validate_report(valid_report(), 'screen', evaluator_sha256='c' * 64)
+
+    def test_rejects_library_thread_drift_and_inconsistent_totals(self):
+        report = valid_report()
+        report['environment']['thread_limits']['OPENBLAS_NUM_THREADS'] = '16'
+        with self.assertRaisesRegex(ValueError, 'thread limits'):
+            self.worker._validate_report(report, 'screen')
+        for field in ('end_to_end', 'trace_lower_and_compile'):
+            report = valid_report()
+            report['timing_seconds'][field] = .001
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, 'phase timings'):
+                self.worker._validate_report(report, 'screen')
+
+    def test_rejects_missing_duplicate_negative_and_nan_phases(self):
+        for mutation in ('missing', 'duplicate', 'negative', 'nan'):
+            report = valid_report()
+            if mutation == 'missing': report['phases'].pop()
+            elif mutation == 'duplicate': report['phases'][1] = dict(report['phases'][0])
+            else: report['phases'][0]['seconds'] = -1 if mutation == 'negative' else float('nan')
+            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                self.worker._validate_report(report, 'screen')
+
+    def test_environment_removes_inherited_jax_and_xla_overrides(self):
+        with patch.dict('os.environ', {'JAX_DISABLE_JIT': 'true', 'XLA_FLAGS': '--unexpected',
+                                      'JAX_COMPILATION_CACHE_DIR': '/tmp/cache'}):
+            env = self.worker._environment(self.repo)
+        self.assertNotIn('JAX_DISABLE_JIT', env)
+        self.assertNotIn('XLA_FLAGS', env)
+        self.assertNotIn('JAX_COMPILATION_CACHE_DIR', env)
+        self.assertEqual(env['JAX_ENABLE_COMPILATION_CACHE'], 'false')
+
+    def test_resource_metadata_does_not_claim_a_per_job_memory_cap(self):
+        result = resource_snapshot()
+        self.assertFalse(result['per_job_memory_limit_enforced'])
+        self.assertIn('memory.max', result['container_limits'])
+
+    def test_gnu_time_peak_above_budget_is_rejected(self):
+        self.worker.memory_budget_bytes = 100
+        self.submit()
+        with patch('lab.worker.MemoryMonitor') as monitor:
+            monitor.return_value.sample.return_value = False
+            monitor.return_value.report.return_value = {'exceeded': False}
+            result = self.worker.run_once()
+        self.assertEqual(result['status'], 'failed')
+        self.assertEqual(result['result']['verdict'], 'resource_budget_exceeded')
+
+    def test_sampled_memory_excess_stops_process_and_records_failure(self):
+        self.write_evaluator('import time; time.sleep(60)\n')
+        self.submit()
+        with patch('lab.worker.MemoryMonitor') as monitor:
+            monitor.return_value.sample.return_value = True
+            monitor.return_value.report.return_value = {'exceeded': True}
+            result = self.worker.run_once()
+        self.assertEqual(result['status'], 'failed')
+        self.assertEqual(result['result']['verdict'], 'resource_budget_exceeded')
+        self.assertTrue(result['result']['memory_monitoring']['exceeded'])
+
+    def test_rejects_invalid_validation_scalars_and_boolean_cpu_counts(self):
+        for field, value in (('gradient_norm', 0), ('loss', float('nan')),
+                             ('max_absolute_log_sensitivity_error', 2e-5)):
+            report = valid_report()
+            report['validation'][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                self.worker._validate_report(report, 'screen')
+        report = valid_report()
+        report['environment']['requested_logical_cpus'] = True
+        with self.assertRaises(ValueError):
+            self.worker._validate_report(report, 'screen')
 
 
 if __name__ == "__main__":

@@ -38,7 +38,7 @@ A local copy of reports, plots and logs is in `/Users/t.betz/tmp/amd-hackathon-r
 
 ## Memory interpretation
 
-The upstream README reports roughly **14.4 GiB peak RAM** for its reference benchmark. That is temporary system memory during computation, not the input size, repository size or GPU VRAM use. Peak RAM for the AMD runs has not yet been measured. The new evaluator should record peak resident memory for future runs before increasing concurrency.
+The upstream README reports roughly **14.4 GiB peak RAM** for its reference benchmark. That is temporary system memory during computation, not the input size, repository size or GPU VRAM use. Subsequent AMD queue calibration measured roughly 14.4 GiB peak RSS, as recorded below. The audited worker also records process-group RSS samples and container resource limits.
 
 The reference workload is one fixed optical setup evaluated at all 101 frequencies, including the gradient for all 193 physical design variables. Removing warm repetitions reduces total evaluation time but need not reduce peak memory. A different algorithm may use more or less memory.
 

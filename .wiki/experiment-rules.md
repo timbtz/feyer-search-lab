@@ -30,15 +30,21 @@ Write a short note after each result: what changed, the evidence, whether the hy
 | State | Evidence required |
 | --- | --- |
 | Screened | Complete workload evaluated once; screening checks passed; timing recorded |
-| Validated | Unchanged official full benchmark passed for that exact commit |
+| Official checks passed | Unchanged official full benchmark passed for that exact commit |
+| Validated for automatic promotion | Official checks and the team's additional strict saved-array regression check both passed |
+| Numerical review needed | Official checks passed, but the additional strict regression check failed |
 | Confirmed improvement | Repeated full runs under matching conditions show a reproducible improvement over the baseline |
 
-A failed or incomplete candidate cannot enter the validated ranking. Screening helps allocate evaluation time; it is not the final correctness gate. A reduced smoke test, if added, is only a debugging result.
+A failed or incomplete candidate cannot enter the internally validated ranking. An official pass with a strict-only failure is a reviewable idea, not an official disqualification. Screening helps allocate evaluation time; it is not the final correctness gate. A reduced smoke test, if added, is only a debugging result.
 
-For numerical changes, compare saved carrier, signal, noise, sensitivity, powers, loss and full-gradient arrays against the baseline. Record maximum absolute and relative errors with the chosen tolerances; near-zero values need an absolute-error criterion. Do not assume a linear algebra rewrite changes results only by harmless rounding. Array comparison supplements the official checks.
+For numerical changes, compare the saved carrier, signal, noise, sensitivity, powers and full-gradient arrays against the baseline; parameters and frequencies must match exactly. Loss is checked for finiteness by the official harness and recorded in JSON, but is not one of its saved NPZ arrays. Record failing entries and error/tolerance ratios, not only global error norms. Do not assume a linear algebra rewrite changes results only by harmless rounding. The current mixed-unit gradient tolerance is a conservative regression policy, not an independently calibrated numerical error bound. Substantial solver or derivative rewrites need independent, parameter-scaled derivative diagnostics before endorsement.
+
+The official full harness validates and saves the last warm repetition's outputs; screening validates its first-run outputs. Preserve this distinction when describing validation coverage. Never edit the canonical benchmark to change it.
 
 ## Fair comparisons
 
 Start a fresh Python process, use the same environment and CPU affinity, and retain double precision. The initial worker uses CPU 2 and runs serially. Keep exploratory concurrent timings separate from final sequential comparisons. Changes that interact must be evaluated again after integration rather than combining their individual speedup percentages.
+
+Both screening and full evaluation use a 32,000,000,000-byte monitored process-group RSS budget. This conservative interpretation of 32 GB is a watchdog and post-run rejection rule, not a kernel cgroup cap: the AMD container's cgroup mount is read-only. Record the enforcement mode and actual peaks. Do not claim strict hardware equivalence with the final Intel machine. The whole instance remains at its 55 GiB system-RAM allocation; the GPU's approximately 48 GB VRAM is separate and not consumed by this CPU budget.
 
 The agent session has no candidate-count limit. Its existing one-hour deadline remains in force. Repeated evaluations of the same revision do not create a new candidate. Finish by writing a handoff and preserving the session so it can be resumed explicitly.
