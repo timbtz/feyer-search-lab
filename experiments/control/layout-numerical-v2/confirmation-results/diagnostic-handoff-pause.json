@@ -1,0 +1,25 @@
+{
+  "observed_at": 1795294654.717752,
+  "controller_pid": 54735,
+  "signal": "SIGSTOP",
+  "reason": "Coordinator prioritized one bounded compiler diagnostic before optional repeats",
+  "deadline_unix": 1795296029.2574458,
+  "reserved_numerical_jobs": 27,
+  "pending_requests": [
+    {
+      "sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+      "request_id": "2c18ff3f3a7347389216c7a614f70fc2",
+      "job_id": "455f97ede73945a3a0846744efef1519",
+      "status": "waiting",
+      "reserved_at": 1795294600.1950772
+    }
+  ],
+  "active_queue_jobs": [
+    {
+      "id": "455f97ede73945a3a0846744efef1519",
+      "sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+      "status": "running"
+    }
+  ],
+  "resume_condition": "Broker confirms diagnostic finished, exact numerical worker/root/policy restored and no diagnostic process remains; SIGCONT same controller, original deadline unchanged"
+}
