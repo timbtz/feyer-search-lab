@@ -44777,6 +44777,60 @@
         "cohort_digest": "d78b193bdd3e61a0c054f0ba4b2645e67f80f7007e9e5fd6acea817f876795f6",
         "target_evidence": []
       }
+    },
+    {
+      "seq": 34,
+      "at": 1795295540.459517,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "astra-independent-v1-launch-c569731377e9",
+        "kind": "explore",
+        "status": "current",
+        "executor": {
+          "kind": "supervisor",
+          "id": "astra-independent-v1"
+        },
+        "hypothesis": "Independent challenge exploration; no initial optimization hypothesis assigned.",
+        "change_summary": "Fresh Astra conversation from the original scientific baseline with neutral instructions and own evidence-only feedback.",
+        "parents": [],
+        "candidate_sha": null,
+        "target_phases": [],
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/b50e8c77e1f1edfd0ba53b029f96f5425dba9497/experiments/launches/astra-independent-v1.json",
+        "source_digest": "c569731377e9a6025e299c7fbc520ff639624932029454ea5743ebd494588f54",
+        "source_digest_kind": "canonical-json-sha256",
+        "evaluations": [],
+        "session_id": "01a1fff1-9eab-7320-ad80-197ed7970d6c",
+        "input_receipt": {
+          "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/astra-independent-v1/turn-01-prompt-73de6ad2f25c7177a925b9d4a032958bf031d5d84e618520573135bc50c4f77d.json",
+          "sha256": "73de6ad2f25c7177a925b9d4a032958bf031d5d84e618520573135bc50c4f77d",
+          "turn": 1,
+          "thread_id": null,
+          "feedback_mode": "evidence-only"
+        },
+        "observed_at": 1795295444.172245,
+        "scientific_baseline_sha": "02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f",
+        "scaffold_commit": "7a07aa40a673a5bb4d584216b5b161b115839275",
+        "scaffold_paths": [
+          "AGENTS.md"
+        ],
+        "branch": "explore/astra-independent-v1",
+        "runtime_commit": "92a95e6ea04974d7e02319577252938d93528f7a",
+        "started_at": 1795295386.4772549,
+        "fixed_deadline_unix": 1795298986.4772549,
+        "feedback_mode": "evidence-only",
+        "actual_model": "gpt-6-astra",
+        "actual_reasoning_effort": "high",
+        "fresh_conversation": true,
+        "memory_features_disabled": [
+          "memories",
+          "external_agent_memory_import"
+        ],
+        "own_feedback_only": true,
+        "no_inherited_research_edges": true,
+        "target_evidence": []
+      }
     }
   ],
   "comparison_regime": {
@@ -45540,6 +45594,54 @@
         "receipt": "https://github.com/timbtz/feyer-search-lab/issues/6"
       },
       "cohort_digest": "d78b193bdd3e61a0c054f0ba4b2645e67f80f7007e9e5fd6acea817f876795f6",
+      "target_evidence": []
+    },
+    "astra-independent-v1-launch-c569731377e9": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "astra-independent-v1-launch-c569731377e9",
+      "kind": "explore",
+      "status": "current",
+      "executor": {
+        "kind": "supervisor",
+        "id": "astra-independent-v1"
+      },
+      "hypothesis": "Independent challenge exploration; no initial optimization hypothesis assigned.",
+      "change_summary": "Fresh Astra conversation from the original scientific baseline with neutral instructions and own evidence-only feedback.",
+      "parents": [],
+      "candidate_sha": null,
+      "target_phases": [],
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/b50e8c77e1f1edfd0ba53b029f96f5425dba9497/experiments/launches/astra-independent-v1.json",
+      "source_digest": "c569731377e9a6025e299c7fbc520ff639624932029454ea5743ebd494588f54",
+      "source_digest_kind": "canonical-json-sha256",
+      "evaluations": [],
+      "session_id": "01a1fff1-9eab-7320-ad80-197ed7970d6c",
+      "input_receipt": {
+        "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/astra-independent-v1/turn-01-prompt-73de6ad2f25c7177a925b9d4a032958bf031d5d84e618520573135bc50c4f77d.json",
+        "sha256": "73de6ad2f25c7177a925b9d4a032958bf031d5d84e618520573135bc50c4f77d",
+        "turn": 1,
+        "thread_id": null,
+        "feedback_mode": "evidence-only"
+      },
+      "observed_at": 1795295444.172245,
+      "scientific_baseline_sha": "02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f",
+      "scaffold_commit": "7a07aa40a673a5bb4d584216b5b161b115839275",
+      "scaffold_paths": [
+        "AGENTS.md"
+      ],
+      "branch": "explore/astra-independent-v1",
+      "runtime_commit": "92a95e6ea04974d7e02319577252938d93528f7a",
+      "started_at": 1795295386.4772549,
+      "fixed_deadline_unix": 1795298986.4772549,
+      "feedback_mode": "evidence-only",
+      "actual_model": "gpt-6-astra",
+      "actual_reasoning_effort": "high",
+      "fresh_conversation": true,
+      "memory_features_disabled": [
+        "memories",
+        "external_agent_memory_import"
+      ],
+      "own_feedback_only": true,
+      "no_inherited_research_edges": true,
       "target_evidence": []
     }
   }
