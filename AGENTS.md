@@ -21,6 +21,6 @@ This repository contains the public Differometor challenge plus the team's exper
 
 ## Initial session budget
 
-The first optimization session is limited to four distinct candidate revisions or one hour from its first work, whichever is reached first. Repeated screen/full runs of one revision are not new candidates. Return `summary`, `hypothesis`, `ready_for_evaluation`, `stop` and `notes` as required by the supervisor's schema. Both readiness and stop may be true when the last candidate should be evaluated before finishing. At the limit, finish safe bookkeeping, write a handoff and preserve the session identifier so the session can be resumed explicitly. Do not silently extend the budget.
+The optimization session has no candidate-count limit. The existing one-hour deadline from its first work remains in force. Repeated screen/full runs of one revision are not new candidates. Return `summary`, `hypothesis`, `ready_for_evaluation`, `stop` and `notes` as required by the supervisor's schema. Both readiness and stop may be true when the last candidate should be evaluated before finishing. At the limit, finish safe bookkeeping, write a handoff and preserve the session identifier so the session can be resumed explicitly. Do not silently extend the budget.
 
 Read `.wiki/README.md` and `experiments/initial-agent.md` before starting the first exploration. Use the checked-in client help for the actual queue commands; do not guess commands or bypass failures.
