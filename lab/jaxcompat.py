@@ -22,6 +22,7 @@ import traceback
 import math
 import hashlib
 import platform
+from importlib import metadata
 from pathlib import Path
 
 os.environ.setdefault("JAX_PLATFORMS", "cpu")
@@ -217,7 +218,16 @@ def run(args):
                     harness_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                     python=platform.python_version(), platform=platform.platform(),
                     machine=platform.machine(), jax=jax.__version__, numpy=np.__version__,
-                    x64=bool(jax.config.jax_enable_x64), devices=[str(x) for x in jax.devices()])
+                    x64=bool(jax.config.jax_enable_x64), devices=[str(x) for x in jax.devices()],
+                    cpu_affinity=sorted(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else None,
+                    thread_environment={key: os.environ.get(key) for key in
+                                        ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
+                                         "XLA_FLAGS", "JAX_PLATFORMS", "JAX_ENABLE_X64")})
+    for dependency in ("jaxlib", "scipy"):
+        try:
+            identity[dependency] = metadata.version(dependency)
+        except metadata.PackageNotFoundError:
+            identity[dependency] = None
     results = dict(schema_version=SCHEMA_VERSION, identity=identity,
                    tree=os.path.abspath(args.tree), setup=args.setup, tests={}, domain_observations={})
     setup, pairs, freqs, arrays, params, loss = problem(args.setup)

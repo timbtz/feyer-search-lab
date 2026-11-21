@@ -74,5 +74,15 @@ class AcceptanceTests(unittest.TestCase):
             self.assertFalse(json.loads(out.read_text())["passed"])
 
 
+class BoundedTrajectoryTests(unittest.TestCase):
+    def test_saved_domain_points(self):
+        from lab.bounded_jaxcompat import validate_points
+        pairs = [["etmy", "reflectivity"], ["fm2", "tuning"], ["laser", "power"]]
+        self.assertTrue(validate_points(pairs, [[0.999, -0.014, 1.]]))
+        for points in ([[1.00015,-0.014,1.]], [[0.9,0.,float("nan")]],
+                       [[0.9,0.,-1.]], [[0.9]], []):
+            self.assertFalse(validate_points(pairs, points))
+
+
 if __name__ == '__main__':
     unittest.main()

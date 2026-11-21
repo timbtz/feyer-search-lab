@@ -52,3 +52,15 @@ The teammate's `roundoff_study.py` performs eight residual corrections with exte
 6. Only after correctness gates pass, rerun complete first-run timings on matching pinned hardware in fresh processes. There is no source evidence that the existing official timer omitted asynchronous execution: it blocks on returned results, includes build/tracing, and the host engine assembles/solves on each evaluation. Token-cache reuse for a matching backward pass is not itself evidence of precomputed answers.
 
 The new all193-coordinate finite-difference check at an interior point strengthens first-order evidence for that point. It does not settle arbitrary designs, second derivatives, full JAX compatibility or the ill-conditioned failing readouts.
+
+## Separate bounded diagnostic
+
+`lab/bounded_jaxcompat.py` preserves the historical suite and uses distinct IDs `bounded_descent_3_steps` and `bounded_vmap_value_and_grad`. It evaluates the same Voyager setup (45 parameters, 40 frequencies), projects unit-interval properties to [1e-6,1−1e-6] and positive properties to at least 1e-12, while leaving tuning unrestricted. It records every evaluated/final parameter vector, all three gradients and losses, and finite-output checks. The comparator independently checks saved vectors against these declared restrictions; this is a limited domain check, not a proof of every physical invariant. No old cached results can be relabeled as these new tests.
+
+```sh
+python lab/bounded_jaxcompat.py run --tree /path/to/pristine --out bounded-reference.json
+python lab/bounded_jaxcompat.py run --tree /path/to/candidate --out bounded-candidate.json
+python lab/bounded_jaxcompat.py compare bounded-reference.json bounded-candidate.json --out bounded-comparison.json
+```
+
+Run the two simulations sequentially in the same pinned environment. Numerical run results are pending at the time this diagnostic was authored. Nine local acceptance/domain tests now pass; the script compiles and its CLI help executes without importing JAX. The parent evaluator owns actual pinned simulations and will record those receipts separately.
