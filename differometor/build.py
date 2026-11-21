@@ -1612,6 +1612,20 @@ def pairs_to_arrays(
             carrier_changing_parameter_indices.append(parameter_names.index(f"{changing_component}_{changing_parameter}"))
             append_information(parameter_instructions, carrier_arrays, changing_component, carrier_components)
 
+    def group_functions(function_indices):
+        """Keep component types static while their row indices remain JAX inputs.
+
+        Dictionary keys are pytree structure, so a compiled update can call only
+        the function needed by each group instead of batching a dynamic switch
+        over the entire component registry. This stores topology, not evaluated
+        component values.
+        """
+        indices = np.asarray(function_indices, dtype=int)
+        return {
+            int(index): jnp.asarray(np.flatnonzero(indices == index), dtype=int)
+            for index in np.unique(indices)
+        }
+
     def combine_arrays(arrays: dict, signal: bool = False):
         """
         Stack per-component lists into dense arrays. Provide a dummy update if empty.
@@ -1635,7 +1649,7 @@ def pairs_to_arrays(
             # Dummy update that leaves matrices unchanged.
             return (
                 jnp.array([[0, 0, 0]]),
-                jnp.array([FUNCTIONS.index(dummy_function)]),
+                group_functions([FUNCTIONS.index(dummy_function)]),
                 jnp.array([[0], [0]]),
                 jnp.array([[0], [0]]),
             )
@@ -1657,7 +1671,7 @@ def pairs_to_arrays(
 
             return (
                 jnp.array(function_input_indices, dtype=int),
-                jnp.array(arrays["function_indices"], dtype=int),
+                group_functions(arrays["function_indices"]),
                 jnp.array(output_indices, dtype=int),
                 jnp.array(system_matrix_indices, dtype=int),
                 jnp.array(carrier_solution_indices, dtype=int),
@@ -1666,7 +1680,7 @@ def pairs_to_arrays(
 
         return (
             jnp.array(function_input_indices, dtype=int),
-            jnp.array(arrays["function_indices"], dtype=int),
+            group_functions(arrays["function_indices"]),
             jnp.array(output_indices, dtype=int),
             jnp.array(system_matrix_indices, dtype=int),
         )

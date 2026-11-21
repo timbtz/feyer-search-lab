@@ -65,7 +65,7 @@ def update(
     function_input_indices: jnp.ndarray,
     output_indices: tuple[jnp.ndarray, jnp.ndarray],
     matrix_indices: tuple[jnp.ndarray, jnp.ndarray],
-    function_indices: jnp.ndarray,
+    function_indices: jnp.ndarray | dict[int, jnp.ndarray],
 ) -> jnp.ndarray:
     """
     Update selected entries of a system matrix by evaluating component functions.
@@ -90,9 +90,10 @@ def update(
     matrix_indices : tuple[jnp.ndarray, jnp.ndarray]
         Pair of index arrays selecting where to write into `matrix`.
         Each element has shape (M,).
-    function_indices : jnp.ndarray
-        Indices selecting which function to use for each input, shape (K,).
-        Values index into the global `FUNCTIONS` list.
+    function_indices : jnp.ndarray or dict[int, jnp.ndarray]
+        A mapping from component function ID to its input rows. Dictionary keys
+        are static JAX pytree structure. Legacy arrays of per-row function IDs
+        are also supported.
 
     Returns
     -------
@@ -101,12 +102,18 @@ def update(
 
     Notes
     -----
-    `lax.switch` selects functions from the global `FUNCTIONS` list. In JAX, a
-    Python list of callables referenced as a global is treated as static during
-    tracing, which keeps the function jittable as long as the list is stable.
+    Grouped instructions evaluate each component function only on its own input
+    rows, then restore the original row order before selecting matrix entries.
+    The legacy array representation uses a dynamic switch.
     """
     function_inputs = parameters[function_input_indices]
-    output_matrix = vmap(lambda i, x: lax.switch(i, FUNCTIONS, x))(function_indices, function_inputs)
+    if isinstance(function_indices, dict):
+        output_matrix = jnp.zeros((function_inputs.shape[0], 4), dtype=jnp.complex128)
+        for function_index, rows in function_indices.items():
+            values = vmap(FUNCTIONS[function_index])(function_inputs[rows])
+            output_matrix = output_matrix.at[rows].set(values)
+    else:
+        output_matrix = vmap(lambda i, x: lax.switch(i, FUNCTIONS, x))(function_indices, function_inputs)
     outputs = output_matrix[output_indices[0], output_indices[1]]
     return matrix.at[matrix_indices[0], matrix_indices[1]].set(outputs)
 
@@ -171,19 +178,19 @@ def simulate(
     indices_to_link: jnp.ndarray,
     # carrier arrays
     carrier_function_input_indices: jnp.ndarray,
-    carrier_function_indices: jnp.ndarray,
+    carrier_function_indices: jnp.ndarray | dict[int, jnp.ndarray],
     carrier_output_indices: tuple[jnp.ndarray, jnp.ndarray],
     carrier_matrix_indices: tuple[jnp.ndarray, jnp.ndarray],
     # signal arrays
     signal_function_input_indices: jnp.ndarray,
-    signal_function_indices: jnp.ndarray,
+    signal_function_indices: jnp.ndarray | dict[int, jnp.ndarray],
     signal_output_indices: tuple[jnp.ndarray, jnp.ndarray],
     signal_matrix_indices: tuple[jnp.ndarray, jnp.ndarray],
     signal_carrier_indices: jnp.ndarray,
     signal_carrier_placing_indices: tuple[jnp.ndarray, jnp.ndarray],
     # noise arrays
     noise_function_input_indices: jnp.ndarray,
-    noise_function_indices: jnp.ndarray,
+    noise_function_indices: jnp.ndarray | dict[int, jnp.ndarray],
     noise_output_indices: tuple[jnp.ndarray, jnp.ndarray],
     noise_system_matrix_indices: tuple[jnp.ndarray, jnp.ndarray],
 ) -> tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
