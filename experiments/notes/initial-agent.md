@@ -5,7 +5,7 @@
 - Starting checkout / candidate parent: `0bf57ae2af4a377f72cb34a3d6a328c714baafc8`
 - Public simulator baseline: `02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f`
 - Managed session label: `seed-agent`; Codex thread identifier: `01a1fe87-7574-74b2-a289-227279a3bdc8`, read from supervisor status during turn 4. Status is in `/Users/t.betz/Documents/Feyer challenge/.lab/sessions/seed-agent/status.json` (not the assigned worktree). Supervisor owns session continuity and submission.
-- Budget: original one-hour session remains in force. In the candidate 5 resumption, the user explicitly removed the four-candidate cap and authorized continued exploration while time remains; this supersedes the older stop-after-four instruction. Remaining allowances at candidate 5/6/7 start: 1878/1597/1249 seconds. No commits, pushes, SSH calls, local benchmark runs or evaluator submissions made by agent.
+- Budget: original one-hour session remains in force. In the candidate 5 resumption, the user explicitly removed the four-candidate cap and authorized continued exploration while time remains; this supersedes the older stop-after-four instruction. Remaining allowances at candidate 5/6/7/8 start: 1878/1597/1249/980 seconds. No commits, pushes, SSH calls, local benchmark runs or evaluator submissions made by agent.
 
 ## Baseline evidence supplied by maintainer
 
@@ -451,17 +451,89 @@ Unchanged AMD official complete first-evaluation totals: 35.821919, 35.614326, 3
 
 ## Candidate 7: recompute scalar component intermediates in reverse
 
-- Candidate SHA: pending supervisor commit. Parent after candidate 6 feedback: `4511720c2c84da2aacf58fdbd61e6d57e5bd6f60`.
+- Candidate SHA: `0a0c93fa8f814e0c9c2eab87117d6030a0e87b40`. Parent after candidate 6 feedback: `4511720c2c84da2aacf58fdbd61e6d57e5bd6f60`.
 - Restore candidate 5's validated simulator, then add `jax.checkpoint(..., prevent_cse=False)` underneath the existing JIT decorator on `_evaluate_component`. Other changes are the standard-library `partial` import and helper docstring. The function body, 19 component functions, matrix assembly/mask, all solves and original noise contraction are unchanged.
 - Hypothesis: saving only component inputs and recomputing small intermediate values inside the reverse pass may shrink conditional/scan derivative residuals and forward compilation work, reducing complete first-run time and memory. Candidate 5 spends 8.722988600 s compiling forward and has 13787576 KiB peak RSS; these justify a focused residual-storage tradeoff. Reverse arithmetic and compilation can increase, so only total measured cost decides success. No residual-size measurement or gain is claimed yet.
 - [JAX checkpoint documentation](https://docs.jax.dev/en/latest/_autosummary/jax.checkpoint.html) describes the compute-for-memory tradeoff and permits `prevent_cse=False` for use inside scan. The component helper is executed by `lax.map` (scan-based). This is a local autodiff evaluation strategy, not an XLA environment change or persistent compilation cache. It does not precompute/cache physical answers, omit gradients, checkpoint the dense solves, or change the official three outer JIT stages. JAX's existing automatic differentiation rules remain responsible for complex derivatives; no custom VJP/JVP is introduced.
 - Local checks: syntax and AST isolation passed. Compared with candidate 5, only the helper's checkpoint decorator, explanatory docstring and functools import differ. All other simulator expressions are identical. No local simulator/benchmark execution or dependency changes.
-- Candidate SHA, screen/full identifiers, phase timings, RSS and full-array numerical errors: pending evaluator.
+
+### Candidate 7 screen result
+
+- Run `b38f89a2b10d464bbde1741305aacc1f`; verdict `screened`; official passed: False.
+- Complete first-run 30.558078213 s; process wall 32.024481149 s; peak RSS 13313892 KiB.
+- Trace/lower/compile total 15.229738418 s; warm median None s.
+
+| Phase | Seconds |
+| --- | ---: |
+| imports | 0.287562259 |
+| initialize | 0.002890987 |
+| load | 0.001525922 |
+| build | 0.735589627 |
+| forward_lower | 0.742446732 |
+| forward_compile | 4.770310225 |
+| forward | 12.432655139 |
+| sensitivity_lower | 0.085588401 |
+| sensitivity_compile | 0.401812807 |
+| sensitivity | 0.000916621 |
+| gradient_lower | 1.239327988 |
+| gradient_compile | 7.990252266 |
+| gradient | 1.866887553 |
+| host_transfer | 0.000311688 |
+
+### Candidate 7 full result
+
+- Run `da015d91ac4c448b9b487d196ee057e0`; verdict `validated`; official passed: True.
+- Complete first-run 30.564033644 s; process wall 113.822420936 s; peak RSS 13699596 KiB.
+- Trace/lower/compile total 15.367485467 s; warm median 14.498443583026528 s.
+
+| Phase | Seconds |
+| --- | ---: |
+| imports | 0.285583274 |
+| initialize | 0.002905656 |
+| load | 0.001499455 |
+| build | 0.742987163 |
+| forward_lower | 0.735714125 |
+| forward_compile | 4.737811621 |
+| forward | 12.301440489 |
+| sensitivity_lower | 0.086452691 |
+| sensitivity_compile | 0.372499883 |
+| sensitivity | 0.000925241 |
+| gradient_lower | 1.338877307 |
+| gradient_compile | 8.096129840 |
+| gradient | 1.860807763 |
+| host_transfer | 0.000399135 |
+
+### Candidate 7 numerical evidence and rejection
+
+- Official sensitivity and gradient checks and strict array comparison passed. All outputs and gradients finite; maximum log-sensitivity reference error 5.374104176780747e-06. Reported loss remains baseline-equal at 9.793036291535532e-08.
+
+| Array | Maximum absolute error | Relative L2 error | Strict pass |
+| --- | ---: | ---: | --- |
+| carrier | 0 | 0 | True |
+| signal | 0 | 0 | True |
+| noise | 0 | 0 | True |
+| sensitivity | 0 | 0 | True |
+| powers | 0 | 0 | True |
+| gradient | 1.5178830414797062e-18 | 2.1531895610344731e-23 | True |
+| parameters | 0 | 0 | True |
+| frequencies | 0 | 0 | True |
+
+- Full first-run 30.564033644 s is 1.592205485 s slower than candidate 5. Forward compile fell to 4.737811621 s from 8.722988600 s, but gradient compile rose to 8.096129840 s from 2.429704785 s. Forward/reverse execution remained around 12.30/1.86 s, with warm median 14.498443583 s. Thus the extra reverse compilation outweighed the forward saving.
+- Decision: reject outer-switch checkpointing for total-time performance, preserving its valid result in history. Physical arrays are exact; gradient maximum absolute error 1.5178830414797062e-18, relative L2 error 2.153189561034473e-23. Maximum pointwise relative gradient errors are not supplied; all individual tolerance checks passed.
+
+## Candidate 8: put recomputation inside component branches
+
+- Candidate SHA: pending supervisor commit. Parent after candidate 7 feedback: `dbd16936567d3f5b24568fc85d5ce045940bfbfa`.
+- Focused follow-up to candidate 7's measured compilation tradeoff. Remove checkpoint around the entire `_evaluate_component` switch. Instead wrap each original component function with `jax.checkpoint(function, prevent_cse=False)` inside the existing jitted helper and pass those branches to the unchanged scalar switch. Remove the now-unused functools import. Preserve candidate 5's masked matrix conjugation and all physical arithmetic.
+- Hypothesis: branch-local recomputation may retain candidate 7's smaller forward residual graph while keeping recomputation and differentiation within one selected reverse branch, avoiding some of its enlarged reverse compilation cost. This is an inference from transformation placement and measured phase costs; actual optimized HLO has not been inspected. Full complete-time measurement must decide whether the combined compilation tradeoff improves over candidate 5.
+- The checkpoint wrapper tuple is formed at JAX trace time from the original function registry; it contains functions, not answers or physical data. Existing JIT helper identity and original component order/selector semantics remain. All work is paid within the unchanged benchmark stages. No global environment/XLA flags, persistent caching, custom derivatives, altered solves or skipped physics.
+- Local syntax/AST isolation checks passed: compared with candidate 5, only `_evaluate_component`'s body/docstring differ; all other simulator code is identical. No local simulator/benchmark execution. Full saved outputs and 193-variable gradients remain for evaluator validation.
+- Exact SHA, screen/full run identifiers, timing phases, RSS and numerical comparison: pending.
 
 ## Current handoff / next action
 
-Best validated measured revision remains `3c9717f9254e94d5b441401a75dbc79b7b4b4d8c`: complete first-run 28.971828159 s, warm median 14.589272164 s, exact physical outputs and maximum gradient absolute error 1.5178830414797062e-18. Candidate 6 is preserved but excluded for performance; the direct noise contraction remains excluded for numerical failure, and lazy import has no demonstrated benefit.
+Best validated measured revision remains candidate 5, `3c9717f9254e94d5b441401a75dbc79b7b4b4d8c`, complete first-run 28.971828159 s and warm median 14.589272164 s. Physical outputs exact; maximum absolute full-gradient error 1.5178830414797062e-18. Reject candidate 7 as the final choice unless a later separately validated change improves its total cost.
 
-Next: supervisor commits/screens candidate 7 and fully validates the same SHA if eligible. Measure forward/reverse compilation and execution together, memory and complete total; inspect all saved physical arrays and full gradients, plus reported loss. Keep candidate 5 if recomputation does not yield a valid total-time improvement. A faster screen alone is insufficient for promotion. Supplemental pointwise relative gradient diagnostics remain unavailable; never mislabel relative L2 errors. Repeat full fresh-process runs of the eventual selected SHA to confirm improvement.
+Next: supervisor commits/screens candidate 8 and fully validates the exact SHA if eligible. Compare the sum of forward and reverse compilation/lowering, execution, imports and complete first-run time against candidate 5, plus peak memory and all physical arrays/full-gradient/known loss. Reject if numerical tolerances fail or extra compilation outweighs savings. Screens are provisional; repeat fresh-process full measurements of the eventual best SHA for confirmation.
 
-The former candidate cap is removed, but the original session time limit remains. Preserve session `seed-agent`, thread `01a1fe87-7574-74b2-a289-227279a3bdc8`, worktree, branch and failed history. Supervisor owns all commits/submissions; no merge, independent benchmark, SSH or infrastructure changes. Unfinished diagnostics include actual solve lowering/factorization reuse and candidate 2's failing gradient coordinates. No sparse solve/custom derivative was attempted.
+Candidate-count cap is removed; remaining session time still controls exploration. Preserve session `seed-agent`, thread `01a1fe87-7574-74b2-a289-227279a3bdc8`, worktree/branch and all failed history. Supervisor retains submission ownership; no commits, SSH, benchmarks or infrastructure changes by this agent. Pointwise relative gradient diagnostics, actual solve lowering/factorization reuse and candidate 2's failing coordinates remain unfinished. No sparse solve or custom VJP has been attempted.

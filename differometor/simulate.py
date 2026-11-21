@@ -18,7 +18,6 @@ Conventions used throughout:
 """
 
 import jax
-from functools import partial
 from time import time
 import jax.numpy as jnp
 from jax import lax, vmap, jit
@@ -61,11 +60,11 @@ def solve(matrix: jnp.ndarray, right_hand_side: jnp.ndarray) -> jnp.ndarray:
 
 
 @jit
-@partial(jax.checkpoint, prevent_cse=False)
 def _evaluate_component(function_and_inputs):
-    """Reuse the component trace and recompute its small intermediates in reverse."""
+    """Keep recomputation within the selected component's reverse branch."""
     function_index, function_inputs = function_and_inputs
-    return lax.switch(function_index, FUNCTIONS, function_inputs)
+    branches = tuple(jax.checkpoint(function, prevent_cse=False) for function in FUNCTIONS)
+    return lax.switch(function_index, branches, function_inputs)
 
 
 def update(
