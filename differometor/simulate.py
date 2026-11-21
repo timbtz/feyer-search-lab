@@ -495,6 +495,11 @@ FREQUENCY_CHUNK_SIZE: int | None = 1
 # Loop scope when chunking: "signal_noise" (assembly + solves), "solve" (solves only)
 # or "assemble" (assembly only; solves stay full-vmap).
 FREQUENCY_LOOP_SCOPE: str = "assemble"
+# Solve the signal system and the noise-covariance system (both with the signal matrix A,
+# untransposed) as one multi-right-hand-side solve. The A^H noise-weight solve remains a
+# separate factorization (sharing it with A previously failed the strict gradient gate).
+# False reproduces the parent's two separate solve calls. Read at trace time.
+MERGE_SAME_MATRIX_SOLVES: bool = True
 
 
 def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):
@@ -614,7 +619,8 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
     selections (D, 1 or B, SN). Returns the signal solution (B, SN) and the
     unsqueezed noise amplitude spectral density (D, B).
     """
-    signal = vmap(solve)(signal_matrix[:, :, :-1], signal_matrix[:, :, -1])
+    if not MERGE_SAME_MATRIX_SOLVES:
+        signal = vmap(solve)(signal_matrix[:, :, :-1], signal_matrix[:, :, -1])
 
     # --------------------
     # Quantum noise solve
@@ -649,7 +655,20 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
 
     # Project noise sources into the system and propagate through the signal matrix.
     noise_sources = vmap(matmul_single_batch, in_axes=(None, 0))(noise_matrix, noise_weights)
-    covariances = vmap(vmap(solve), in_axes=(None, 0))(signal_matrix[:, :, :-1], noise_sources)
+    if MERGE_SAME_MATRIX_SOLVES:
+        # The signal RHS and the D propagated noise sources share the system matrix A
+        # (same transpose mode, no data dependence between them), so solve them as one
+        # multi-RHS system: one factorization of A and one triangular-solve pair per
+        # frequency in the forward pass and one transpose-solve in the reverse pass.
+        # Columns: [signal RHS, noise source 0, ..., noise source D-1].
+        right_hand_sides = jnp.concatenate(
+            [signal_matrix[:, :, -1:], jnp.moveaxis(noise_sources, 0, 2)], axis=2
+        )
+        solutions = solve(signal_matrix[:, :, :-1], right_hand_sides)
+        signal = solutions[:, :, 0]
+        covariances = jnp.moveaxis(solutions[:, :, 1:], 2, 0)
+    else:
+        covariances = vmap(vmap(solve), in_axes=(None, 0))(signal_matrix[:, :, :-1], noise_sources)
 
     # Convert propagated covariances into amplitude spectral density.
     temporary_sum = jnp.sum(jnp.real(covariances * jnp.conjugate(carrier_selections)), axis=2)
