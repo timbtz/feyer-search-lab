@@ -1,8 +1,8 @@
 # Campaign smac-pilot-v1
 
-Export schema: `feyer-campaign-export-v1`. Snapshot: `adaa20735867ba1a312d12c92a128f45a52516a62bba68ca4054ba2395cfbb2e`.
+Export schema: `feyer-campaign-export-v1`. Snapshot: `ff82b471b5393e223fabcd64a8f92c9fea6eb89078e3e9a60f1118f05123b6e5`.
 
-[Frozen proposer context](contexts/eb3cefbcbe20f79ac1616be57993911cca5ffa1b030c681b9d8fa24168b03d63.json) — SHA256 `eb3cefbcbe20f79ac1616be57993911cca5ffa1b030c681b9d8fa24168b03d63`.
+[Frozen proposer context](contexts/1fd2239f2a1be7fa9fb74ccf20d1e17e6f82c0b235f2d881da7f8ab312c8d52e.json) — SHA256 `1fd2239f2a1be7fa9fb74ccf20d1e17e6f82c0b235f2d881da7f8ab312c8d52e`.
 
 This is an evidence ledger. Scientific parents describe chosen inputs to an experiment; they are not necessarily Git parents. Phase changes are observations, not proof that one edit caused the difference. A failed attempt remains part of the history.
 
@@ -4209,5 +4209,6 @@ Frozen specification: `8845f4d41a65ad79387ce3c77379b2938f526d89a6b392a20a17e4ffb
 | 40 | evaluation_reserved | coordinator | {"attempt": 1, "candidate_id": "82a14a89f0c54743910d7a18c9180435", "profile": "full", "request_id": "0ba619fa2f5b480d96b51e0ff4ee4104"} |
 | 41 | evaluation_bound | coordinator | {"job_id": "fabe103c8cb44384a9f2654ae6498b86", "request_id": "0ba619fa2f5b480d96b51e0ff4ee4104"} |
 | 42 | evidence_observed | coordinator | {"candidate_id": "82a14a89f0c54743910d7a18c9180435", "category": "valid", "evidence_digest": "8319930aeb98b191dd7d0468277a5d7981cf2d5a6514ff1230a35ea2d0dbdd52", "evidence_id": "fabe103c8cb44384a9f2654ae6498b86:d9cfdce79fc26a941c74e991fdd1c96c415cb731d63a6cbd65933906137367ca", "job_id": "fabe103c8cb44384a9f2654ae6498b86", "progress": {"axes": ["compilation", "runtime", "peak_rss_bytes"], "meaningful_pareto": false, "meaningful_total": false, "policy": {"absolute": 0.02, "relative": 0.01}, "reference_best_total": 28.09352152608335, "reference_parents": ["seed8"]}, "status": "valid", "strikes": 3} |
+| 43 | decision_recorded | coordinator | {"decision_id": "82b20f849e20410c9deb9bece7fd63b6", "payload": {"plan": {"action": "budget_exhausted", "reason": "Frozen campaign deadline or resource budget reached"}, "policy": "finite-space-smac-v1"}, "payload_digest": "1f6c0a18db1c33d16ed6ab24290ded2bb88a367fcfd7187d9574267032a4c909"} |
 
 Guidance may propose a new round. It cannot silently replace frozen operators, ownership, evaluation requirements or budgets. Only the coordinator can admit that round through the campaign state API. Publishing this ledger does not merge or promote candidate code.
