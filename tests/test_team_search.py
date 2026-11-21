@@ -70,7 +70,7 @@ class TeamSearchTests(unittest.TestCase):
             apply(self.state, 'candidate', 'alice', {**reservation, 'sha':'d' * 40})
 
     def test_only_full_parents_admitted_and_two_combination_inputs(self):
-        task = {**spec('refine'), 'kind':'refine'}
+        task = {**spec('refine'), 'kind':'refine', 'max_candidates':1}
         with self.assertRaises(ValueError):
             apply(self.state, 'add', 'coordinator', task)
         obs = observation()
@@ -81,6 +81,8 @@ class TeamSearchTests(unittest.TestCase):
             apply(self.state, 'add', 'coordinator', task)
         self.state, _ = apply(self.state, 'record', 'coordinator', dict(observation=observation(job_id='full')))
         self.state, _ = apply(self.state, 'add', 'coordinator', task)
+        with self.assertRaisesRegex(ValueError, 'one successor'):
+            apply(self.state, 'add', 'coordinator', {**task, 'id':'multiple', 'max_candidates':2})
         with self.assertRaises(ValueError):
             apply(self.state, 'add', 'coordinator', {**spec('combo'), 'kind':'combine'})
 
@@ -188,6 +190,31 @@ class TeamSearchTests(unittest.TestCase):
                 outcomes = list(pool.map(claim, ['alice', 'bob']))
             self.assertEqual(sum(v is not None for v in outcomes), 1)
             self.assertEqual(ledger.read()['tasks']['solver']['owner'], next(v for v in outcomes if v))
+
+    def test_lost_push_response_refuses_reassigned_claim(self):
+        with tempfile.TemporaryDirectory() as directory:
+            remote = str(Path(directory) / 'remote.git')
+            subprocess.run(['git', 'init', '--bare', '-q', remote], check=True)
+            ledger = GitLedger(remote)
+            ledger.transact('init', 'coordinator', {})
+            ledger.transact('add', 'coordinator', spec())
+
+            class ReassignedResponse(GitLedger):
+                @staticmethod
+                def git(path, *args, **kwargs):
+                    result = GitLedger.git(path, *args, **kwargs)
+                    if args[0] == 'push' and result.returncode == 0:
+                        ledger.transact('release', 'coordinator', dict(
+                            task='solver', claim_id='one', reason='Prior work drained'))
+                        ledger.transact('claim', 'bob', dict(
+                            task='solver', instance='amd-b', claim_id='two'))
+                        raise subprocess.TimeoutExpired(result.args, 120)
+                    return result
+
+            with self.assertRaisesRegex(RuntimeError, 'ownership changed'):
+                ReassignedResponse(remote).transact('claim', 'alice', dict(
+                    task='solver', instance='amd-a', claim_id='one'))
+            self.assertEqual(ledger.read()['tasks']['solver']['owner'], 'bob')
 
     def test_lost_push_response_recovers_without_replaying_claim(self):
         class LostResponse(GitLedger):

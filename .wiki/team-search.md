@@ -68,6 +68,11 @@ branch manually. Claims coordinate trusted teammates, not hostile tenants.
    strict saved-output/gradient checks. Compare complete first-run totals, retaining
    compilation, warm runtime and memory separately. Refine a useful topology with
    focused code changes or its reviewed finite tuning menu.
+   Each team `refine` task admits exactly one successor, with the previous best
+   revision frozen as its parent. After confirmation, a further refinement gets
+   a new task from the retained best. A 35-second successor to a 34-second best
+   stalls even when both beat an older 40-second baseline. Multi-candidate
+   exploration produces alternatives; it does not promote every baseline gain.
 2. **Combine, then refine again.** When an iteration stalls, preserve its best
    validated revision. Select two complementary approaches with explicit parent
    SHAs and overlap/compatibility notes. Create a fresh combination branch from a

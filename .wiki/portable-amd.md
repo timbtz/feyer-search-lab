@@ -46,9 +46,10 @@ worker/comparison hashes. Upgrades need a drained queue and a new calibration.
 ## 2. Establish this host's reference
 
 Check `taskset -pc $$`, `lscpu`, `free -h`, `df -h /workspace`, and the container's
-`/sys/fs/cgroup/memory.max`. Default CPU 2 must be available. If it is unavailable,
-choose an allowed logical CPU consistently, configure the worker accordingly,
-and treat this as a separate measurement cohort.
+`/sys/fs/cgroup/memory.max`. CPU 2 must be available for this release: both the
+deployment and evidence adapter require it. If unavailable, stop setup and use
+a compatible instance. Another CPU requires a reviewed, versioned worker and
+evidence policy change before its results can enter this workflow.
 
 The following commands **run benchmarks**; a teammate executes them when ready.
 Ensure `base1.*`, `base2.*`, `base3.*` do not already exist. Run each sequentially
@@ -96,9 +97,7 @@ python3 -m lab.deploy --repo . --host amd-alice --root /workspace/feyer-lab
 It expects the prepared pristine checkout and venv above. It creates a mirror,
 immutable release and `control` link, then the `feyer-worker` tmux session. An
 existing tmux session prevents a switch; do not delete it to force an upgrade.
-The deployment command currently starts CPU 2. For another CPU, an operator must
-prepare the release and start `lab.remote --root /workspace/feyer-lab worker
---cpu N` deliberately; do not use the default deployment blindly.
+The deployment command starts CPU 2, matching this release's evidence policy.
 
 Submit unchanged baseline code through the existing client to each new queue,
 first screen and then full (see `python3 -m lab.client --help`). Import only a

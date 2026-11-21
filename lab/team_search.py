@@ -136,6 +136,8 @@ def apply(state, command, actor, data, now=None):
             raise ValueError('Refine/combine/confirm parents need eligible full evidence')
         if type(task.get('max_candidates')) is not int or task['max_candidates'] < 1:
             raise ValueError('An explicit positive candidate budget is required')
+        if task['kind'] == 'refine' and task['max_candidates'] != 1:
+            raise ValueError('Each refinement task admits one successor; freeze the previous best as its parent')
         if not finite_positive(task.get('deadline_unix')) or task['deadline_unix'] <= now:
             raise ValueError('An explicit future task deadline is required')
         task.setdefault('minimum_full_runs', 3)
@@ -357,6 +359,11 @@ class GitLedger:
                 # ancestry before replaying a mutation (especially a claim).
                 fetched = self.git(path, 'fetch', '-q', self.remote, 'refs/heads/' + self.branch, check=False)
                 if fetched.returncode == 0 and self.git(path, 'merge-base', '--is-ancestor', commit, 'FETCH_HEAD', check=False).returncode == 0:
+                    if command in ('claim', 'candidate'):
+                        latest = json.loads(self.git(path, 'show', 'FETCH_HEAD:state.json').stdout)
+                        current = latest['tasks'][data['task']]
+                        if any(current[key] != output[key] for key in ('status', 'owner', 'claim_id', 'instance')):
+                            raise RuntimeError('Transaction landed but ownership changed; inspect shared state before continuing')
                     return output
                 if not any(s in pushed.stderr for s in ('non-fast-forward', 'fetch first', 'cannot lock ref', 'failed to update ref', 'already exists')):
                     raise RuntimeError('Ledger publication failed: ' + pushed.stderr.strip())
