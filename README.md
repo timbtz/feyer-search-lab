@@ -18,4 +18,4 @@ graph TD
 
 Every edge records intended inputs, not proof of speedup.
 
-Recorded jobs: 11. Decisions/events: 12.
+Recorded jobs: 12. Decisions/events: 13.
