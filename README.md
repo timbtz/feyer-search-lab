@@ -8,6 +8,16 @@ Claims and decisions live in this branch. Timing comparisons require the same in
 | --- | --- | --- | --- | --- |
 | inventory-search-frontier-v1 | diagnose | ready | — / — | f3139c71ae2a, 4c12600ce07d |
 
+## Comparison regime
+
+Current mode: **concurrent**, epoch 14.
+
+Concurrent and unverified timing imports are exploratory and excluded from winner assessment.
+
+Receipt: https://github.com/timbtz/feyer-search-lab/issues/6
+
+User authorized expanded CPU capacity. Conservatively exclude new timing imports until all overlapping work drains and fresh serial confirmation begins; this admission does not assert that lane 2 has started.
+
 ## Scientific lineage
 
 ```mermaid
@@ -18,4 +28,4 @@ graph TD
 
 Every edge records intended inputs, not proof of speedup.
 
-Recorded jobs: 12. Decisions/events: 13.
+Recorded jobs: 12. Decisions/events: 14.

@@ -40528,6 +40528,24 @@
           }
         }
       }
+    },
+    {
+      "seq": 14,
+      "at": 1795292600.04386,
+      "actor": "timbtz",
+      "command": "comparison-regime",
+      "data": {
+        "mode": "concurrent",
+        "reason": "User authorized expanded CPU capacity. Conservatively exclude new timing imports until all overlapping work drains and fresh serial confirmation begins; this admission does not assert that lane 2 has started.",
+        "receipt": "https://github.com/timbtz/feyer-search-lab/issues/6"
+      }
     }
-  ]
+  ],
+  "comparison_regime": {
+    "mode": "concurrent",
+    "reason": "User authorized expanded CPU capacity. Conservatively exclude new timing imports until all overlapping work drains and fresh serial confirmation begins; this admission does not assert that lane 2 has started.",
+    "receipt": "https://github.com/timbtz/feyer-search-lab/issues/6",
+    "changed_at": 1795292600.04386,
+    "epoch": 14
+  }
 }
