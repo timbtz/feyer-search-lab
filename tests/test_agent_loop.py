@@ -1,0 +1,256 @@
+"""Guards used before an autonomous edit becomes a committed candidate."""
+import subprocess
+import json
+import tempfile
+import time
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
+
+from lab.agent_loop import (CodexTurnError, SessionBusyError, _advance_candidate,
+                            _recover_submission, changed_paths, codex_turn,
+                            exclusive_lock, run, validate_changes, validate_response)
+
+
+def git(repo, *args):
+    return subprocess.check_output(["git", "-C", str(repo), *args], text=True, stderr=subprocess.PIPE).strip()
+
+
+class AgentChangeGuardTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.repo = Path(self.temp.name)
+        git(self.repo, "init", "-b", "main")
+        git(self.repo, "config", "user.name", "Test")
+        git(self.repo, "config", "user.email", "test@example.invalid")
+        (self.repo / "differometor").mkdir()
+        (self.repo / "differometor/simulate.py").write_text("# original\n")
+        (self.repo / "benchmark.py").write_text("# fixed harness\n")
+        (self.repo / "experiments/notes").mkdir(parents=True)
+        (self.repo / "experiments/initial-agent.md").write_text("Fixed instructions\n")
+        git(self.repo, "add", ".")
+        git(self.repo, "commit", "-m", "baseline")
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def test_detects_staged_unstaged_untracked_and_deleted_files(self):
+        (self.repo / "differometor/simulate.py").write_text("# changed\n")
+        git(self.repo, "add", "differometor/simulate.py")
+        (self.repo / "benchmark.py").unlink()
+        (self.repo / "experiments/initial-agent.md").write_text("Changed instructions\n")
+        (self.repo / "experiments/notes/idea.md").write_text("A hypothesis\n")
+        self.assertEqual(changed_paths(self.repo), [
+            "benchmark.py", "differometor/simulate.py", "experiments/initial-agent.md",
+            "experiments/notes/idea.md"])
+
+    def test_accepts_simulator_and_notes_edits(self):
+        note = self.repo / "experiments/notes/idea.md"
+        note.write_text("Hypothesis\n")
+        validate_changes(self.repo, ["differometor/simulate.py", "experiments/notes/idea.md"])
+        (self.repo / "differometor/simulate.py").unlink()
+        validate_changes(self.repo, ["differometor/simulate.py"])
+
+    def test_rejects_harness_instructions_feedback_and_other_paths(self):
+        for name in ("benchmark.py", "lab/worker.py", "requirements.txt", "AGENTS.md",
+                     "experiments/initial-agent.md", "experiments/runs/agent/candidate-01.json",
+                     "differometor_else/file.py", "examples/data/reference.json"):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                validate_changes(self.repo, [name])
+
+    def test_rejects_symlinks_and_oversized_files(self):
+        link = self.repo / "differometor/link.py"
+        link.symlink_to(self.repo / "benchmark.py")
+        with self.assertRaises(ValueError):
+            validate_changes(self.repo, ["differometor/link.py"])
+        huge = self.repo / "experiments/notes/huge.bin"
+        with huge.open("wb") as f:
+            f.truncate(2 * 1024 * 1024 + 1)
+        with self.assertRaises(ValueError):
+            validate_changes(self.repo, ["experiments/notes/huge.bin"])
+
+    def test_session_lock_rejects_a_second_supervisor(self):
+        lock = self.repo / 'session.lock'
+        with exclusive_lock(lock):
+            with self.assertRaises(SessionBusyError):
+                with exclusive_lock(lock):
+                    pass
+
+    def test_response_requires_real_booleans(self):
+        response = {'summary': 'change', 'hypothesis': 'faster', 'notes': '',
+                    'ready_for_evaluation': True, 'stop': False}
+        self.assertEqual(validate_response(response), response)
+        for key in ('ready_for_evaluation', 'stop'):
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                validate_response(response | {key: 'false'})
+
+
+class AgentResumeTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.directory = Path(self.temp.name)
+        self.status_file = self.directory / 'status.json'
+        self.args = SimpleNamespace(name='agent-a', direction='imports', branch='explore/imports',
+                                    github_repo='test/repo', baseline_seconds=35.7)
+        self.response = {'summary': 'change', 'hypothesis': 'faster', 'notes': '',
+                         'ready_for_evaluation': True, 'stop': False}
+        self.active = {'iteration': 1, 'sha': 'a' * 40, 'response': self.response,
+                       'jobs': {}, 'feedback': {'candidate_sha': 'a' * 40, 'agent_response': self.response}}
+        self.state = {'active_candidate': self.active}
+        self.client = Mock()
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def advance(self, deadline):
+        return _advance_candidate(self.active, self.args, self.client, self.directory,
+                                  self.directory, self.state, self.status_file, deadline)
+
+    def test_resume_waits_existing_failed_screen_and_does_not_resubmit(self):
+        self.active['jobs']['screen'] = 'existing-job'
+        job = {'id': 'existing-job', 'sha': 'a' * 40, 'profile': 'screen',
+               'status': 'failed', 'error': 'incorrect result'}
+        self.client.wait.return_value = job
+        with patch('lab.agent_loop.github_status'), patch('lab.agent_loop._finish_record') as finish:
+            self.assertTrue(self.advance(time.monotonic() + 60))
+        self.client.submit.assert_not_called()
+        self.client.wait.assert_called_once_with('existing-job', timeout=1800)
+        self.assertEqual(self.active['feedback']['screen'], job)
+        finish.assert_called_once()
+
+    def test_no_new_job_is_submitted_after_deadline(self):
+        self.assertFalse(self.advance(time.monotonic() - 1))
+        self.client.submit.assert_not_called()
+        self.assertEqual(self.state['status'], 'budget_exhausted')
+        self.assertIs(self.state['active_candidate'], self.active)
+
+    def test_existing_evaluation_may_finish_after_deadline_but_full_is_not_started(self):
+        self.active['jobs']['screen'] = 'already-queued'
+        self.client.wait.return_value = {'id': 'already-queued', 'sha': 'a' * 40,
+                                         'profile': 'screen', 'status': 'completed',
+                                         'result': {'first_run_seconds': 30}}
+        with patch('lab.agent_loop.github_status'):
+            self.assertFalse(self.advance(time.monotonic() - 1))
+        self.client.wait.assert_called_once()
+        self.client.submit.assert_not_called()
+        self.assertEqual(self.active['feedback']['screen']['status'], 'completed')
+        self.assertEqual(self.state['status'], 'budget_exhausted')
+
+    def test_wait_timeout_keeps_job_id_for_later_resume(self):
+        self.active['jobs']['screen'] = 'pending'
+        self.client.wait.side_effect = TimeoutError('still pending')
+        self.assertFalse(self.advance(time.monotonic() + 60))
+        self.assertEqual(self.state['status'], 'waiting_for_evaluation')
+        self.assertEqual(self.state['active_candidate']['jobs']['screen'], 'pending')
+        self.client.submit.assert_not_called()
+
+    def test_lost_submission_response_recovers_unique_matching_job(self):
+        self.active.update(submitting_profile='screen', submission_started_at=100)
+        self.client.request.return_value = [{'id': 'recovered', 'sha': 'a' * 40,
+            'profile': 'screen', 'agent': 'agent-a', 'direction': 'imports', 'created_at': 101}]
+        _recover_submission(self.active, self.args, self.client, self.state, self.status_file)
+        self.assertEqual(self.active['jobs']['screen'], 'recovered')
+        self.assertNotIn('submitting_profile', self.active)
+
+    def test_uncertain_submission_never_blindly_requeues(self):
+        self.active.update(submitting_profile='screen', submission_started_at=100)
+        self.client.request.return_value = []
+        with self.assertRaisesRegex(RuntimeError, 'uncertain'):
+            _recover_submission(self.active, self.args, self.client, self.state, self.status_file)
+        self.client.submit.assert_not_called()
+        self.assertEqual(self.active['submitting_profile'], 'screen')
+
+    def test_codex_failure_preserves_thread_identifier(self):
+        process = Mock(returncode=1)
+        def communicate(_prompt, timeout):
+            (self.directory / 'turn-01.jsonl').write_text('{"type":"thread.started","thread_id":"saved-thread"}\n')
+        process.communicate.side_effect = communicate
+        with patch('lab.agent_loop.subprocess.Popen', return_value=process):
+            with self.assertRaises(CodexTurnError) as raised:
+                codex_turn(self.directory, self.directory, 1, 'prompt', None, 10)
+        self.assertEqual(raised.exception.thread_id, 'saved-thread')
+
+    def test_codex_timeout_preserves_thread_and_stops_process_group(self):
+        process = Mock(returncode=-15)
+        def communicate(_prompt, timeout):
+            (self.directory / 'turn-02.jsonl').write_text('{"type":"thread.started","thread_id":"timeout-thread"}\n')
+            raise subprocess.TimeoutExpired('codex', timeout)
+        process.communicate.side_effect = communicate
+        with patch('lab.agent_loop.subprocess.Popen', return_value=process), \
+             patch('lab.agent_loop.terminate_group') as terminate:
+            with self.assertRaises(CodexTurnError) as raised:
+                codex_turn(self.directory, self.directory, 2, 'prompt', None, 0.1)
+        self.assertTrue(raised.exception.timed_out)
+        self.assertEqual(raised.exception.thread_id, 'timeout-thread')
+        terminate.assert_called_once_with(process)
+
+
+class AgentLoopIntegrationTests(unittest.TestCase):
+    def test_two_candidates_keep_one_conversation_and_versioned_feedback(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo, worktree, origin = root / 'repo', root / 'worktree', root / 'origin.git'
+            repo.mkdir()
+            git(repo, 'init', '-b', 'main')
+            git(repo, 'config', 'user.name', 'Test')
+            git(repo, 'config', 'user.email', 'test@example.invalid')
+            (repo / 'differometor').mkdir()
+            (repo / 'differometor/simulate.py').write_text('# baseline\n')
+            (repo / 'experiments').mkdir()
+            (repo / 'experiments/initial-agent.md').write_text('Try safe optimizations.\n')
+            git(repo, 'add', '.')
+            git(repo, 'commit', '-m', 'baseline')
+            subprocess.run(['git', 'clone', '--bare', str(repo), str(origin)], check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+            git(repo, 'remote', 'add', 'origin', str(origin))
+            args = SimpleNamespace(repo=repo, worktree=worktree, name='trial', branch='explore/trial',
+                direction='imports', resume=False, host='unused', github_repo='test/repo',
+                max_minutes=1, max_candidates=2, baseline_seconds=36.177949)
+            calls = []
+            submitted = {}
+            client = Mock()
+            def turn(folder, session, number, prompt, thread, timeout, lock_fds=()):
+                calls.append((thread, prompt))
+                (folder / 'differometor/simulate.py').write_text(f'# candidate {number}\n')
+                return 'same-thread', {'summary': f'Change {number}', 'hypothesis': 'faster',
+                    'ready_for_evaluation': True, 'stop': number == 2, 'notes': ''}
+            def submit(folder, branch, agent, direction, hypothesis, profile, sha):
+                job_id = f'job-{len(submitted) + 1}'
+                job = {'id': job_id, 'sha': sha, 'profile': profile, 'status': 'queued'}
+                submitted[job_id] = job
+                return job
+            def wait(job_id, timeout):
+                job = submitted[job_id]
+                return job | {'status': 'completed', 'result': {'first_run_seconds': 30,
+                    'verdict': 'screened' if job['profile'] == 'screen' else 'validated'}}
+            client.submit.side_effect = submit
+            client.wait.side_effect = wait
+            with patch('lab.agent_loop.Client', return_value=client), \
+                 patch('lab.agent_loop.codex_turn', side_effect=turn), \
+                 patch('lab.agent_loop.github_status'):
+                run(args)
+            self.assertEqual(len(calls), 2)
+            self.assertIsNone(calls[0][0])
+            self.assertEqual(calls[1][0], 'same-thread')
+            self.assertIn('job-1', calls[1][1])
+            self.assertEqual(len(submitted), 4)
+            reports = worktree / 'experiments/runs/trial'
+            first = json.loads((reports / 'candidate-01.json').read_text())
+            second = json.loads((reports / 'candidate-02.json').read_text())
+            self.assertEqual(first['candidate_sha'], submitted['job-1']['sha'])
+            self.assertEqual(second['candidate_sha'], submitted['job-3']['sha'])
+            parent = git(worktree, 'rev-parse', second['candidate_sha'] + '^')
+            self.assertEqual(git(worktree, 'show', '-s', '--format=%s', parent),
+                             'Record evaluator feedback for ' + first['candidate_sha'][:12])
+            state = json.loads((repo / '.lab/sessions/trial/status.json').read_text())
+            self.assertEqual(state['status'], 'complete')
+            self.assertEqual(state['thread_id'], 'same-thread')
+            self.assertEqual(state['candidates'], 2)
+            self.assertIsNone(state['active_candidate'])
+            with self.assertRaisesRegex(ValueError, 'already exists'):
+                run(args)
+
+
+if __name__ == "__main__":
+    unittest.main()

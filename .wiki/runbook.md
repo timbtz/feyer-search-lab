@@ -114,3 +114,13 @@ The supervised Codex worktree will be `/Users/t.betz/Documents/Feyer challenge a
 ## Worker deployment
 
 `python3 -m lab.deploy` uploads the committed evaluator files and starts the worker in the remote `feyer-worker` tmux session. Releases are immutable directories under `/workspace/feyer-lab/releases`; the active worker resolves its trusted evaluator directory at startup. Deployment refuses to switch an already-running worker. Inspect `state/worker.log` and stop an idle worker before updating it. Do not terminate it during an evaluation.
+
+## Supervised session status and recovery
+
+The live local state is `.lab/sessions/seed-agent/status.json`; the process log is `.lab/sessions/seed-agent/supervisor.log`. Each Codex turn has a JSONL event log, stderr log and structured response in that directory. Agent transcripts stay local; measured evaluator summaries are committed under `experiments/runs/seed-agent/` and linked from GitHub commit statuses.
+
+The first session starts at most four candidates and starts no new coding turn or submission after 60 minutes. An already-submitted evaluation may finish and save feedback after that deadline. A lost connection does not cancel remote evaluation.
+
+To resume, run the same `lab.agent_loop` command with `--resume`. It restores the saved conversation and reconciles pending jobs before new coding. Explicit resumption grants the requested new time window; the candidate count continues. Increase `--max-candidates` only when intentionally authorizing more candidates. Session and worktree locks prevent duplicate supervisors.
+
+For the initial run use `--baseline-seconds 36.177949`, the measured screening calibration. The first successful candidate gets full validation; later candidates get full validation when screening is within 2% of that baseline or faster. This is an exploration gate, not a claim that a small timing difference is a speedup.
