@@ -68,3 +68,9 @@ Three fresh-process pairs under the audited evaluator all passed official and st
 The main gains were compilation (median 19.6300 → 12.7776 s) and gradient execution (2.9563 → 1.8829 s). Forward execution was slightly slower (12.1191 → 12.3995 s). Thus this is a favorable total-time tradeoff, not a strict Pareto improvement in every phase. It is repeated evidence on this AMD instance, not a promise about the final Intel system.
 
 See [the confirmation study](../experiments/audits/confirmation.md) for all pairs, exact commit/job IDs, resource observations and limitations. An additional audited screen of the same implementation passed with first-evaluation validation and the same monitored budget.
+
+## Final verification
+
+The final code passed **88 tests** in GitHub CI and in the existing AMD Python environment, with no NumPy tests skipped on AMD. A live request replay returned the same job ID twice, produced exactly one queued evaluation, and that screening job completed successfully under the monitored budget. [Verification record](../experiments/audits/verification.json).
+
+The serial evaluator remains running. The original Codex search stopped at its retained one-hour deadline after ten full candidate evaluations and screening candidate 11; it was not silently granted extra coding time. The six-run confirmation study and deployment smoke checks were separate audit tasks. Refresh shared/manual-agent results with `python3 -m lab.phase_report --sync`; a watcher tied to the stopped search session has also stopped.

@@ -1,0 +1,23 @@
+{
+  "deployed_release": "861601b9c5d31390caca420b078f09ff7ad83156",
+  "tests": {
+    "count": 88,
+    "remote_skipped": 0,
+    "remote_result": "passed",
+    "ci_result": "passed",
+    "ci_url": "https://github.com/timbtz/feyer-search-lab/actions/runs/44921086862"
+  },
+  "live_idempotency": {
+    "request_id": "b0edbeab926b440bb25d83cecc21b7c9",
+    "first_job_id": "ec367f0cd4204945adfdf65599b487d2",
+    "retry_job_id": "ec367f0cd4204945adfdf65599b487d2",
+    "same_job": true,
+    "matching_job_count": 1,
+    "job_status": "completed",
+    "memory_budget_bytes": 32000000000,
+    "resource_enforcement": "sampled_process_group_rss",
+    "kernel_memory_cap_enforced": false
+  },
+  "canonical_benchmark_unchanged": true,
+  "search_session_status": "budget_exhausted"
+}

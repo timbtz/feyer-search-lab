@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-21T15:52:58.907816+00:00",
+  "generated_at": "2026-11-21T15:58:17.933870+00:00",
   "baseline": {
     "runs": 3,
     "signature": {
@@ -2983,15 +2983,15 @@
       ],
       "observed_pareto_frontier": false,
       "parent_candidate": "1e552d675c3795265be8af1ac23ffb61f90f30b1",
-      "parent_run_key": "b2202c5e03f1423ead49d161b2a9b4a7",
+      "parent_run_key": "ec367f0cd4204945adfdf65599b487d2",
       "saved_vs_parent_seconds": {
-        "setup": -0.07235610671341419,
-        "compilation": -0.3425243068486452,
-        "forward": -0.1933730375021696,
-        "sensitivity": -3.6733224987983704e-05,
-        "gradient": -0.01148063875734806,
-        "transfer": -9.067915380001068e-05,
-        "total": -0.6198615022003651
+        "setup": -0.03550904057919979,
+        "compilation": -0.11304062977433205,
+        "forward": 0.010868262499570847,
+        "sensitivity": -3.8972124457359314e-05,
+        "gradient": 0.04088965430855751,
+        "transfer": 2.9148533940315247e-05,
+        "total": -0.09680157713592052
       }
     },
     {
@@ -5256,280 +5256,6 @@
       }
     },
     {
-      "sha": "3db9b657f8496d40a9f195fd9864e5e048c7df5b",
-      "profile": "screen",
-      "job_id": "af18c37444224d31a69ced471361ef2d",
-      "error": null,
-      "idea": "Read from source: the baseline factors A^H separately from A in the forward stage (101 complex LUs at n=751, an estimated ~1e11 flops). It may also factor A twice unless XLA CSE merges the signal and covariance getrf calls. The JIT stages save the LUs as AD residuals. Reusing LU(A) for the A^H system (solve via U^H L^H P) should remove at least one LU batch from the forward stage. It should also remove the ~0.9 GB materialized A^H and one ~0.9 GB LU residual. Expected result: lower forward-stage and complete first-run time and lower peak memory. Gradient-stage cost and compile time should be about the same, and the outputs should differ only at rounding level (carrier and signal essentially identical).",
-      "hypothesis": "Read from source: the baseline factors A^H separately from A in the forward stage (101 complex LUs at n=751, an estimated ~1e11 flops). It may also factor A twice unless XLA CSE merges the signal and covariance getrf calls. The JIT stages save the LUs as AD residuals. Reusing LU(A) for the A^H system (solve via U^H L^H P) should remove at least one LU batch from the forward stage. It should also remove the ~0.9 GB materialized A^H and one ~0.9 GB LU residual. Expected result: lower forward-stage and complete first-run time and lower peak memory. Gradient-stage cost and compile time should be about the same, and the outputs should differ only at rounding level (carrier and signal essentially identical).",
-      "branch": "explore/linear-algebra-audit",
-      "agent": "claude-linear-algebra",
-      "direction": "matrix-structure-and-factorization",
-      "created_at": 1795275732.0545418,
-      "validated": false,
-      "execution_status": "completed",
-      "official_check": "not_run",
-      "strict_check": "not_run",
-      "resource_evidence": {
-        "budget_bytes": 32000000000,
-        "enforcement": "sampled_process_group_rss",
-        "kernel_memory_limit_enforced": false,
-        "sampled_process_group_peak_rss_bytes": 12785045504,
-        "budget_exceeded": false,
-        "gnu_time_peak_rss_bytes": 12783996928,
-        "container_memory_max": "59055800320",
-        "comparison_memory_monitoring": null
-      },
-      "metrics": {
-        "setup": 1.055135464295745,
-        "compilation": 19.595172002911568,
-        "forward": 8.043404726311564,
-        "sensitivity": 0.0008638110011816025,
-        "gradient": 2.733567710965872,
-        "transfer": 0.00039040856063365936,
-        "total": 31.428534124046564
-      },
-      "phases": {
-        "imports": 0.28924397751688957,
-        "initialize": 0.004960475489497185,
-        "load": 0.0021281354129314423,
-        "build": 0.7588028758764267,
-        "forward_lower": 1.196588745340705,
-        "forward_compile": 12.992488536983728,
-        "forward": 8.043404726311564,
-        "sensitivity_lower": 0.09501532278954983,
-        "sensitivity_compile": 0.35694038309156895,
-        "sensitivity": 0.0008638110011816025,
-        "gradient_lower": 0.30685049667954445,
-        "gradient_compile": 4.647288518026471,
-        "gradient": 2.733567710965872,
-        "host_transfer": 0.00039040856063365936
-      },
-      "comparable": true,
-      "evaluator_hash_matches_report": true,
-      "warm_timing": {},
-      "source_report": {
-        "public_repository": "https://github.com/artificial-scientist-lab/Differometor",
-        "baseline_commit": "b0dc7c79e7c72a1b010174f6bdcad01efa51d6ff",
-        "commit": "3db9b657f8496d40a9f195fd9864e5e048c7df5b",
-        "modified": false,
-        "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        "simulator_files_sha256": {
-          "differometor/__init__.py": "505d559d5a17409680a91f555882edf23f78cbb7c98ee28845018fa9bfeba7e7",
-          "differometor/build.py": "f1fdff78515500f5912907537dbedecf30c3915fa949b820bf2ad81b4c062771",
-          "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
-          "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
-          "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
-          "differometor/simulate.py": "bb14b50dda507cc550e9d90a96933dd7797f41534782533ab56fed884d1fdc80",
-          "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
-        }
-      },
-      "peak_rss_kib": 12484372,
-      "delta": {
-        "setup": {
-          "seconds": 1.055135464295745,
-          "baseline_seconds": 1.0290241818875074,
-          "saved_seconds": -0.026111282408237457,
-          "saved_percent": -2.5374799609026035,
-          "threshold_seconds": 0.041935382410883904,
-          "classification": "within_noise_band"
-        },
-        "compilation": {
-          "seconds": 19.595172002911568,
-          "baseline_seconds": 19.66518940217793,
-          "saved_seconds": 0.07001739926636219,
-          "saved_percent": 0.35604741878869334,
-          "threshold_seconds": 0.5899556820653379,
-          "classification": "within_noise_band"
-        },
-        "forward": {
-          "seconds": 8.043404726311564,
-          "baseline_seconds": 12.127282157540321,
-          "saved_seconds": 4.083877431228757,
-          "saved_percent": 33.67512504596542,
-          "threshold_seconds": 0.3638184647262096,
-          "classification": "improved"
-        },
-        "sensitivity": {
-          "seconds": 0.0008638110011816025,
-          "baseline_seconds": 0.0008683912456035614,
-          "saved_seconds": 4.580244421958923e-06,
-          "saved_percent": 0.5274401884113304,
-          "threshold_seconds": 0.02,
-          "classification": "within_noise_band"
-        },
-        "gradient": {
-          "seconds": 2.733567710965872,
-          "baseline_seconds": 2.9347561299800873,
-          "saved_seconds": 0.20118841901421547,
-          "saved_percent": 6.8553709440784285,
-          "threshold_seconds": 0.08804268389940262,
-          "classification": "improved"
-        },
-        "transfer": {
-          "seconds": 0.00039040856063365936,
-          "baseline_seconds": 0.0005150735378265381,
-          "saved_seconds": 0.00012466497719287872,
-          "saved_percent": 24.20333564774634,
-          "threshold_seconds": 0.02,
-          "classification": "within_noise_band"
-        },
-        "total": {
-          "seconds": 31.428534124046564,
-          "baseline_seconds": 35.73706482537091,
-          "saved_seconds": 4.308530701324344,
-          "saved_percent": 12.05619633950905,
-          "threshold_seconds": 1.0721119447611271,
-          "classification": "improved"
-        }
-      },
-      "phase_delta": {
-        "imports": {
-          "seconds": 0.28924397751688957,
-          "baseline_seconds": 0.2690851055085659,
-          "saved_seconds": -0.02015887200832367,
-          "saved_percent": -7.491634280620539,
-          "threshold_seconds": 0.0258482675999403,
-          "classification": "within_noise_band"
-        },
-        "initialize": {
-          "seconds": 0.004960475489497185,
-          "baseline_seconds": 0.0031066499650478363,
-          "saved_seconds": -0.0018538255244493484,
-          "saved_percent": -59.67281622668433,
-          "threshold_seconds": 0.02,
-          "classification": "within_noise_band"
-        },
-        "load": {
-          "seconds": 0.0021281354129314423,
-          "baseline_seconds": 0.0015017036348581314,
-          "saved_seconds": -0.0006264317780733109,
-          "saved_percent": -41.71474074726409,
-          "threshold_seconds": 0.02,
-          "classification": "within_noise_band"
-        },
-        "build": {
-          "seconds": 0.7588028758764267,
-          "baseline_seconds": 0.7487606573849916,
-          "saved_seconds": -0.010042218491435051,
-          "saved_percent": -1.341178705423304,
-          "threshold_seconds": 0.022813662886619568,
-          "classification": "within_noise_band"
-        },
-        "forward_lower": {
-          "seconds": 1.196588745340705,
-          "baseline_seconds": 1.1645036935806274,
-          "saved_seconds": -0.032085051760077477,
-          "saved_percent": -2.7552554738080772,
-          "threshold_seconds": 0.034935110807418825,
-          "classification": "within_noise_band"
-        },
-        "forward_compile": {
-          "seconds": 12.992488536983728,
-          "baseline_seconds": 12.928618423640728,
-          "saved_seconds": -0.06387011334300041,
-          "saved_percent": -0.49402118037771314,
-          "threshold_seconds": 0.3878585527092218,
-          "classification": "within_noise_band"
-        },
-        "forward": {
-          "seconds": 8.043404726311564,
-          "baseline_seconds": 12.127282157540321,
-          "saved_seconds": 4.083877431228757,
-          "saved_percent": 33.67512504596542,
-          "threshold_seconds": 0.3638184647262096,
-          "classification": "improved"
-        },
-        "sensitivity_lower": {
-          "seconds": 0.09501532278954983,
-          "baseline_seconds": 0.1058458723127842,
-          "saved_seconds": 0.010830549523234367,
-          "saved_percent": 10.232377783452062,
-          "threshold_seconds": 0.02,
-          "classification": "within_noise_band"
-        },
-        "sensitivity_compile": {
-          "seconds": 0.35694038309156895,
-          "baseline_seconds": 0.4674806520342827,
-          "saved_seconds": 0.11054026894271374,
-          "saved_percent": 23.645955926023493,
-          "threshold_seconds": 0.1319595593959093,
-          "classification": "within_noise_band"
-        },
-        "sensitivity": {
-          "seconds": 0.0008638110011816025,
-          "baseline_seconds": 0.0008683912456035614,
-          "saved_seconds": 4.580244421958923e-06,
-          "saved_percent": 0.5274401884113304,
-          "threshold_seconds": 0.02,
-          "classification": "within_noise_band"
-        },
-        "gradient_lower": {
-          "seconds": 0.30685049667954445,
-          "baseline_seconds": 0.29914812184870243,
-          "saved_seconds": -0.007702374830842018,
-          "saved_percent": -2.5747695767709287,
-          "threshold_seconds": 0.02,
-          "classification": "within_noise_band"
-        },
-        "gradient_compile": {
-          "seconds": 4.647288518026471,
-          "baseline_seconds": 4.656178630888462,
-          "saved_seconds": 0.008890112861990929,
-          "saved_percent": 0.19093152489930512,
-          "threshold_seconds": 0.13968535892665385,
-          "classification": "within_noise_band"
-        },
-        "gradient": {
-          "seconds": 2.733567710965872,
-          "baseline_seconds": 2.9347561299800873,
-          "saved_seconds": 0.20118841901421547,
-          "saved_percent": 6.8553709440784285,
-          "threshold_seconds": 0.08804268389940262,
-          "classification": "improved"
-        },
-        "host_transfer": {
-          "seconds": 0.00039040856063365936,
-          "baseline_seconds": 0.0005150735378265381,
-          "saved_seconds": 0.00012466497719287872,
-          "saved_percent": 24.20333564774634,
-          "threshold_seconds": 0.02,
-          "classification": "within_noise_band"
-        }
-      },
-      "improved_subphases": [
-        "forward",
-        "gradient"
-      ],
-      "regressed_subphases": [],
-      "improved": [
-        "forward",
-        "gradient"
-      ],
-      "regressed": [],
-      "observed_dominates_baseline": false,
-      "classification": "improvement_without_detected_regression",
-      "record": null,
-      "name": "claude-linear-algebra/3db9b657-screen-af18c374",
-      "run_key": "af18c37444224d31a69ced471361ef2d",
-      "screen_job_ids": [
-        "af18c37444224d31a69ced471361ef2d"
-      ],
-      "screen_pairing": "Same SHA, agent, branch and direction; no one-to-one rerun pairing inferred",
-      "observed_pareto_frontier": false,
-      "parent_candidate": "0c011fbbff6edb4ca095f12b5c762652da788f73",
-      "parent_run_key": "f668a9b0ab2c44c791aff3f0b9ccdeb1",
-      "saved_vs_parent_seconds": {
-        "setup": 0.0029193833470344543,
-        "compilation": 0.45308176800608635,
-        "forward": 4.154641417786479,
-        "sensitivity": 1.5087425708770752e-07,
-        "gradient": 0.2926565818488598,
-        "transfer": 0.00011433660984039307,
-        "total": 4.903413638472557
-      }
-    },
-    {
       "sha": "1e552d675c3795265be8af1ac23ffb61f90f30b1",
       "profile": "screen",
       "job_id": "b2202c5e03f1423ead49d161b2a9b4a7",
@@ -5806,6 +5532,864 @@
         "gradient": -0.05272788926959038,
         "transfer": 9.025819599628448e-05,
         "total": 2.409967264160514
+      }
+    },
+    {
+      "sha": "3db9b657f8496d40a9f195fd9864e5e048c7df5b",
+      "profile": "full",
+      "job_id": "cd271462a63446a997264fb26882b711",
+      "error": "Official benchmark passed, but strict baseline array comparison failed",
+      "idea": "Candidate 1: share one LU factorization of each frequency's 751x751 signal matrix A. It now serves three solves: the signal solve, the noise-weight solve with A^H (previously a separately factored, materialized conjugate transpose) and the covariance solve. New helpers in differometor/simulate.py are lu_factor, _lu_solve (trans 0/1/2 via lax.linalg.triangular_solve) and solve_factored (lax.custom_linear_solve with matvec A x, or conj(A)^T x for the A^H case). The carrier solve and the public solve() are unchanged. The evidence and proposal are in experiments/notes/claude-linear-algebra.md.",
+      "hypothesis": "Read from source: the baseline factors A^H separately from A in the forward stage (101 complex LUs at n=751, an estimated ~1e11 flops). It may also factor A twice unless XLA CSE merges the signal and covariance getrf calls. The JIT stages save the LUs as AD residuals. Reusing LU(A) for the A^H system (solve via U^H L^H P) should remove at least one LU batch from the forward stage. It should also remove the ~0.9 GB materialized A^H and one ~0.9 GB LU residual. Expected result: lower forward-stage and complete first-run time and lower peak memory. Gradient-stage cost and compile time should be about the same, and the outputs should differ only at rounding level (carrier and signal essentially identical).",
+      "branch": "explore/linear-algebra-audit",
+      "agent": "claude-linear-algebra",
+      "direction": "matrix-structure-and-factorization",
+      "created_at": 1795276318.7446618,
+      "validated": false,
+      "execution_status": "failed",
+      "official_check": "passed",
+      "strict_check": "failed",
+      "resource_evidence": {
+        "budget_bytes": 32000000000,
+        "enforcement": "sampled_process_group_rss",
+        "kernel_memory_limit_enforced": false,
+        "sampled_process_group_peak_rss_bytes": 12777611264,
+        "budget_exceeded": false,
+        "gnu_time_peak_rss_bytes": 12776562688,
+        "container_memory_max": "59055800320",
+        "comparison_memory_monitoring": {
+          "budget_bytes": 32000000000,
+          "enforcement": "sampled_process_group_rss",
+          "kernel_memory_limit_enforced": false,
+          "sampled_process_group_peak_rss_bytes": 7340032,
+          "samples": 1,
+          "exceeded": false,
+          "notes": "RSS sampling can miss brief peaks and counts shared pages in each process. It excludes GPU VRAM and does not reserve RAM or constrain other instance work."
+        }
+      },
+      "metrics": {
+        "setup": 1.0794666558504105,
+        "compilation": 19.657827578485012,
+        "forward": 8.036047495901585,
+        "sensitivity": 0.0008639693260192871,
+        "gradient": 2.7345046680420637,
+        "transfer": 0.00030125677585601807,
+        "total": 31.509011624380946
+      },
+      "phases": {
+        "imports": 0.28632811456918716,
+        "initialize": 0.00288538821041584,
+        "load": 0.0014280658215284348,
+        "build": 0.788825087249279,
+        "forward_lower": 1.2178902979940176,
+        "forward_compile": 12.974575089290738,
+        "forward": 8.036047495901585,
+        "sensitivity_lower": 0.09682399407029152,
+        "sensitivity_compile": 0.3394882120192051,
+        "sensitivity": 0.0008639693260192871,
+        "gradient_lower": 0.2988920286297798,
+        "gradient_compile": 4.73015795648098,
+        "gradient": 2.7345046680420637,
+        "host_transfer": 0.00030125677585601807
+      },
+      "comparable": true,
+      "evaluator_hash_matches_report": true,
+      "warm_timing": {
+        "forward": 7.936591025441885,
+        "sensitivity": 0.1646125316619873,
+        "gradient": 2.7398174926638603,
+        "host_transfer": 0.00023176893591880798
+      },
+      "source_report": {
+        "public_repository": "https://github.com/artificial-scientist-lab/Differometor",
+        "baseline_commit": "b0dc7c79e7c72a1b010174f6bdcad01efa51d6ff",
+        "commit": "3db9b657f8496d40a9f195fd9864e5e048c7df5b",
+        "modified": false,
+        "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "simulator_files_sha256": {
+          "differometor/__init__.py": "505d559d5a17409680a91f555882edf23f78cbb7c98ee28845018fa9bfeba7e7",
+          "differometor/build.py": "f1fdff78515500f5912907537dbedecf30c3915fa949b820bf2ad81b4c062771",
+          "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+          "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+          "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+          "differometor/simulate.py": "bb14b50dda507cc550e9d90a96933dd7797f41534782533ab56fed884d1fdc80",
+          "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+        }
+      },
+      "peak_rss_kib": 12477112,
+      "delta": {
+        "setup": {
+          "seconds": 1.0794666558504105,
+          "baseline_seconds": 1.0290241818875074,
+          "saved_seconds": -0.05044247396290302,
+          "saved_percent": -4.901971678680859,
+          "threshold_seconds": 0.041935382410883904,
+          "classification": "regressed"
+        },
+        "compilation": {
+          "seconds": 19.657827578485012,
+          "baseline_seconds": 19.66518940217793,
+          "saved_seconds": 0.007361823692917824,
+          "saved_percent": 0.03743581382492303,
+          "threshold_seconds": 0.5899556820653379,
+          "classification": "within_noise_band"
+        },
+        "forward": {
+          "seconds": 8.036047495901585,
+          "baseline_seconds": 12.127282157540321,
+          "saved_seconds": 4.091234661638737,
+          "saved_percent": 33.73579181626404,
+          "threshold_seconds": 0.3638184647262096,
+          "classification": "improved"
+        },
+        "sensitivity": {
+          "seconds": 0.0008639693260192871,
+          "baseline_seconds": 0.0008683912456035614,
+          "saved_seconds": 4.421919584274292e-06,
+          "saved_percent": 0.5092082176854406,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "gradient": {
+          "seconds": 2.7345046680420637,
+          "baseline_seconds": 2.9347561299800873,
+          "saved_seconds": 0.20025146193802357,
+          "saved_percent": 6.823444711209524,
+          "threshold_seconds": 0.08804268389940262,
+          "classification": "improved"
+        },
+        "transfer": {
+          "seconds": 0.00030125677585601807,
+          "baseline_seconds": 0.0005150735378265381,
+          "saved_seconds": 0.00021381676197052002,
+          "saved_percent": 41.511890296823466,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "total": {
+          "seconds": 31.509011624380946,
+          "baseline_seconds": 35.73706482537091,
+          "saved_seconds": 4.228053200989962,
+          "saved_percent": 11.831002970306416,
+          "threshold_seconds": 1.0721119447611271,
+          "classification": "improved"
+        }
+      },
+      "phase_delta": {
+        "imports": {
+          "seconds": 0.28632811456918716,
+          "baseline_seconds": 0.2690851055085659,
+          "saved_seconds": -0.01724300906062126,
+          "saved_percent": -6.408013192715476,
+          "threshold_seconds": 0.0258482675999403,
+          "classification": "within_noise_band"
+        },
+        "initialize": {
+          "seconds": 0.00288538821041584,
+          "baseline_seconds": 0.0031066499650478363,
+          "saved_seconds": 0.00022126175463199615,
+          "saved_percent": 7.122197773207744,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "load": {
+          "seconds": 0.0014280658215284348,
+          "baseline_seconds": 0.0015017036348581314,
+          "saved_seconds": 7.363781332969666e-05,
+          "saved_percent": 4.90361823867153,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "build": {
+          "seconds": 0.788825087249279,
+          "baseline_seconds": 0.7487606573849916,
+          "saved_seconds": -0.040064429864287376,
+          "saved_percent": -5.3507658914946665,
+          "threshold_seconds": 0.022813662886619568,
+          "classification": "regressed"
+        },
+        "forward_lower": {
+          "seconds": 1.2178902979940176,
+          "baseline_seconds": 1.1645036935806274,
+          "saved_seconds": -0.05338660441339016,
+          "saved_percent": -4.58449421051096,
+          "threshold_seconds": 0.034935110807418825,
+          "classification": "regressed"
+        },
+        "forward_compile": {
+          "seconds": 12.974575089290738,
+          "baseline_seconds": 12.928618423640728,
+          "saved_seconds": -0.04595666565001011,
+          "saved_percent": -0.3554646300487582,
+          "threshold_seconds": 0.3878585527092218,
+          "classification": "within_noise_band"
+        },
+        "forward": {
+          "seconds": 8.036047495901585,
+          "baseline_seconds": 12.127282157540321,
+          "saved_seconds": 4.091234661638737,
+          "saved_percent": 33.73579181626404,
+          "threshold_seconds": 0.3638184647262096,
+          "classification": "improved"
+        },
+        "sensitivity_lower": {
+          "seconds": 0.09682399407029152,
+          "baseline_seconds": 0.1058458723127842,
+          "saved_seconds": 0.009021878242492676,
+          "saved_percent": 8.523599499309906,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "sensitivity_compile": {
+          "seconds": 0.3394882120192051,
+          "baseline_seconds": 0.4674806520342827,
+          "saved_seconds": 0.1279924400150776,
+          "saved_percent": 27.379195151308906,
+          "threshold_seconds": 0.1319595593959093,
+          "classification": "within_noise_band"
+        },
+        "sensitivity": {
+          "seconds": 0.0008639693260192871,
+          "baseline_seconds": 0.0008683912456035614,
+          "saved_seconds": 4.421919584274292e-06,
+          "saved_percent": 0.5092082176854406,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "gradient_lower": {
+          "seconds": 0.2988920286297798,
+          "baseline_seconds": 0.29914812184870243,
+          "saved_seconds": 0.00025609321892261505,
+          "saved_percent": 0.08560749682798849,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "gradient_compile": {
+          "seconds": 4.73015795648098,
+          "baseline_seconds": 4.656178630888462,
+          "saved_seconds": -0.07397932559251785,
+          "saved_percent": -1.5888420839730883,
+          "threshold_seconds": 0.13968535892665385,
+          "classification": "within_noise_band"
+        },
+        "gradient": {
+          "seconds": 2.7345046680420637,
+          "baseline_seconds": 2.9347561299800873,
+          "saved_seconds": 0.20025146193802357,
+          "saved_percent": 6.823444711209524,
+          "threshold_seconds": 0.08804268389940262,
+          "classification": "improved"
+        },
+        "host_transfer": {
+          "seconds": 0.00030125677585601807,
+          "baseline_seconds": 0.0005150735378265381,
+          "saved_seconds": 0.00021381676197052002,
+          "saved_percent": 41.511890296823466,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        }
+      },
+      "improved_subphases": [
+        "forward",
+        "gradient"
+      ],
+      "regressed_subphases": [
+        "build",
+        "forward_lower"
+      ],
+      "improved": [
+        "forward",
+        "gradient"
+      ],
+      "regressed": [
+        "setup"
+      ],
+      "observed_dominates_baseline": false,
+      "classification": "tradeoff",
+      "record": "experiments/runs/claude-linear-algebra/candidate-01.json",
+      "name": "claude-linear-algebra/candidate-01",
+      "run_key": "cd271462a63446a997264fb26882b711",
+      "screen_job_ids": [
+        "af18c37444224d31a69ced471361ef2d"
+      ],
+      "screen_pairing": "Same SHA, agent, branch and direction; no one-to-one rerun pairing inferred",
+      "observed_pareto_frontier": false,
+      "parent_candidate": "0c011fbbff6edb4ca095f12b5c762652da788f73",
+      "parent_run_key": "f668a9b0ab2c44c791aff3f0b9ccdeb1",
+      "saved_vs_parent_seconds": {
+        "setup": -0.02141180820763111,
+        "compilation": 0.390426192432642,
+        "forward": 4.161998648196459,
+        "sensitivity": -7.450580596923828e-09,
+        "gradient": 0.2917196247726679,
+        "transfer": 0.00020348839461803436,
+        "total": 4.822936138138175
+      }
+    },
+    {
+      "sha": "1e552d675c3795265be8af1ac23ffb61f90f30b1",
+      "profile": "screen",
+      "job_id": "ec367f0cd4204945adfdf65599b487d2",
+      "error": null,
+      "idea": "Live smoke: replay identical durable request ID; exactly one screening evaluation should exist",
+      "hypothesis": "Live smoke: replay identical durable request ID; exactly one screening evaluation should exist",
+      "branch": "audit/idempotency-smoke",
+      "agent": "audit-idempotency",
+      "direction": "submission-recovery",
+      "created_at": 1795276565.0583313,
+      "validated": false,
+      "execution_status": "completed",
+      "official_check": "not_run",
+      "strict_check": "not_run",
+      "resource_evidence": {
+        "budget_bytes": 32000000000,
+        "enforcement": "sampled_process_group_rss",
+        "kernel_memory_limit_enforced": false,
+        "sampled_process_group_peak_rss_bytes": 13662240768,
+        "budget_exceeded": false,
+        "gnu_time_peak_rss_bytes": 13661192192,
+        "container_memory_max": "59055800320",
+        "comparison_memory_monitoring": null
+      },
+      "metrics": {
+        "setup": 1.0796117391437292,
+        "compilation": 13.094052232801914,
+        "forward": 12.536224082112312,
+        "sensitivity": 0.0009036008268594742,
+        "gradient": 1.9659059457480907,
+        "transfer": 0.00042870454490184784,
+        "total": 28.677126305177808
+      },
+      "phases": {
+        "imports": 0.295762637630105,
+        "initialize": 0.003065437078475952,
+        "load": 0.0015009157359600067,
+        "build": 0.7792827486991882,
+        "forward_lower": 0.8624924477189779,
+        "forward_compile": 5.193137658759952,
+        "forward": 12.536224082112312,
+        "sensitivity_lower": 0.08647308498620987,
+        "sensitivity_compile": 0.3728647716343403,
+        "sensitivity": 0.0009036008268594742,
+        "gradient_lower": 0.4329141825437546,
+        "gradient_compile": 6.14617008715868,
+        "gradient": 1.9659059457480907,
+        "host_transfer": 0.00042870454490184784
+      },
+      "comparable": true,
+      "evaluator_hash_matches_report": true,
+      "warm_timing": {},
+      "source_report": {
+        "public_repository": "https://github.com/artificial-scientist-lab/Differometor",
+        "baseline_commit": "b0dc7c79e7c72a1b010174f6bdcad01efa51d6ff",
+        "commit": "1e552d675c3795265be8af1ac23ffb61f90f30b1",
+        "modified": false,
+        "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "simulator_files_sha256": {
+          "differometor/__init__.py": "505d559d5a17409680a91f555882edf23f78cbb7c98ee28845018fa9bfeba7e7",
+          "differometor/build.py": "f1fdff78515500f5912907537dbedecf30c3915fa949b820bf2ad81b4c062771",
+          "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+          "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+          "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+          "differometor/simulate.py": "8225fedb4580e39fcc3f3611e73e4e356c7c0b55e4a3353486fcad9260d77c01",
+          "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+        }
+      },
+      "peak_rss_kib": 13341008,
+      "delta": {
+        "setup": {
+          "seconds": 1.0796117391437292,
+          "baseline_seconds": 1.0290241818875074,
+          "saved_seconds": -0.05058755725622177,
+          "saved_percent": -4.916070792761213,
+          "threshold_seconds": 0.041935382410883904,
+          "classification": "regressed"
+        },
+        "compilation": {
+          "seconds": 13.094052232801914,
+          "baseline_seconds": 19.66518940217793,
+          "saved_seconds": 6.571137169376016,
+          "saved_percent": 33.415071856100504,
+          "threshold_seconds": 0.5899556820653379,
+          "classification": "improved"
+        },
+        "forward": {
+          "seconds": 12.536224082112312,
+          "baseline_seconds": 12.127282157540321,
+          "saved_seconds": -0.40894192457199097,
+          "saved_percent": -3.3720822131422508,
+          "threshold_seconds": 0.3638184647262096,
+          "classification": "regressed"
+        },
+        "sensitivity": {
+          "seconds": 0.0009036008268594742,
+          "baseline_seconds": 0.0008683912456035614,
+          "saved_seconds": -3.520958125591278e-05,
+          "saved_percent": -4.054575795664652,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "gradient": {
+          "seconds": 1.9659059457480907,
+          "baseline_seconds": 2.9347561299800873,
+          "saved_seconds": 0.9688501842319965,
+          "saved_percent": 33.01297079967494,
+          "threshold_seconds": 0.08804268389940262,
+          "classification": "improved"
+        },
+        "transfer": {
+          "seconds": 0.00042870454490184784,
+          "baseline_seconds": 0.0005150735378265381,
+          "saved_seconds": 8.636899292469025e-05,
+          "saved_percent": 16.768283862755307,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "total": {
+          "seconds": 28.677126305177808,
+          "baseline_seconds": 35.73706482537091,
+          "saved_seconds": 7.0599385201931,
+          "saved_percent": 19.755227673821214,
+          "threshold_seconds": 1.0721119447611271,
+          "classification": "improved"
+        }
+      },
+      "phase_delta": {
+        "imports": {
+          "seconds": 0.295762637630105,
+          "baseline_seconds": 0.2690851055085659,
+          "saved_seconds": -0.026677532121539116,
+          "saved_percent": -9.914161570228524,
+          "threshold_seconds": 0.0258482675999403,
+          "classification": "regressed"
+        },
+        "initialize": {
+          "seconds": 0.003065437078475952,
+          "baseline_seconds": 0.0031066499650478363,
+          "saved_seconds": 4.1212886571884155e-05,
+          "saved_percent": 1.3266021932164977,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "load": {
+          "seconds": 0.0015009157359600067,
+          "baseline_seconds": 0.0015017036348581314,
+          "saved_seconds": 7.878988981246948e-07,
+          "saved_percent": 0.05246700346431066,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "build": {
+          "seconds": 0.7792827486991882,
+          "baseline_seconds": 0.7487606573849916,
+          "saved_seconds": -0.030522091314196587,
+          "saved_percent": -4.076348164551464,
+          "threshold_seconds": 0.022813662886619568,
+          "classification": "regressed"
+        },
+        "forward_lower": {
+          "seconds": 0.8624924477189779,
+          "baseline_seconds": 1.1645036935806274,
+          "saved_seconds": 0.3020112458616495,
+          "saved_percent": 25.93476066469333,
+          "threshold_seconds": 0.034935110807418825,
+          "classification": "improved"
+        },
+        "forward_compile": {
+          "seconds": 5.193137658759952,
+          "baseline_seconds": 12.928618423640728,
+          "saved_seconds": 7.735480764880776,
+          "saved_percent": 59.83223041632973,
+          "threshold_seconds": 0.3878585527092218,
+          "classification": "improved"
+        },
+        "forward": {
+          "seconds": 12.536224082112312,
+          "baseline_seconds": 12.127282157540321,
+          "saved_seconds": -0.40894192457199097,
+          "saved_percent": -3.3720822131422508,
+          "threshold_seconds": 0.3638184647262096,
+          "classification": "regressed"
+        },
+        "sensitivity_lower": {
+          "seconds": 0.08647308498620987,
+          "baseline_seconds": 0.1058458723127842,
+          "saved_seconds": 0.019372787326574326,
+          "saved_percent": 18.302827406746648,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "sensitivity_compile": {
+          "seconds": 0.3728647716343403,
+          "baseline_seconds": 0.4674806520342827,
+          "saved_seconds": 0.0946158803999424,
+          "saved_percent": 20.239528628235878,
+          "threshold_seconds": 0.1319595593959093,
+          "classification": "within_noise_band"
+        },
+        "sensitivity": {
+          "seconds": 0.0009036008268594742,
+          "baseline_seconds": 0.0008683912456035614,
+          "saved_seconds": -3.520958125591278e-05,
+          "saved_percent": -4.054575795664652,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "gradient_lower": {
+          "seconds": 0.4329141825437546,
+          "baseline_seconds": 0.29914812184870243,
+          "saved_seconds": -0.13376606069505215,
+          "saved_percent": -44.7156612143819,
+          "threshold_seconds": 0.02,
+          "classification": "regressed"
+        },
+        "gradient_compile": {
+          "seconds": 6.14617008715868,
+          "baseline_seconds": 4.656178630888462,
+          "saved_seconds": -1.489991456270218,
+          "saved_percent": -32.000306998228446,
+          "threshold_seconds": 0.13968535892665385,
+          "classification": "regressed"
+        },
+        "gradient": {
+          "seconds": 1.9659059457480907,
+          "baseline_seconds": 2.9347561299800873,
+          "saved_seconds": 0.9688501842319965,
+          "saved_percent": 33.01297079967494,
+          "threshold_seconds": 0.08804268389940262,
+          "classification": "improved"
+        },
+        "host_transfer": {
+          "seconds": 0.00042870454490184784,
+          "baseline_seconds": 0.0005150735378265381,
+          "saved_seconds": 8.636899292469025e-05,
+          "saved_percent": 16.768283862755307,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        }
+      },
+      "improved_subphases": [
+        "forward_lower",
+        "forward_compile",
+        "gradient"
+      ],
+      "regressed_subphases": [
+        "imports",
+        "build",
+        "forward",
+        "gradient_lower",
+        "gradient_compile"
+      ],
+      "improved": [
+        "compilation",
+        "gradient"
+      ],
+      "regressed": [
+        "setup",
+        "forward"
+      ],
+      "observed_dominates_baseline": false,
+      "classification": "tradeoff",
+      "record": null,
+      "name": "audit-idempotency/1e552d67-screen-ec367f0c",
+      "run_key": "ec367f0cd4204945adfdf65599b487d2",
+      "screen_job_ids": [
+        "ec367f0cd4204945adfdf65599b487d2"
+      ],
+      "screen_pairing": "Same SHA, agent, branch and direction; no one-to-one rerun pairing inferred",
+      "observed_pareto_frontier": false,
+      "parent_candidate": "0a0c93fa8f814e0c9c2eab87117d6030a0e87b40",
+      "parent_run_key": "da015d91ac4c448b9b487d196ee057e0",
+      "saved_vs_parent_seconds": {
+        "setup": -0.0466361902654171,
+        "compilation": 2.2734332345426083,
+        "forward": -0.2347835935652256,
+        "sensitivity": 2.164021134376526e-05,
+        "gradient": -0.10509818233549595,
+        "transfer": -2.9569491744041443e-05,
+        "total": 1.8869073390960693
+      }
+    },
+    {
+      "sha": "0ed67104f64ad82059b3465d20e56489762b4312",
+      "profile": "screen",
+      "job_id": "be819ed2f7d94e859c762f85a57d8665",
+      "error": null,
+      "idea": "After candidate 1 the forward pass (7.9 s warm) is dominated by one batch of 101 complex 751-LUs, about 4.5 s judging by candidate 1's saving. The block factorization needs about 1.1e8 complex FMA per frequency vs 2.8e8 for a dense LU. That should cut forward runtime by roughly 2\u20133 s, and the first run by a similar amount, while the gradient stage and compile time stay about the same. Because pivoting is now restricted to within blocks, numerical differences may be larger than candidate 1's. Carrier and powers should remain identical; signal, noise and gradient will differ at rounding level unless B1, B2 or S is ill-conditioned.",
+      "hypothesis": "After candidate 1 the forward pass (7.9 s warm) is dominated by one batch of 101 complex 751-LUs, about 4.5 s judging by candidate 1's saving. The block factorization needs about 1.1e8 complex FMA per frequency vs 2.8e8 for a dense LU. That should cut forward runtime by roughly 2\u20133 s, and the first run by a similar amount, while the gradient stage and compile time stay about the same. Because pivoting is now restricted to within blocks, numerical differences may be larger than candidate 1's. Carrier and powers should remain identical; signal, noise and gradient will differ at rounding level unless B1, B2 or S is ill-conditioned.",
+      "branch": "explore/linear-algebra-audit",
+      "agent": "claude-linear-algebra",
+      "direction": "matrix-structure-and-factorization",
+      "created_at": 1795276594.7600236,
+      "validated": false,
+      "execution_status": "completed",
+      "official_check": "not_run",
+      "strict_check": "not_run",
+      "resource_evidence": {
+        "budget_bytes": 32000000000,
+        "enforcement": "sampled_process_group_rss",
+        "kernel_memory_limit_enforced": false,
+        "sampled_process_group_peak_rss_bytes": 12550746112,
+        "budget_exceeded": false,
+        "gnu_time_peak_rss_bytes": 12549697536,
+        "container_memory_max": "59055800320",
+        "comparison_memory_monitoring": null
+      },
+      "metrics": {
+        "setup": 1.079506766051054,
+        "compilation": 21.466416969895363,
+        "forward": 6.85453912243247,
+        "sensitivity": 0.0008823499083518982,
+        "gradient": 2.736993547528982,
+        "transfer": 0.0003221184015274048,
+        "total": 32.13866087421775
+      },
+      "phases": {
+        "imports": 0.28403760120272636,
+        "initialize": 0.0029000192880630493,
+        "load": 0.0014854427427053452,
+        "build": 0.7910837028175592,
+        "forward_lower": 1.3726524505764246,
+        "forward_compile": 14.256705923005939,
+        "forward": 6.85453912243247,
+        "sensitivity_lower": 0.0956721305847168,
+        "sensitivity_compile": 0.3543455321341753,
+        "sensitivity": 0.0008823499083518982,
+        "gradient_lower": 0.30502539686858654,
+        "gradient_compile": 5.082015536725521,
+        "gradient": 2.736993547528982,
+        "host_transfer": 0.0003221184015274048
+      },
+      "comparable": true,
+      "evaluator_hash_matches_report": true,
+      "warm_timing": {},
+      "source_report": {
+        "public_repository": "https://github.com/artificial-scientist-lab/Differometor",
+        "baseline_commit": "b0dc7c79e7c72a1b010174f6bdcad01efa51d6ff",
+        "commit": "0ed67104f64ad82059b3465d20e56489762b4312",
+        "modified": false,
+        "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "simulator_files_sha256": {
+          "differometor/__init__.py": "505d559d5a17409680a91f555882edf23f78cbb7c98ee28845018fa9bfeba7e7",
+          "differometor/build.py": "f1fdff78515500f5912907537dbedecf30c3915fa949b820bf2ad81b4c062771",
+          "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+          "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+          "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+          "differometor/simulate.py": "59b9be497bdcebbcafdcc0e576525b42574a86b302d675c5ce63686766fe68e4",
+          "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+        }
+      },
+      "peak_rss_kib": 12255564,
+      "delta": {
+        "setup": {
+          "seconds": 1.079506766051054,
+          "baseline_seconds": 1.0290241818875074,
+          "saved_seconds": -0.05048258416354656,
+          "saved_percent": -4.905869565761605,
+          "threshold_seconds": 0.041935382410883904,
+          "classification": "regressed"
+        },
+        "compilation": {
+          "seconds": 21.466416969895363,
+          "baseline_seconds": 19.66518940217793,
+          "saved_seconds": -1.801227567717433,
+          "saved_percent": -9.159472257703992,
+          "threshold_seconds": 0.5899556820653379,
+          "classification": "regressed"
+        },
+        "forward": {
+          "seconds": 6.85453912243247,
+          "baseline_seconds": 12.127282157540321,
+          "saved_seconds": 5.272743035107851,
+          "saved_percent": 43.47835703508756,
+          "threshold_seconds": 0.3638184647262096,
+          "classification": "improved"
+        },
+        "sensitivity": {
+          "seconds": 0.0008823499083518982,
+          "baseline_seconds": 0.0008683912456035614,
+          "saved_seconds": -1.3958662748336792e-05,
+          "saved_percent": -1.6074163367037455,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "gradient": {
+          "seconds": 2.736993547528982,
+          "baseline_seconds": 2.9347561299800873,
+          "saved_seconds": 0.19776258245110512,
+          "saved_percent": 6.738637682049819,
+          "threshold_seconds": 0.08804268389940262,
+          "classification": "improved"
+        },
+        "transfer": {
+          "seconds": 0.0003221184015274048,
+          "baseline_seconds": 0.0005150735378265381,
+          "saved_seconds": 0.0001929551362991333,
+          "saved_percent": 37.461667534571546,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "total": {
+          "seconds": 32.13866087421775,
+          "baseline_seconds": 35.73706482537091,
+          "saved_seconds": 3.598403951153159,
+          "saved_percent": 10.069108833466744,
+          "threshold_seconds": 1.0721119447611271,
+          "classification": "improved"
+        }
+      },
+      "phase_delta": {
+        "imports": {
+          "seconds": 0.28403760120272636,
+          "baseline_seconds": 0.2690851055085659,
+          "saved_seconds": -0.014952495694160461,
+          "saved_percent": -5.556790542494174,
+          "threshold_seconds": 0.0258482675999403,
+          "classification": "within_noise_band"
+        },
+        "initialize": {
+          "seconds": 0.0029000192880630493,
+          "baseline_seconds": 0.0031066499650478363,
+          "saved_seconds": 0.000206630676984787,
+          "saved_percent": 6.651237806303849,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "load": {
+          "seconds": 0.0014854427427053452,
+          "baseline_seconds": 0.0015017036348581314,
+          "saved_seconds": 1.6260892152786255e-05,
+          "saved_percent": 1.0828296459655604,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "build": {
+          "seconds": 0.7910837028175592,
+          "baseline_seconds": 0.7487606573849916,
+          "saved_seconds": -0.042323045432567596,
+          "saved_percent": -5.652413092907241,
+          "threshold_seconds": 0.022813662886619568,
+          "classification": "regressed"
+        },
+        "forward_lower": {
+          "seconds": 1.3726524505764246,
+          "baseline_seconds": 1.1645036935806274,
+          "saved_seconds": -0.20814875699579716,
+          "saved_percent": -17.874460866309434,
+          "threshold_seconds": 0.034935110807418825,
+          "classification": "regressed"
+        },
+        "forward_compile": {
+          "seconds": 14.256705923005939,
+          "baseline_seconds": 12.928618423640728,
+          "saved_seconds": -1.3280874993652105,
+          "saved_percent": -10.272462654916984,
+          "threshold_seconds": 0.3878585527092218,
+          "classification": "regressed"
+        },
+        "forward": {
+          "seconds": 6.85453912243247,
+          "baseline_seconds": 12.127282157540321,
+          "saved_seconds": 5.272743035107851,
+          "saved_percent": 43.47835703508756,
+          "threshold_seconds": 0.3638184647262096,
+          "classification": "improved"
+        },
+        "sensitivity_lower": {
+          "seconds": 0.0956721305847168,
+          "baseline_seconds": 0.1058458723127842,
+          "saved_seconds": 0.010173741728067398,
+          "saved_percent": 9.611845512504319,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "sensitivity_compile": {
+          "seconds": 0.3543455321341753,
+          "baseline_seconds": 0.4674806520342827,
+          "saved_seconds": 0.11313511990010738,
+          "saved_percent": 24.20102723134959,
+          "threshold_seconds": 0.1319595593959093,
+          "classification": "within_noise_band"
+        },
+        "sensitivity": {
+          "seconds": 0.0008823499083518982,
+          "baseline_seconds": 0.0008683912456035614,
+          "saved_seconds": -1.3958662748336792e-05,
+          "saved_percent": -1.6074163367037455,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "gradient_lower": {
+          "seconds": 0.30502539686858654,
+          "baseline_seconds": 0.29914812184870243,
+          "saved_seconds": -0.0058772750198841095,
+          "saved_percent": -1.9646705396521287,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        },
+        "gradient_compile": {
+          "seconds": 5.082015536725521,
+          "baseline_seconds": 4.656178630888462,
+          "saved_seconds": -0.425836905837059,
+          "saved_percent": -9.145630775677597,
+          "threshold_seconds": 0.13968535892665385,
+          "classification": "regressed"
+        },
+        "gradient": {
+          "seconds": 2.736993547528982,
+          "baseline_seconds": 2.9347561299800873,
+          "saved_seconds": 0.19776258245110512,
+          "saved_percent": 6.738637682049819,
+          "threshold_seconds": 0.08804268389940262,
+          "classification": "improved"
+        },
+        "host_transfer": {
+          "seconds": 0.0003221184015274048,
+          "baseline_seconds": 0.0005150735378265381,
+          "saved_seconds": 0.0001929551362991333,
+          "saved_percent": 37.461667534571546,
+          "threshold_seconds": 0.02,
+          "classification": "within_noise_band"
+        }
+      },
+      "improved_subphases": [
+        "forward",
+        "gradient"
+      ],
+      "regressed_subphases": [
+        "build",
+        "forward_lower",
+        "forward_compile",
+        "gradient_compile"
+      ],
+      "improved": [
+        "forward",
+        "gradient"
+      ],
+      "regressed": [
+        "setup",
+        "compilation"
+      ],
+      "observed_dominates_baseline": false,
+      "classification": "tradeoff",
+      "record": null,
+      "name": "claude-linear-algebra/0ed67104-screen-be819ed2",
+      "run_key": "be819ed2f7d94e859c762f85a57d8665",
+      "screen_job_ids": [
+        "be819ed2f7d94e859c762f85a57d8665"
+      ],
+      "screen_pairing": "Same SHA, agent, branch and direction; no one-to-one rerun pairing inferred",
+      "observed_pareto_frontier": false,
+      "parent_candidate": "3db9b657f8496d40a9f195fd9864e5e048c7df5b",
+      "parent_run_key": "cd271462a63446a997264fb26882b711",
+      "saved_vs_parent_seconds": {
+        "setup": -4.011020064353943e-05,
+        "compilation": -1.8085893914103508,
+        "forward": 1.1815083734691143,
+        "sensitivity": -1.8380582332611084e-05,
+        "gradient": -0.0024888794869184494,
+        "transfer": -2.086162567138672e-05,
+        "total": -0.6296492498368025
       }
     }
   ],

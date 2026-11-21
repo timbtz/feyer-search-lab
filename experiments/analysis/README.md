@@ -1,6 +1,6 @@
 # Candidate phase comparison
 
-Snapshot: 2026-11-21T15:52:58.907816+00:00
+Snapshot: 2026-11-21T15:58:17.933870+00:00
 
 Magnitude exceeds max(0.02 seconds, 3% of baseline phase median, baseline phase range). Heuristic, not statistical significance.
 
@@ -31,8 +31,10 @@ All times below are first-run seconds. Positive savings mean faster.
 | audit-confirmation/02ec741d-full-e1eaa6e9 (02ec741d) | passed / passed | 35.9469 | 1.0407 | 19.7398 | 12.2198 | 0.0009 | 2.9452 | 0.0005 | improved: none; regressed: none |
 | audit-confirmation/02ec741d-full-e41f0615 (02ec741d) | passed / passed | 35.6383 | 1.0312 | 19.5305 | 12.1191 | 0.0009 | 2.9563 | 0.0003 | improved: none; regressed: none |
 | audit-confirmation/1e552d67-full-882be0c1 (1e552d67) | passed / passed | 28.5743 | 1.0996 | 13.1709 | 12.4001 | 0.0011 | 1.9022 | 0.0004 | improved: compilation, gradient; regressed: setup |
-| claude-linear-algebra/3db9b657-screen-af18c374 (3db9b657) | not_run / not_run | 31.4285 | 1.0551 | 19.5952 | 8.0434 | 0.0009 | 2.7336 | 0.0004 | improved: forward, gradient; regressed: none |
 | audit-screen/1e552d67-screen-b2202c5e (1e552d67) | not_run / not_run | 28.1541 | 1.0428 | 12.8646 | 12.3320 | 0.0009 | 1.9135 | 0.0003 | improved: compilation, gradient; regressed: none |
+| claude-linear-algebra/candidate-01 (3db9b657) | passed / failed | 31.5090 | 1.0795 | 19.6578 | 8.0360 | 0.0009 | 2.7345 | 0.0003 | improved: forward, gradient; regressed: setup |
+| audit-idempotency/1e552d67-screen-ec367f0c (1e552d67) | not_run / not_run | 28.6771 | 1.0796 | 13.0941 | 12.5362 | 0.0009 | 1.9659 | 0.0004 | improved: compilation, gradient; regressed: setup, forward |
+| claude-linear-algebra/0ed67104-screen-be819ed2 (0ed67104) | not_run / not_run | 32.1387 | 1.0795 | 21.4664 | 6.8545 | 0.0009 | 2.7370 | 0.0003 | improved: forward, gradient; regressed: setup, compilation |
 
 ## Exploration ancestry
 
@@ -59,7 +61,7 @@ graph LR
   c8["seed-agent/candidate-08"]
   c7 --> c8
   c9["seed-agent/candidate-09"]
-  c19 --> c9
+  c20 --> c9
   c10["seed-agent/candidate-10"]
   c9 --> c10
   c11["seed-agent/d04921ce-screen-e6d36ddf"]
@@ -73,10 +75,14 @@ graph LR
   c16["audit-confirmation/02ec741d-full-e41f0615"]
   c17["audit-confirmation/1e552d67-full-882be0c1"]
   c7 --> c17
-  c18["claude-linear-algebra/3db9b657-screen-af18c374"]
-  c0 --> c18
-  c19["audit-screen/1e552d67-screen-b2202c5e"]
-  c7 --> c19
+  c18["audit-screen/1e552d67-screen-b2202c5e"]
+  c7 --> c18
+  c19["claude-linear-algebra/candidate-01"]
+  c0 --> c19
+  c20["audit-idempotency/1e552d67-screen-ec367f0c"]
+  c7 --> c20
+  c21["claude-linear-algebra/0ed67104-screen-be819ed2"]
+  c19 --> c21
 ```
 
 ## Candidate details
@@ -263,16 +269,6 @@ Memory enforcement evidence: sampled_process_group_rss; kernel cap: False; budge
 
 [Code](https://github.com/timbtz/feyer-search-lab/commit/1e552d675c3795265be8af1ac23ffb61f90f30b1)
 
-### claude-linear-algebra/3db9b657-screen-af18c374
-
-Read from source: the baseline factors A^H separately from A in the forward stage (101 complex LUs at n=751, an estimated ~1e11 flops). It may also factor A twice unless XLA CSE merges the signal and covariance getrf calls. The JIT stages save the LUs as AD residuals. Reusing LU(A) for the A^H system (solve via U^H L^H P) should remove at least one LU batch from the forward stage. It should also remove the ~0.9 GB materialized A^H and one ~0.9 GB LU residual. Expected result: lower forward-stage and complete first-run time and lower peak memory. Gradient-stage cost and compile time should be about the same, and the outputs should differ only at rounding level (carrier and signal essentially identical).
-
-Classification: improvement_without_detected_regression. Observed Pareto frontier: False.
-
-Memory enforcement evidence: sampled_process_group_rss; kernel cap: False; budget bytes: 32000000000.
-
-[Code](https://github.com/timbtz/feyer-search-lab/commit/3db9b657f8496d40a9f195fd9864e5e048c7df5b)
-
 ### audit-screen/1e552d67-screen-b2202c5e
 
 Verify audited screening schema and 32GB sampled-RSS policy on already validated candidate8
@@ -282,3 +278,35 @@ Classification: improvement_without_detected_regression. Observed Pareto frontie
 Memory enforcement evidence: sampled_process_group_rss; kernel cap: False; budget bytes: 32000000000.
 
 [Code](https://github.com/timbtz/feyer-search-lab/commit/1e552d675c3795265be8af1ac23ffb61f90f30b1)
+
+### claude-linear-algebra/candidate-01
+
+Candidate 1: share one LU factorization of each frequency's 751x751 signal matrix A. It now serves three solves: the signal solve, the noise-weight solve with A^H (previously a separately factored, materialized conjugate transpose) and the covariance solve. New helpers in differometor/simulate.py are lu_factor, _lu_solve (trans 0/1/2 via lax.linalg.triangular_solve) and solve_factored (lax.custom_linear_solve with matvec A x, or conj(A)^T x for the A^H case). The carrier solve and the public solve() are unchanged. The evidence and proposal are in experiments/notes/claude-linear-algebra.md.
+
+Classification: tradeoff. Observed Pareto frontier: False.
+
+Memory enforcement evidence: sampled_process_group_rss; kernel cap: False; budget bytes: 32000000000.
+
+[Code](https://github.com/timbtz/feyer-search-lab/commit/3db9b657f8496d40a9f195fd9864e5e048c7df5b)
+
+Validation: Official benchmark passed, but strict baseline array comparison failed
+
+### audit-idempotency/1e552d67-screen-ec367f0c
+
+Live smoke: replay identical durable request ID; exactly one screening evaluation should exist
+
+Classification: tradeoff. Observed Pareto frontier: False.
+
+Memory enforcement evidence: sampled_process_group_rss; kernel cap: False; budget bytes: 32000000000.
+
+[Code](https://github.com/timbtz/feyer-search-lab/commit/1e552d675c3795265be8af1ac23ffb61f90f30b1)
+
+### claude-linear-algebra/0ed67104-screen-be819ed2
+
+After candidate 1 the forward pass (7.9 s warm) is dominated by one batch of 101 complex 751-LUs, about 4.5 s judging by candidate 1's saving. The block factorization needs about 1.1e8 complex FMA per frequency vs 2.8e8 for a dense LU. That should cut forward runtime by roughly 2–3 s, and the first run by a similar amount, while the gradient stage and compile time stay about the same. Because pivoting is now restricted to within blocks, numerical differences may be larger than candidate 1's. Carrier and powers should remain identical; signal, noise and gradient will differ at rounding level unless B1, B2 or S is ill-conditioned.
+
+Classification: tradeoff. Observed Pareto frontier: False.
+
+Memory enforcement evidence: sampled_process_group_rss; kernel cap: False; budget bytes: 32000000000.
+
+[Code](https://github.com/timbtz/feyer-search-lab/commit/0ed67104f64ad82059b3465d20e56489762b4312)
