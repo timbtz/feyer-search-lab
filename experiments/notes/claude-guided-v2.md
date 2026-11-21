@@ -232,5 +232,45 @@ This is my own hypothesis. It is *not* a transfer of 7d1ccc5's code, which I cou
   - Adds the `_save_assembly_indices` policy (copied from 7d1ccc5) and the `COMPONENT_VALUE_REMAT` flag.
   - Fallback: set the flag to False.
 
+### Results: SHA `aac9904cb4dd9b2caae377d8d4694f6782ec3498`: official PASS, strict PASS, **kept (new branch best)**
+
+**Screen** (`750cd6af`): 17.800 s.
+
+**Full** (`afea41cd`):
+
+| Phase | Candidate 5 | 633689f (`ef7e77be`) | Change |
+| --- | --- | --- | --- |
+| Complete first run | **17.850** | 19.543 | **−1.69** |
+| Forward lower | 0.680 | 0.714 | −0.03 |
+| Forward compile | 3.470 | 6.394 | **−2.92** |
+| Forward execute | 8.463 | 8.415 | +0.05 |
+| Gradient lower | 0.220 | 0.162 | +0.06 |
+| Gradient compile | 2.424 | 1.305 | **+1.12** |
+| Gradient execute | 1.550 | 1.518 | +0.03 |
+
+- Warm median: 10.527 s vs 10.070 s. The warm forward median was 8.82 s vs 8.38 s, so warm runtime is worse by about 0.45 s. This is separate from the first-run objective.
+- Peak RSS: 7.71 GB (was 7.96 GB).
+- Strict comparison: all forward outputs bitwise identical; gradient max normalized error 1.6e-8, unchanged.
+- **Interpretation:**
+  - Unlike candidate 1, the transfer was not one-for-one: the forward program lost 2.92 s of compile while the gradient program gained only 1.12 s.
+  - Measured: the narrow component-value checkpoint is worth about −1.7 s of first-run time on this branch.
+  - This is the lowest full-valid total in cohort `10567ad0` so far (astra c99bd28: 18.02). It is one observation and needs a quiet serial confirmation.
+- **Decision:** keep. Candidate 6 builds on it.
+
+## Candidate 6: NOISE_FACTOR_REUSE "direct_implicit" → "direct"
+
+### Hypothesis
+- **Target:** gradient compile (2.42 s) and gradient lower (0.22 s) in job `afea41cd`.
+- **Mechanism:**
+  - "direct_implicit" solves A^H through `lax.custom_linear_solve`, with a separate stop-gradient LU and an einsum matvec. Its transpose rule adds a matvec transpose plus a transpose_solve to the reverse program.
+  - "direct" uses `jnp.linalg.solve` on the explicit A^H, the original validated path that peer 7d1ccc5 also uses.
+- **Exactness:** the forward pass factors the same matrix with the same pivots, so noise outputs are expected bitwise identical or near-identical. The gradient may differ at reordering level.
+- **Prediction:**
+  - Gradient compile and lower decrease by an unknown amount.
+  - Forward execute or memory may rise, because "direct" keeps the transposed copy as an AD residual, which is why direct_implicit was introduced.
+  - The net sign is unknown.
+- **Reject if:** a strict failure or a total slower than 17.85 s beyond noise.
+- **Source delta vs aac9904:** a one-line flag change in simulate.py.
+
 ### Results
 - Pending.

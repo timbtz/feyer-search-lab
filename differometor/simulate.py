@@ -699,7 +699,9 @@ NOISE_REUSE_MODE: str = "broadcast"
 # "direct_implicit" is "direct" with the A^H solve as its own custom_linear_solve:
 # the LU of the explicit A^H (identical LAPACK input) but a matvec that reads A
 # itself (x -> conj(A)^T x), so the transposed copy is not kept as an AD residual.
-NOISE_FACTOR_REUSE: str = "direct_implicit"
+# Candidate 6: "direct" (as in peer 7d1ccc5) to test whether the custom_linear_solve
+# of "direct_implicit" costs gradient compile now that component values are remat'd.
+NOISE_FACTOR_REUSE: str = "direct"
 
 
 def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):
