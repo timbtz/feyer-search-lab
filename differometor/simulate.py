@@ -63,7 +63,7 @@ def solve(matrix: jnp.ndarray, right_hand_side: jnp.ndarray) -> jnp.ndarray:
 def _evaluate_component(function_and_inputs):
     """Keep recomputation within the selected component's reverse branch."""
     function_index, function_inputs = function_and_inputs
-    branches = tuple(jax.checkpoint(function, prevent_cse=False) for function in FUNCTIONS)
+    branches = tuple(jax.checkpoint(function, prevent_cse=True) for function in FUNCTIONS)
     return lax.switch(function_index, branches, function_inputs)
 
 
