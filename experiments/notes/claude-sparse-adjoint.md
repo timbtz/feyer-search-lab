@@ -166,3 +166,37 @@
 - Dev (CPU 100): build 0.30 -> ~0.06 s (harness, all setups 0.013-0.061 s); no eager compiles
   remain in differometor's build path. Dev first run 7.13 s.
 - Numerics: dev arrays and all 8 harness setups bitwise identical to candidate 6, gradients included.
+- Candidate 6 results: screen `4be290b18878466e8bee4e61e2febdd9` 7.495 s; full
+  `19304daff7d44eeba99c9e10e8c6cd46` **official PASS**, strict FAIL (same class), first run
+  **7.461 s** (candidate 4 custom_vjp: 7.388 s full / 7.372 s screen) — custom_linear_solve costs
+  <= ~0.1 s (forward compile 4.389 vs 4.301 s), within run-to-run noise.
+  jaxcompat report: compatible 11/11.
+- Candidate 7 results (SHA `64d15bc6cf137ca2143ba0d70c6c973ade3b1d3b`): screen
+  `01025116797142df9d56e5fb6aeaf525` 8.342 s and full `2642f537f91641da99c595628da9881e` 7.977 s
+  (official PASS, strict FAIL) both had build 0.87-0.91 s — **contaminated**: they ran while my
+  CPU-100 jaxcompat + dense-matrix experiment were running. Clean fresh-tree dev run: build
+  0.068 s, first run 7.26 s. Repeat screen with my side idle `da69e700a2eb4521970b591de99957b4`:
+  build 0.075 s, first run 7.560 s; forward lower 0.560 (+0.05) and forward compile 4.615
+  (+0.23) vs candidate 6. Interpretation: the build's tiny eager compilations previously paid
+  XLA's one-time compiler initialisation, which now lands in the first real compile.
+  **Neutral; no gain claimed.** jaxcompat report: compatible 11/11.
+- Methodology note: heavy dev processes on CPU 100 visibly inflated a concurrent queue run's
+  build phase (+0.6 s). Queue timings taken while other workers run dev jobs are suspect.
+
+## Dense-reference reproducibility (uifo_rand1, same AMD host, all 101 frequencies)
+- max |dlog S| vs JAX dense / vs extended-precision truth:
+  JAX dense 0 / 2.04e-4; SciPy getrf 0 / 2.04e-4 (bitwise = JAX); numpy dense 2.39e-4 / 2.56e-4;
+  SuperLU NATURAL 2.88e-4 / 2.78e-4; SuperLU COLAMD 2.16e-4 / 6.6e-5;
+  **SuperLU COLAMD + refinement 2.04e-4 / 7.6e-11**. Unblocked partial-pivoting LU at the
+  worst frequency: -2.53e-4 vs JAX dense, -4.9e-5 vs truth.
+- => On ill-conditioned setups the dense reference's error is rounding-pattern noise: dense LU
+  implementations with the same pivoting rule disagree by ~2e-4 on one machine. Matching a dense
+  reference within 1e-5 there requires bit-identical LAPACK on the grader's CPU (i.e. the dense
+  O(n^3) path itself). Most defensible: be accurate (refined sparse is ~truth).
+
+## Status / next
+- Branch best measured: candidate 4 `b890b98` (custom_vjp) 7.388 s full; JAX-semantics default:
+  candidate 6 `7b1431a` 7.461 s full (custom_linear_solve, jaxcompat 11/11). Candidate 7 `64d15bc`
+  = candidate 6 + host build, neutral (7.56 s clean screen).
+- Remaining cost is XLA compile of component evaluation (forward ~4.3 s, gradient ~1.16 s), now
+  owned by claude-host-assembly (NumPy components). Execution ~0.48 s, build/imports ~0.37 s.
