@@ -1,0 +1,92 @@
+{
+  "status": 200,
+  "headers": {
+    "x-ratelimit-limit-user-daily-usd": "1",
+    "x-ratelimit-limit-user-rpm": "20",
+    "x-ratelimit-remaining-user-daily-usd": "0.99874252",
+    "x-ratelimit-remaining-user-rpm": "19",
+    "x-ratelimit-reset-user-daily-usd": "1795350381",
+    "x-ratelimit-used-user-daily-usd": "0.00125748"
+  },
+  "stream_done": true,
+  "first_event_seconds": 1.601477792,
+  "first_content_seconds": 62.877724334,
+  "reasoning_characters": 4253,
+  "usable_completion": true,
+  "latency_seconds": 71.57284325,
+  "data": {
+    "choices": [
+      {
+        "message": {
+          "content": "{\n  \"classification\": \"floating-point operation-order divergence in algebraically equivalent reformulation\",\n  \"hypothesis\": \"Substituting d^H solve(A,Nw) with w^H N w changes the FP operation sequence (eliminates a solve, alters rounding accumulation). The ~3.7e-5 absolute error on large-magnitude coordinates exceeds the 3e-6 strict tolerance. Official pass uses looser criteria; strict check enforces near-bitwise agreement.\",\n  \"proposed_code_repair\": \"Revert the noise-gradient contraction to the reference operation order: compute Nw, solve A x = Nw, then form d^H x. This restores identical FP rounding to the baseline without altering physics or tolerances.\",\n  \"required_checks\": [\n    \"bitwise equality of all 193 gradients vs reference across 3 runs\",\n    \"all 101 frequencies unchanged\",\n    \"carrier/signal outputs remain identical\",\n    \"noise/sensitivity outputs match reference bitwise\"\n  ],\n  \"proven_cause\": false\n}"
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 441,
+      "completion_tokens": 1369,
+      "total_tokens": 2950,
+      "reasoning_tokens": 1140,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "cache_write_tokens": 0,
+        "audio_tokens": 0,
+        "video_tokens": 0,
+        "image_tokens": 0
+      },
+      "cost": 0.000111265,
+      "cost_details": {
+        "upstream_inference_cost": 0.000111265,
+        "upstream_inference_prompt_cost": 1.5435e-05,
+        "upstream_inference_completions_cost": 9.583e-05,
+        "total_cost": 0.000111265,
+        "input_cost": 1.5435e-05,
+        "output_cost": 9.583e-05,
+        "cached_input_cost": 0,
+        "cache_write_input_cost": 0,
+        "request_cost": 0,
+        "web_search_cost": 0,
+        "image_input_cost": null,
+        "image_output_cost": null,
+        "audio_input_cost": null,
+        "data_storage_cost": 2.95e-05
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 1140,
+        "image_tokens": 0,
+        "audio_tokens": 0
+      }
+    }
+  },
+  "answer": {
+    "classification": "floating-point operation-order divergence in algebraically equivalent reformulation",
+    "hypothesis": "Substituting d^H solve(A,Nw) with w^H N w changes the FP operation sequence (eliminates a solve, alters rounding accumulation). The ~3.7e-5 absolute error on large-magnitude coordinates exceeds the 3e-6 strict tolerance. Official pass uses looser criteria; strict check enforces near-bitwise agreement.",
+    "proposed_code_repair": "Revert the noise-gradient contraction to the reference operation order: compute Nw, solve A x = Nw, then form d^H x. This restores identical FP rounding to the baseline without altering physics or tolerances.",
+    "required_checks": [
+      "bitwise equality of all 193 gradients vs reference across 3 runs",
+      "all 101 frequencies unchanged",
+      "carrier/signal outputs remain identical",
+      "noise/sensitivity outputs match reference bitwise"
+    ],
+    "proven_cause": false
+  },
+  "valid_json": true,
+  "task_usable": true,
+  "assessment": {
+    "transport_and_format": "Complete SSE, stop, valid JSON; task delivered",
+    "proposal_status": "review_required; not applied, compiled or evaluated",
+    "useful": [
+      "Suggests minimally reverting the changed solve/contraction order without loosening tolerances",
+      "Records proven_cause false"
+    ],
+    "corrections": [
+      "Floating-point operation-order effects are a hypothesis, not established cause",
+      "Restoring an expression does not prove bitwise identity after compiler transformations or other candidate changes",
+      "The strict tolerance is not a requirement of bitwise equality",
+      "Required checks must include unchanged full official and strict saved outputs/all gradients, not only the model list"
+    ],
+    "novelty": "Conservative fallback, not a newly demonstrated speed-preserving repair",
+    "token_accounting": "441 prompt +1369 completion =1810; reasoning1140 is included in completion. Provider total_tokens2950 appears to count reasoning again; raw preserved."
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "started_at": 1795284904.7510972,
+  "model": "Qwen3.8-27B",
+  "request_sha256": "58cdd653d42cfce36fb51025bf9630296770ccb2231ac774489408d5622e787c",
+  "stream": true,
+  "max_tokens": 4096,
+  "reasoning_effort": "low",
+  "first_event_seconds": 14.070317291,
+  "first_content_seconds": 192.862576833,
+  "reasoning_characters": 14518,
+  "content": "{\"verdict\":\"conditional\",\"risks\":[{\"claim\":\"The guard (noise_function_input_indices \u2229 swept_indices = \u2205) is necessary for correctness, but the source does not expose the actual index arrays, so it cannot be confirmed that the guard passes for this specific 193-variable problem.\",\"source_lines\":\"simulate.py:116 (function_inputs = parameters[function_input_indices]), simulate.py:316 (expand_parameters with signal_changing_parameter_indices)\",\"test\":\"Print or assert set(noise_function_input_indices).isdisjoint(set(signal_changing_parameter_indices)) at build time before the vmap over parameters.\"},{\"claim\":\"Memory savings from storing one (751,751) matrix instead of (101,751,751) are unprovable from source. XLA may already deduplicate identical vmap outputs, or the tensor may be a transient intermediate immediately consumed by the einsum, making the peak-memory difference negligible.\",\"source_lines\":\"simulate.py:392-399 (vmap producing noise_matrix), simulate.py:420 (immediate consumption by matmul_single_batch)\",\"test\":\"Profile peak device memory with and without the optimization using jax.profiler or nvidia-smi during a single forward pass; compare allocated bytes for the noise_matrix buffer.\"},{\"claim\":\"Gradient correctness depends on the noise matrix being a function only of non-swept parameters. The source shows linking resolves before expansion (lines 289-294 before 316), so linked values are row-invariant. However, if a future code change moves linking after expansion or adds a new noise-function input that reads a swept index, the shared-matrix assumption silently breaks with no error.\",\"source_lines\":\"simulate.py:289-294 (linking before expansion), simulate.py:316 (expansion), simulate.py:392 (noise vmap)\",\"test\":\"Add a runtime assertion inside the noise update that verifies parameters[0, noise_function_input_indices] equals parameters[-1, noise_function_input_indices] (all rows agree) before the einsum; raise if they differ.\"}],\"minimal_guard\":\"assert j",
+  "usage": {
+    "prompt_tokens": 2501,
+    "completion_tokens": 4096,
+    "total_tokens": 10240,
+    "reasoning_tokens": 3643,
+    "prompt_tokens_details": {
+      "cached_tokens": 2496,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0,
+      "image_tokens": 0
+    },
+    "cost": 0.0002886422,
+    "cost_details": {
+      "upstream_inference_cost": 0.00028864220000000005,
+      "upstream_inference_prompt_cost": 1.9222e-06,
+      "upstream_inference_completions_cost": 0.00028672,
+      "total_cost": 0.0002886422,
+      "input_cost": 1.75e-07,
+      "output_cost": 0.00028672,
+      "cached_input_cost": 1.7472e-06,
+      "cache_write_input_cost": 0,
+      "request_cost": 0,
+      "web_search_cost": 0,
+      "image_input_cost": null,
+      "image_output_cost": null,
+      "audio_input_cost": null,
+      "data_storage_cost": 0.00010240000000000001
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 3643,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "finish_reason": "length",
+  "events": 4068,
+  "done": true,
+  "status": 200,
+  "headers_seconds": 0.680676166,
+  "headers": {
+    "content-type": "text/event-stream",
+    "x-ratelimit-limit-user-daily-usd": "1",
+    "x-ratelimit-limit-user-rpm": "20",
+    "x-ratelimit-remaining-user-daily-usd": "0.99903117",
+    "x-ratelimit-remaining-user-rpm": "19",
+    "x-ratelimit-reset-user-daily-usd": "1795350381",
+    "x-ratelimit-used-user-daily-usd": "0.00096883"
+  },
+  "latency_seconds": 215.136057375,
+  "finished_at": 1795285136.191558,
+  "valid_json": false,
+  "usable_completion": false,
+  "assessment": {
+    "connection": "Streaming received events past the observed 60-second nonstream limit",
+    "completion": "Rejected: finish_reason length, invalid truncated JSON",
+    "quality_flags": [
+      "Suggested nvidia-smi despite AMD/CPU context",
+      "Suggested checking first and last rows as evidence all rows agree; insufficient for arbitrary middle rows",
+      "Example guard checked signal indices only, omitting real carrier sweeps"
+    ],
+    "causal_limit": "Streaming, JSON mode and token cap changed together; this is not an isolated controlled parameter experiment",
+    "accounting_note": "Provider total_tokens is10240 but prompt_tokens+completion_tokens is6597; preserve raw fields rather than silently double-count reasoning"
+  }
+}
