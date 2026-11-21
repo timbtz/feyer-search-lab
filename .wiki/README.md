@@ -2,7 +2,7 @@
 
 The lab separates optimization work from evaluation. Agents explore a direction in their own branch and working directory. A supervisor commits and submits their changes, then returns the AMD evaluator's results so they can decide what to try next. A screening result is provisional; a validated result passes the unchanged official benchmark.
 
-The team repository is [timkireply/feyer-search-lab](https://github.com/timkireply/feyer-search-lab). The challenge source and README remain at the repository root.
+The team repository is [timbtz/feyer-search-lab](https://github.com/timbtz/feyer-search-lab). The challenge source and README remain at the repository root.
 
 ## Start here
 
@@ -21,7 +21,7 @@ The AMD instance, SSH access, VS Code connection, isolated Python environment an
 
 ## Working model
 
-The first Codex candidate completed the entire feedback cycle: committed on `explore/seed-agent`, screened, fully validated, published its results, and resumed the same Codex conversation for candidate two. Its lazy visualization import preserved all saved arrays exactly. Complete first-run time was 37.00 seconds versus the lab calibration's 36.33 seconds, so this single measurement does not demonstrate a speed gain. See the [candidate report](https://github.com/timkireply/feyer-search-lab/blob/explore/seed-agent/experiments/runs/seed-agent/candidate-01.json).
+The first Codex candidate completed the entire feedback cycle: committed on `explore/seed-agent`, screened, fully validated, published its results, and resumed the same Codex conversation for candidate two. Its lazy visualization import preserved all saved arrays exactly. Complete first-run time was 37.00 seconds versus the lab calibration's 36.33 seconds, so this single measurement does not demonstrate a speed gain. See the [candidate report](https://github.com/timbtz/feyer-search-lab/blob/explore/seed-agent/experiments/runs/seed-agent/candidate-01.json).
 
 One direction can outlive an agent session. One agent can produce several candidate commits. One candidate can have several evaluation runs. Keep those identities separate so a replacement agent can resume from the written findings and every timing remains attributable to exact code.
 

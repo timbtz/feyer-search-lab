@@ -416,7 +416,7 @@ def main():
     parser.add_argument('--name',default='seed-agent')
     parser.add_argument('--direction',default='first-pass')
     parser.add_argument('--host',default='amd-hackathon')
-    parser.add_argument('--github-repo',default='timkireply/feyer-search-lab')
+    parser.add_argument('--github-repo',default='timbtz/feyer-search-lab')
     parser.add_argument('--max-candidates',type=int,default=4)
     parser.add_argument('--max-minutes',type=float,default=60)
     parser.add_argument('--baseline-seconds',type=float,default=35.737065)
