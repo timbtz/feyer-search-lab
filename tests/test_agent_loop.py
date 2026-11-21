@@ -204,7 +204,10 @@ class AgentLoopIntegrationTests(unittest.TestCase):
     def test_no_count_limit_continues_past_four_candidates(self):
         self.exercise_loop(None, 5)
 
-    def exercise_loop(self, candidate_limit, expected_candidates):
+    def test_claude_uses_shared_queue_and_resumes_with_feedback(self):
+        self.exercise_loop(2, 2, provider='claude')
+
+    def exercise_loop(self, candidate_limit, expected_candidates, provider='codex'):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             repo, worktree, origin = root / 'repo', root / 'worktree', root / 'origin.git'
@@ -223,11 +226,13 @@ class AgentLoopIntegrationTests(unittest.TestCase):
             git(repo, 'remote', 'add', 'origin', str(origin))
             args = SimpleNamespace(repo=repo, worktree=worktree, name='trial', branch='explore/trial',
                 direction='imports', resume=False, host='unused', github_repo='test/repo',
-                max_minutes=1, max_candidates=candidate_limit, baseline_seconds=36.177949)
+                max_minutes=1, max_candidates=candidate_limit, baseline_seconds=36.177949,
+                agent_provider=provider, agent_model='claude-opus-5-5' if provider == 'claude' else None)
             calls = []
             submitted = {}
             client = Mock()
-            def turn(folder, session, number, prompt, thread, timeout, lock_fds=()):
+            def turn(folder, session, number, prompt, thread, timeout, lock_fds=(), model=None):
+                self.assertEqual(model, args.agent_model)
                 calls.append((thread, prompt))
                 (folder / 'differometor/simulate.py').write_text(f'# candidate {number}\n')
                 return 'same-thread', {'summary': f'Change {number}', 'hypothesis': 'faster',
@@ -244,7 +249,7 @@ class AgentLoopIntegrationTests(unittest.TestCase):
             client.submit.side_effect = submit
             client.wait.side_effect = wait
             with patch('lab.agent_loop.Client', return_value=client), \
-                 patch('lab.agent_loop.codex_turn', side_effect=turn), \
+                 patch('lab.claude_turn.claude_turn' if provider == 'claude' else 'lab.agent_loop.codex_turn', side_effect=turn), \
                  patch('lab.agent_loop.github_status'):
                 run(args)
             self.assertEqual(len(calls), expected_candidates)
@@ -267,6 +272,13 @@ class AgentLoopIntegrationTests(unittest.TestCase):
             self.assertEqual(state['thread_id'], 'same-thread')
             self.assertEqual(state['candidates'], expected_candidates)
             self.assertIsNone(state['active_candidate'])
+            self.assertEqual(state['agent_provider'], provider)
+            args.resume = True
+            args.agent_provider = 'claude' if provider == 'codex' else 'codex'
+            with self.assertRaisesRegex(ValueError, 'different agent provider'):
+                run(args)
+            args.agent_provider = provider
+            args.resume = False
             with self.assertRaisesRegex(ValueError, 'already exists'):
                 run(args)
 
