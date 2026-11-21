@@ -112,3 +112,68 @@ Implementation: `build.py` prepares optional `carrier_output_positions`; `update
 Validation: syntax parsing and diff whitespace checks pass; a standard-library-only complex-valued algebra check verifies sparse scaling before matrix assembly equals dense gather/scale/scatter with reordered destination lists, and checks missing-destination fallback condition. No JAX/simulator execution, local benchmark, diagnostic run, new infrastructure, dependency change or publication. Guard activation on the official workload is not directly measured locally. If feedback shows no effect, that remains a possible explanation requiring coordinator attribution rather than an invented cost claim.
 
 Next: supervisor screen/full; inspect every saved output and full-gradient error, all 14 phase deltas, total, warm, memory and job duration against exact parent and seed. Reject strict failures or first-run regressions; keep candidate 1 available. Re-rank phases before subsequent changes.
+
+
+## Candidate 2 evaluation — valid, effectively tied
+
+SHA **`9802a087d5857e6af6f3ec60129c4b71bdf686ca`**, exact parent `0f865e2c7fc9f53b44e65787091b28fbcb129b0f`.
+
+Screen `5718fae40eee4f7787e4fa18c5187e29`, request `aabdb52de5494f39959cc66b452cbae3`, source `feedback.screen`: screened, first run **22.189232895 s**, compilation/lowering **10.985009976 s**, job wall **23.114547299 s**, RSS **8,115,208 KiB**. No warm or official/strict checks. Screen was **0.088752355 s slower** than candidate 1 screen; provisional.
+
+Full **`4fb236e2c0e94925b60773782749ca9f`**, request `5b3b977dceed44faa3f45afab9395fc4`, source `feedback.full`: official, strict, resource, source, workload and precision all PASS; eligible full. Exact same full cohort `10567ad0f8dcb7122b6b182e1be342313b89eef340d4070073fdf62d6342204c`, screen cohort `fc9228f32197f0d2653ba0de06fc01d528953444ab2039dbff6e1284cf689351`, and evaluator/worker/comparator/reference hashes recorded for previous runs. Profiler schemas unchanged; no operator attribution or guard-activation diagnostic supplied.
+
+Full first run **22.161553681 s**, **-0.017578484 s** vs candidate 1 and **-0.203997033 s** vs seed observation. Combined lowering/compilation **10.915266180 s**, **-0.038973261 s** vs candidate 1. Warm median **10.586986126 s** (**-0.115461865 s**), samples 10.627806367, 10.586986126, 10.257564338 s. Warm phase medians: forward 8.950657044, sensitivity 0.181732871, gradient 1.454367973, transfer 0.000257069 s. Job wall **87.653744036 s**, **-0.506136311 s**. GNU time RSS **8,110,024 KiB**, **+1,404 KiB**; sampled peak **8,305,713,152 bytes**, within budget. No substantive memory improvement.
+
+All phase times and deltas vs exact parent full, seconds:
+
+| Phase | Candidate 2 | Delta vs candidate 1 |
+| --- | ---: | ---: |
+| imports | 0.292913781 | -0.005810909 |
+| initialize | 0.002881670 | -0.000061568 |
+| load | 0.001437513 | +0.000016140 |
+| build | 0.831739860 | +0.003762182 |
+| forward_lower | 0.821703788 | +0.000393260 |
+| forward_compile | 7.442433039 | -0.073821355 |
+| forward | 8.644237544 | +0.039458564 |
+| sensitivity_lower | 0.092561042 | +0.000560313 |
+| sensitivity_compile | 0.461313093 | +0.035738481 |
+| sensitivity | 0.000966661 | +0.000050230 |
+| gradient_lower | 0.193246165 | +0.014855618 |
+| gradient_compile | 1.904009053 | -0.016699579 |
+| gradient | 1.471783366 | -0.015998881 |
+| host_transfer | 0.000327105 | -0.000020981 |
+
+Every saved-array check inspected (same strict reference; last warm scope):
+
+| Check | Passed | Max absolute error | Relative L2 | Max normalized error | Failing count |
+| --- | --- | ---: | ---: | ---: | ---: |
+| carrier | True | 0 | 0 | 0 | 0 |
+| signal | True | 0 | 0 | 0 | 0 |
+| noise | True | 0 | 0 | 0 | 0 |
+| sensitivity | True | 0 | 0 | 0 | 0 |
+| powers | True | 0 | 0 | 0 | 0 |
+| gradient | True | 5.0931703299283981e-10 | 7.5765292801749325e-15 | 6.0395508824953272e-07 | 0 |
+| parameters | True | 0 | 0 | 0 | 0 |
+| frequencies | True | 0 | 0 | 0 | 0 |
+
+All are finite, empty failing-index and mismatch-detail lists, no truncation. Parameters/frequencies exact-required checks pass. Gradient retains all 193 entries and remains far from the tolerance boundary; no strict margin warning. Official log-sensitivity error `5.374104176780747e-6` and finite-difference spot check pass; shapes/dtypes unchanged. Comparison metrics equal parent, but direct bitwise parent-gradient equality was not separately measured.
+
+Decision: **retain provisionally**, candidate 2 now lowest observed eligible full but effectively tied with candidate 1. The 18 ms reduction is not credible evidence of superiority by itself, particularly with the slower screen. No gain or mechanism activation claimed. Candidate 1 remains a simpler validated fallback; seed remains repeat-established fallback. Do not continue extending this small scatter mechanism without better attribution.
+
+Updated ranking: forward **8.644237544 s (39.01%)**, forward compile **7.442433039 s (33.58%)**, gradient compile **1.904009053 s (8.59%)**, gradient execute **1.471783366 s (6.64%)**, build 0.831739860 s, forward lower 0.821703788 s. Compilation aggregate **49.25%** still warrants investigation, but internal costs remain unknown.
+
+## Candidate 3 — checkpoint the assembly-only frequency-loop body
+
+Same session `01a1ffba-57ec-7191-8ba9-c6163633a3b3`, fixed deadline **2026-11-21 21:09:24.088367 UTC**, resumed with 3000 seconds remaining. Exact parent and retained lowest observed eligible candidate **`9802a087d5857e6af6f3ec60129c4b71bdf686ca`**. Candidate SHA and run identifiers pending.
+
+Measured target: **full** job **`4fb236e2c0e94925b60773782749ca9f`**, forward compile **7.442433039 s (33.58%)** of **22.161553681 s** total. This remains substantial after two structural indexing experiments. Possible costs are gradient compile (1.904009053 s) and reverse execution (1.471783366 s); forward execution is 8.644237544 s. Assembly residual size, compiler operator costs and checkpoint savings are unknown.
+
+One focused change: pass `jax.checkpoint(block_assemble, prevent_cse=False)` to the existing `_map_row_chunks` only in `FREQUENCY_LOOP_SCOPE == "assemble"`. This asks automatic differentiation to recompute assembly intermediates in reverse instead of retaining them for each frequency. The loop still emits every assembled dense signal matrix; all full-vmap solves and the noise contraction remain outside the checkpoint. The existing generic/noise fallback body is checkpointed as a whole if used. No extra JIT stage, persistent compilation cache, new custom derivative, frequency batching change or physical-input change.
+
+Hypothesis: a smaller retained-intermediate graph may lower forward compilation and residual memory; recomputation can increase reverse compilation and execution enough to make total slower. Tentative forward-compile opportunity **0–1 s**, not a measurement or promise; **7.442433039 s** is the absolute bound on savings from eliminating only that measured phase. Net gain may be negative. A phase reduction alone will not justify keeping a slower candidate.
+
+Historical distinction: initial-agent outer dynamic-switch checkpointing reduced forward compile but increased gradient compile more, so was rejected. Component-specialization later removed checkpoints around homogeneous component functions. This trial wraps the **whole assembly body inside the subsequent frequency scan**, including indexing/scatter/conjugation, while leaving dense solves outside. It is a different retained-intermediate boundary on a newer structure, not evidence that prior failures cease to matter. Those failures increase concern about reverse compilation; inspect that phase explicitly. No overlap with Claude's contraction scheduling.
+
+Validation: Python AST parsing passes. AST comparison against exact HEAD confirms `simulate` is the only changed function and removing this one checkpoint call makes the entire module AST identical to parent. Diff whitespace check passes. No JAX execution, local benchmark, new tests/infrastructure, diagnostic workload, dependency or environment changes. All output/gradient validation remains the supervisor's responsibility.
+
+Next action: screen then unchanged official full plus every strict saved-array/full-gradient check. Compare all 14 phases, complete first run, warm, memory and job wall against candidate 2, candidate 1 and seed. If checkpointing only transfers cost into reverse or worsens total, revert it in the next attributable trial. If compilation remains opaque after this experiment, request a coordinator-owned compile/retained-residual diagnostic for the retained exact SHA; do not launch one here or alter JIT boundaries to measure it.

@@ -539,7 +539,14 @@ def simulate(
                     return (block_signal_matrix,)
                 return block_signal_matrix, block_noise_matrix
 
-            assembled = _map_row_chunks(block_assemble, (parameters, row_carrier_entries), chunk_size)
+            # Recompute assembly intermediates during reverse mode rather than
+            # retaining them for every frequency. Solves remain outside this
+            # checkpoint, and the official compilation stages stay unchanged.
+            assembled = _map_row_chunks(
+                jax.checkpoint(block_assemble, prevent_cse=False),
+                (parameters, row_carrier_entries),
+                chunk_size,
+            )
             assembled_signal = assembled[0]
             assembled_noise = broadcast_noise(assembled[1] if len(assembled) > 1 else None)
             signal, noise = _solve_signal_and_noise(assembled_signal, assembled_noise, base_carrier_selections)
