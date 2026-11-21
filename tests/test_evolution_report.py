@@ -37,6 +37,17 @@ def snapshot():
 
 
 class EvolutionReportTests(unittest.TestCase):
+    def test_proposed_candidate_without_metrics_exports_before_evaluation(self):
+        state = snapshot()
+        state['candidates'][1].update(status='proposed', metrics=None, evidence_ids=[])
+        state['evaluations'] = []
+        state['evidence'] = []
+        with tempfile.TemporaryDirectory() as directory:
+            manifest = export_campaign(state, state['events'], directory)
+            root = Path(manifest['directory'])
+            self.assertIn('unknown', (root / 'README.md').read_text())
+            self.assertIn('trial', (root / 'candidates.csv').read_text())
+
     def test_export_preserves_failed_path_and_exact_attribution(self):
         with tempfile.TemporaryDirectory() as directory:
             manifest = export_campaign(snapshot(), snapshot()['events'], directory)

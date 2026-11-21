@@ -201,7 +201,7 @@ def render_markdown(snapshot, manifest):
         lines.append('| ' + ' | '.join((_text(row['candidate_id']),
             _text(str(row.get('round_id', 'unknown')) + ' / ' + str(row.get('lane_id', 'unknown'))),
             _text(', '.join(row.get('parents', [])) or 'root'), _text(row.get('commit_sha', 'not materialized')),
-            _text(row.get('status', 'unknown')), _seconds(row.get('metrics', {}).get('total')),
+            _text(row.get('status', 'unknown')), _seconds((row.get('metrics') or {}).get('total')),
             _text(', '.join(row.get('evidence_ids', [])) or 'none'))) + ' |')
     lines += ['', '## Round decisions and stalled work', '']
     for round_ in snapshot.get('rounds', []):
@@ -247,7 +247,7 @@ def _csv(snapshot):
     for row in snapshot.get('candidates', []):
         values = [*[row.get(k) for k in names], json.dumps(row.get('parents', [])),
                          json.dumps(row.get('git_parents', [])), json.dumps(row.get('evidence_ids', [])),
-                         *[row.get('metrics', {}).get(k) for k in
+                         *[(row.get('metrics') or {}).get(k) for k in
                            ('total', 'setup', 'compilation', 'forward', 'sensitivity', 'gradient', 'transfer')]]
         writer.writerow(["'" + value if isinstance(value, str) and value.startswith(('=', '+', '-', '@')) else value
                          for value in values])
