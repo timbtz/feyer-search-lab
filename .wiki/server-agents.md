@@ -6,11 +6,15 @@ Runtime commit/path, provider/model, brief hash, declared parent/combination can
 
 ## Current readiness
 
+On 2026-11-21, both native Linux CLIs were installed under `/workspace/feyer-agents/bin`: Codex 0.171.0 and Claude Code 2.1.323. Small HTTP range downloads from the official npm registry succeeded where whole downloads stalled. Completed archives matched the registry's SHA-512 integrity values before extracting the executables, and both `--version` checks passed. No Node installation or evaluator dependency change was needed. The package versions were `@openai/codex@0.171.0-linux-x64` and `@anthropic-ai/claude-code-linux-x64@2.1.323`.
+
+The installed Codex supports the supervisor's headless flags, but its actual `login --device-auth` request failed with HTTP 403. Claude's fresh login command generated a browser authorization URL; it was not completed. Its current authorization and token-service domains, `claude.com` and `platform.claude.com`, also returned proxy CONNECT 403 in unauthenticated connectivity checks. Do not describe this as a successful login or inference test. The persistent installation and connectivity evidence is `/workspace/feyer-agents/migration-status.json`; no laptop credentials were copied.
+
 The AMD evaluator remains on audited release 861601b and is unchanged by migration. The shared queue is serial on CPU2 with the existing sampled 32e9-byte RSS budget, not a kernel memory reservation. Agent CLI work should avoid CPU2 and its SMT sibling; benchmark affinity must not change.
 
 The server's outbound proxy denied chatgpt.com and claude.ai; API probes to OpenAI failed and Anthropic returned `Request not allowed`. Installation does not establish authenticated inference. Fresh server authentication and successful inference are required before transferring branch ownership. Do not copy laptop tokens or private keys or bypass network policy. GitHub publishing access must also be independently provisioned and tested.
 
-Until those checks pass, existing local sessions may continue on the audited runtime. Preserve conversation IDs, outstanding job IDs, uncommitted edits and the original deadline during handoff. Never run two supervisors on one branch. A new Codex direction is prepared in experiments/briefs/codex-component-specialization.md; it must not be reported as running until a live session is verified.
+Until those checks pass, existing local sessions may continue on the audited runtime. Preserve conversation IDs, outstanding job IDs, uncommitted edits and the original deadline during handoff. Never run two supervisors on one branch. The component-specialization Codex session was launched locally on runtime fdff88a with thread `01a1fedf-f7aa-77b2-885d-75aceeb4c48c`, using the brief in experiments/briefs/codex-component-specialization.md. Its committed records demonstrate the full feedback loop, including durable request IDs and official plus strict validation. This is launch evidence, not a permanently live status: inspect the supervisor process and session status before reporting it as running. The Claude linear-algebra session completed and is not automatically restarted by installing its server CLI.
 
 ## Evidence-driven exploration
 
