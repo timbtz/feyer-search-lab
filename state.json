@@ -44114,6 +44114,56 @@
         ],
         "target_evidence": []
       }
+    },
+    {
+      "seq": 20,
+      "at": 1795294484.3394828,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "feedback-3a02491587595a272c2f0d30d099a1d4c4b74c8f997d8a1f4b1973c8d89ce694",
+        "executor": {
+          "kind": "supervisor",
+          "id": "claude-noise-reuse"
+        },
+        "kind": "explore",
+        "status": "completed",
+        "candidate_sha": "05508471e6b65e62ac44fb7f1dacbd31ca990fee",
+        "parents": [
+          "d09dc1d08fb046d08b3b699685d8ff780d611e87"
+        ],
+        "target_phases": [],
+        "hypothesis": "The signal/covariance LU sharing (bitwise-exact numerics) and the shared unbatched noise contraction (about \u22120.76 s, about \u22120.9 GB in candidate 2) act on separate parts of the computation, so the savings should add up to a first run of about 21.6 s. Not measured. The strict gradient margin is expected near candidate 2's 0.949, so a pass is plausible but not guaranteed.",
+        "change_summary": "Final candidate 5 (not executed; this session cannot run code): candidate 4 plus variant B, i.e. NOISE_FACTOR_REUSE=\"direct\" with NOISE_REUSE_MODE=\"shared\" in differometor/simulate.py. Candidate 4 (96474bd, full ab12c14c) passed official and strict: first run 22.366 s, forward execute 8.609 s, gradient execute 1.475 s, peak RSS 8.13 GB. All forward outputs are bitwise identical to the parent and the max normalized gradient error is 6e-7. It is the best validated revision with a robust margin. Notes contain the full history (candidates 1\u20134 including the rejected candidate 3), the knob JSON handoff, remaining uncertainties and suggested next experiments.",
+        "stopping_reason": null,
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-05.json",
+        "source_digest": "3a02491587595a272c2f0d30d099a1d4c4b74c8f997d8a1f4b1973c8d89ce694",
+        "source_digest_kind": "canonical_json_sha256",
+        "feedback_ref": {
+          "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-05.json",
+          "artifact_digest": "3a02491587595a272c2f0d30d099a1d4c4b74c8f997d8a1f4b1973c8d89ce694",
+          "digest_kind": "canonical_json_sha256"
+        },
+        "session_id": "c3962834-70b7-4d37-bcd1-ac7a66ece4cd",
+        "iteration": null,
+        "checkpoint": null,
+        "next_input": null,
+        "input_receipt": null,
+        "evaluations": [
+          {
+            "job_id": "88b7cd374ccb40c69cf7367dc211b273",
+            "candidate_sha": "05508471e6b65e62ac44fb7f1dacbd31ca990fee",
+            "profile": "screen"
+          },
+          {
+            "job_id": "cb43b777416649429d8b0cb868cee75b",
+            "candidate_sha": "05508471e6b65e62ac44fb7f1dacbd31ca990fee",
+            "profile": "full"
+          }
+        ],
+        "target_evidence": []
+      }
     }
   ],
   "comparison_regime": {
@@ -44295,6 +44345,50 @@
         {
           "job_id": "ab12c14c29354bad9aa6dc024c91f8e6",
           "candidate_sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+          "profile": "full"
+        }
+      ],
+      "target_evidence": []
+    },
+    "feedback-3a02491587595a272c2f0d30d099a1d4c4b74c8f997d8a1f4b1973c8d89ce694": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "feedback-3a02491587595a272c2f0d30d099a1d4c4b74c8f997d8a1f4b1973c8d89ce694",
+      "executor": {
+        "kind": "supervisor",
+        "id": "claude-noise-reuse"
+      },
+      "kind": "explore",
+      "status": "completed",
+      "candidate_sha": "05508471e6b65e62ac44fb7f1dacbd31ca990fee",
+      "parents": [
+        "d09dc1d08fb046d08b3b699685d8ff780d611e87"
+      ],
+      "target_phases": [],
+      "hypothesis": "The signal/covariance LU sharing (bitwise-exact numerics) and the shared unbatched noise contraction (about \u22120.76 s, about \u22120.9 GB in candidate 2) act on separate parts of the computation, so the savings should add up to a first run of about 21.6 s. Not measured. The strict gradient margin is expected near candidate 2's 0.949, so a pass is plausible but not guaranteed.",
+      "change_summary": "Final candidate 5 (not executed; this session cannot run code): candidate 4 plus variant B, i.e. NOISE_FACTOR_REUSE=\"direct\" with NOISE_REUSE_MODE=\"shared\" in differometor/simulate.py. Candidate 4 (96474bd, full ab12c14c) passed official and strict: first run 22.366 s, forward execute 8.609 s, gradient execute 1.475 s, peak RSS 8.13 GB. All forward outputs are bitwise identical to the parent and the max normalized gradient error is 6e-7. It is the best validated revision with a robust margin. Notes contain the full history (candidates 1\u20134 including the rejected candidate 3), the knob JSON handoff, remaining uncertainties and suggested next experiments.",
+      "stopping_reason": null,
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-05.json",
+      "source_digest": "3a02491587595a272c2f0d30d099a1d4c4b74c8f997d8a1f4b1973c8d89ce694",
+      "source_digest_kind": "canonical_json_sha256",
+      "feedback_ref": {
+        "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-05.json",
+        "artifact_digest": "3a02491587595a272c2f0d30d099a1d4c4b74c8f997d8a1f4b1973c8d89ce694",
+        "digest_kind": "canonical_json_sha256"
+      },
+      "session_id": "c3962834-70b7-4d37-bcd1-ac7a66ece4cd",
+      "iteration": null,
+      "checkpoint": null,
+      "next_input": null,
+      "input_receipt": null,
+      "evaluations": [
+        {
+          "job_id": "88b7cd374ccb40c69cf7367dc211b273",
+          "candidate_sha": "05508471e6b65e62ac44fb7f1dacbd31ca990fee",
+          "profile": "screen"
+        },
+        {
+          "job_id": "cb43b777416649429d8b0cb868cee75b",
+          "candidate_sha": "05508471e6b65e62ac44fb7f1dacbd31ca990fee",
           "profile": "full"
         }
       ],

@@ -22,21 +22,23 @@ User authorized expanded CPU capacity. Conservatively exclude new timing imports
 
 ```mermaid
 graph TD
-  c0["4c12600ce07d"]
-  c1["96474bdd4d83"]
-  c2["bb9a183fd64f"]
-  c3["d09dc1d08fb0"]
-  c4["e525ee5ee4ef"]
-  c5["f3139c71ae2a"]
-  c3 -->|explore| c1
-  c3 -->|explore| c2
-  c3 -->|explore| c4
-  c3 -->|explore| c5
+  c0["05508471e6b6"]
+  c1["4c12600ce07d"]
+  c2["96474bdd4d83"]
+  c3["bb9a183fd64f"]
+  c4["d09dc1d08fb0"]
+  c5["e525ee5ee4ef"]
+  c6["f3139c71ae2a"]
+  c4 -->|explore| c0
+  c4 -->|explore| c2
+  c4 -->|explore| c3
+  c4 -->|explore| c5
+  c4 -->|explore| c6
 ```
 
 Every edge records intended inputs, not proof of speedup.
 
-Recorded jobs: 13. Decisions/events: 19.
+Recorded jobs: 13. Decisions/events: 20.
 
 ## External research records
 
@@ -46,5 +48,6 @@ Recorded jobs: 13. Decisions/events: 19.
 | claude-noise-reuse | explore | e525ee5ee4ef | unknown | completed |
 | claude-noise-reuse | explore | bb9a183fd64f | unknown | completed |
 | claude-noise-reuse | explore | 96474bdd4d83 | unknown | completed |
+| claude-noise-reuse | explore | 05508471e6b6 | unknown | completed |
 
 These records are evidence, not competing task claims or winner declarations.
