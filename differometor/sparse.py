@@ -260,7 +260,10 @@ class SparseSystem:
 class SparseStructure:
     """Static sparse metadata for one built setup (no array leaves)."""
 
-    def __init__(self, carrier, signal, noise, carrier_size, signal_placing_positions, unique_placing):
+    def __init__(self, carrier, signal, noise, carrier_size, signal_placing_positions, unique_placing,
+                 group_indices=None):
+        # group_indices: {system: {function_index: (rows, slots) int array}} or None.
+        self.group_indices = group_indices
         self.carrier = carrier
         self.signal = signal
         self.noise = noise
@@ -278,6 +281,14 @@ class SparseStructure:
             digest.update(part.encode())
         digest.update(np.int64(cs).tobytes())
         digest.update(self.signal_placing_positions.tobytes())
+        for system in sorted(group_indices or {}):
+            digest.update(system.encode())
+            for function_index in sorted(group_indices[system]):
+                indices = group_indices[system][function_index]
+                digest.update(np.int64(function_index).tobytes())
+                digest.update(np.int64(indices.ndim).tobytes())
+                digest.update(np.asarray(indices.shape, dtype=np.int64).tobytes())
+                digest.update(indices.tobytes())
         self._key = digest.hexdigest()
 
     def __hash__(self):

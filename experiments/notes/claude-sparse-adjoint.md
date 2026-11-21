@@ -92,3 +92,20 @@
   signal systems (same functions), compile-cheaper formulations of complex sqrt/asin that are
   provably identical on all branches, or moving component Jacobians out of the forward stage
   only if total compile drops (parent's remat moved compile without net gain).
+
+## Candidate 3 — candidate 2 + shared statically gathered component columns
+- Op attribution: ~60 % of forward-vjp StableHLO ops come from grouped component evaluation;
+  the six 54-row signal groups (surface, susceptibility, force_calculation_left/right,
+  corrected_optomechanical_phase_left/right) dominate. incidence_angle_right (complex asin)
+  is evaluated 5x per surface and sqrt(R(1-loss)) 3x, each on separately gathered inputs
+  (traced index leaves), so XLA could not CSE them.
+- Change (sparse path only): `SparseStructure.group_indices` holds static host copies of the
+  per-group parameter indices; `_shared_component_outputs` gathers each distinct index column
+  once per system/row and passes the same value to every group (`SHARED_COMPONENT_COLUMNS`).
+  Component arithmetic, slot pruning and lower-variant handling are unchanged.
+- Dev (CPU 100): forward vjp compile 5.43 -> 4.50 s (A/B, same process type), forward lower
+  +0.09 s, gradient compile unchanged (1.07 vs 1.01 s).
+- Numerics: dev arrays bitwise identical to candidate 2 full job 3723bee8 for carrier, signal,
+  noise, sensitivity, powers; gradient max rel 1.7e-15. Cross-setup vs candidate 2: forward
+  outputs bitwise identical on all 8 setups; gradient relL2 <= 8e-17; every case 0.4-0.7 s
+  faster (harness first-run excl. imports, e.g. dev 8.12 -> 7.45 s, voyager 7.88 -> 7.10 s).
