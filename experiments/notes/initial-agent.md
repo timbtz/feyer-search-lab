@@ -5,7 +5,7 @@
 - Starting checkout / candidate parent: `0bf57ae2af4a377f72cb34a3d6a328c714baafc8`
 - Public simulator baseline: `02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f`
 - Managed session label: `seed-agent`; Codex thread identifier: `01a1fe87-7574-74b2-a289-227279a3bdc8`, read from supervisor status during turn 4. Status is in `/Users/t.betz/Documents/Feyer challenge/.lab/sessions/seed-agent/status.json` (not the assigned worktree). Supervisor owns session continuity and submission.
-- Budget: original one-hour session remains in force. In the candidate 5 resumption, the user explicitly removed the four-candidate cap and authorized continued exploration while time remains; this supersedes the older stop-after-four instruction. Remaining allowances at candidate 5/6/7/8/9/10 start: 1878/1597/1249/980/708/371 seconds. No commits, pushes, SSH calls, local benchmark runs or evaluator submissions made by agent.
+- Budget: original one-hour session remains in force. In the candidate 5 resumption, the user explicitly removed the four-candidate cap and authorized continued exploration while time remains; this supersedes the older stop-after-four instruction. Remaining allowances at candidate 5/6/7/8/9/10/11 start: 1878/1597/1249/980/708/371/110 seconds. No commits, pushes, SSH calls, local benchmark runs or evaluator submissions made by agent.
 
 ## Baseline evidence supplied by maintainer
 
@@ -666,16 +666,89 @@ Unchanged AMD official complete first-evaluation totals: 35.821919, 35.614326, 3
 
 ## Candidate 10: reuse JIT wrappers for individual component branches
 
-- Candidate SHA: pending supervisor commit. Parent after candidate 9 feedback: `2829947094a53c4c1036f884e167c8e483c0bc81`.
+- Candidate SHA: `46a24bbc779cdccd8126ef3a02398f0a16ea2bc9`. Parent after candidate 9 feedback: `2829947094a53c4c1036f884e167c8e483c0bc81`.
 - Restore candidate 8's non-inline helper. Construct a module-level tuple of `jit(jax.checkpoint(function, prevent_cse=False))` wrappers in registry order, then use these in the unchanged scalar switch. The tuple contains callable wrappers only; creating it performs no physical computation or compilation. The registry is already treated as static by the existing JIT helper.
 - Hypothesis: reusable per-branch JIT wrappers may reduce repeated tracing and derivative compilation across matrix updates and keep branch derivative graphs better isolated. Candidate 8's gradient compilation remains 6.078370517 s. Extra nested call boundaries may instead increase costs; actual compiler behavior and any gains are unmeasured. Full evaluator timing decides.
 - Numerical expressions, component selection/order, checkpoint placement within selected branches, masked conjugation, dense solves, double precision, all frequencies/parameters and the official three outer JIT stages are preserved. No persistent compilation cache, precomputed answers, custom derivatives, environment changes or harness changes.
 - Syntax and AST isolation checks passed. All code outside callable-wrapper construction and the scalar helper equals candidate 8. No local simulator or benchmark execution. Full numerical evaluation remains pending.
 
-## Current handoff / next action
 
-Best validated revision remains candidate 8, `1e552d675c3795265be8af1ac23ffb61f90f30b1`, complete first-run 28.013464769 s and warm median 14.571259789 s, approximately 21.61% below the baseline first-run median. Physical outputs exact; maximum absolute full-gradient error 1.5178830414797062e-18.
+### Candidate 10 screen result
 
-Next: supervisor commits/screens candidate 10 and fully validates the exact SHA if eligible. Compare complete first-run, all compilation phases and full output/gradient comparison with candidate 8. Reject if numerical tolerances fail or total cost rises. If time expires or candidate 10 fails to improve, candidate 8 is the recommended validated fallback. Repeat fresh-process full measurements of the eventual best SHA for confirmation; this remains outstanding.
+- Run `29232345cd854ad5bcd3a19b105bbb29`; verdict `screened`; official passed: False.
+- Complete first-run 28.669409864 s; process wall 30.021185810 s; peak RSS 13344132 KiB.
+- Trace/lower/compile total 13.313425677 s; warm median None s.
 
-Candidate-count cap is removed; remaining session time still controls exploration (371 seconds at candidate 10 start). Preserve session `seed-agent`, thread `01a1fe87-7574-74b2-a289-227279a3bdc8`, worktree/branch and failed history. Supervisor owns submission; no commits, SSH, benchmarks or infrastructure changes by this agent. Pointwise relative gradient diagnostics, actual solve lowering/factorization reuse and candidate 2's failing coordinates remain unfinished. No sparse solve or custom VJP has been attempted.
+| Phase | Seconds |
+| --- | ---: |
+| imports | 0.291351605 |
+| initialize | 0.002878470 |
+| load | 0.001511976 |
+| build | 0.800111050 |
+| forward_lower | 0.811625795 |
+| forward_compile | 5.149032120 |
+| forward | 12.319040820 |
+| sensitivity_lower | 0.084992133 |
+| sensitivity_compile | 0.372888226 |
+| sensitivity | 0.000910200 |
+| gradient_lower | 0.602268027 |
+| gradient_compile | 6.292619376 |
+| gradient | 1.939730300 |
+| host_transfer | 0.000449765 |
+
+### Candidate 10 full result
+
+- Run `63ae8220618e4445b111536545d544f9`; verdict `validated`; official passed: True.
+- Complete first-run 28.764793415 s; process wall 113.106419720 s; peak RSS 13441596 KiB.
+- Trace/lower/compile total 13.023229867 s; warm median 14.62478700838983 s.
+
+| Phase | Seconds |
+| --- | ---: |
+| imports | 0.346620815 |
+| initialize | 0.002887663 |
+| load | 0.001538496 |
+| build | 0.739609193 |
+| forward_lower | 0.782501198 |
+| forward_compile | 4.931746265 |
+| forward | 12.773510974 |
+| sensitivity_lower | 0.088052759 |
+| sensitivity_compile | 0.422311358 |
+| sensitivity | 0.000919860 |
+| gradient_lower | 0.640402418 |
+| gradient_compile | 6.158215869 |
+| gradient | 1.876070959 |
+| host_transfer | 0.000405587 |
+
+### Candidate 10 numerical evidence and decision
+
+- Official sensitivity and finite-difference gradient checks and strict array comparison passed. All outputs and gradients finite. Reported loss remains baseline-equal at 9.793036291535532e-08.
+
+| Array | Maximum absolute error | Relative L2 error | Strict pass |
+| --- | ---: | ---: | --- |
+| carrier | 0 | 0 | True |
+| signal | 0 | 0 | True |
+| noise | 0 | 0 | True |
+| sensitivity | 0 | 0 | True |
+| powers | 0 | 0 | True |
+| gradient | 1.5178830414797062e-18 | 2.1531895610344731e-23 | True |
+| parameters | 0 | 0 | True |
+| frequencies | 0 | 0 | True |
+
+- Reject candidate 10 as a performance improvement. Full first-run 28.764793415 s is 0.751328645 s above candidate 8. Forward compilation 4.931746265 s is similar, but reverse lowering 0.640402418 s and compilation 6.158215869 s show no combined benefit. Forward execution also rose to 12.773510974 s; warm median 14.624787008 s. Run variability limits causal attribution, but the additional wrappers do not justify replacing the simpler best revision.
+
+## Candidate 11: restore the best implementation for confirmation
+
+- Candidate SHA: pending supervisor commit. Parent after candidate 10 feedback: `a273481319c7d260897e4f42178bf93c4fdd9104`.
+- Restore `differometor/simulate.py` byte-for-byte from candidate 8, `1e552d675c3795265be8af1ac23ffb61f90f30b1`. This removes candidate 10's additional branch JIT wrappers and restores branch-local checkpoint wrappers inside the non-inline helper. All other simulator files are unchanged from candidate 8.
+- This is a confirmation candidate, not a new optimization claim. Hypothesis: the simpler candidate 8 implementation will reproduce its lower first-run cost in a fresh process. Candidate 9 and 10 showed no improvement, and fresh-process confirmation of candidate 8 remains outstanding.
+- Local syntax and byte-equivalence checks passed. All tracked simulator files are checked against candidate 8. No local simulation, benchmark, commits, pushes, SSH, dependency changes or harness edits.
+
+## Final session handoff
+
+Recommended implementation: candidate 8, `1e552d675c3795265be8af1ac23ffb61f90f30b1`, now restored in the worktree for supervisor confirmation. Its measured full first-run is 28.013464769 s versus baseline median 35.737065 s (approximately 21.61% lower); warm median 14.571259789 s; trace/lower/compile total 12.769457951 s; full job wall 112.319361839 s; peak RSS 13435756 KiB. Physical outputs match exactly. Maximum absolute full-gradient error 1.5178830414797062e-18, relative L2 error 2.153189561034473e-23. All strict coordinate checks and official sensitivity/finite-difference checks passed. Its screen was 28.093449853 s; only one official full first-run is recorded, so repeatability is not yet established.
+
+Final retained changes: scalar component dispatch through lax.map; reusable non-inline JIT helper; single masked signal conjugation; checkpointing inside component branches. Original noise mathematics is preserved. Rejected experiments and full evidence remain above and in supervisor history. Candidate 2's algebraic noise contraction failed strict gradients despite passing official spot checks; do not revive it without resolving that error.
+
+Next supervisor action: commit and evaluate the restored implementation as candidate 11, compare with candidate 8's prior full result, and preserve the confirmed result. Readiness and stop are both true: with 110 seconds remaining at this turn's start and recent full jobs taking roughly 113 seconds before queue/screen overhead, this handoff reserves remaining work for confirmation rather than another optimization trial. Stopping is due to the session time budget, not a candidate-count cap. No merge is requested.
+
+Preserve session `seed-agent`, thread `01a1fe87-7574-74b2-a289-227279a3bdc8`, worktree `/Users/t.betz/Documents/Feyer challenge agents/codex-seed`, branch `explore/seed-agent` and all failed history. Future investigation: inspect actual optimized solve lowering/factorization reuse, obtain pointwise gradient diagnostics and candidate 2's failing coordinates, and repeat the best full measurement. No sparse solve or custom VJP has been attempted. Any future optimization session requires its own time allowance; the removed four-candidate cap must not be reinstated.

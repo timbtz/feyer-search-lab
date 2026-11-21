@@ -59,17 +59,12 @@ def solve(matrix: jnp.ndarray, right_hand_side: jnp.ndarray) -> jnp.ndarray:
     return jnp.linalg.solve(matrix, right_hand_side)
 
 
-# Reuse each component's traced checkpointed call across matrix updates.
-_COMPONENT_BRANCHES = tuple(
-    jit(jax.checkpoint(function, prevent_cse=False)) for function in FUNCTIONS
-)
-
-
 @jit
 def _evaluate_component(function_and_inputs):
     """Keep recomputation within the selected component's reverse branch."""
     function_index, function_inputs = function_and_inputs
-    return lax.switch(function_index, _COMPONENT_BRANCHES, function_inputs)
+    branches = tuple(jax.checkpoint(function, prevent_cse=False) for function in FUNCTIONS)
+    return lax.switch(function_index, branches, function_inputs)
 
 
 def update(
