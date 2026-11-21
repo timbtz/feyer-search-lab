@@ -98,7 +98,18 @@ def _save_assembly_indices(primitive, *avals, **params):
     )
 
 
-@partial(jax.checkpoint, prevent_cse=False, policy=_save_assembly_indices)
+def _save_component_residuals(primitive, *avals, **params):
+    """Retain real nonlinear results as well as discrete assembly indices."""
+    # These unary primitives preserve their input dtype. Restrict saving to
+    # real floating inputs: the checkpoint's reduce_precision insertion cannot
+    # handle complex residuals. Complex optical phases still recompute.
+    if primitive.name in ("exp", "sqrt", "sin", "cos", "sinh", "cosh", "asin"):
+        dtype = getattr(avals[0], "dtype", None) if len(avals) == 1 else None
+        return dtype is not None and np.issubdtype(dtype, np.floating)
+    return _save_assembly_indices(primitive, *avals, **params)
+
+
+@partial(jax.checkpoint, prevent_cse=False, policy=_save_component_residuals)
 def _component_values(
     parameters,
     function_input_indices,

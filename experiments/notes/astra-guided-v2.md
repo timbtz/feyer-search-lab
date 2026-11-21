@@ -89,3 +89,62 @@ Measured target: restored parent full `7e6ce3c3bf5148af93351918fda06e22` spends 
 Validation: all simulator modules parse and whitespace checks pass. AST comparison to scientific seed confirms all helpers except the solver are unchanged; substituting the normalized coefficient/RHS inputs back into the solver yields exactly its parent executable AST. The only other changed function is simulate's assembly-only branch. Standard-library slice/stack checks cover 1, 2, 5 and 101 rows, chunk sizes 1, 2 and 4, matrix sizes 1 and 3 including padding/discard; retained values match exactly. No local JAX or benchmark execution. These checks do not establish compiler layout, strict AD equivalence or performance.
 
 Next: exact-candidate screen/full, inspect all saved physical outputs and gradients under unchanged tolerances, compare total with retained seed and preserve any failures. Confirm promising full results against matching scientific parents before promotion. Session `astra-guided-v2`, thread `01a1fffd-808b-7df1-9718-3c929f0deb90`, fixed deadline 22:22:45.341115 UTC; no candidate cap.
+
+
+## Candidate 2 result: retain provisionally, confirmation outstanding
+
+Exact SHA **`3581734de67e45f701259839d640442add500777`**; screen `382fb3eb33924c60854a743c24b23075`, full **`445a35d5836749ae92a4f30d0b70e41b`**. Local saved report and all comparison checks inspected. Official/strict/resource/source/workload/precision all pass; full cohort `10567ad0f8dcb7122b6b182e1be342313b89eef340d4070073fdf62d6342204c`, concurrent exploratory timing. This is a valid new combination, not a confirmed shared best. The supervisor's automatic parent list records candidate 1 as history parent; scientific parents remain the restored seed plus slicing donor documented above.
+
+Screen first run 19.935477491 s, compilation/lowering 8.876356849 s, wall 20.912261374 s, RSS 6,945,104 KiB; cheap checks pass. Full first run **19.698403006 s**, -0.359314619 s relative to seed job `7e6ce3c3bf5148af93351918fda06e22` (20.057717625 s). Forward 8.301623050 s, -0.298854981 s; gradient 1.456364272 s, -0.061666677 s; combined compilation/lowering 8.736152118 s, -0.082263229 s. Build rose to 0.905320648 s. The observed direction is consistent with the layout hypothesis but native copy costs remain unknown.
+
+Warm median 10.260291660 s, samples 10.270717381, 9.924800375, 10.260291660 s; wall 82.807315163 s. Full peak RSS 6,953,972 KiB, -847,692 KiB from seed; sampled peak 7,121,915,904 bytes. Memory and warm/job-wall metrics remain distinct from first run. Matched quiet serial confirmation against seed and relevant compatible parents is still needed; no promotion requested on a single observation.
+
+Full phase ledger, seconds:
+
+| Phase | Seconds |
+| --- | ---: |
+| imports | 0.293269549 |
+| initialize | 0.002913747 |
+| load | 0.001534173 |
+| build | 0.905320648 |
+| forward_lower | 0.696097840 |
+| forward_compile | 3.370378388 |
+| forward | 8.301623050 |
+| sensitivity_lower | 0.077736806 |
+| sensitivity_compile | 0.305117520 |
+| sensitivity | 0.000900123 |
+| gradient_lower | 0.293137388 |
+| gradient_compile | 3.993684176 |
+| gradient | 1.456364272 |
+| host_transfer | 0.000325326 |
+
+Saved outputs and complete gradient (last warm scope):
+
+| Output | Max absolute error | Relative L2 error | Max normalized error | Failures |
+| --- | ---: | ---: | ---: | ---: |
+| carrier | 0 | 0 | 0 | 0 |
+| signal | 0 | 0 | 0 | 0 |
+| noise | 0 | 0 | 0 | 0 |
+| sensitivity | 0 | 0 | 0 | 0 |
+| powers | 0 | 0 | 0 | 0 |
+| gradient | 4.54747350886464e-13 | 6.6472216603647e-18 | 1.63809701493981e-08 | 0 |
+| parameters | 0 | 0 | 0 | 0 |
+| frequencies | 0 | 0 | 0 | 0 |
+
+All finite; all failure lists empty; exact parameters and frequencies unchanged. Gradient norm 70517.10686388786, shape 193. Official sensitivity error 5.374104176780747e-6; finite-difference gradient check passes; loss 9.793036291535532e-8. Candidate 2 is retained for further experiments; candidate 1 remains a valid but slower rejected trial.
+
+Turn-3 shared feed generated Unix `1795296762.015154`, instance `amd-tim`, collector `trusted-local-artifacts-v1`; team digest changed to `922c284037a5d8f7be5e5b299abffb478d7441b59b987196ed74184b846da99d`, unchanged policy digest `54fffa2b291a30d2d20eb7b881da57f3f127ed0d3559330d7d5685838532e01c`, evidence digest `552b881a671a55201c05a0dd61a786c57030116b6a7a0a230bdc9cc7342222aa`, content digest `00e4b4a5912b4ad2cd31e5c6358bf7611c0ad7bc400cae301203d243b427c02e`. Matching cohort remains concurrent epoch 14; feed predates candidate 2 full completion. Claude guided recorded full `01ae324501d64448a29f71dca05e82a8` / `5b2169697d359f6a1c1f7fd6b5f66e08e9906969` passes, total 21.724829946 s with build 0.300624622 s but compilation 11.026949693 s. Read-only commit summary says this is not the assigned combination, so it is not evidence that the intended combination has been tested. No code is adopted from it. Independent session facts remain one-way feed evidence only.
+
+## Candidate 3: retain only real nonlinear component residuals
+
+Exact scientific parent **`3581734de67e45f701259839d640442add500777`**; candidate SHA and evaluator IDs pending. No new source combination or layout/solver change. Parent full **`445a35d5836749ae92a4f30d0b70e41b`** has largest phases forward 8.301623050 s (42.14%), gradient compile 3.993684176 s (20.27%), forward compile 3.370378388 s (17.11%), gradient execution 1.456364272 s (7.39%). Total compilation/lowering 8.736152118 s (44.35%). These measurements justify investigating reverse compilation, without attributing cost to individual primitives.
+
+Focused change: add `_save_component_residuals` as the policy of the existing component-values checkpoint. Preserve the parent's discrete-index policy for all other operations; additionally permit unary exp/sqrt/sin/cos/sinh/cosh/asin only with one input whose abstract dtype is explicitly non-null and a real floating subtype. These unary operations preserve input dtype, so complex residuals cannot be selected by this added branch. No casts, precision settings, manual derivatives, additional JIT stage or formula changes. Complex phases continue to recompute.
+
+New reason relative to historical failed trial **`e63f627129ed9d59da5b5f7189dbf54944e2a151`**, screen **`069cb2e8ae004d2b8f1b10de5d01097a`**: that policy selected nonlinear results irrespective of dtype and failed on checkpoint reduce_precision for complex128. Exact historical diff and failure notes inspected. This policy deliberately rejects complex inputs and missing dtypes; it also acts on the smaller current component checkpoint rather than the historical entire-assembly boundary. The failed trial provided no timing or correctness result. It is not repeated unchanged, and no dependency workaround is introduced.
+
+Mechanism: retained real nonlinear results can reduce recomputation in the reverse graph, potentially reducing the measured 3.993684176 s gradient compilation phase and some gradient execution. Real-valued square roots and trigonometric factors occur in component formulas; their native cost and how much the compiler already eliminates are unknown. Tentative total first-run opportunity 0–0.4 s, unmeasured. Increased saved residual traffic, forward compile graph and storage could outweigh it. Reduction in one phase alone does not justify retention if total worsens.
+
+Checks: simulator syntax and whitespace pass. Removing the new policy and restoring its decorator reference reproduces the exact parent module AST. A policy-only standard-library check with disjoint stand-in dtype families verifies acceptance of the real unary case, rejection of complex/integer/bool/missing dtype and wrong arity, and delegation of other primitives to the original index policy. This is control-flow validation, not NumPy/JAX runtime validation. No JAX, benchmark, environment changes, new test infrastructure, Git writes, SSH or agents used.
+
+Next: supervisor screen/full and strict saved outputs/full gradient at unchanged tolerances. Reject trace errors, numerical failures and slower complete totals; retain all trials in history. Preserve candidate 2 for matched serial confirmation before any promotion. Continue within fixed deadline 2026-11-21 22:22:45.341115 UTC, session `astra-guided-v2`, thread `01a1fffd-808b-7df1-9718-3c929f0deb90`.
