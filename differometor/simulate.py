@@ -426,8 +426,9 @@ def simulate(
     def broadcast_noise(assembled_noise, allow_shared=True):
         if shared_noise_matrix is None:
             return assembled_noise
-        if allow_shared and NOISE_REUSE_MODE == "shared":
-            # Unbatched (NN, NN): _solve_signal_and_noise contracts it with one einsum.
+        if allow_shared and NOISE_REUSE_MODE in ("shared", "rowmap"):
+            # Unbatched (NN, NN): _solve_signal_and_noise contracts it without a
+            # (B, NN, NN) broadcast ("shared": one GEMM; "rowmap": per-row matvecs).
             return shared_noise_matrix
         return jnp.broadcast_to(shared_noise_matrix, (count, *shared_noise_matrix.shape))
 
@@ -543,8 +544,11 @@ NOISE_ROW_REUSE: bool = True
 # How the reused noise matrix enters the contraction when NOISE_ROW_REUSE applies:
 # "broadcast" (variant A; broadcast to (B, NN, NN), unchanged batched einsum;
 # candidate f3139c7 passed official + strict with bitwise forward outputs) or
-# "shared" (variant B; unbatched einsum "ij,dbj->dbi", may round differently).
-NOISE_REUSE_MODE: str = "broadcast"
+# "shared" (variant B; unbatched einsum "ij,dbj->dbi", may round differently;
+# e525ee5 strict gradient margin 0.949) or "rowmap" (lax.map of per-row
+# (NN,NN)x(NN,D) products against the single noise matrix; no (B,NN,NN) broadcast,
+# intended to keep the per-row product of "broadcast"; profile-guided candidate 1).
+NOISE_REUSE_MODE: str = "rowmap"
 # Signal-matrix LU reuse: "off" (three jnp.linalg.solve calls), "direct" (one LU of
 # A shared by the signal and covariance solves; separate LU of A^H for noise
 # weights) or "all" (A's LU also for A^H; candidate 3 bb9a183, 18.65 s but FAILED
@@ -745,7 +749,16 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
         return jnp.einsum("bij,bj->bi", matrix_batch, vector_batch)
 
     # Project noise sources into the system and propagate through the signal matrix.
-    if noise_matrix.ndim == 2:
+    if noise_matrix.ndim == 2 and NOISE_REUSE_MODE == "rowmap":
+        # Guarded shared noise matrix (NN, NN), contracted row by row in a sequential
+        # loop: each row is the same (NN, NN) x (NN, D) product the broadcast batched
+        # einsum performs per batch element, but the (B, NN, NN) broadcast operand and
+        # its AD residual are never materialized.
+        def row_sources(row_weights):
+            return jnp.einsum("ij,dj->di", noise_matrix, row_weights)
+
+        noise_sources = jnp.moveaxis(lax.map(row_sources, jnp.moveaxis(noise_weights, 1, 0)), 0, 1)
+    elif noise_matrix.ndim == 2:
         # Guarded shared noise matrix (NN, NN): one contraction over all detectors/rows.
         noise_sources = jnp.einsum("ij,dbj->dbi", noise_matrix, noise_weights)
     else:
