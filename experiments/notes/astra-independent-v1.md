@@ -223,3 +223,37 @@ not an assertion that the strict failure is harmless. No tolerance changes or
 parameter-specific adjustments are made.
 
 Local AST and diff checks passed; full numerical evaluation pending.
+
+### Candidate 6 evaluator outcome: unit batching did not repair the discrepancy
+
+SHA `32102a2936f9b33a286215cb69895aa4622e96f4`. Screen
+`e034e9e546e94418a43049a4b6cedac0`: 22.754280 s, limited checks passed.
+Full `4591cab0daf044afa1fc2b2cd2612547`: official passed, strict gradient FAILED.
+First run 22.625723 s, warm median 9.125790 s, job wall 76.945162 s,
+peak RSS 5,553,536 KiB. Forward lower/compile/execute
+0.943489 / 8.860996 / 7.994654 s; gradient lower/compile/execute
+0.219195 / 2.468800 / 0.868833 s. Physical outputs remained exact, and every
+reported numerical error and the failing index 161 were identical to candidate
+5 (max normalized error 1.820741704027975). The unit-batching repair hypothesis
+was not supported. Official gradient sanity check still passed. Neither
+candidate 5 nor 6 is strictly validated.
+
+## Candidate 7: map only dense linear algebra
+
+Restore candidate 3's validated batched matrix assembly, conjugation, noise
+source projection, and readout. Map only LU factorization and the dense solves
+over frequencies, keeping their mathematical equations and independent adjoint
+factorization unchanged. Helpers map ordinary and pre-factored solves; detector
+vectorization remains outside those helpers. This replaces the full-frequency
+mapping experiment and its unit-batch variant.
+
+Hypothesis (unmeasured): retaining batched component arithmetic and cotangent
+assembly may recover strict gradient agreement while mapped dense operations
+retain some locality benefit. Exact physical outputs in candidates 5/6 isolate
+their difference to the derivative path, but the precise operation causing it
+is not yet known. Candidate 3 (27.188263 s) remains the best recorded fully
+validated first-run result. No parameter-specific correction is used.
+
+Local AST parsing and git diff --check passed. Reviewed the diff against this
+session's own candidate 3: only mapped dense helpers and four call sites differ.
+Full benchmark and strict comparison await supervisor evaluation.
