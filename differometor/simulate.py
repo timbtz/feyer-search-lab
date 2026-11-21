@@ -68,7 +68,7 @@ def _evaluate_component(function_and_inputs):
     return lax.switch(function_index, branches, function_inputs)
 
 
-@partial(jit, static_argnums=(0,))
+@partial(jit, static_argnums=(0,), inline=True)
 def _evaluate_component_group(function_index, function_inputs):
     """Vectorize one component type without batching a dynamic branch selector."""
     return vmap(FUNCTIONS[function_index])(function_inputs)

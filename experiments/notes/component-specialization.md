@@ -310,3 +310,25 @@ Proposal: use `.at[:, rows, columns].get(unique_indices=verified)` for only the 
 Hypothesis: informing the gather's transpose of disjoint destinations may reduce reverse accumulation work or compilation. Actual lowered effects and performance are unmeasured. Candidate 7 remains fallback; new full official and strict validation required.
 
 Implementation complete. Syntax/whitespace checks passed; exact AST normalization verifies only the signal-matrix gather hint and reuse of the existing scatter flag changed. Builder is byte-identical to candidate 7. Existing uniqueness proof is reused; no new structural inference or local numerical/benchmark run. SHA, run IDs and results pending supervisor.
+
+## Candidate 8 evaluation and decision
+
+- SHA `a4923527a59fb15d2bdf4ac553bf4b3fdd76bfc4`, immediate parent `585f25ce1f9113597c9e69eea50ccfdccb532ab5`.
+- Screen `f6c9675ccda64a8f9014f6e155b65fb3`, request `117192a06d274aef88cd7cdc1d95b618`: passed; first-run 24.904913539 s, compilation/lowering 10.462944172 s, process wall 26.206730263 s, peak RSS 12548568 KiB.
+- Full `fc1c8ed8c6e24a0ca5b3a8e7aff28881`, request `264b027a59de41acbe20131523eca6a5`: official and strict passed; first-run 24.992129887 s, compilation/lowering 10.607761912 s, warm median 13.556135844 s, process wall 104.846886175 s, peak RSS 12556792 KiB. Full CPU2 workload unchanged.
+
+Full first-run phase seconds: imports 0.289227687; initialize 0.002961870; load 0.001516815; build 0.772823865; forward lower 0.692426173; forward compile 7.256156135; forward execute 11.507096585; sensitivity lower 0.086774582; sensitivity compile 0.401428452; sensitivity execute 0.000879541; gradient lower 0.192533428; gradient compile 1.978443142; gradient execute 1.809534656; host transfer 0.000326956.
+
+Comparison inspected: physical outputs, parameters and frequencies match exactly; gradient max absolute error 1.5178830414797062e-18, relative L2 2.153189561034463e-23, max normalized tolerance error 2.627152248723926e-11, zero failing coordinates at unchanged strict tolerances. Loss unchanged at 9.793036291535532e-08; official gradient check passed; max reference log-sensitivity error 5.374104176780747e-06. Saved comparison covers last warm evaluation.
+
+Decision: no clear first-run improvement from the gather hint. Full first-run rose 0.089326 s versus candidate 7 while warm median fell 0.266137 s; peak RSS is nearly unchanged. Keep the correctness-validated hint for the next test, without attributing the warm difference to it. Candidate 7 remains the lowest observed full first-run result. Repeats of the final best revision remain necessary for repeatable-superiority claims.
+
+## Candidate 9 proposal
+
+Same thread `01a1fedf-f7aa-77b2-885d-75aceeb4c48c`, 1124 seconds remaining on resumption. Immediate numerical parent `a4923527a59fb15d2bdf4ac553bf4b3fdd76bfc4`; no external combination.
+
+Focused change: add `inline=True` only to `_evaluate_component_group`'s existing JIT decorator. Its function ID remains static; function formulas, homogeneous `vmap`, no-checkpoint policy and all indexing/uniqueness metadata remain identical.
+
+Hypothesis: exposing homogeneous component computation to its caller may simplify optimization of parameter gathers, saved residuals and selected outputs, lowering the still-dominant forward compilation cost. It can instead duplicate work or worsen compiler optimization. Seed9 tested inlining around a dynamic switch and was slower; this explicitly tests the later static, homogeneous, non-checkpointed structure, so the prior outcome is context rather than proof. No HLO or predicted numeric speedup. New official and strict full checks required; candidate 7/8 remain validated alternatives.
+
+Implementation ready. Syntax/whitespace checks passed; exact AST comparison confirms the only executable change is that single JIT decorator keyword. No local simulator or benchmark run. Candidate SHA/run IDs and measurements pending supervisor.
