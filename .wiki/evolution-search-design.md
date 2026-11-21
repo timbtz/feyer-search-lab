@@ -1,6 +1,6 @@
 # Feyer search: candidate DAG, adaptive policies and tiered agents
 
-Status: design and repository inspection, 21 November 2026. The existing evaluator and agent sessions are operational. This document does not mean an EvoHarness controller, a Qwen swarm, or a general DAG executor has been deployed.
+Status: design and repository inspection, 21 November 2026. A finite-space DAG controller and runner have now been implemented; see [implementation and evidence ledger](dag-search.md). This design remains broader than the pilot: the full EvoHarness package, adaptive bandit scheduling and a large worker swarm are not deployed by this change.
 
 ## Decision
 
@@ -100,4 +100,4 @@ The [saved probe](../experiments/audits/qwen-recipe-probe.json) contains three s
 3. Run a bounded Qwen recipe pilot. Measure parse rate, applicability, duplicate rate, strict-pass rate, improvement rate, tokens, latency and end-to-end gain per evaluator-hour. Existing larger Codex/Claude sessions remain separate producers.
 4. Add crossover and strong-agent escalation, then compare against simple random operator sampling and best-parent refinement at equal budgets. Increase throughput only after this demonstrates useful candidate yield.
 
-This sequence can scale without replacing the evaluator or prematurely committing to another evolution framework. It is a proposed implementation plan; no large Qwen campaign has been started by writing this document.
+This sequence can scale without replacing the evaluator or prematurely committing to another evolution framework. The implemented pilot uses a deterministic lane schedule, a finite seed8 renderer, bounded Qwen recipes and the existing queue. Larger adaptive policies and broader operator discovery remain follow-up work.

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/timbtz/feyer-search-lab/experiments/contracts/dag-task-v1.schema.json",
+  "title": "Operator-assigned Feyer DAG worker task",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "task_id", "campaign_id", "round_id", "round_spec_sha256", "parent_candidates", "context", "ownership", "provider", "budget", "kind", "brief", "allowed_paths", "output_schema"],
+  "properties": {
+    "schema_version": {"const": "feyer-dag-task-v1"},
+    "task_id": {"type": "string", "pattern": "^[0-9a-f]{32}$"},
+    "campaign_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$"},
+    "round_id": {"type": "string", "minLength": 1, "maxLength": 160},
+    "round_spec_sha256": {"$ref": "#/$defs/sha256"},
+    "parent_candidates": {
+      "type": "array", "minItems": 1, "maxItems": 8,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["candidate_id", "commit_sha"],
+        "properties": {"candidate_id": {"type": "string", "minLength": 1}, "commit_sha": {"$ref": "#/$defs/sha1"}}
+      }
+    },
+    "context": {"$ref": "#/$defs/artifact"},
+    "brief": {"$ref": "#/$defs/artifact"},
+    "ownership": {
+      "type": "object", "additionalProperties": false,
+      "required": ["actor", "claim_version", "branch"],
+      "properties": {"actor": {"type": "string", "minLength": 1}, "claim_version": {"type": "integer", "minimum": 1}, "branch": {"type": "string", "pattern": "^explore/[A-Za-z0-9_./-]+$"}}
+    },
+    "provider": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "model", "model_policy"],
+      "properties": {"name": {"enum": ["codex", "claude", "amd-token-factory"]}, "model": {"type": ["string", "null"]}, "model_policy": {"enum": ["specified", "inherit-designated-config"]}, "reasoning": {"type": ["string", "null"]}}
+    },
+    "budget": {
+      "type": "object", "additionalProperties": false,
+      "required": ["deadline_unix", "max_turns"],
+      "properties": {"deadline_unix": {"type": "number", "exclusiveMinimum": 0}, "max_turns": {"const": 1}}
+    },
+    "kind": {"enum": ["guidance", "candidate"]},
+    "allowed_paths": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "output_schema": {"const": "feyer-dag-proposal-v1"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "sha1": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "artifact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "commit_sha"],
+      "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"$ref": "#/$defs/sha256"}, "commit_sha": {"$ref": "#/$defs/sha1"}}
+    }
+  }
+}
