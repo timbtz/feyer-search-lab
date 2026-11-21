@@ -1,0 +1,15 @@
+# Additional evaluator lanes
+
+The existing AMD worker remains CPU 2 with its 32,000,000,000-byte sampled RSS guard. `lab.lane_worker` adds one separately queued lane on CPU 34, with a 16,000,000,000-byte sampled guard and an 8,000,000,000-byte host reserve. CPU 2/66 share one physical core; CPU 34/98 share another on socket 1. Neither SMT sibling is an evaluation lane. These are sampled guards, not per-process kernel memory caps.
+
+The second root is `/workspace/feyer-lab-lane1`, with its own Git mirror, SQLite queue, runs and worker lock. The original root and in-flight jobs are not changed. A host-wide additional-lane lock allows only one extra evaluator under this policy. Unclean death leaves a latched running receipt requiring inspection of child jobs before restart. To drain the extra worker, create `/workspace/feyer-lab-lane1/state/STOP`; it finishes its current job and stops before claiming another. Do not kill the original `feyer-worker` tmux session.
+
+The committed `feyer-lane-v1` configuration records roots, CPU IDs and memory budgets. The launcher rejects overlapping roots, a shared physical core, unavailable CPUs, and aggregate budgets plus reserve exceeding the cgroup limit. It waits before claiming if current cgroup use leaves insufficient headroom. A third lane requires a newly reviewed aggregate policy; copying the second-lane configuration does not authorize one.
+
+Run the reviewed release with `python -m lab.lane_worker --config /workspace/feyer-lab-lane1/lane.json`. Use `Client('amd-hackathon', root='/workspace/feyer-lab-lane1')` to address this queue. Durable request IDs remain required for automated submissions and retries.
+
+Calibration uses a fresh full run of the exact reference revision on this lane. Derive its policy with `policy_from_job(job, policy_context={'cpu': 34, 'memory_budget_bytes': 16_000_000_000})`. The policy context comes from the coordinator-owned deployment, never from an untrusted candidate's claims. Default normalization deliberately remains CPU 2 / 32 GB. New-lane callers must supply explicit policy and must not import CPU 2 timings as their baseline. Existing profiler/UI callers that use defaults may label non-default-lane eligibility unknown; keep raw artifacts and the independently normalized evidence rather than relabeling them.
+
+Concurrency epoch evidence lives at `/workspace/feyer-capacity/epochs/two-lanes-v1/epoch.json`. `lab/capacity_sampler.py` records cgroup memory/CPU usage, per-worker descendant RSS and actual running/queued job IDs with raw start timestamps. RSS sums can double-count shared pages. Local startup/calibration receipts are under `.lab/deployments/lane1`.
+
+All jobs overlapping this epoch, including on CPU 2, have exploratory timings. Full official and strict correctness results still matter. A final speed claim requires the coordinator to drain additional lanes, explicitly enter a new serial comparison epoch, and admit new matched reference/candidate runs after that transition. A worker hash alone cannot prove quiet timing conditions.
