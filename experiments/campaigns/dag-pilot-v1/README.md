@@ -1,8 +1,8 @@
 # Campaign dag-pilot-v1
 
-Export schema: `feyer-campaign-export-v1`. Snapshot: `9610605d08a3ac5529623a92112ac52725adcc49a356924d7b015ccd915f1282`.
+Export schema: `feyer-campaign-export-v1`. Snapshot: `aadc61e36924b6c655431d07066f93558b639302321029c7b28b94f20104ab79`.
 
-[Frozen proposer context](contexts/91a4f479706d72b9cad5e566e2706f3f2cedf4c10353242596828c137222a805.json) — SHA256 `91a4f479706d72b9cad5e566e2706f3f2cedf4c10353242596828c137222a805`.
+[Frozen proposer context](contexts/0d267bf81594bfe56aa8102a967c4c09013ed9c8d6968c008a7abcf54f651d48.json) — SHA256 `0d267bf81594bfe56aa8102a967c4c09013ed9c8d6968c008a7abcf54f651d48`.
 
 This is an evidence ledger. Scientific parents describe chosen inputs to an experiment; they are not necessarily Git parents. Phase changes are observations, not proof that one edit caused the difference. A failed attempt remains part of the history.
 
@@ -13,6 +13,7 @@ Campaign specification digest: `798a2fde3f2a8d08a9311bb76c249ab070962bb892100acd
 | Actor | Role | Ownership version | Active |
 | --- | --- | --- | --- |
 | coordinator | coordinator | 1 | True |
+| hetzner-codex-1 | strong | 1 | True |
 | qwen-checkpoint | qwen | 1 | True |
 | qwen-joint | qwen | 1 | True |
 | qwen-mapping | qwen | 1 | True |
@@ -24,6 +25,8 @@ Edges come from declared scientific parents, not inferred chronology or Git ance
 ```mermaid
 graph LR
   n0["seed8 seed valid"]
+  n1["ad854f714081480f98ddb88010993ee9 mutate proposed"]
+  n0 -->|mutate| n1
 ```
 
 ## Candidate outcomes
@@ -31,6 +34,7 @@ graph LR
 | Candidate | Round / lane | Scientific parents | Exact commit | State | First-run seconds | Evidence IDs |
 | --- | --- | --- | --- | --- | --- | --- |
 | seed8 | round-001 / checkpoint | root | 1e552d675c3795265be8af1ac23ffb61f90f30b1 | valid | 28.0935 | e6e5badb945c47ae927e511a3ff15fd7:820c7dfc19d0099d62f3b2315da0fb1dd7ee7ee9203b875447cfc2bd07d956a2, 415bab6b82ef42baa0e0a5277df7aeb9:49937d87a08c533f73470c9dcc48dbc7870c12f467d9a8b5de192dffb5484afa, 882be0c143db470c9686cd2ba9e44c77:b547550f15337f868903dbcb118fa79d025993744270cf25cc8c7816a2e5616d |
+| ad854f714081480f98ddb88010993ee9 | round-001 / checkpoint | seed8 | 42aaabf394d2d9bf5618b6802eb1e11315e85030 | proposed | unknown | none |
 
 ## Round decisions and stalled work
 
@@ -108,7 +112,7 @@ Frozen specification: `340b0328994b565ff10f277a62029154eed8346995b6ccec5a616e87b
 }
 ```
 
-- round-001/checkpoint: ready; owner qwen-checkpoint; strikes 0; reason not recorded
+- round-001/checkpoint: active; owner qwen-checkpoint; strikes 0; reason not recorded
 - round-001/mapping: ready; owner qwen-mapping; strikes 0; reason not recorded
 
 ## Candidate evidence and proposed changes
@@ -797,6 +801,208 @@ Frozen specification: `340b0328994b565ff10f277a62029154eed8346995b6ccec5a616e87b
 }
 ```
 
+### ad854f714081480f98ddb88010993ee9
+
+```json
+{
+  "cohort_digest": null,
+  "commit_sha": "42aaabf394d2d9bf5618b6802eb1e11315e85030",
+  "content_sha256": "ca7a299118fe3731c494910ae92526d3ed4c82ee4924a38380c2dc75c1463b19",
+  "context_sha256": null,
+  "evaluation_requests": [],
+  "evidence": [],
+  "evidence_ids": [],
+  "git_parents": null,
+  "heuristic_id": null,
+  "hypothesis": null,
+  "improved": false,
+  "kind": "mutate",
+  "lane_id": "checkpoint",
+  "metrics": null,
+  "model_manifest": null,
+  "owner": "qwen-checkpoint",
+  "owner_version": 1,
+  "parameters": {
+    "checkpoint": true,
+    "map_batch_size": null,
+    "prevent_cse": true
+  },
+  "parameters_after": {
+    "checkpoint": true,
+    "map_batch_size": null,
+    "prevent_cse": true
+  },
+  "parameters_before": null,
+  "parents": [
+    "seed8"
+  ],
+  "prompt_sha256": null,
+  "proposal": {
+    "candidate_id": "ad854f714081480f98ddb88010993ee9",
+    "commit_sha": "42aaabf394d2d9bf5618b6802eb1e11315e85030",
+    "content_sha256": "ca7a299118fe3731c494910ae92526d3ed4c82ee4924a38380c2dc75c1463b19",
+    "kind": "mutate",
+    "lane_id": "checkpoint",
+    "parameters": {
+      "checkpoint": true,
+      "map_batch_size": null,
+      "prevent_cse": true
+    },
+    "parents": [
+      "seed8"
+    ],
+    "proposal_id": "ad854f714081480f98ddb88010993ee9",
+    "provenance": {
+      "context": {
+        "bytes": 1035,
+        "path": "contexts/250f3ecd0720dfcfc4e3e3052191d728cc3288395d88c78ffbd976a6cac1c7ca.json",
+        "sha256": "250f3ecd0720dfcfc4e3e3052191d728cc3288395d88c78ffbd976a6cac1c7ca"
+      },
+      "context_sha256": "250f3ecd0720dfcfc4e3e3052191d728cc3288395d88c78ffbd976a6cac1c7ca",
+      "git_parent_sha": "86e7f04c2897d2d571a9474a866363585d0ea564",
+      "heuristic_id": "finite-menu-guided-selection-v1",
+      "hypothesis": "Preventing CSE may reduce compilation overhead without memory risk.",
+      "model": "Qwen3.8-27B",
+      "model_call_id": "ad854f714081480f98ddb88010993ee9",
+      "operator_version": "seed8-component-execution-v1",
+      "parameters_before": {
+        "checkpoint": true,
+        "map_batch_size": null,
+        "prevent_cse": false
+      },
+      "prompt": {
+        "bytes": 1374,
+        "path": "prompts/60ff545e00f3abd6ae70fa8d23cc39445c2b8fa6e8e3a9df5376d709dcbc57ca.txt",
+        "sha256": "60ff545e00f3abd6ae70fa8d23cc39445c2b8fa6e8e3a9df5376d709dcbc57ca"
+      },
+      "response": {
+        "bytes": 1628,
+        "path": "responses/05f0e976809561e25fc765ffd0a127e34a51674a8b8d1b08327f80eff41481b2.txt",
+        "sha256": "05f0e976809561e25fc765ffd0a127e34a51674a8b8d1b08327f80eff41481b2"
+      },
+      "source_context_sha256": "ac7eb74754a5508876adcccb73241892e9db604fff9247be940d8f8b0c34c732",
+      "target_symbols": [
+        "simulate._evaluate_component",
+        "simulate.update"
+      ],
+      "usage": {
+        "completion_tokens": 330,
+        "completion_tokens_details": {
+          "audio_tokens": 0,
+          "image_tokens": 0,
+          "reasoning_tokens": 307
+        },
+        "cost": 4.5745e-05,
+        "cost_details": {
+          "audio_input_cost": null,
+          "cache_write_input_cost": 0,
+          "cached_input_cost": 0,
+          "data_storage_cost": 1.284e-05,
+          "image_input_cost": null,
+          "image_output_cost": null,
+          "input_cost": 2.2645e-05,
+          "output_cost": 2.31e-05,
+          "request_cost": 0,
+          "total_cost": 4.5745e-05,
+          "upstream_inference_completions_cost": 2.31e-05,
+          "upstream_inference_cost": 4.5745e-05,
+          "upstream_inference_prompt_cost": 2.2645e-05,
+          "web_search_cost": 0
+        },
+        "prompt_tokens": 647,
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": 0,
+          "video_tokens": 0
+        },
+        "reasoning_tokens": 307,
+        "total_tokens": 977
+      }
+    },
+    "recipe": "checkpoint",
+    "round_id": "round-001"
+  },
+  "proposal_id": "ad854f714081480f98ddb88010993ee9",
+  "provenance": {
+    "context": {
+      "bytes": 1035,
+      "path": "contexts/250f3ecd0720dfcfc4e3e3052191d728cc3288395d88c78ffbd976a6cac1c7ca.json",
+      "sha256": "250f3ecd0720dfcfc4e3e3052191d728cc3288395d88c78ffbd976a6cac1c7ca"
+    },
+    "context_sha256": "250f3ecd0720dfcfc4e3e3052191d728cc3288395d88c78ffbd976a6cac1c7ca",
+    "git_parent_sha": "86e7f04c2897d2d571a9474a866363585d0ea564",
+    "heuristic_id": "finite-menu-guided-selection-v1",
+    "hypothesis": "Preventing CSE may reduce compilation overhead without memory risk.",
+    "model": "Qwen3.8-27B",
+    "model_call_id": "ad854f714081480f98ddb88010993ee9",
+    "operator_version": "seed8-component-execution-v1",
+    "parameters_before": {
+      "checkpoint": true,
+      "map_batch_size": null,
+      "prevent_cse": false
+    },
+    "prompt": {
+      "bytes": 1374,
+      "path": "prompts/60ff545e00f3abd6ae70fa8d23cc39445c2b8fa6e8e3a9df5376d709dcbc57ca.txt",
+      "sha256": "60ff545e00f3abd6ae70fa8d23cc39445c2b8fa6e8e3a9df5376d709dcbc57ca"
+    },
+    "response": {
+      "bytes": 1628,
+      "path": "responses/05f0e976809561e25fc765ffd0a127e34a51674a8b8d1b08327f80eff41481b2.txt",
+      "sha256": "05f0e976809561e25fc765ffd0a127e34a51674a8b8d1b08327f80eff41481b2"
+    },
+    "source_context_sha256": "ac7eb74754a5508876adcccb73241892e9db604fff9247be940d8f8b0c34c732",
+    "target_symbols": [
+      "simulate._evaluate_component",
+      "simulate.update"
+    ],
+    "usage": {
+      "completion_tokens": 330,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 307
+      },
+      "cost": 4.5745e-05,
+      "cost_details": {
+        "audio_input_cost": null,
+        "cache_write_input_cost": 0,
+        "cached_input_cost": 0,
+        "data_storage_cost": 1.284e-05,
+        "image_input_cost": null,
+        "image_output_cost": null,
+        "input_cost": 2.2645e-05,
+        "output_cost": 2.31e-05,
+        "request_cost": 0,
+        "total_cost": 4.5745e-05,
+        "upstream_inference_completions_cost": 2.31e-05,
+        "upstream_inference_cost": 4.5745e-05,
+        "upstream_inference_prompt_cost": 2.2645e-05,
+        "web_search_cost": 0
+      },
+      "prompt_tokens": 647,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "video_tokens": 0
+      },
+      "reasoning_tokens": 307,
+      "total_tokens": 977
+    }
+  },
+  "recipe": "checkpoint",
+  "response_sha256": null,
+  "round_id": "round-001",
+  "target_symbols": null,
+  "uncertainty": "No repeat-confirmation or causality is inferred from this export. Inspect exact job evidence and matching cohorts.",
+  "valid": false
+}
+```
+
 ## Decision and failure trail
 
 | Sequence | Event | Actor | Detail |
@@ -817,5 +1023,8 @@ Frozen specification: `340b0328994b565ff10f277a62029154eed8346995b6ccec5a616e87b
 | 14 | decision_recorded | coordinator | {"decision_id": "1ace343bc5d342398809496cc07531a5", "payload": {"plan": {"action": "mutate", "attempted_parameters": [{"checkpoint": true, "map_batch_size": null, "prevent_cse": false}], "base_candidate": "seed8", "dimensions": ["checkpoint", "prevent_cse"], "lane_id": "checkpoint", "owner": "qwen-checkpoint", "parent_candidates": ["seed8"], "recipes": {"checkpoint": {"dimensions": ["checkpoint", "prevent_cse"]}, "mapping": {"dimensions": ["map_batch_size"]}}, "round_id": "round-001"}, "policy": "frozen-lane-three-strike-v1"}, "payload_digest": "3ffbef7c0b61e14d853336ac4ff544a09a83c46cc40c63cf33bb6efe791aedc7"} |
 | 15 | model_call_reserved | coordinator | {"call_id": "ad854f714081480f98ddb88010993ee9", "metadata": {"actor": "qwen-checkpoint", "context_sha256": "250f3ecd0720dfcfc4e3e3052191d728cc3288395d88c78ffbd976a6cac1c7ca", "controller_commit": "eec16f6ab442e73ff171bafca57c617e2e842b34", "max_tokens": 1024, "model": {"model": "Qwen3.8-27B", "provider": "amd-token-factory"}, "prompt": {"bytes": 1374, "path": "prompts/60ff545e00f3abd6ae70fa8d23cc39445c2b8fa6e8e3a9df5376d709dcbc57ca.txt", "sha256": "60ff545e00f3abd6ae70fa8d23cc39445c2b8fa6e8e3a9df5376d709dcbc57ca"}, "reasoning_effort": "low", "temperature": 0}} |
 | 16 | model_call_finished | coordinator | {"call_id": "ad854f714081480f98ddb88010993ee9", "metadata": {"recipe_valid": true, "response": {"bytes": 1628, "path": "responses/05f0e976809561e25fc765ffd0a127e34a51674a8b8d1b08327f80eff41481b2.txt", "sha256": "05f0e976809561e25fc765ffd0a127e34a51674a8b8d1b08327f80eff41481b2"}, "summary": {"content_characters": 96, "finish_reason": "stop", "headers": {"x-ratelimit-limit-user-daily-usd": "1", "x-ratelimit-limit-user-rpm": "20", "x-ratelimit-remaining-user-daily-usd": "0.99931411", "x-ratelimit-remaining-user-rpm": "19", "x-ratelimit-reset-user-daily-usd": "1795350381", "x-ratelimit-used-user-daily-usd": "0.00068589"}, "latency_seconds": 13.705206375000001, "status": 200, "usage": {"comple… [full detail in events.jsonl] |
+| 17 | candidate_proposed | qwen-checkpoint | {"candidate_id": "ad854f714081480f98ddb88010993ee9", "duplicate_of": null, "owner_version": 1, "proposal_digest": "193d02b86a09de0e4129422ec510deaa8e657df599828a2827b658103948a4af", "proposal_id": "ad854f714081480f98ddb88010993ee9"} |
+| 18 | owner_claimed | coordinator | {"actor": "hetzner-codex-1", "role": "strong", "version": 1} |
+| 19 | model_call_reserved | coordinator | {"call_id": "076fb719980748409ecf0c5ab4d1d53b", "metadata": {"actor": "hetzner-codex-1", "context_sha256": "83ad5453fe05d5804bde25d432a241d9f3e651b04c8ab90986ebe0e58b82670c", "dispatch": "assigned to Hetzner broker; no evaluator execution", "kind": "guidance", "max_turns": 1, "model": "gpt-6-astra", "model_policy": "inherit-designated-config", "provider": "codex", "reasoning": "xhigh"}} |
 
 Guidance may propose a new round. It cannot silently replace frozen operators, ownership, evaluation requirements or budgets. Only the coordinator can admit that round through the campaign state API. Publishing this ledger does not merge or promote candidate code.
