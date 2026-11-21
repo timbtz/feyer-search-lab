@@ -44912,6 +44912,85 @@
         "freshness_upgrade_pending": true,
         "assignment_id": "claude-guided-v2"
       }
+    },
+    {
+      "seq": 36,
+      "at": 1795296673.439473,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "astra-guided-v2-launch-9a4c5c9f15bf",
+        "kind": "explore",
+        "status": "current",
+        "executor": {
+          "kind": "supervisor",
+          "id": "astra-guided-v2"
+        },
+        "candidate_sha": null,
+        "parents": [
+          "7d1ccc59cef3d7436870bb0e6c941dbde4c30770"
+        ],
+        "target_phases": [
+          "compilation",
+          "forward",
+          "gradient"
+        ],
+        "hypothesis": "Explore the declared target phases from the validated starting candidate using shared full-result evidence.",
+        "change_summary": "Verified fresh guided session launch; declared inputs are an assignment, not a measured combination result.",
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/13630b1a2b56623e4f64d57daadfffca409ffe20/experiments/launches/astra-guided-v2.json",
+        "source_digest": "9a4c5c9f15bf55363d667a544df9ace32857a321d2d0cf2b92860088e3ef5ba7",
+        "source_digest_kind": "canonical-json-sha256",
+        "session_id": "01a1fffd-808b-7df1-9718-3c929f0deb90",
+        "input_receipt": {
+          "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/astra-guided-v2/turn-01-prompt-925420b2f9ac1fe1d63376e81e371008eadc13fc2b2ae49d621e064635dce6f9.json",
+          "sha256": "925420b2f9ac1fe1d63376e81e371008eadc13fc2b2ae49d621e064635dce6f9",
+          "turn": 1,
+          "thread_id": null,
+          "feedback_mode": "guided",
+          "shared_evidence": {
+            "schema": "feyer-search-frontier-v1",
+            "source_path": "/Users/t.betz/Documents/Feyer challenge/.lab/frontier/current.json",
+            "snapshot_ref": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/astra-guided-v2/shared-evidence/734a412e9472a0dfb9cae3baa207d98de3ced47709370c0c0a6abff3da769fe2.json",
+            "sha256": "734a412e9472a0dfb9cae3baa207d98de3ced47709370c0c0a6abff3da769fe2",
+            "bytes": 92255,
+            "generated_at": 1795296099.3428102,
+            "read_at": 1795296165.506755,
+            "content_digest": "d7104025dd21259343e293c59b77496ae04d9c4ccdd432156b728c631fcb9672",
+            "source_provenance": {
+              "team_digest": "788879fb135abfe2c1d5c2737a25df0ac568ecf87f9fef92903068a3f8fe0695",
+              "policy_digest": "54fffa2b291a30d2d20eb7b881da57f3f127ed0d3559330d7d5685838532e01c",
+              "policy_source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d3e5e4de995914819631acdf9980c00fd95a47b3/experiments/deployments/amd-two-lanes-v1.json",
+              "evidence_digest": "1ce373aeb6eef374439c48c19c9e90eeeeb04e746bd3fd9e6bb3872777e6d018",
+              "collector": "trusted-local-artifacts-v1",
+              "instance": "amd-tim"
+            }
+          }
+        },
+        "observed_at": 1795296309.355083,
+        "evaluations": [],
+        "target_evidence": [
+          {
+            "job_id": "7e6ce3c3bf5148af93351918fda06e22",
+            "candidate_sha": "7d1ccc59cef3d7436870bb0e6c941dbde4c30770",
+            "profile": "full"
+          }
+        ],
+        "runtime_commit": "ca93123b873dd30a12c67b592936260c7bf05892",
+        "initial_sha": "7d1ccc59cef3d7436870bb0e6c941dbde4c30770",
+        "started_at": 1795296165.341115,
+        "fixed_deadline_unix": 1795299765.341115,
+        "feedback_mode": "guided",
+        "actual_model": "gpt-6-astra",
+        "actual_reasoning_effort": "high",
+        "parent_candidates": [
+          "7d1ccc59cef3d7436870bb0e6c941dbde4c30770"
+        ],
+        "planned_peer_candidates": [],
+        "branch": "explore/astra-guided-v2",
+        "freshness_upgrade_pending": true,
+        "assignment_id": "astra-guided-v2"
+      }
     }
   ],
   "comparison_regime": {
@@ -45799,6 +45878,79 @@
       "branch": "explore/claude-guided-v2",
       "freshness_upgrade_pending": true,
       "assignment_id": "claude-guided-v2"
+    },
+    "astra-guided-v2-launch-9a4c5c9f15bf": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "astra-guided-v2-launch-9a4c5c9f15bf",
+      "kind": "explore",
+      "status": "current",
+      "executor": {
+        "kind": "supervisor",
+        "id": "astra-guided-v2"
+      },
+      "candidate_sha": null,
+      "parents": [
+        "7d1ccc59cef3d7436870bb0e6c941dbde4c30770"
+      ],
+      "target_phases": [
+        "compilation",
+        "forward",
+        "gradient"
+      ],
+      "hypothesis": "Explore the declared target phases from the validated starting candidate using shared full-result evidence.",
+      "change_summary": "Verified fresh guided session launch; declared inputs are an assignment, not a measured combination result.",
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/13630b1a2b56623e4f64d57daadfffca409ffe20/experiments/launches/astra-guided-v2.json",
+      "source_digest": "9a4c5c9f15bf55363d667a544df9ace32857a321d2d0cf2b92860088e3ef5ba7",
+      "source_digest_kind": "canonical-json-sha256",
+      "session_id": "01a1fffd-808b-7df1-9718-3c929f0deb90",
+      "input_receipt": {
+        "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/astra-guided-v2/turn-01-prompt-925420b2f9ac1fe1d63376e81e371008eadc13fc2b2ae49d621e064635dce6f9.json",
+        "sha256": "925420b2f9ac1fe1d63376e81e371008eadc13fc2b2ae49d621e064635dce6f9",
+        "turn": 1,
+        "thread_id": null,
+        "feedback_mode": "guided",
+        "shared_evidence": {
+          "schema": "feyer-search-frontier-v1",
+          "source_path": "/Users/t.betz/Documents/Feyer challenge/.lab/frontier/current.json",
+          "snapshot_ref": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/astra-guided-v2/shared-evidence/734a412e9472a0dfb9cae3baa207d98de3ced47709370c0c0a6abff3da769fe2.json",
+          "sha256": "734a412e9472a0dfb9cae3baa207d98de3ced47709370c0c0a6abff3da769fe2",
+          "bytes": 92255,
+          "generated_at": 1795296099.3428102,
+          "read_at": 1795296165.506755,
+          "content_digest": "d7104025dd21259343e293c59b77496ae04d9c4ccdd432156b728c631fcb9672",
+          "source_provenance": {
+            "team_digest": "788879fb135abfe2c1d5c2737a25df0ac568ecf87f9fef92903068a3f8fe0695",
+            "policy_digest": "54fffa2b291a30d2d20eb7b881da57f3f127ed0d3559330d7d5685838532e01c",
+            "policy_source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d3e5e4de995914819631acdf9980c00fd95a47b3/experiments/deployments/amd-two-lanes-v1.json",
+            "evidence_digest": "1ce373aeb6eef374439c48c19c9e90eeeeb04e746bd3fd9e6bb3872777e6d018",
+            "collector": "trusted-local-artifacts-v1",
+            "instance": "amd-tim"
+          }
+        }
+      },
+      "observed_at": 1795296309.355083,
+      "evaluations": [],
+      "target_evidence": [
+        {
+          "job_id": "7e6ce3c3bf5148af93351918fda06e22",
+          "candidate_sha": "7d1ccc59cef3d7436870bb0e6c941dbde4c30770",
+          "profile": "full"
+        }
+      ],
+      "runtime_commit": "ca93123b873dd30a12c67b592936260c7bf05892",
+      "initial_sha": "7d1ccc59cef3d7436870bb0e6c941dbde4c30770",
+      "started_at": 1795296165.341115,
+      "fixed_deadline_unix": 1795299765.341115,
+      "feedback_mode": "guided",
+      "actual_model": "gpt-6-astra",
+      "actual_reasoning_effort": "high",
+      "parent_candidates": [
+        "7d1ccc59cef3d7436870bb0e6c941dbde4c30770"
+      ],
+      "planned_peer_candidates": [],
+      "branch": "explore/astra-guided-v2",
+      "freshness_upgrade_pending": true,
+      "assignment_id": "astra-guided-v2"
     }
   }
 }
