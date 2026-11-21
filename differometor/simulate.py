@@ -70,9 +70,9 @@ def _evaluate_component(function_and_inputs):
 
 @partial(jit, static_argnums=(0,))
 def _evaluate_component_group(function_index, function_inputs):
-    """Map one structural component type, retaining branch-local recomputation."""
+    """Vectorize one component type without batching a dynamic branch selector."""
     function = jax.checkpoint(FUNCTIONS[function_index], prevent_cse=False)
-    return lax.map(function, function_inputs)
+    return vmap(function)(function_inputs)
 
 
 def update(
