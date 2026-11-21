@@ -18,6 +18,7 @@ Conventions used throughout:
 """
 
 import jax
+from functools import partial
 from time import time
 import jax.numpy as jnp
 from jax import lax, vmap, jit
@@ -67,6 +68,13 @@ def _evaluate_component(function_and_inputs):
     return lax.switch(function_index, branches, function_inputs)
 
 
+@partial(jit, static_argnums=(0,))
+def _evaluate_component_group(function_index, function_inputs):
+    """Map one structural component type, retaining branch-local recomputation."""
+    function = jax.checkpoint(FUNCTIONS[function_index], prevent_cse=False)
+    return lax.map(function, function_inputs)
+
+
 def update(
     parameters: jnp.ndarray,
     matrix: jnp.ndarray,
@@ -74,6 +82,7 @@ def update(
     output_indices: tuple[jnp.ndarray, jnp.ndarray],
     matrix_indices: tuple[jnp.ndarray, jnp.ndarray],
     function_indices: jnp.ndarray,
+    component_groups: dict | None = None,
 ) -> jnp.ndarray:
     """
     Update selected entries of a system matrix by evaluating component functions.
@@ -101,6 +110,10 @@ def update(
     function_indices : jnp.ndarray
         Indices selecting which function to use for each input, shape (K,).
         Values index into the global `FUNCTIONS` list.
+    component_groups : dict | None
+        Optional builder-produced structural partition of the function rows.
+        Function IDs are dictionary keys, so remain static under JAX tracing.
+        Omit or rebuild the groups when changing function selectors.
 
     Returns
     -------
@@ -116,10 +129,19 @@ def update(
     function_inputs = parameters[function_input_indices]
     # Keep the function selector scalar so only the selected component branch
     # executes. The outer vmap in simulate still batches frequency samples.
-    output_matrix = lax.map(
-        _evaluate_component,
-        (function_indices, function_inputs),
-    )
+    if component_groups is None:
+        output_matrix = lax.map(
+            _evaluate_component,
+            (function_indices, function_inputs),
+        )
+    else:
+        # Restore original function-row order before selecting matrix updates.
+        # In particular, do not reorder the final scatter's possibly overlapping
+        # destinations, or omit entries whose current parameter value is zero.
+        output_matrix = jnp.zeros((function_inputs.shape[0], 4), dtype=jnp.complex128)
+        for function_index, rows in component_groups.items():
+            group_outputs = _evaluate_component_group(function_index, function_inputs[rows])
+            output_matrix = output_matrix.at[rows].set(group_outputs)
     outputs = output_matrix[output_indices[0], output_indices[1]]
     return matrix.at[matrix_indices[0], matrix_indices[1]].set(outputs)
 
@@ -199,6 +221,8 @@ def simulate(
     noise_function_indices: jnp.ndarray,
     noise_output_indices: tuple[jnp.ndarray, jnp.ndarray],
     noise_system_matrix_indices: tuple[jnp.ndarray, jnp.ndarray],
+    *,
+    component_groups: dict | None = None,
 ) -> tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
     """
     Run one full simulation pass: carrier, signal, and quantum noise.
@@ -264,6 +288,11 @@ def simulate(
     noise_system_matrix_indices :
         Indexing and function-selection arrays used by `update` to fill the noise matrix.
 
+    component_groups : dict | None
+        Optional structural dispatch metadata produced by `run_build_step`.
+        Contains carrier, signal and noise partitions. Omit it to use dynamic
+        function selectors, or rebuild it if those selectors are changed.
+
     Returns
     -------
     carrier : jnp.ndarray
@@ -300,13 +329,14 @@ def simulate(
     # Carrier solve
     # --------------------
     parameters = expand_parameters(parameters, carrier_changing_parameter_indices, carrier_changing_values)
-    carrier_matrix = vmap(update, in_axes=(0, None, None, None, None, None))(
+    carrier_matrix = vmap(update, in_axes=(0, None, None, None, None, None, None))(
         parameters,
         carrier_matrix,
         carrier_function_input_indices,
         carrier_output_indices,
         carrier_matrix_indices,
         carrier_function_indices,
+        None if component_groups is None else component_groups["carrier"],
     )
     carrier = vmap(solve)(carrier_matrix[:, :, :-1], carrier_matrix[:, :, -1])
 
@@ -314,13 +344,14 @@ def simulate(
     # Signal solve
     # --------------------
     parameters = expand_parameters(parameters, signal_changing_parameter_indices, signal_changing_values)
-    signal_matrix = vmap(update, in_axes=(0, None, None, None, None, None))(
+    signal_matrix = vmap(update, in_axes=(0, None, None, None, None, None, None))(
         parameters,
         signal_matrix,
         signal_function_input_indices,
         signal_output_indices,
         signal_matrix_indices,
         signal_function_indices,
+        None if component_groups is None else component_groups["signal"],
     )
 
     # Scale signal connector entries by the carrier solution at the respective spaces.
@@ -389,13 +420,14 @@ def simulate(
     noise_weights = vmap(vmap(solve), in_axes=(None, 0))(transposed_conjugated_signal_matrix, carrier_selections)
 
     # Update noise source matrix (may depend on current parameters).
-    noise_matrix = vmap(update, in_axes=(0, None, None, None, None, None))(
+    noise_matrix = vmap(update, in_axes=(0, None, None, None, None, None, None))(
         parameters,
         noise_matrix,
         noise_function_input_indices,
         noise_output_indices,
         noise_system_matrix_indices,
         noise_function_indices,
+        None if component_groups is None else component_groups["noise"],
     )
 
     def matmul_single_batch(matrix_batch: jnp.ndarray, vector_batch: jnp.ndarray) -> jnp.ndarray:
@@ -475,8 +507,9 @@ def run_build_step(
     start = time()
 
     instructions, matrices, metadata = build(setup)
+    component_groups = {}
     arrays_to_prepare, carrier_arrays, signal_arrays, noise_arrays = pairs_to_arrays(
-        *instructions, optimization_pairs, changing_pairs
+        *instructions, optimization_pairs, changing_pairs, component_groups=component_groups
     )
     prepared_arrays = prepare_arrays(*arrays_to_prepare, changing_values, parameters=matrices[0])
 
@@ -491,6 +524,7 @@ def run_build_step(
         )
 
     simulation_arrays = {arg_names[i]: array for i, array in enumerate(all_arrays)}
+    simulation_arrays["component_groups"] = component_groups
 
     if timeit:
         for array in simulation_arrays.values():

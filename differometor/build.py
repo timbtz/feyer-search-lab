@@ -1442,6 +1442,14 @@ def build(setup: Setup):
     )
 
 
+def _group_component_indices(function_indices):
+    """Classify host-side instructions without inspecting parameter values."""
+    groups = defaultdict(list)
+    for row, function_index in enumerate(function_indices):
+        groups[int(function_index)].append(row)
+    return {index: jnp.array(rows, dtype=int) for index, rows in groups.items()}
+
+
 def pairs_to_arrays(
     parameter_instructions: dict,
     signal_instructions: dict,
@@ -1450,6 +1458,8 @@ def pairs_to_arrays(
     parameter_names: list,
     optimization_pairs: list | None = None,
     changing_pairs: list | None = None,
+    *,
+    component_groups: dict | None = None,
 ):
     """
     Convert instruction dictionaries into dense index arrays for vectorized JAX execution.
@@ -1480,6 +1490,10 @@ def pairs_to_arrays(
         List of pairs `(component, parameter)` or list of lists to represent shared optimization values.
     changing_pairs:
         List of pairs `(component, parameter)` indicating parameters changed over a sweep.
+    component_groups:
+        Optional output dictionary filled with structural function groups for each
+        system. Integer keys identify functions; array leaves contain original
+        function-row indices. Rebuild these groups if function selectors change.
 
     Returns
     -------
@@ -1612,7 +1626,7 @@ def pairs_to_arrays(
             carrier_changing_parameter_indices.append(parameter_names.index(f"{changing_component}_{changing_parameter}"))
             append_information(parameter_instructions, carrier_arrays, changing_component, carrier_components)
 
-    def combine_arrays(arrays: dict, signal: bool = False):
+    def combine_arrays(arrays: dict, system: str, signal: bool = False):
         """
         Stack per-component lists into dense arrays. Provide a dummy update if empty.
 
@@ -1633,12 +1647,17 @@ def pairs_to_arrays(
         """
         if len(arrays["function_input_indices"]) == 0:
             # Dummy update that leaves matrices unchanged.
+            if component_groups is not None:
+                component_groups[system] = _group_component_indices([FUNCTIONS.index(dummy_function)])
             return (
                 jnp.array([[0, 0, 0]]),
                 jnp.array([FUNCTIONS.index(dummy_function)]),
                 jnp.array([[0], [0]]),
                 jnp.array([[0], [0]]),
             )
+
+        if component_groups is not None:
+            component_groups[system] = _group_component_indices(arrays["function_indices"])
 
         function_input_indices = np.vstack(arrays["function_input_indices"])
         output_indices = np.stack((np.concatenate(arrays["output_row_indices"]), np.concatenate(arrays["output_column_indices"])))
@@ -1678,9 +1697,9 @@ def pairs_to_arrays(
             jnp.array(carrier_changing_parameter_indices, dtype=int),
             jnp.array(signal_changing_parameter_indices, dtype=int),
         ),
-        combine_arrays(carrier_arrays),
-        combine_arrays(signal_arrays, signal=True),
-        combine_arrays(noise_arrays),
+        combine_arrays(carrier_arrays, "carrier"),
+        combine_arrays(signal_arrays, "signal", signal=True),
+        combine_arrays(noise_arrays, "noise"),
     )
 
 
