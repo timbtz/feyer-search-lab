@@ -45279,6 +45279,87 @@
         ],
         "target_evidence": []
       }
+    },
+    {
+      "seq": 41,
+      "at": 1795298142.003572,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "feedback-82d4ff940ca80f8dbd5683edd8d95d66178d0f22821b3a29e7307f8be1b96235",
+        "executor": {
+          "kind": "supervisor",
+          "id": "claude-guided-v2"
+        },
+        "kind": "explore",
+        "status": "completed",
+        "candidate_sha": "10a311f6dbe4e8b71fa98654d015493ab8b3ef27",
+        "parents": [
+          "5b2169697d359f6a1c1f7fd6b5f66e08e9906969"
+        ],
+        "target_phases": [],
+        "hypothesis": "Target phases: forward compile (7.62 s) and gradient compile (1.96 s) in job 35abe628 (aa2b1ab). Candidate 1 (job 01ae3245) attributed about 2.9 s of that compile to the assembly linearization. Mechanism: the expanded parameter row carries a dense tangent, so the vjp forms derivative residuals and transposes for every component input. Many of those inputs never depend on a design variable; for example, 5 of the 7 surface inputs are constants. Gradient-stopping the slots that are provably constant gives them symbolic-zero tangents, so their residuals and transposes are never generated. Their true derivative is exactly zero, and stop_gradient is the identity in the forward pass. Prediction: forward and gradient compile both go down, and lower times go down slightly; the size is unknown and the ceiling is well under 2.9 s. Execute times stay the same or drop slightly. Forward outputs should be bitwise identical, and the gradient identical or within reordering (the dropped terms were exact 0*x contributions). Any forward difference or a strict failure rejects the candidate.",
+        "change_summary": "Candidate 1 (5b21696, ASSEMBLY_REMAT) passed official and strict checks in full job 01ae3245, but it is not kept: the first run was 21.725 s against the parent's 21.550 s. Remat moved about 2.9 s of compile from the forward program to the gradient program (forward compile \u22122.92 s, gradient compile +2.81 s), and total compile stayed about the same. That suggests roughly 2.9 s of compile belongs to the assembly linearization wherever it sits. Candidate 2 sets ASSEMBLY_REMAT back to False and goes after that cost directly. The builder now records, on the host, which input slots of each component group read an optimized or linked parameter. update() then applies lax.stop_gradient to the remaining constant slots (frequency, loss, refractive indices, angle) and passes each slot as a separate scalar, so JAX never forms their derivative terms. All changes are in simulate.py; COMPONENT_SLOT_PRUNING=False restores aa2b1ab behaviour.",
+        "stopping_reason": null,
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/ae180410c4375fff1ca3f755fb057ffc0641db75/experiments/runs/claude-guided-v2/candidate-02.json",
+        "source_digest": "82d4ff940ca80f8dbd5683edd8d95d66178d0f22821b3a29e7307f8be1b96235",
+        "source_digest_kind": "canonical_json_sha256",
+        "feedback_ref": {
+          "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/ae180410c4375fff1ca3f755fb057ffc0641db75/experiments/runs/claude-guided-v2/candidate-02.json",
+          "artifact_digest": "82d4ff940ca80f8dbd5683edd8d95d66178d0f22821b3a29e7307f8be1b96235",
+          "digest_kind": "canonical_json_sha256"
+        },
+        "session_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+        "iteration": null,
+        "checkpoint": null,
+        "next_input": null,
+        "input_receipt": {
+          "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-guided-v2/turn-02-prompt-7ca9856ffddf3709e4fff418512529ee1049c6642d30040124007ad9dacb7758.json",
+          "sha256": "7ca9856ffddf3709e4fff418512529ee1049c6642d30040124007ad9dacb7758",
+          "turn": 2,
+          "thread_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+          "feedback_mode": "guided",
+          "shared_evidence": {
+            "schema": "feyer-search-frontier-v1",
+            "source_path": "/Users/t.betz/Documents/Feyer challenge/.lab/frontier/current.json",
+            "snapshot_ref": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-guided-v2/shared-evidence/140ac7b9ba00c900f1666da812adbc17164a8f47026c41ba3e24d1d1f91458d6.json",
+            "sha256": "140ac7b9ba00c900f1666da812adbc17164a8f47026c41ba3e24d1d1f91458d6",
+            "bytes": 92254,
+            "generated_at": 1795296433.429441,
+            "read_at": 1795296441.5846632,
+            "age_seconds": 8.155222177505493,
+            "freshness_policy": {
+              "max_age_seconds": 300,
+              "future_skew_seconds": 30
+            },
+            "content_digest": "32ebbe318c15d973e61ee4d6176477419825cfe34a1a2a5dcf7d64dfa639f9a7",
+            "source_provenance": {
+              "team_digest": "788879fb135abfe2c1d5c2737a25df0ac568ecf87f9fef92903068a3f8fe0695",
+              "policy_digest": "54fffa2b291a30d2d20eb7b881da57f3f127ed0d3559330d7d5685838532e01c",
+              "policy_source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d3e5e4de995914819631acdf9980c00fd95a47b3/experiments/deployments/amd-two-lanes-v1.json",
+              "evidence_digest": "b8182202b381f85d58840e114c35195f25acfea57c00f704102477b366bc713a",
+              "collector": "trusted-local-artifacts-v1",
+              "instance": "amd-tim"
+            }
+          },
+          "consumed_feedback_digest": "a6c486da398b0acae04ccd266ca052cf45559af9b8db40b78eeb67ffa8339834",
+          "consumed_candidate_sha": "5b2169697d359f6a1c1f7fd6b5f66e08e9906969"
+        },
+        "evaluations": [
+          {
+            "job_id": "d6028ac4a12047efafe6ae4459546d12",
+            "candidate_sha": "10a311f6dbe4e8b71fa98654d015493ab8b3ef27",
+            "profile": "screen"
+          },
+          {
+            "job_id": "3a030c65057c4134ae07d46f012d674a",
+            "candidate_sha": "10a311f6dbe4e8b71fa98654d015493ab8b3ef27",
+            "profile": "full"
+          }
+        ],
+        "target_evidence": []
+      }
     }
   ],
   "comparison_regime": {
@@ -46499,6 +46580,81 @@
         {
           "job_id": "01ae324501d64448a29f71dca05e82a8",
           "candidate_sha": "5b2169697d359f6a1c1f7fd6b5f66e08e9906969",
+          "profile": "full"
+        }
+      ],
+      "target_evidence": []
+    },
+    "feedback-82d4ff940ca80f8dbd5683edd8d95d66178d0f22821b3a29e7307f8be1b96235": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "feedback-82d4ff940ca80f8dbd5683edd8d95d66178d0f22821b3a29e7307f8be1b96235",
+      "executor": {
+        "kind": "supervisor",
+        "id": "claude-guided-v2"
+      },
+      "kind": "explore",
+      "status": "completed",
+      "candidate_sha": "10a311f6dbe4e8b71fa98654d015493ab8b3ef27",
+      "parents": [
+        "5b2169697d359f6a1c1f7fd6b5f66e08e9906969"
+      ],
+      "target_phases": [],
+      "hypothesis": "Target phases: forward compile (7.62 s) and gradient compile (1.96 s) in job 35abe628 (aa2b1ab). Candidate 1 (job 01ae3245) attributed about 2.9 s of that compile to the assembly linearization. Mechanism: the expanded parameter row carries a dense tangent, so the vjp forms derivative residuals and transposes for every component input. Many of those inputs never depend on a design variable; for example, 5 of the 7 surface inputs are constants. Gradient-stopping the slots that are provably constant gives them symbolic-zero tangents, so their residuals and transposes are never generated. Their true derivative is exactly zero, and stop_gradient is the identity in the forward pass. Prediction: forward and gradient compile both go down, and lower times go down slightly; the size is unknown and the ceiling is well under 2.9 s. Execute times stay the same or drop slightly. Forward outputs should be bitwise identical, and the gradient identical or within reordering (the dropped terms were exact 0*x contributions). Any forward difference or a strict failure rejects the candidate.",
+      "change_summary": "Candidate 1 (5b21696, ASSEMBLY_REMAT) passed official and strict checks in full job 01ae3245, but it is not kept: the first run was 21.725 s against the parent's 21.550 s. Remat moved about 2.9 s of compile from the forward program to the gradient program (forward compile \u22122.92 s, gradient compile +2.81 s), and total compile stayed about the same. That suggests roughly 2.9 s of compile belongs to the assembly linearization wherever it sits. Candidate 2 sets ASSEMBLY_REMAT back to False and goes after that cost directly. The builder now records, on the host, which input slots of each component group read an optimized or linked parameter. update() then applies lax.stop_gradient to the remaining constant slots (frequency, loss, refractive indices, angle) and passes each slot as a separate scalar, so JAX never forms their derivative terms. All changes are in simulate.py; COMPONENT_SLOT_PRUNING=False restores aa2b1ab behaviour.",
+      "stopping_reason": null,
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/ae180410c4375fff1ca3f755fb057ffc0641db75/experiments/runs/claude-guided-v2/candidate-02.json",
+      "source_digest": "82d4ff940ca80f8dbd5683edd8d95d66178d0f22821b3a29e7307f8be1b96235",
+      "source_digest_kind": "canonical_json_sha256",
+      "feedback_ref": {
+        "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/ae180410c4375fff1ca3f755fb057ffc0641db75/experiments/runs/claude-guided-v2/candidate-02.json",
+        "artifact_digest": "82d4ff940ca80f8dbd5683edd8d95d66178d0f22821b3a29e7307f8be1b96235",
+        "digest_kind": "canonical_json_sha256"
+      },
+      "session_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+      "iteration": null,
+      "checkpoint": null,
+      "next_input": null,
+      "input_receipt": {
+        "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-guided-v2/turn-02-prompt-7ca9856ffddf3709e4fff418512529ee1049c6642d30040124007ad9dacb7758.json",
+        "sha256": "7ca9856ffddf3709e4fff418512529ee1049c6642d30040124007ad9dacb7758",
+        "turn": 2,
+        "thread_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+        "feedback_mode": "guided",
+        "shared_evidence": {
+          "schema": "feyer-search-frontier-v1",
+          "source_path": "/Users/t.betz/Documents/Feyer challenge/.lab/frontier/current.json",
+          "snapshot_ref": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-guided-v2/shared-evidence/140ac7b9ba00c900f1666da812adbc17164a8f47026c41ba3e24d1d1f91458d6.json",
+          "sha256": "140ac7b9ba00c900f1666da812adbc17164a8f47026c41ba3e24d1d1f91458d6",
+          "bytes": 92254,
+          "generated_at": 1795296433.429441,
+          "read_at": 1795296441.5846632,
+          "age_seconds": 8.155222177505493,
+          "freshness_policy": {
+            "max_age_seconds": 300,
+            "future_skew_seconds": 30
+          },
+          "content_digest": "32ebbe318c15d973e61ee4d6176477419825cfe34a1a2a5dcf7d64dfa639f9a7",
+          "source_provenance": {
+            "team_digest": "788879fb135abfe2c1d5c2737a25df0ac568ecf87f9fef92903068a3f8fe0695",
+            "policy_digest": "54fffa2b291a30d2d20eb7b881da57f3f127ed0d3559330d7d5685838532e01c",
+            "policy_source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d3e5e4de995914819631acdf9980c00fd95a47b3/experiments/deployments/amd-two-lanes-v1.json",
+            "evidence_digest": "b8182202b381f85d58840e114c35195f25acfea57c00f704102477b366bc713a",
+            "collector": "trusted-local-artifacts-v1",
+            "instance": "amd-tim"
+          }
+        },
+        "consumed_feedback_digest": "a6c486da398b0acae04ccd266ca052cf45559af9b8db40b78eeb67ffa8339834",
+        "consumed_candidate_sha": "5b2169697d359f6a1c1f7fd6b5f66e08e9906969"
+      },
+      "evaluations": [
+        {
+          "job_id": "d6028ac4a12047efafe6ae4459546d12",
+          "candidate_sha": "10a311f6dbe4e8b71fa98654d015493ab8b3ef27",
+          "profile": "screen"
+        },
+        {
+          "job_id": "3a030c65057c4134ae07d46f012d674a",
+          "candidate_sha": "10a311f6dbe4e8b71fa98654d015493ab8b3ef27",
           "profile": "full"
         }
       ],

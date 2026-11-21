@@ -23,47 +23,49 @@ User authorized expanded CPU capacity. Conservatively exclude new timing imports
 ```mermaid
 graph TD
   c0["05508471e6b6"]
-  c1["211f65a5f18d"]
-  c2["28566a64a9ef"]
-  c3["39b23e3c6e84"]
-  c4["3b805077bb5c"]
-  c5["3e94580ec446"]
-  c6["423bcc4ad6e9"]
-  c7["4c12600ce07d"]
-  c8["5b2169697d35"]
-  c9["633689f9bf05"]
-  c10["7d1ccc59cef3"]
-  c11["7d6f99624be6"]
-  c12["96474bdd4d83"]
-  c13["aa2b1ab44180"]
-  c14["bb9a183fd64f"]
-  c15["d09dc1d08fb0"]
-  c16["d947905c9b73"]
-  c17["e0a1dc69f495"]
-  c18["e525ee5ee4ef"]
-  c19["f3139c71ae2a"]
-  c1 -->|explore| c10
-  c2 -->|combine| c17
-  c4 -->|explore| c9
-  c5 -->|explore| c6
-  c6 -->|combine| c17
-  c7 -->|combine| c2
-  c13 -->|explore| c8
-  c13 -->|explore| c11
-  c15 -->|explore| c0
-  c15 -->|explore| c3
-  c15 -->|explore| c5
-  c15 -->|explore| c7
-  c15 -->|explore| c12
-  c15 -->|explore| c14
-  c15 -->|explore| c18
-  c15 -->|explore| c19
-  c19 -->|combine| c2
+  c1["10a311f6dbe4"]
+  c2["211f65a5f18d"]
+  c3["28566a64a9ef"]
+  c4["39b23e3c6e84"]
+  c5["3b805077bb5c"]
+  c6["3e94580ec446"]
+  c7["423bcc4ad6e9"]
+  c8["4c12600ce07d"]
+  c9["5b2169697d35"]
+  c10["633689f9bf05"]
+  c11["7d1ccc59cef3"]
+  c12["7d6f99624be6"]
+  c13["96474bdd4d83"]
+  c14["aa2b1ab44180"]
+  c15["bb9a183fd64f"]
+  c16["d09dc1d08fb0"]
+  c17["d947905c9b73"]
+  c18["e0a1dc69f495"]
+  c19["e525ee5ee4ef"]
+  c20["f3139c71ae2a"]
+  c2 -->|explore| c11
+  c3 -->|combine| c18
+  c5 -->|explore| c10
+  c6 -->|explore| c7
+  c7 -->|combine| c18
+  c8 -->|combine| c3
+  c9 -->|explore| c1
+  c14 -->|explore| c9
+  c14 -->|explore| c12
+  c16 -->|explore| c0
+  c16 -->|explore| c4
+  c16 -->|explore| c6
+  c16 -->|explore| c8
+  c16 -->|explore| c13
+  c16 -->|explore| c15
+  c16 -->|explore| c19
+  c16 -->|explore| c20
+  c20 -->|combine| c3
 ```
 
 Every edge records intended inputs, not proof of speedup.
 
-Recorded jobs: 13. Decisions/events: 40.
+Recorded jobs: 13. Decisions/events: 41.
 
 ## External research records
 
@@ -94,5 +96,6 @@ Recorded jobs: 13. Decisions/events: 40.
 | claude-guided-v2 | explore | 633689f9bf05 | unknown | completed |
 | claude-guided-v2 | diagnose | unknown | unknown | current |
 | claude-guided-v2 | explore | 5b2169697d35 | unknown | completed |
+| claude-guided-v2 | explore | 10a311f6dbe4 | unknown | completed |
 
 These records are evidence, not competing task claims or winner declarations.
