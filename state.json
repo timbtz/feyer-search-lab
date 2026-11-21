@@ -44693,6 +44693,48 @@
         "assignment_id": "codex-profile-guided-v1-compiler-gap",
         "supersedes": "codex-profile-guided-v1-compiler-gap-cbaf17c27953"
       }
+    },
+    {
+      "seq": 32,
+      "at": 1795294821.773783,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "layout-numerical-v2-coverage-92c46f6db0cd",
+        "kind": "refine",
+        "executor": {
+          "kind": "campaign",
+          "id": "layout-numerical-v2"
+        },
+        "status": "menu_exhausted",
+        "candidate_sha": null,
+        "parents": [
+          "e0a1dc69f4951c100fefbc9fc08a23c3c12058dc"
+        ],
+        "target_phases": [],
+        "hypothesis": "Evaluate the frozen legal implementation menu without changing the physical workload.",
+        "change_summary": "Recorded complete finite-menu coverage; no local-optimum or final timing-gain claim.",
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/6e03f5195222a9145a5d0da412f172a3ad382286/experiments/control/layout-numerical-v2/confirmation-results/plan.json",
+        "source_digest": "cc055fe2ed9cbc5ffd7e3c7f84afcb05625635c4aa44fff7170c38c05567149b",
+        "source_digest_kind": "canonical_json_sha256",
+        "stopping_reason": "Controller returned combine after 4/4 legal configurations were covered.",
+        "menu": {
+          "manifest_digest": "131c6e7c3117b1bbf860e967014c77c548fdfa4108a6457a72672f3e4051e835",
+          "legal_count": 4,
+          "covered_count": 4
+        },
+        "evaluations": [],
+        "executor_stop_status": "combine",
+        "observed_at": 1795293105.3522592,
+        "comparison_context": {
+          "mode": "concurrent",
+          "epoch": 14,
+          "receipt": "https://github.com/timbtz/feyer-search-lab/issues/6"
+        },
+        "cohort_digest": null,
+        "target_evidence": []
+      }
     }
   ],
   "comparison_regime": {
@@ -45385,6 +45427,42 @@
       "target_evidence": [],
       "assignment_id": "codex-profile-guided-v1-compiler-gap",
       "supersedes": "codex-profile-guided-v1-compiler-gap-cbaf17c27953"
+    },
+    "layout-numerical-v2-coverage-92c46f6db0cd": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "layout-numerical-v2-coverage-92c46f6db0cd",
+      "kind": "refine",
+      "executor": {
+        "kind": "campaign",
+        "id": "layout-numerical-v2"
+      },
+      "status": "menu_exhausted",
+      "candidate_sha": null,
+      "parents": [
+        "e0a1dc69f4951c100fefbc9fc08a23c3c12058dc"
+      ],
+      "target_phases": [],
+      "hypothesis": "Evaluate the frozen legal implementation menu without changing the physical workload.",
+      "change_summary": "Recorded complete finite-menu coverage; no local-optimum or final timing-gain claim.",
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/6e03f5195222a9145a5d0da412f172a3ad382286/experiments/control/layout-numerical-v2/confirmation-results/plan.json",
+      "source_digest": "cc055fe2ed9cbc5ffd7e3c7f84afcb05625635c4aa44fff7170c38c05567149b",
+      "source_digest_kind": "canonical_json_sha256",
+      "stopping_reason": "Controller returned combine after 4/4 legal configurations were covered.",
+      "menu": {
+        "manifest_digest": "131c6e7c3117b1bbf860e967014c77c548fdfa4108a6457a72672f3e4051e835",
+        "legal_count": 4,
+        "covered_count": 4
+      },
+      "evaluations": [],
+      "executor_stop_status": "combine",
+      "observed_at": 1795293105.3522592,
+      "comparison_context": {
+        "mode": "concurrent",
+        "epoch": 14,
+        "receipt": "https://github.com/timbtz/feyer-search-lab/issues/6"
+      },
+      "cohort_digest": null,
+      "target_evidence": []
     }
   }
 }
