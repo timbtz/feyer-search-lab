@@ -44831,6 +44831,87 @@
         "no_inherited_research_edges": true,
         "target_evidence": []
       }
+    },
+    {
+      "seq": 35,
+      "at": 1795296668.237941,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "claude-guided-v2-launch-b6ec0fde19f5",
+        "kind": "combine",
+        "status": "current",
+        "executor": {
+          "kind": "supervisor",
+          "id": "claude-guided-v2"
+        },
+        "candidate_sha": null,
+        "parents": [
+          "aa2b1ab44180af8dd1cd3a9796adb911b1a3986a",
+          "7d1ccc59cef3d7436870bb0e6c941dbde4c30770"
+        ],
+        "target_phases": [
+          "setup",
+          "compilation"
+        ],
+        "hypothesis": "Evaluate the declared combination inputs using shared full-result evidence.",
+        "change_summary": "Verified fresh guided session launch; declared inputs are an assignment, not a measured combination result.",
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/13630b1a2b56623e4f64d57daadfffca409ffe20/experiments/launches/claude-guided-v2.json",
+        "source_digest": "b6ec0fde19f50305384995334cb1268dcbeb8d3890611063016d9b50a11baa8a",
+        "source_digest_kind": "canonical-json-sha256",
+        "session_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+        "input_receipt": {
+          "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-guided-v2/turn-01-prompt-d8bf6b06a01a25591b2b323317ff87351fe6b5d618cf2274743c943714cc0dbb.json",
+          "sha256": "d8bf6b06a01a25591b2b323317ff87351fe6b5d618cf2274743c943714cc0dbb",
+          "turn": 1,
+          "thread_id": null,
+          "feedback_mode": "guided",
+          "shared_evidence": {
+            "schema": "feyer-search-frontier-v1",
+            "source_path": "/Users/t.betz/Documents/Feyer challenge/.lab/frontier/current.json",
+            "snapshot_ref": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-guided-v2/shared-evidence/734a412e9472a0dfb9cae3baa207d98de3ced47709370c0c0a6abff3da769fe2.json",
+            "sha256": "734a412e9472a0dfb9cae3baa207d98de3ced47709370c0c0a6abff3da769fe2",
+            "bytes": 92255,
+            "generated_at": 1795296099.3428102,
+            "read_at": 1795296165.384107,
+            "content_digest": "d7104025dd21259343e293c59b77496ae04d9c4ccdd432156b728c631fcb9672",
+            "source_provenance": {
+              "team_digest": "788879fb135abfe2c1d5c2737a25df0ac568ecf87f9fef92903068a3f8fe0695",
+              "policy_digest": "54fffa2b291a30d2d20eb7b881da57f3f127ed0d3559330d7d5685838532e01c",
+              "policy_source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d3e5e4de995914819631acdf9980c00fd95a47b3/experiments/deployments/amd-two-lanes-v1.json",
+              "evidence_digest": "1ce373aeb6eef374439c48c19c9e90eeeeb04e746bd3fd9e6bb3872777e6d018",
+              "collector": "trusted-local-artifacts-v1",
+              "instance": "amd-tim"
+            }
+          }
+        },
+        "observed_at": 1795296309.349189,
+        "evaluations": [],
+        "target_evidence": [
+          {
+            "job_id": "35abe6287c9b4294a761a4aef65f0e54",
+            "candidate_sha": "aa2b1ab44180af8dd1cd3a9796adb911b1a3986a",
+            "profile": "full"
+          }
+        ],
+        "runtime_commit": "ca93123b873dd30a12c67b592936260c7bf05892",
+        "initial_sha": "aa2b1ab44180af8dd1cd3a9796adb911b1a3986a",
+        "started_at": 1795296165.2068522,
+        "fixed_deadline_unix": 1795299765.2068522,
+        "feedback_mode": "guided",
+        "actual_model": "claude-opus-5-5",
+        "actual_reasoning_effort": null,
+        "parent_candidates": [
+          "aa2b1ab44180af8dd1cd3a9796adb911b1a3986a"
+        ],
+        "planned_peer_candidates": [
+          "7d1ccc59cef3d7436870bb0e6c941dbde4c30770"
+        ],
+        "branch": "explore/claude-guided-v2",
+        "freshness_upgrade_pending": true,
+        "assignment_id": "claude-guided-v2"
+      }
     }
   ],
   "comparison_regime": {
@@ -45643,6 +45724,81 @@
       "own_feedback_only": true,
       "no_inherited_research_edges": true,
       "target_evidence": []
+    },
+    "claude-guided-v2-launch-b6ec0fde19f5": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "claude-guided-v2-launch-b6ec0fde19f5",
+      "kind": "combine",
+      "status": "current",
+      "executor": {
+        "kind": "supervisor",
+        "id": "claude-guided-v2"
+      },
+      "candidate_sha": null,
+      "parents": [
+        "aa2b1ab44180af8dd1cd3a9796adb911b1a3986a",
+        "7d1ccc59cef3d7436870bb0e6c941dbde4c30770"
+      ],
+      "target_phases": [
+        "setup",
+        "compilation"
+      ],
+      "hypothesis": "Evaluate the declared combination inputs using shared full-result evidence.",
+      "change_summary": "Verified fresh guided session launch; declared inputs are an assignment, not a measured combination result.",
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/13630b1a2b56623e4f64d57daadfffca409ffe20/experiments/launches/claude-guided-v2.json",
+      "source_digest": "b6ec0fde19f50305384995334cb1268dcbeb8d3890611063016d9b50a11baa8a",
+      "source_digest_kind": "canonical-json-sha256",
+      "session_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+      "input_receipt": {
+        "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-guided-v2/turn-01-prompt-d8bf6b06a01a25591b2b323317ff87351fe6b5d618cf2274743c943714cc0dbb.json",
+        "sha256": "d8bf6b06a01a25591b2b323317ff87351fe6b5d618cf2274743c943714cc0dbb",
+        "turn": 1,
+        "thread_id": null,
+        "feedback_mode": "guided",
+        "shared_evidence": {
+          "schema": "feyer-search-frontier-v1",
+          "source_path": "/Users/t.betz/Documents/Feyer challenge/.lab/frontier/current.json",
+          "snapshot_ref": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-guided-v2/shared-evidence/734a412e9472a0dfb9cae3baa207d98de3ced47709370c0c0a6abff3da769fe2.json",
+          "sha256": "734a412e9472a0dfb9cae3baa207d98de3ced47709370c0c0a6abff3da769fe2",
+          "bytes": 92255,
+          "generated_at": 1795296099.3428102,
+          "read_at": 1795296165.384107,
+          "content_digest": "d7104025dd21259343e293c59b77496ae04d9c4ccdd432156b728c631fcb9672",
+          "source_provenance": {
+            "team_digest": "788879fb135abfe2c1d5c2737a25df0ac568ecf87f9fef92903068a3f8fe0695",
+            "policy_digest": "54fffa2b291a30d2d20eb7b881da57f3f127ed0d3559330d7d5685838532e01c",
+            "policy_source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d3e5e4de995914819631acdf9980c00fd95a47b3/experiments/deployments/amd-two-lanes-v1.json",
+            "evidence_digest": "1ce373aeb6eef374439c48c19c9e90eeeeb04e746bd3fd9e6bb3872777e6d018",
+            "collector": "trusted-local-artifacts-v1",
+            "instance": "amd-tim"
+          }
+        }
+      },
+      "observed_at": 1795296309.349189,
+      "evaluations": [],
+      "target_evidence": [
+        {
+          "job_id": "35abe6287c9b4294a761a4aef65f0e54",
+          "candidate_sha": "aa2b1ab44180af8dd1cd3a9796adb911b1a3986a",
+          "profile": "full"
+        }
+      ],
+      "runtime_commit": "ca93123b873dd30a12c67b592936260c7bf05892",
+      "initial_sha": "aa2b1ab44180af8dd1cd3a9796adb911b1a3986a",
+      "started_at": 1795296165.2068522,
+      "fixed_deadline_unix": 1795299765.2068522,
+      "feedback_mode": "guided",
+      "actual_model": "claude-opus-5-5",
+      "actual_reasoning_effort": null,
+      "parent_candidates": [
+        "aa2b1ab44180af8dd1cd3a9796adb911b1a3986a"
+      ],
+      "planned_peer_candidates": [
+        "7d1ccc59cef3d7436870bb0e6c941dbde4c30770"
+      ],
+      "branch": "explore/claude-guided-v2",
+      "freshness_upgrade_pending": true,
+      "assignment_id": "claude-guided-v2"
     }
   }
 }
