@@ -238,9 +238,53 @@ between A and A^H is introduced.
   forward reduction. Risk: the cotangent of A now merges contributions from the loop (A^H path) and
   the batched solves in a different association order, which could perturb the gradient at the
   rounding level and fail strict; outcome decides whether only assembly may enter the loop.
-- SHA / runs: pending. If strict fails or timing regresses, revert to candidate 6 state.
+- SHA `b1ef5d3a6a62fa5a35fed32902be895d6ec29fa1`.
+- Screen `1630e19e3da0418e8795c42db0c4e3e6` (request `093363ad221f469a83b5749b491d32c2`): first-run
+  24.253413 s; forward exec 9.653; gradient exec 2.210; RSS 10807040 KiB.
+- Full `81d0fe5bd2194f129354c475ac44d15e` (request `a7437b21e7a947f8b5e5e636dd651750`): official
+  PASS, strict PASS. First-run 24.414222 s (candidate 6: 23.558115, +0.856 s); build 0.844; forward
+  lower 0.832 / compile 7.844; forward exec 9.771; gradient lower 0.180 / compile 1.986; gradient
+  exec 2.236; compile/lower 11.270; warm median 12.544 s; RSS 10806340 KiB; wall 100.10 s.
+- Comparison: outputs exact; gradient max abs 5.09e-10 (rel L2 7.6e-15, max normalized 6.0e-7) —
+  passes but is ~1000× further from baseline than candidate 6 (4.5e-13), consistent with the
+  predicted change in cotangent association order for A.
+- **Hypothesis rejected**: no forward gain (+0.47 s), slower overall. Decision: revert to
+  candidate 6 code.
 
-## Revised operator specification (proposal for coordinator review)
+### Candidate 8 — restore candidate 6 code (repeat measurement)
+- Change vs candidate 7: removes the in-loop A^H; simulator code is identical to candidate 6
+  (`1d5a796f`) except one comment line above `FREQUENCY_CHUNK_SIZE`. Constants: k=1, scope
+  "assemble".
+- Purpose: leave the branch head on the best validated configuration and obtain a second full
+  first-run sample for candidate 6's code (repeat evidence, not a new idea).
+- Expectation: ~23.5 s first run, strict pass with gradient max abs 4.5e-13 (identical to
+  candidate 6). SHA / runs: pending.
+
+## Final operator specification (proposal for coordinator review; supersedes the revision below)
+
+- Name `frequency_loop`; materialized as two module constants in `differometor/simulate.py`:
+  `FREQUENCY_CHUNK_SIZE` and `FREQUENCY_LOOP_SCOPE` (read at trace time; no traced inputs, benchmark
+  arrays and three JIT stages unchanged).
+- Strict-admissible values (measured, one full run each unless noted):
+  - `none` = (None, —): full vmap; 24.815 s (cand. 5), strict pass, gradient = parent.
+  - `assemble_k1` = (1, "assemble"): 23.558 s (cand. 6), strict pass, gradient = parent;
+    repeat pending (cand. 8).
+- Official-only values (strict FAIL, gradient index 161 normalized 1.82, outputs exact):
+  (1, "signal_noise") 22.08 s; (2, "signal_noise") 23.68 s; (1, "solve") 23.55 s.
+- Rejected: in-loop A^H extension of `assemble_k1` (24.41 s, strict pass but slower).
+- Recommended frozen-space entry: `frequency_loop ∈ {none, assemble_k1}`, default `none`.
+  Untested and not proposed: assemble with k ∈ {2,4,8,16} (k=2 cost +1.6 s compile in another
+  scope).
+- Conditions: loop only when carrier batch == 1 and signal rows > k; remainder padded by
+  repeating the last row and discarded. Compatible with component grouping and
+  checkpoint/prevent_cse configurations (component code unchanged inside the loop body), but each
+  combination needs its own full official + strict run; not combined with shared-LU/Schur.
+- Materialization/validation for a future search-space version: set the two constants; run the
+  unchanged full benchmark with saved arrays; require official + strict pass and inspect gradient
+  max abs (expect 4.5e-13 vs baseline for `assemble_k1`); record forward/gradient compile and
+  execute separately and peak RSS; at least 3 repeats before superiority claims.
+
+## Earlier revised operator specification (historical)
 
 - `frequency_chunk_size` ∈ {None, 1, 2, 4, 8, 16}, default None. `frequency_loop_scope` ∈
   {"signal_noise", "solve"}, active only when chunk size is not None. Symbols:
@@ -260,7 +304,13 @@ between A and A^H is introduced.
 
 ## Handoff
 
-- Best validated (strict) revision remains parent `6dc993a06cf2de5ae2ae3afa83304a46b2ead4d0`
+- **Best validated revision of this session: candidate 6 `1d5a796faa16629e6300af4acb15bdb879d0721c`**
+  (k=1, scope "assemble"): 23.558 s first run vs parent 24.657 s, official + strict pass, gradient
+  identical to parent. Single full run; candidate 8 provides a repeat of the same code. Not merged;
+  no promotion without coordinator review and repeats.
+- Validated fallback with operator at default: candidate 5 `7e00e16b6ad9aca51d1fcd6e9b746d5b02350f08`
+  (24.815 s). Parent `6dc993a…` remains the external reference.
+- (Historical, superseded:) Best validated (strict) revision remains parent `6dc993a06cf2de5ae2ae3afa83304a46b2ead4d0`
   (24.657 s) unless candidate 5 reproduces it (then candidate 5 is an equivalent validated head with
   the operator wired in at default).
 - Fastest official-only result: candidate 1 `aa4d230f4af70946be5c0f1f784eac2888c6bbe6`, 22.076 s

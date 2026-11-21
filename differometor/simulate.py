@@ -469,17 +469,12 @@ def simulate(
 
             def block_assemble(blocks):
                 block_parameters, block_entries = blocks
-                block_signal_matrix, block_noise_matrix = assemble(block_parameters, block_entries)
-                # The explicit conjugate transpose is exact and frequency-local.
-                block_adjoint = jnp.transpose(jnp.conjugate(block_signal_matrix[:, :, :-1]), (0, 2, 1))
-                return block_signal_matrix, block_noise_matrix, block_adjoint
+                return assemble(block_parameters, block_entries)
 
-            assembled_signal, assembled_noise, assembled_adjoint = _map_row_chunks(
+            assembled_signal, assembled_noise = _map_row_chunks(
                 block_assemble, (parameters, row_carrier_entries), chunk_size
             )
-            signal, noise = _solve_signal_and_noise(
-                assembled_signal, assembled_noise, base_carrier_selections, assembled_adjoint
-            )
+            signal, noise = _solve_signal_and_noise(assembled_signal, assembled_noise, base_carrier_selections)
         else:
             raise ValueError(f"Unknown FREQUENCY_LOOP_SCOPE {FREQUENCY_LOOP_SCOPE!r}")
 
@@ -612,9 +607,7 @@ def _assemble_signal_and_noise(
     return signal_matrix, noise_matrix
 
 
-def _solve_signal_and_noise(
-    signal_matrix, noise_matrix, base_carrier_selections, transposed_conjugated_signal_matrix=None
-):
+def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections):
     """Solve the signal and quantum-noise systems for B assembled signal rows.
 
     `signal_matrix` (B, SN, SN + 1), `noise_matrix` (B, NN, NN) and detector
@@ -629,8 +622,7 @@ def _solve_signal_and_noise(
     carrier_selections = base_carrier_selections
 
     # Back-propagate detector weights by solving the transposed conjugated signal system.
-    if transposed_conjugated_signal_matrix is None:
-        transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(signal_matrix[:, :, :-1]), (0, 2, 1))
+    transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(signal_matrix[:, :, :-1]), (0, 2, 1))
     carrier_selections = jnp.broadcast_to(
         carrier_selections,
         (carrier_selections.shape[0], transposed_conjugated_signal_matrix.shape[0], carrier_selections.shape[2]),
