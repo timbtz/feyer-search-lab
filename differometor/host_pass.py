@@ -189,22 +189,115 @@ def _split(system, values):
     return coefficients, rhs
 
 
+_GSTRF = None
+# The options `scipy.sparse.linalg.splu(A, permc_spec="COLAMD")` passes to SuperLU.
+_SUPERLU_OPTIONS = dict(DiagPivotThresh=None, ColPerm="COLAMD", PanelSize=None, Relax=None)
+
+
+def _construct_csc(*args, **kwargs):
+    # Only used if a caller inspects factor.L / factor.U.
+    from scipy.sparse import csc_array
+    return csc_array(*args, **kwargs)
+
+
+def _superlu_gstrf():
+    """SciPy's SuperLU factorization entry point, without importing scipy.sparse.
+
+    `splu` lives in `scipy.sparse.linalg`, whose package import (iterative
+    solvers, array-API compatibility layer, `scipy.sparse`) costs ~0.1-0.16 s of
+    the first evaluation. The factorization itself is the `_superlu` extension,
+    which is loaded directly here and called with the same arguments as `splu`.
+    Any failure falls back to the public `splu` path.
+    """
+    global _GSTRF
+    if _GSTRF is None:
+        import sys
+        name = "scipy.sparse.linalg._dsolve._superlu"
+        try:
+            module = sys.modules.get(name)
+            if module is None:
+                import importlib.machinery
+                import importlib.util
+                import os
+                scipy_spec = importlib.util.find_spec("scipy")
+                directory = os.path.join(os.path.dirname(scipy_spec.origin), "sparse", "linalg", "_dsolve")
+                suffixes = tuple(importlib.machinery.EXTENSION_SUFFIXES)
+                filename = next(f for f in sorted(os.listdir(directory)) if f.startswith("_superlu.") and f.endswith(suffixes))
+                path = os.path.join(directory, filename)
+                loader = importlib.machinery.ExtensionFileLoader(name, path)
+                module = importlib.util.module_from_spec(importlib.util.spec_from_file_location(name, path, loader=loader))
+                loader.exec_module(module)
+            _GSTRF = module.gstrf
+        except Exception:
+            _GSTRF = False
+    return _GSTRF
+
+
 def _factor(pattern, values):
+    data = np.ascontiguousarray(values, dtype=np.complex128)
+    gstrf = _superlu_gstrf()
+    if gstrf:
+        return gstrf(pattern.size, data.size, data, pattern.indices.astype(np.intc), pattern.indptr.astype(np.intc),
+                     csc_construct_func=_construct_csc, ilu=False, options=dict(_SUPERLU_OPTIONS))
     splu, csc_matrix = _scipy()
-    matrix = csc_matrix((values, pattern.indices, pattern.indptr), shape=(pattern.size, pattern.size))
-    return matrix, splu(matrix, permc_spec="COLAMD")
+    return splu(csc_matrix((data, pattern.indices, pattern.indptr), shape=(pattern.size, pattern.size)),
+                permc_spec="COLAMD")
 
 
-def _solve(matrix, factor, rhs, trans):
-    operator = matrix if trans == "N" else matrix.T if trans == "T" else matrix.conj().T
+class _Products:
+    """NumPy sparse products for one static pattern (no scipy.sparse)."""
+
+    def __init__(self, pattern):
+        self.size = pattern.size
+        self.rows, self.cols = pattern.rows, pattern.cols
+        self.row_order = np.argsort(pattern.rows, kind="stable")
+        self.row_ids, self.row_starts = np.unique(pattern.rows[self.row_order], return_index=True)
+        self.col_ids, self.col_starts = np.unique(pattern.cols, return_index=True)  # CSC order
+
+    def apply(self, values, x, trans="N"):
+        """op(A) x for x (N,) or (N, K); op in {A, A^T, A^H}."""
+        x = np.asarray(x)
+        vector = x.ndim == 1
+        x = x[:, None] if vector else x
+        result = np.zeros((self.size, x.shape[1]), dtype=np.complex128)
+        if trans == "N":
+            contributions = (values[:, None] * x[self.cols])[self.row_order]
+            result[self.row_ids] = np.add.reduceat(contributions, self.row_starts, axis=0)
+        else:
+            weights = values if trans == "T" else np.conj(values)
+            result[self.col_ids] = np.add.reduceat(weights[:, None] * x[self.rows], self.col_starts, axis=0)
+        return result[:, 0] if vector else result
+
+
+_PRODUCTS = {}
+
+
+def _products(pattern):
+    if pattern not in _PRODUCTS:
+        _PRODUCTS[pattern] = _Products(pattern)
+    return _PRODUCTS[pattern]
+
+
+def _solve(products, values, factor, rhs, trans):
+    """Solve op(A) x = rhs with SuperLU and the iterative refinement of `differometor.sparse`."""
     rhs = np.ascontiguousarray(rhs, dtype=np.complex128)
     solution = factor.solve(rhs, trans=trans)
     for _ in range(REFINEMENT_STEPS):
-        correction = factor.solve(np.ascontiguousarray(rhs - operator @ solution), trans=trans)
+        correction = factor.solve(np.ascontiguousarray(rhs - products.apply(values, solution, trans)), trans=trans)
         solution = solution + correction
         if np.max(np.abs(correction)) <= REFINEMENT_TOLERANCE * np.max(np.abs(solution)):
             break
     return solution
+
+
+# Signal-system factorizations of the latest forward evaluation, consumed by its
+# backward evaluation (same coefficients, verified by digest) and then dropped.
+# Each forward factors afresh, so repeated evaluations never reuse a factorization.
+_FACTORS = {}
+
+
+def _digest_values(pattern, values):
+    return pattern, hashlib.blake2b(np.ascontiguousarray(values).tobytes(), digest_size=20).digest()
 
 
 def _selections(plan, carrier, selection_vectors):
@@ -224,9 +317,10 @@ def _assemble(plan, parameters, carrier_values, signal_values, carrier_base, sig
     carrier_vals = plan.carrier.values(carrier_rows, carrier_base)
     carrier_coefficients, carrier_rhs = _split(structure.carrier, carrier_vals)
     carrier = np.empty((carrier_rows.shape[0], structure.carrier.size), dtype=np.complex128)
+    carrier_products = _products(structure.carrier.pattern)
     for row in range(carrier_rows.shape[0]):
-        matrix, factor = _factor(structure.carrier.pattern, carrier_coefficients[row])
-        carrier[row] = _solve(matrix, factor, carrier_rhs[row], "N")
+        factor = _factor(structure.carrier.pattern, carrier_coefficients[row])
+        carrier[row] = _solve(carrier_products, carrier_coefficients[row], factor, carrier_rhs[row], "N")
     signal_rows = _expand(carrier_rows, plan.signal_changing, signal_values)
     raw_signal = plan.signal.values(signal_rows, signal_base)
     placing = structure.signal_placing_positions
@@ -241,7 +335,6 @@ def _assemble(plan, parameters, carrier_values, signal_values, carrier_base, sig
 
 def host_forward(plan, parameters, carrier_values, signal_values, carrier_base, signal_base, noise_base,
                  selection_vectors):
-    _, csc_matrix = _scipy()
     state = _assemble(plan, np.asarray(parameters), np.asarray(carrier_values), np.asarray(signal_values),
                       np.asarray(carrier_base), np.asarray(signal_base), np.asarray(noise_base))
     structure = plan.structure
@@ -250,18 +343,20 @@ def host_forward(plan, parameters, carrier_values, signal_values, carrier_base, 
     _, selected = _selections(plan, state["carrier"], np.asarray(selection_vectors))
     count, detectors = coefficients.shape[0], selected.shape[0]
     selections = np.moveaxis(np.broadcast_to(selected, (detectors, count, system.size)), 0, 1)
-    noise_pattern = structure.noise.pattern
+    products, noise_products = _products(system.pattern), _products(structure.noise.pattern)
     signal = np.empty((count, system.size), dtype=np.complex128)
     covariances = np.empty((count, detectors, system.size), dtype=np.complex128)
     weights = np.empty((count, detectors, system.size), dtype=np.complex128)
+    factors = []
     for row in range(count):
-        matrix, factor = _factor(system.pattern, coefficients[row])
-        weight = _solve(matrix, factor, selections[row].T, "H")                    # A^H w = s
-        noise_matrix = csc_matrix((state["noise_values"][0 if plan.noise_row_reuse else row],
-                                   noise_pattern.indices, noise_pattern.indptr),
-                                  shape=(noise_pattern.size, noise_pattern.size))
-        solution = _solve(matrix, factor, np.concatenate([rhs[row][:, None], noise_matrix @ weight], axis=1), "N")
+        factor = _factor(system.pattern, coefficients[row])
+        factors.append(factor)
+        weight = _solve(products, coefficients[row], factor, selections[row].T, "H")      # A^H w = s
+        sources = noise_products.apply(state["noise_values"][0 if plan.noise_row_reuse else row], weight)
+        solution = _solve(products, coefficients[row], factor, np.concatenate([rhs[row][:, None], sources], axis=1), "N")
         signal[row], covariances[row], weights[row] = solution[:, 0], solution[:, 1:].T, weight.T
+    _FACTORS.clear()
+    _FACTORS[_digest_values(system.pattern, coefficients)] = factors
     noise = _noise_amplitude(np.sum(np.real(covariances * np.conj(selections)), axis=2)).T     # (D, Bs)
     return state["carrier"], signal, noise, covariances, weights
 
@@ -283,7 +378,6 @@ def _cast_bar(value, dtype):
 def host_backward(plan, parameters, carrier_values, signal_values, carrier_base, signal_base, noise_base,
                   selection_vectors, carrier, signal, noise, covariances, weights,
                   carrier_bar, signal_bar, noise_bar):
-    _, csc_matrix = _scipy()
     parameters, carrier_values = np.asarray(parameters), np.asarray(carrier_values)
     signal_values, selection_vectors = np.asarray(signal_values), np.asarray(selection_vectors)
     carrier, signal, noise = np.asarray(carrier), np.asarray(signal), np.asarray(noise)
@@ -304,21 +398,22 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
     signal_values_bar = np.zeros(state["signal_values"].shape, dtype=np.complex128)
     noise_values_bar = np.zeros(state["noise_values"].shape, dtype=np.complex128)
     pattern, noise_pattern = system.pattern, noise_system.pattern
+    products, noise_products = _products(pattern), _products(noise_pattern)
+    factors = _FACTORS.pop(_digest_values(pattern, coefficients), None)
+    _FACTORS.clear()
     signal_bar = np.asarray(signal_bar)
     for row in range(count):
-        matrix, factor = _factor(pattern, coefficients[row])
+        factor = factors[row] if factors is not None else _factor(pattern, coefficients[row])
         solution = np.concatenate([signal[row][:, None], covariances[row].T], axis=1)           # (N, 1 + D)
         solution_bar = np.concatenate([signal_bar[row][:, None], covariance_bar[row].T], axis=1)
-        rhs_bar = _solve(matrix, factor, solution_bar, "T")                                    # A^T r = x_bar
+        rhs_bar = _solve(products, coefficients[row], factor, solution_bar, "T")               # A^T r = x_bar
         coefficient_bar = -np.sum(rhs_bar[pattern.rows] * solution[pattern.cols], axis=1)
         sources_bar, weight = rhs_bar[:, 1:], weights[row].T                                    # (N, D)
         noise_row = 0 if plan.noise_row_reuse else row
         noise_values_bar[noise_row] += np.sum(sources_bar[noise_pattern.rows] * weight[noise_pattern.cols], axis=1)
-        noise_matrix = csc_matrix((state["noise_values"][noise_row], noise_pattern.indices, noise_pattern.indptr),
-                                  shape=(noise_pattern.size, noise_pattern.size))
-        weight_bar = noise_matrix.T @ sources_bar
+        weight_bar = noise_products.apply(state["noise_values"][noise_row], sources_bar, "T")
         # w = conj(A)^-T s: s_bar = conj(A)^-1 w_bar = g; conj(A)_bar[r, c] = -g[c] w[r].
-        adjoint = np.conj(_solve(matrix, factor, np.conj(weight_bar), "N"))
+        adjoint = np.conj(_solve(products, coefficients[row], factor, np.conj(weight_bar), "N"))
         selection_bar[row] += adjoint.T
         coefficient_bar += np.conj(-np.sum(adjoint[pattern.cols] * weight[pattern.rows], axis=1))
         signal_values_bar[row, : system.nnz] = coefficient_bar
@@ -351,9 +446,10 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
     # Carrier solve.
     carrier_values_bar = np.zeros(state["carrier_values"].shape, dtype=np.complex128)
     carrier_pattern = carrier_system.pattern
+    carrier_products = _products(carrier_pattern)
     for row in range(carrier.shape[0]):
-        matrix, factor = _factor(carrier_pattern, state["carrier_coefficients"][row])
-        rhs_bar = _solve(matrix, factor, carrier_total_bar[row], "T")
+        factor = _factor(carrier_pattern, state["carrier_coefficients"][row])
+        rhs_bar = _solve(carrier_products, state["carrier_coefficients"][row], factor, carrier_total_bar[row], "T")
         carrier_values_bar[row, : carrier_system.nnz] = -rhs_bar[carrier_pattern.rows] * carrier[row][carrier_pattern.cols]
         if carrier_system.augmented:
             carrier_values_bar[row, carrier_system.nnz :] = rhs_bar[carrier_system.rhs_rows]
