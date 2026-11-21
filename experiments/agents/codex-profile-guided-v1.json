@@ -1,0 +1,27 @@
+{
+  "name": "codex-profile-guided-v1",
+  "provider": "codex",
+  "model": "gpt-6-astra",
+  "reasoning_effort": "high",
+  "branch": "explore/codex-profile-guided-v1",
+  "worktree": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/codex-profile-guided-v1",
+  "initial_sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+  "parent_candidates": [
+    "96474bdd4d83bb02c163640f63fae1c4bd7a21d4"
+  ],
+  "profile_seed_job": "ab12c14c29354bad9aa6dc024c91f8e6",
+  "profile_seed": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/claude-window-confirmation-v1/ab12c14c29354bad9aa6dc024c91f8e6.json",
+  "runtime_commit": "3176d58b44014d33d138492d72756531b7670040",
+  "runtime_root": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/profile-runtime-v1",
+  "brief_path": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/profiler-session-records/experiments/briefs/codex-profile-guided-v1.md",
+  "brief_sha256": "e0fce937e4eab2716daf570efda98f0836e2e86124b69dbcc1cbd195dd7e7bb6",
+  "wrapper_path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/codex-profile-guided-v1/bin/codex",
+  "versioned_wrapper": "experiments/launchers/codex-profile-guided-v1.sh",
+  "wrapper_sha256": "61034b4c151f83239cead6c805fc1f65c5b694c2ce68ba8d29b2cb5708786542",
+  "budget_minutes": 60,
+  "candidate_limit": null,
+  "deadline_unix": null,
+  "status": "prepared_not_started",
+  "prepared_at": 1795291718.389892,
+  "coordination": "Independent author, shared serial AMD evaluator; existing Claude unchanged"
+}
