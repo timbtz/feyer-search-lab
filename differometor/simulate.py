@@ -119,7 +119,7 @@ def update(
     output_matrix = lax.map(
         _evaluate_component,
         (function_indices, function_inputs),
-        batch_size=1,
+        batch_size=2,
     )
     outputs = output_matrix[output_indices[0], output_indices[1]]
     return matrix.at[matrix_indices[0], matrix_indices[1]].set(outputs)
