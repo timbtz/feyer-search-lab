@@ -1,0 +1,22 @@
+{
+  "candidate_sha": "cb502e8a5a15689e6f41971bd4a611cf6612283f",
+  "archive_sha256": "81adc6d463925b48d348e60870642a546b5e464192194ca651858fcc8add9e56",
+  "suite_sha256": "be01b911bf9af3b0bca83099b3381d609328209b19cc9209fc46f69cbe94f759",
+  "reference_sha256": "0e1eb8309af3b0e881585c36070828a10553399039074fda04af2b824cbc89b3",
+  "commands": [
+    "env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 JAX_ENABLE_COMPILATION_CACHE=false taskset -c 101 /workspace/venv-feyer/bin/python -u /tmp/feyer-independent-review-cb502e8/code/experiments/notes/host_compatibility_probe.py",
+    "env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 JAX_ENABLE_COMPILATION_CACHE=false taskset -c 101 /workspace/venv-feyer/bin/python -u /tmp/feyer-independent-review-cb502e8/jaxcompat.py run --tree /tmp/feyer-independent-review-cb502e8/code --setup voyager --out /tmp/feyer-independent-review-cb502e8/jaxcompat.json"
+  ],
+  "started_at": 1795301033.02107,
+  "runs": [
+    {
+      "command": "env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 JAX_ENABLE_COMPILATION_CACHE=false taskset -c 101 /workspace/venv-feyer/bin/python -u /tmp/feyer-independent-review-cb502e8/code/experiments/notes/host_compatibility_probe.py",
+      "returncode": 1
+    },
+    {
+      "command": "env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 JAX_ENABLE_COMPILATION_CACHE=false taskset -c 101 /workspace/venv-feyer/bin/python -u /tmp/feyer-independent-review-cb502e8/jaxcompat.py run --tree /tmp/feyer-independent-review-cb502e8/code --setup voyager --out /tmp/feyer-independent-review-cb502e8/jaxcompat.json",
+      "returncode": 0
+    }
+  ],
+  "finished_at": 1795301043.22224
+}

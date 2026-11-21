@@ -1,0 +1,38 @@
+[value_and_grad_jit] ok 0.19s
+/tmp/feyer-independent-review-cb502e8/code/differometor/host.py:93: RuntimeWarning: invalid value encountered in sqrt
+  return _ELEMENTWISE[primitive](*args)
+ERROR:2026-11-21 22:44:01,189:jax._src.callback:94: jax.pure_callback failed
+Traceback (most recent call last):
+  File "/workspace/venv-feyer/lib/python3.12/site-packages/jax/_src/callback.py", line 92, in pure_callback_impl
+    return tree_util.tree_map(np.asarray, callback(*args))
+                                          ^^^^^^^^^^^^^^^
+  File "/workspace/venv-feyer/lib/python3.12/site-packages/jax/_src/callback.py", line 70, in __call__
+    return tree_util.tree_leaves(self.callback_func(*args, **kwargs))
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/feyer-independent-review-cb502e8/code/differometor/host.py", line 772, in host
+    outputs, state = engine.forward(*arrays, mode=mode)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/feyer-independent-review-cb502e8/code/differometor/host.py", line 450, in forward
+    carrier = np.linalg.solve(system[:, :, :-1], system[:, :, -1:])[..., 0]  # (Rc, Nc)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/venv-feyer/lib/python3.12/site-packages/numpy/linalg/_linalg.py", line 463, in solve
+    r = gufunc(a, b, signature=signature)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/venv-feyer/lib/python3.12/site-packages/numpy/linalg/_linalg.py", line 144, in _raise_linalgerror_singular
+    raise LinAlgError("Singular matrix")
+numpy.linalg.LinAlgError: Singular matrix
+[descent_3_steps] ERROR ValueError: INTERNAL: CpuCallback error calling callback: Traceback (most recent call last):
+  File "/tmp/feyer-independent-review-cb502e8/jaxcompat.py", line 198, in <module>
+  File "/tmp/feyer-independent-revie
+[vmap_value_and_grad] ok 0.47s
+[jvp] ERROR TypeError: can't apply forward-mode autodiff (jvp) to a custom_vjp function.
+[jacfwd_2] ERROR TypeError: can't apply forward-mode autodiff (jvp) to a custom_vjp function.
+[hvp_fwd_over_rev] ERROR ValueError: Pure callbacks do not support JVP. Please use `jax.custom_jvp` to use callbacks while taking gradients.
+[hvp_rev_over_rev] ERROR ValueError: Pure callbacks do not support JVP. Please use `jax.custom_jvp` to use callbacks while taking gradients.
+[eager_value_and_grad] ok 0.59s
+/workspace/venv-feyer/lib/python3.12/site-packages/jax/_src/numpy/array_constructors.py:286: ComplexWarning: Casting complex values to real discards the imaginary part
+  out_array: Array = lax._convert_element_type(
+[public_run] ok 0.14s
+[checkpoint_grad] ok 0.15s
+[second_setup_same_process] ok 0.42s
+saved /tmp/feyer-independent-review-cb502e8/jaxcompat.json

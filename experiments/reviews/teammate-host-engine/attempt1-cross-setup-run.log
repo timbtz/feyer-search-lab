@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/tmp/feyer-independent-review-e2fd659/gencheck.py", line 308, in <module>
+    {"run": run, "compare": compare, "report": report}[args.cmd](args)
+  File "/tmp/feyer-independent-review-e2fd659/gencheck.py", line 41, in run
+    assert os.path.abspath(os.path.dirname(df.__file__)).startswith(os.path.abspath(args.tree)), df.__file__
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: /workspace/feyer-pristine/differometor/__init__.py

@@ -1,0 +1,387 @@
+{
+  "schema": "feyer-generalization-collection-v1",
+  "reports": [
+    {
+      "schema": "feyer-generalization-v1",
+      "candidate_sha": "e2fd659e6f426289c526f79ae758bed4182879a9",
+      "label": "independent-teammate-host-engine",
+      "branch": "review/teammate-host-engine",
+      "reference_sha": "02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f",
+      "instance": "amd-hackathon",
+      "cpu": 101,
+      "observed_at": 1795300075.4454062,
+      "status": "needs_review",
+      "thresholds": {
+        "max_abs_log_sensitivity_error": 1e-05,
+        "gradient_relative_l2": 0.0001
+      },
+      "timing_scope": "Exploratory development timing on a non-evaluator CPU, excluding imports; not a scored queue measurement.",
+      "cases": [
+        {
+          "case": "aligo",
+          "status": "ok",
+          "issues": [],
+          "frequencies": 100,
+          "design_variables": 29,
+          "finite": true,
+          "max_abs_log_sensitivity_error": 9.592326932761353e-11,
+          "max_relative_output_error": {
+            "carrier": 0.0,
+            "signal": 3.175977107100616e-11,
+            "noise": 2.336795125569603e-12,
+            "powers": 0.0
+          },
+          "gradient_relative_l2": 1.5835661443399856e-11,
+          "gradient_worst_normalized": 6.629726205387739e-11,
+          "gradient_worst_index": 10,
+          "loss_abs_difference": 2.6290081223123707e-13,
+          "reference_seconds": 19.800366528332233,
+          "candidate_seconds": 0.2255672812461853,
+          "reference_timings": {
+            "build": 0.1664539836347103,
+            "forward_lower": 1.0985202640295029,
+            "forward_compile": 13.257830787450075,
+            "forward": 0.05166261084377766,
+            "sensitivity_lower": 0.029566962271928787,
+            "sensitivity_compile": 0.20893828570842743,
+            "sensitivity": 0.00042657554149627686,
+            "gradient_lower": 0.3746937494724989,
+            "gradient_compile": 4.581257093697786,
+            "gradient": 0.031016215682029724
+          },
+          "candidate_timings": {
+            "build": 0.01076747290790081,
+            "forward_lower": 0.003762999549508095,
+            "forward_compile": 0.0043141767382621765,
+            "forward": 0.013671347871422768,
+            "sensitivity_lower": 0.011235926300287247,
+            "sensitivity_compile": 0.11370745114982128,
+            "sensitivity": 0.0006887055933475494,
+            "gradient_lower": 0.007167734205722809,
+            "gradient_compile": 0.05423649586737156,
+            "gradient": 0.006014971062541008
+          }
+        },
+        {
+          "case": "dev",
+          "status": "ok",
+          "issues": [],
+          "frequencies": 101,
+          "design_variables": 193,
+          "finite": true,
+          "max_abs_log_sensitivity_error": 6.775521654844852e-08,
+          "max_relative_output_error": {
+            "carrier": 4.994927146392346e-12,
+            "signal": 1.323150001908711e-07,
+            "noise": 4.1175363518320414e-08,
+            "powers": 6.756903946527331e-12
+          },
+          "gradient_relative_l2": 8.722537065826712e-08,
+          "gradient_worst_normalized": 6.914390108764738e-07,
+          "gradient_worst_index": 33,
+          "loss_abs_difference": 7.031520935665137e-10,
+          "reference_seconds": 34.772283524274826,
+          "candidate_seconds": 0.45438120886683464,
+          "reference_timings": {
+            "build": 0.6992836147546768,
+            "forward_lower": 1.0831887181848288,
+            "forward_compile": 12.714188756421208,
+            "forward": 12.049078300595284,
+            "sensitivity_lower": 0.08231231942772865,
+            "sensitivity_compile": 0.39026980474591255,
+            "sensitivity": 0.0008256305009126663,
+            "gradient_lower": 0.2856437433511019,
+            "gradient_compile": 4.548310739919543,
+            "gradient": 2.9191818963736296
+          },
+          "candidate_timings": {
+            "build": 0.09088497422635555,
+            "forward_lower": 0.004212217405438423,
+            "forward_compile": 0.005401702597737312,
+            "forward": 0.09761673212051392,
+            "sensitivity_lower": 0.01998535543680191,
+            "sensitivity_compile": 0.12849770858883858,
+            "sensitivity": 0.0009572599083185196,
+            "gradient_lower": 0.006786759942770004,
+            "gradient_compile": 0.06010783649981022,
+            "gradient": 0.039930662140250206
+          }
+        },
+        {
+          "case": "dev_perturbed",
+          "status": "ok",
+          "issues": [],
+          "frequencies": 101,
+          "design_variables": 193,
+          "finite": true,
+          "max_abs_log_sensitivity_error": 3.304148066263224e-08,
+          "max_relative_output_error": {
+            "carrier": 2.335987519164159e-14,
+            "signal": 2.8007452935897826e-10,
+            "noise": 2.8246485826367497e-14,
+            "powers": 6.763094638272612e-15
+          },
+          "gradient_relative_l2": 7.128991518186373e-11,
+          "gradient_worst_normalized": 2.6786184009369172e-08,
+          "gradient_worst_index": 111,
+          "loss_abs_difference": 1.9350210322954808e-10,
+          "reference_seconds": 34.11055226996541,
+          "candidate_seconds": 0.3595156315714121,
+          "reference_timings": {
+            "build": 0.4278019294142723,
+            "forward_lower": 0.7963524609804153,
+            "forward_compile": 12.566939391195774,
+            "forward": 12.0825988445431,
+            "sensitivity_lower": 0.04626808874309063,
+            "sensitivity_compile": 0.4076353572309017,
+            "sensitivity": 0.0008071903139352798,
+            "gradient_lower": 0.2826855778694153,
+            "gradient_compile": 4.5629362519830465,
+            "gradient": 2.9365271776914597
+          },
+          "candidate_timings": {
+            "build": 0.026309560984373093,
+            "forward_lower": 0.004150377586483955,
+            "forward_compile": 0.004501376301050186,
+            "forward": 0.08777813613414764,
+            "sensitivity_lower": 0.011158017441630363,
+            "sensitivity_compile": 0.11781074851751328,
+            "sensitivity": 0.001031847670674324,
+            "gradient_lower": 0.006939459592103958,
+            "gradient_compile": 0.06052509881556034,
+            "gradient": 0.03931100852787495
+          }
+        },
+        {
+          "case": "uifo_20_5000",
+          "status": "ok",
+          "issues": [],
+          "frequencies": 100,
+          "design_variables": 192,
+          "finite": true,
+          "max_abs_log_sensitivity_error": 1.2350653832982061e-09,
+          "max_relative_output_error": {
+            "carrier": 1.0205441689111023e-14,
+            "signal": 2.720088844262591e-10,
+            "noise": 7.914915966925786e-10,
+            "powers": 8.026556384956041e-16
+          },
+          "gradient_relative_l2": 2.7499452203772317e-10,
+          "gradient_worst_normalized": 3.252860312727899e-09,
+          "gradient_worst_index": 96,
+          "loss_abs_difference": 6.59738930153253e-12,
+          "reference_seconds": 35.08684717863798,
+          "candidate_seconds": 0.37031634896993637,
+          "reference_timings": {
+            "build": 0.6091581620275974,
+            "forward_lower": 0.981972536072135,
+            "forward_compile": 12.501037249341607,
+            "forward": 12.560997610911727,
+            "sensitivity_lower": 0.06952363811433315,
+            "sensitivity_compile": 0.3864722177386284,
+            "sensitivity": 0.0008012019097805023,
+            "gradient_lower": 0.3026994429528713,
+            "gradient_compile": 4.634290121495724,
+            "gradient": 3.039894998073578
+          },
+          "candidate_timings": {
+            "build": 0.03157692775130272,
+            "forward_lower": 0.003742830827832222,
+            "forward_compile": 0.004113858565688133,
+            "forward": 0.08491452224552631,
+            "sensitivity_lower": 0.019508829340338707,
+            "sensitivity_compile": 0.11587264761328697,
+            "sensitivity": 0.0009464230388402939,
+            "gradient_lower": 0.007899926975369453,
+            "gradient_compile": 0.06203642673790455,
+            "gradient": 0.03970395587384701
+          }
+        },
+        {
+          "case": "uifo_rand1",
+          "status": "needs_review",
+          "issues": [],
+          "frequencies": 101,
+          "design_variables": 193,
+          "finite": true,
+          "max_abs_log_sensitivity_error": 0.00020360985100964513,
+          "max_relative_output_error": {
+            "carrier": 1.1770693038389395e-15,
+            "signal": 3.3509614815403647e-10,
+            "noise": 6.607080066686725e-13,
+            "powers": 9.770351749313844e-16
+          },
+          "gradient_relative_l2": 4.862659508626197e-06,
+          "gradient_worst_normalized": 4.862739582739229e-06,
+          "gradient_worst_index": 140,
+          "loss_abs_difference": 2.1219710593101127e-06,
+          "reference_seconds": 34.2979671433568,
+          "candidate_seconds": 0.3573291301727295,
+          "reference_timings": {
+            "build": 0.2334936298429966,
+            "forward_lower": 1.0396094359457493,
+            "forward_compile": 11.552632553502917,
+            "forward": 12.840539975091815,
+            "sensitivity_lower": 0.09935221448540688,
+            "sensitivity_compile": 0.4117003343999386,
+            "sensitivity": 0.0008185114711523056,
+            "gradient_lower": 0.24710295163094997,
+            "gradient_compile": 4.717329312115908,
+            "gradient": 3.1553882248699665
+          },
+          "candidate_timings": {
+            "build": 0.026536056771874428,
+            "forward_lower": 0.004218338057398796,
+            "forward_compile": 0.004703069105744362,
+            "forward": 0.08038506098091602,
+            "sensitivity_lower": 0.013365883380174637,
+            "sensitivity_compile": 0.12048904784023762,
+            "sensitivity": 0.0010402500629425049,
+            "gradient_lower": 0.00785762071609497,
+            "gradient_compile": 0.06259332969784737,
+            "gradient": 0.03614047355949879
+          }
+        },
+        {
+          "case": "uifo_rand2",
+          "status": "ok",
+          "issues": [],
+          "frequencies": 101,
+          "design_variables": 192,
+          "finite": true,
+          "max_abs_log_sensitivity_error": 9.721397020712175e-10,
+          "max_relative_output_error": {
+            "carrier": 1.5327139770029343e-15,
+            "signal": 1.073352838687095e-09,
+            "noise": 3.4699809934709243e-15,
+            "powers": 1.4749771429286257e-15
+          },
+          "gradient_relative_l2": 1.0485724240055131e-10,
+          "gradient_worst_normalized": 8.750041836124928e-10,
+          "gradient_worst_index": 7,
+          "loss_abs_difference": 3.4280134286746033e-11,
+          "reference_seconds": 34.41571775265038,
+          "candidate_seconds": 0.3428850844502449,
+          "reference_timings": {
+            "build": 0.5942455343902111,
+            "forward_lower": 1.07903934083879,
+            "forward_compile": 12.321215726435184,
+            "forward": 12.005418064072728,
+            "sensitivity_lower": 0.10045580565929413,
+            "sensitivity_compile": 0.38900092989206314,
+            "sensitivity": 0.0005037728697061539,
+            "gradient_lower": 0.34822285175323486,
+            "gradient_compile": 4.619484515860677,
+            "gradient": 2.9581312108784914
+          },
+          "candidate_timings": {
+            "build": 0.02461625635623932,
+            "forward_lower": 0.004227818921208382,
+            "forward_compile": 0.0045627448707818985,
+            "forward": 0.07873735576868057,
+            "sensitivity_lower": 0.011324705556035042,
+            "sensitivity_compile": 0.11787841655313969,
+            "sensitivity": 0.0010514911264181137,
+            "gradient_lower": 0.00702589750289917,
+            "gradient_compile": 0.0575850922614336,
+            "gradient": 0.03587530553340912
+          }
+        },
+        {
+          "case": "uifo_rand3",
+          "status": "needs_review",
+          "issues": [],
+          "frequencies": 101,
+          "design_variables": 197,
+          "finite": true,
+          "max_abs_log_sensitivity_error": 7.318880999207522e-05,
+          "max_relative_output_error": {
+            "carrier": 1.4994254509893574e-15,
+            "signal": 4.1427964323379003e-11,
+            "noise": 1.0392822055624763e-11,
+            "powers": 1.5239499889604932e-15
+          },
+          "gradient_relative_l2": 3.009288174388501e-05,
+          "gradient_worst_normalized": 3.0092881746146582e-05,
+          "gradient_worst_index": 8,
+          "loss_abs_difference": 1.3070409164761543e-05,
+          "reference_seconds": 33.788446525111794,
+          "candidate_seconds": 0.3558431640267372,
+          "reference_timings": {
+            "build": 0.12460088357329369,
+            "forward_lower": 0.8931152299046516,
+            "forward_compile": 12.679721910506487,
+            "forward": 11.895940439775586,
+            "sensitivity_lower": 0.04629631154239178,
+            "sensitivity_compile": 0.3981227111071348,
+            "sensitivity": 0.0004672948271036148,
+            "gradient_lower": 0.24144262447953224,
+            "gradient_compile": 4.577280648052692,
+            "gradient": 2.9314584713429213
+          },
+          "candidate_timings": {
+            "build": 0.034205472096800804,
+            "forward_lower": 0.0039041396230459213,
+            "forward_compile": 0.004260726273059845,
+            "forward": 0.07545721903443336,
+            "sensitivity_lower": 0.011632952839136124,
+            "sensitivity_compile": 0.12076642736792564,
+            "sensitivity": 0.0010674893856048584,
+            "gradient_lower": 0.007044656202197075,
+            "gradient_compile": 0.06053097918629646,
+            "gradient": 0.036973102018237114
+          }
+        },
+        {
+          "case": "voyager",
+          "status": "ok",
+          "issues": [],
+          "frequencies": 100,
+          "design_variables": 45,
+          "finite": true,
+          "max_abs_log_sensitivity_error": 3.623767952376511e-13,
+          "max_relative_output_error": {
+            "carrier": 0.0,
+            "signal": 8.35094936907223e-10,
+            "noise": 3.3380365647979873e-13,
+            "powers": 0.0
+          },
+          "gradient_relative_l2": 2.32259067936964e-13,
+          "gradient_worst_normalized": 1.4519857147069523e-12,
+          "gradient_worst_index": 5,
+          "loss_abs_difference": 3.552713678800501e-15,
+          "reference_seconds": 20.752654882147908,
+          "candidate_seconds": 0.24664301238954067,
+          "reference_timings": {
+            "build": 0.5178952403366566,
+            "forward_lower": 1.146173369139433,
+            "forward_compile": 13.30288072489202,
+            "forward": 0.34398021548986435,
+            "sensitivity_lower": 0.03862622193992138,
+            "sensitivity_compile": 0.3222156036645174,
+            "sensitivity": 0.0004131365567445755,
+            "gradient_lower": 0.24756046757102013,
+            "gradient_compile": 4.66899723187089,
+            "gradient": 0.163912670686841
+          },
+          "candidate_timings": {
+            "build": 0.011776939034461975,
+            "forward_lower": 0.00376107357442379,
+            "forward_compile": 0.004249535501003265,
+            "forward": 0.01874389685690403,
+            "sensitivity_lower": 0.012235656380653381,
+            "sensitivity_compile": 0.1162106841802597,
+            "sensitivity": 0.0010643675923347473,
+            "gradient_lower": 0.007760312408208847,
+            "gradient_compile": 0.06147500313818455,
+            "gradient": 0.009365543723106384
+          }
+        }
+      ]
+    }
+  ],
+  "artifact_hashes": {
+    "cross-setup-candidate.npz": "6f5063445768d7bba84dfad21a304b99c412120c62561a4e2b2c603e525cc5ea",
+    "cross-setup-reference.npz": "d7e739b16f72c1165f95f8a11e5d08bf1fde02c838332ac3cf0bbf4bfd05e77e"
+  }
+}

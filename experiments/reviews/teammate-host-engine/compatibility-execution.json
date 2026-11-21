@@ -1,0 +1,8 @@
+{
+  "command": "env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 JAX_ENABLE_COMPILATION_CACHE=false taskset -c 101 /workspace/venv-feyer/bin/python -u /tmp/feyer-independent-review-e2fd659/compatibility_probe.py --tree /tmp/feyer-independent-review-e2fd659/code --out /tmp/feyer-independent-review-e2fd659/compatibility.json",
+  "script_sha256": "b9e5553f5a35a654ef43afedbb04c282f99a6c519e2e380cac0364c1db1c2912",
+  "started_at": 1795300197.835632,
+  "candidate_sha": "e2fd659e6f426289c526f79ae758bed4182879a9",
+  "finished_at": 1795300278.3628218,
+  "returncode": 1
+}

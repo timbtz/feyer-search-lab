@@ -1,0 +1,12 @@
+{
+  "candidate_sha": "e2fd659e6f426289c526f79ae758bed4182879a9",
+  "source_archive_sha256": "08ca9fc15393ce818d906ce82292dcb72b657216344d7494119a7e398afae2d9",
+  "source_harness_commit": "6011ad34adb7e232a9d207e1b8dd5831ab585e53",
+  "harness_sha256": "8adbd01815be4006f7b414b2cfa8f6c68b611a486647107015a6d6498d59e597",
+  "command": "env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 JAX_PLATFORMS=cpu JAX_ENABLE_X64=true JAX_ENABLE_COMPILATION_CACHE=false taskset -c 101 /workspace/venv-feyer/bin/python -u /tmp/feyer-independent-review-e2fd659/gencheck.py run --tree /tmp/feyer-independent-review-e2fd659/code --out /tmp/feyer-independent-review-e2fd659/candidate.npz",
+  "started_at": 1795300033.933934,
+  "timing_scope": "Diagnostic cross-setup execution excluding imports; not scored timing.",
+  "cpu": 101,
+  "finished_at": 1795300041.255887,
+  "returncode": 0
+}

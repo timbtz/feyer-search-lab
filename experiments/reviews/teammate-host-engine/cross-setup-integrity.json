@@ -1,0 +1,727 @@
+{
+  "method": "Independent NumPy archive audit of all output shapes/dtypes/finiteness and exact parameters/frequencies",
+  "passed": true,
+  "cases": [
+    {
+      "case": "aligo",
+      "checks": {
+        "carrier": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "complex128",
+          "shape": [
+            36,
+            1
+          ]
+        },
+        "signal": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "complex128",
+          "shape": [
+            82,
+            100
+          ]
+        },
+        "noise": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            100
+          ]
+        },
+        "sensitivity": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            100
+          ]
+        },
+        "powers": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            36,
+            1
+          ]
+        },
+        "loss": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": []
+        },
+        "gradient": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            29
+          ]
+        },
+        "parameters": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            29
+          ],
+          "exact_inputs": true
+        },
+        "frequencies": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            100
+          ],
+          "exact_inputs": true
+        }
+      },
+      "passed": true
+    },
+    {
+      "case": "dev",
+      "checks": {
+        "carrier": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "complex128",
+          "shape": [
+            286,
+            1
+          ]
+        },
+        "signal": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "complex128",
+          "shape": [
+            751,
+            101
+          ]
+        },
+        "noise": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            101
+          ]
+        },
+        "sensitivity": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            101
+          ]
+        },
+        "powers": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            286,
+            1
+          ]
+        },
+        "loss": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": []
+        },
+        "gradient": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            193
+          ]
+        },
+        "parameters": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            193
+          ],
+          "exact_inputs": true
+        },
+        "frequencies": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            101
+          ],
+          "exact_inputs": true
+        }
+      },
+      "passed": true
+    },
+    {
+      "case": "dev_perturbed",
+      "checks": {
+        "carrier": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "complex128",
+          "shape": [
+            286,
+            1
+          ]
+        },
+        "signal": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "complex128",
+          "shape": [
+            751,
+            101
+          ]
+        },
+        "noise": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            101
+          ]
+        },
+        "sensitivity": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            101
+          ]
+        },
+        "powers": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            286,
+            1
+          ]
+        },
+        "loss": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": []
+        },
+        "gradient": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            193
+          ]
+        },
+        "parameters": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            193
+          ],
+          "exact_inputs": true
+        },
+        "frequencies": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            101
+          ],
+          "exact_inputs": true
+        }
+      },
+      "passed": true
+    },
+    {
+      "case": "uifo_20_5000",
+      "checks": {
+        "carrier": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "complex128",
+          "shape": [
+            296,
+            1
+          ]
+        },
+        "signal": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "complex128",
+          "shape": [
+            769,
+            100
+          ]
+        },
+        "noise": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            100
+          ]
+        },
+        "sensitivity": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            100
+          ]
+        },
+        "powers": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            296,
+            1
+          ]
+        },
+        "loss": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": []
+        },
+        "gradient": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            192
+          ]
+        },
+        "parameters": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            192
+          ],
+          "exact_inputs": true
+        },
+        "frequencies": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            100
+          ],
+          "exact_inputs": true
+        }
+      },
+      "passed": true
+    },
+    {
+      "case": "uifo_rand1",
+      "checks": {
+        "carrier": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "complex128",
+          "shape": [
+            296,
+            1
+          ]
+        },
+        "signal": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "complex128",
+          "shape": [
+            771,
+            101
+          ]
+        },
+        "noise": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            101
+          ]
+        },
+        "sensitivity": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            101
+          ]
+        },
+        "powers": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            296,
+            1
+          ]
+        },
+        "loss": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": []
+        },
+        "gradient": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            193
+          ]
+        },
+        "parameters": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            193
+          ],
+          "exact_inputs": true
+        },
+        "frequencies": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            101
+          ],
+          "exact_inputs": true
+        }
+      },
+      "passed": true
+    },
+    {
+      "case": "uifo_rand2",
+      "checks": {
+        "carrier": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "complex128",
+          "shape": [
+            286,
+            1
+          ]
+        },
+        "signal": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "complex128",
+          "shape": [
+            749,
+            101
+          ]
+        },
+        "noise": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            101
+          ]
+        },
+        "sensitivity": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            101
+          ]
+        },
+        "powers": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            286,
+            1
+          ]
+        },
+        "loss": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": []
+        },
+        "gradient": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            192
+          ]
+        },
+        "parameters": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            192
+          ],
+          "exact_inputs": true
+        },
+        "frequencies": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            101
+          ],
+          "exact_inputs": true
+        }
+      },
+      "passed": true
+    },
+    {
+      "case": "uifo_rand3",
+      "checks": {
+        "carrier": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "complex128",
+          "shape": [
+            286,
+            1
+          ]
+        },
+        "signal": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "complex128",
+          "shape": [
+            751,
+            101
+          ]
+        },
+        "noise": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            101
+          ]
+        },
+        "sensitivity": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            101
+          ]
+        },
+        "powers": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            286,
+            1
+          ]
+        },
+        "loss": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": []
+        },
+        "gradient": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            197
+          ]
+        },
+        "parameters": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            197
+          ],
+          "exact_inputs": true
+        },
+        "frequencies": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            101
+          ],
+          "exact_inputs": true
+        }
+      },
+      "passed": true
+    },
+    {
+      "case": "voyager",
+      "checks": {
+        "carrier": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "complex128",
+          "shape": [
+            70,
+            1
+          ]
+        },
+        "signal": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "complex128",
+          "shape": [
+            161,
+            100
+          ]
+        },
+        "noise": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            100
+          ]
+        },
+        "sensitivity": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            100
+          ]
+        },
+        "powers": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            70,
+            1
+          ]
+        },
+        "loss": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": []
+        },
+        "gradient": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            45
+          ]
+        },
+        "parameters": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            45
+          ],
+          "exact_inputs": true
+        },
+        "frequencies": {
+          "shape_match": true,
+          "dtype_match": true,
+          "finite": true,
+          "dtype": "float64",
+          "shape": [
+            100
+          ],
+          "exact_inputs": true
+        }
+      },
+      "passed": true
+    }
+  ],
+  "observed_at": 1795300264.884371
+}

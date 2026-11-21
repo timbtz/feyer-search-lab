@@ -1,0 +1,34 @@
+{
+  "candidate_sha": "e2fd659e6f426289c526f79ae758bed4182879a9",
+  "reason": "User explicitly requested direct sub-agent exploration and integration of verification constraints.",
+  "assignments": [
+    {
+      "id": "host_compatibility",
+      "status": "dispatched",
+      "scope": "Investigate JAX transform limitations and fix justified interpreter edge semantics in an isolated branch; preserve official benchmark.",
+      "target_phases": [
+        "gradient"
+      ]
+    },
+    {
+      "id": "verification_constraints",
+      "status": "dispatched",
+      "scope": "Add exact-source optional verification gates without relabeling organizer rules or overriding official/strict verdicts.",
+      "target_phases": []
+    },
+    {
+      "id": "numerical_audit",
+      "status": "dispatched",
+      "scope": "Audit numerical discrepancies and propose independent arbitration distinguishing baseline roundoff from wrong physics.",
+      "target_phases": [
+        "forward",
+        "gradient"
+      ]
+    }
+  ],
+  "limits": [
+    "These are research assignments, not validated candidates.",
+    "Model runtime and full dispatched input are not published in this receipt.",
+    "Primary owns remote test execution; no concurrent benchmark submissions."
+  ]
+}

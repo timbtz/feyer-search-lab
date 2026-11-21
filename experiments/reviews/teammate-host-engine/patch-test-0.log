@@ -1,0 +1,20 @@
+...E...
+======================================================================
+ERROR: test_component_custom_jvp_selects_traced_fallback (__main__.PinnedJaxInterpreter.test_component_custom_jvp_selects_traced_fallback)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/feyer-independent-review-cb502e8/code/experiments/notes/host_compatibility_probe.py", line 135, in test_component_custom_jvp_selects_traced_fallback
+    fallback, *_ = df.run_build_step(setup, [('f', 'frequency')], freqs, pairs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/feyer-independent-review-cb502e8/code/differometor/simulate.py", line 506, in run_build_step
+    instructions, matrices, metadata = build(setup)
+                                       ^^^^^^^^^^^^
+  File "/tmp/feyer-independent-review-cb502e8/code/differometor/build.py", line 785, in build
+    function_indices=[FUNCTIONS.index(laser)],
+                      ^^^^^^^^^^^^^^^^^^^^^^
+ValueError: <function laser at 0x72ab7fd4f4c0> is not in list
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.603s
+
+FAILED (errors=1)

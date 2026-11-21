@@ -1,0 +1,52 @@
+jit-vmap-four-gradients passed 
+pullback-after-cache-eviction passed 
+gradient-through-checkpoint passed 
+forward-mode-jvp failed TypeError: can't apply forward-mode autodiff (jvp) to a custom_vjp function.
+second-reverse-derivative failed ValueError: Pure callbacks do not support JVP. Please use `jax.custom_jvp` to use callbacks while taking gradients.
+hessian-vector-product failed ValueError: Pure callbacks do not support JVP. Please use `jax.custom_jvp` to use callbacks while taking gradients.
+interpreter-abs-at-zero failed AssertionError: 
+Not equal to tolerance rtol=0, atol=0
+
+Mismatched elements: 1 / 1 (100%)
+Mismatch at index:
+ [0]: 0.0 (ACTUAL), 1.0 (DESIRED)
+Max absolute difference among violations: 1.
+Max relative difference among violations: 1.
+ ACTUAL: array([0.])
+ DESIRED: array([1.])
+/workspace/venv-feyer/lib/python3.12/site-packages/jax/_src/numpy/array_constructors.py:286: ComplexWarning: Casting complex values to real discards the imaginary part
+  out_array: Array = lax._convert_element_type(
+no-optimization-parameters passed 
+/tmp/feyer-independent-review-e2fd659/code/differometor/host.py:90: RuntimeWarning: invalid value encountered in sqrt
+  return _ELEMENTWISE[primitive](*args)
+Traceback (most recent call last):
+  File "/tmp/feyer-independent-review-e2fd659/compatibility_probe.py", line 79, in <module>
+    probe('all-193-coordinate-finite-differences',finite_differences,'gradient_validation')
+  File "/tmp/feyer-independent-review-e2fd659/compatibility_probe.py", line 24, in probe
+    row['duration_seconds']=time.time()-t;report['tests'].append(row);save();print(identity,row['status'],row.get('error',''),flush=True)
+                                                                      ^^^^^^
+  File "/tmp/feyer-independent-review-e2fd659/compatibility_probe.py", line 17, in save
+    def save():pathlib.Path(args.out).write_text(json.dumps(report,indent=2,allow_nan=False))
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/__init__.py", line 238, in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/encoder.py", line 202, in encode
+    chunks = list(chunks)
+             ^^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/encoder.py", line 432, in _iterencode
+    yield from _iterencode_dict(o, _current_indent_level)
+  File "/usr/lib/python3.12/json/encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "/usr/lib/python3.12/json/encoder.py", line 326, in _iterencode_list
+    yield from chunks
+  File "/usr/lib/python3.12/json/encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "/usr/lib/python3.12/json/encoder.py", line 326, in _iterencode_list
+    yield from chunks
+  File "/usr/lib/python3.12/json/encoder.py", line 398, in _iterencode_dict
+    yield _floatstr(value)
+          ^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/encoder.py", line 240, in floatstr
+    raise ValueError(
+ValueError: Out of range float values are not JSON compliant: nan

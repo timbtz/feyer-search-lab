@@ -1,0 +1,10 @@
+{
+  "candidate_sha": "cb502e8a5a15689e6f41971bd4a611cf6612283f",
+  "test_source_commit": "3de2520e04b40737868e05cd255a2c3b37c83d13",
+  "test_sha256": "5c822536d8809e10f853bfab88caeecb3b880bb0a09d460b15a4213affbcf43d",
+  "started_at": 1795301177.949166,
+  "finished_at": 1795301183.211933,
+  "command": "env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 JAX_ENABLE_COMPILATION_CACHE=false taskset -c 101 /workspace/venv-feyer/bin/python -u /tmp/feyer-independent-review-cb502e8/code/experiments/notes/host_compatibility_probe.py",
+  "returncode": 0,
+  "scope": "Simulator remains exact cb502; only the external diagnostic fixture was corrected."
+}

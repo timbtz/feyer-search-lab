@@ -1,0 +1,9 @@
+{
+  "command": "env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 JAX_ENABLE_COMPILATION_CACHE=false taskset -c 101 /workspace/venv-feyer/bin/python -u /tmp/feyer-independent-review-e2fd659/compatibility_probe_v2.py --tree /tmp/feyer-independent-review-e2fd659/code --only all-193-coordinate-finite-differences --out /tmp/feyer-independent-review-e2fd659/finite-differences.json",
+  "script_sha256": "48f5b88f8cc5d4a235955b660a7356b1bb12f8adb1255cd5f9bee7bfd14c4066",
+  "started_at": 1795300362.093806,
+  "candidate_sha": "e2fd659e6f426289c526f79ae758bed4182879a9",
+  "retry_reason": "First finite-difference attempt encountered nonfinite boundary probes and JSON rejected NaN. Use explicit physical interior, flag nonfinite derivatives, and retain original attempt.",
+  "finished_at": 1795300488.3265228,
+  "returncode": 0
+}

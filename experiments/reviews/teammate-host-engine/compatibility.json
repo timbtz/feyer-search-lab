@@ -1,0 +1,92 @@
+{
+  "candidate_sha": "e2fd659e6f426289c526f79ae758bed4182879a9",
+  "python": "3.12.15 (main, Oct  1 2026, 15:41:07) [GCC 11.4.0]",
+  "jax": "0.9.0",
+  "numpy": "2.5.5",
+  "tests": [
+    {
+      "id": "jit-vmap-four-gradients",
+      "kind": "compatibility",
+      "started_at": 1795300201.9221041,
+      "status": "passed",
+      "max_abs_error": 0.0,
+      "designs": 4,
+      "frequencies": 101,
+      "gradients_per_design": 193,
+      "duration_seconds": 1.5355055332183838
+    },
+    {
+      "id": "pullback-after-cache-eviction",
+      "kind": "compatibility",
+      "started_at": 1795300203.4577825,
+      "status": "passed",
+      "max_abs_error": 0.0,
+      "intervening_forwards": 8,
+      "duration_seconds": 1.5560061931610107
+    },
+    {
+      "id": "gradient-through-checkpoint",
+      "kind": "compatibility",
+      "started_at": 1795300205.0139973,
+      "status": "passed",
+      "max_abs_error": 0.0,
+      "duration_seconds": 0.20174765586853027
+    },
+    {
+      "id": "forward-mode-jvp",
+      "kind": "compatibility",
+      "started_at": 1795300205.215953,
+      "status": "failed",
+      "error": "TypeError: can't apply forward-mode autodiff (jvp) to a custom_vjp function.",
+      "traceback": "Traceback (most recent call last):\n  File \"/tmp/feyer-independent-review-e2fd659/compatibility_probe.py\", line 21, in probe\n    data=fn();row.update({'status':'passed',**(data or {})})\n         ^^^^\n  File \"/tmp/feyer-independent-review-e2fd659/compatibility_probe.py\", line 48, in <lambda>\n    probe('forward-mode-jvp',lambda: {'value':float(jax.jvp(loss,(p0,),(jnp.ones_like(p0),))[1])})\n                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/feyer-independent-review-e2fd659/compatibility_probe.py\", line 35, in loss\n    c,s,n=df.simulate(**dict(arrays,optimized_parameters=p));det=df.signal_detector(c,s)[ports].squeeze();return jnp.mean(jnp.log10(n/jnp.abs(det)))\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/feyer-independent-review-e2fd659/code/differometor/simulate.py\", line 179, in simulate\n    return simulate_sparse(\n           ^^^^^^^^^^^^^^^^\n  File \"/tmp/feyer-independent-review-e2fd659/code/differometor/sparse.py\", line 397, in simulate_sparse\n    return plan.host_simulate(\n           ^^^^^^^^^^^^^^^^^^^\nTypeError: can't apply forward-mode autodiff (jvp) to a custom_vjp function.\n--------------------\nFor simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.\n",
+      "duration_seconds": 0.10833263397216797
+    },
+    {
+      "id": "second-reverse-derivative",
+      "kind": "compatibility",
+      "started_at": 1795300205.3244424,
+      "status": "failed",
+      "error": "ValueError: Pure callbacks do not support JVP. Please use `jax.custom_jvp` to use callbacks while taking gradients.",
+      "traceback": "Traceback (most recent call last):\n  File \"/tmp/feyer-independent-review-e2fd659/compatibility_probe.py\", line 21, in probe\n    data=fn();row.update({'status':'passed',**(data or {})})\n         ^^^^\n  File \"/tmp/feyer-independent-review-e2fd659/compatibility_probe.py\", line 49, in <lambda>\n    probe('second-reverse-derivative',lambda: {'norm':float(jnp.linalg.norm(jax.grad(lambda p:jax.grad(loss)(p)[0])(p0)))})\n                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/feyer-independent-review-e2fd659/compatibility_probe.py\", line 49, in <lambda>\n    probe('second-reverse-derivative',lambda: {'norm':float(jnp.linalg.norm(jax.grad(lambda p:jax.grad(loss)(p)[0])(p0)))})\n                                                                                              ^^^^^^^^^^^^^^^^^\n  File \"/tmp/feyer-independent-review-e2fd659/compatibility_probe.py\", line 35, in loss\n    c,s,n=df.simulate(**dict(arrays,optimized_parameters=p));det=df.signal_detector(c,s)[ports].squeeze();return jnp.mean(jnp.log10(n/jnp.abs(det)))\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/feyer-independent-review-e2fd659/code/differometor/simulate.py\", line 179, in simulate\n    return simulate_sparse(\n           ^^^^^^^^^^^^^^^^\n  File \"/tmp/feyer-independent-review-e2fd659/code/differometor/sparse.py\", line 397, in simulate_sparse\n    return plan.host_simulate(\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/feyer-independent-review-e2fd659/code/differometor/host.py\", line 783, in forward\n    *outputs, token = run_forward(values, \"active\" if only_optimized else \"full\")\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/feyer-independent-review-e2fd659/code/differometor/host.py\", line 772, in run_forward\n    return jax.pure_callback(host, specs, *args, vmap_method=\"sequential\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/venv-feyer/lib/python3.12/site-packages/jax/_src/callback.py\", line 389, in pure_callback\n    out_flat = pure_callback_p.bind(\n               ^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/venv-feyer/lib/python3.12/site-packages/jax/_src/callback.py\", line 116, in pure_callback_jvp_rule\n    raise ValueError(\nValueError: Pure callbacks do not support JVP. Please use `jax.custom_jvp` to use callbacks while taking gradients.\n--------------------\nFor simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.\n",
+      "duration_seconds": 0.008537054061889648
+    },
+    {
+      "id": "hessian-vector-product",
+      "kind": "compatibility",
+      "started_at": 1795300205.333101,
+      "status": "failed",
+      "error": "ValueError: Pure callbacks do not support JVP. Please use `jax.custom_jvp` to use callbacks while taking gradients.",
+      "traceback": "Traceback (most recent call last):\n  File \"/tmp/feyer-independent-review-e2fd659/compatibility_probe.py\", line 21, in probe\n    data=fn();row.update({'status':'passed',**(data or {})})\n         ^^^^\n  File \"/tmp/feyer-independent-review-e2fd659/compatibility_probe.py\", line 50, in <lambda>\n    probe('hessian-vector-product',lambda: {'norm':float(jnp.linalg.norm(jax.jvp(jax.grad(loss),(p0,),(jnp.ones_like(p0),))[1]))})\n                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/feyer-independent-review-e2fd659/compatibility_probe.py\", line 35, in loss\n    c,s,n=df.simulate(**dict(arrays,optimized_parameters=p));det=df.signal_detector(c,s)[ports].squeeze();return jnp.mean(jnp.log10(n/jnp.abs(det)))\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/feyer-independent-review-e2fd659/code/differometor/simulate.py\", line 179, in simulate\n    return simulate_sparse(\n           ^^^^^^^^^^^^^^^^\n  File \"/tmp/feyer-independent-review-e2fd659/code/differometor/sparse.py\", line 397, in simulate_sparse\n    return plan.host_simulate(\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/feyer-independent-review-e2fd659/code/differometor/host.py\", line 783, in forward\n    *outputs, token = run_forward(values, \"active\" if only_optimized else \"full\")\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/feyer-independent-review-e2fd659/code/differometor/host.py\", line 772, in run_forward\n    return jax.pure_callback(host, specs, *args, vmap_method=\"sequential\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/venv-feyer/lib/python3.12/site-packages/jax/_src/callback.py\", line 389, in pure_callback\n    out_flat = pure_callback_p.bind(\n               ^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/venv-feyer/lib/python3.12/site-packages/jax/_src/callback.py\", line 116, in pure_callback_jvp_rule\n    raise ValueError(\nValueError: Pure callbacks do not support JVP. Please use `jax.custom_jvp` to use callbacks while taking gradients.\n--------------------\nFor simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.\n",
+      "duration_seconds": 0.006600618362426758
+    },
+    {
+      "id": "interpreter-abs-at-zero",
+      "kind": "component_edge_case",
+      "started_at": 1795300205.3398423,
+      "status": "failed",
+      "error": "AssertionError: \nNot equal to tolerance rtol=0, atol=0\n\nMismatched elements: 1 / 1 (100%)\nMismatch at index:\n [0]: 0.0 (ACTUAL), 1.0 (DESIRED)\nMax absolute difference among violations: 1.\nMax relative difference among violations: 1.\n ACTUAL: array([0.])\n DESIRED: array([1.])",
+      "traceback": "Traceback (most recent call last):\n  File \"/tmp/feyer-independent-review-e2fd659/compatibility_probe.py\", line 21, in probe\n    data=fn();row.update({'status':'passed',**(data or {})})\n         ^^^^\n  File \"/tmp/feyer-independent-review-e2fd659/compatibility_probe.py\", line 52, in zero_abs\n    fn=lambda x:jnp.abs(x[0]);x=np.asarray([[0.]],dtype=np.float64);v,j=kernel(fn,(1,))(x);expected=np.asarray(jax.jacfwd(fn)(jnp.asarray([0.])));actual=np.asarray(j).reshape(-1);np.testing.assert_allclose(actual,expected,rtol=0,atol=0);return {'actual':actual.tolist(),'expected':expected.tolist()}\n                                                                                                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/venv-feyer/lib/python3.12/site-packages/numpy/testing/_private/utils.py\", line 1780, in assert_allclose\n    assert_array_compare(compare, actual, desired, err_msg=str(err_msg),\n  File \"/workspace/venv-feyer/lib/python3.12/site-packages/numpy/testing/_private/utils.py\", line 988, in assert_array_compare\n    raise AssertionError(msg)\nAssertionError: \nNot equal to tolerance rtol=0, atol=0\n\nMismatched elements: 1 / 1 (100%)\nMismatch at index:\n [0]: 0.0 (ACTUAL), 1.0 (DESIRED)\nMax absolute difference among violations: 1.\nMax relative difference among violations: 1.\n ACTUAL: array([0.])\n DESIRED: array([1.])\n",
+      "duration_seconds": 0.13182735443115234
+    },
+    {
+      "id": "no-optimization-parameters",
+      "kind": "compatibility",
+      "started_at": 1795300205.4718547,
+      "status": "passed",
+      "shapes": [
+        [
+          286,
+          1
+        ],
+        [
+          751,
+          101
+        ],
+        [
+          101
+        ]
+      ],
+      "duration_seconds": 0.13630294799804688
+    }
+  ]
+}
