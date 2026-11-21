@@ -1,0 +1,29 @@
+{
+  "agent_id": "claude-structure-solve",
+  "provider": "claude",
+  "model": "claude-opus-5-5",
+  "branch": "explore/claude-structure-solve",
+  "direction": "structural-linear-system-representation",
+  "starting_revision": "d09dc1d08fb046d08b3b699685d8ff780d611e87",
+  "parent_candidates": [
+    "d09dc1d08fb046d08b3b699685d8ff780d611e87"
+  ],
+  "combined_candidates": [],
+  "approach_tags": [
+    "structural-linear-system-representation"
+  ],
+  "touched_components": [
+    "simulate",
+    "build"
+  ],
+  "deadline_unix": 1795288990,
+  "budget_minutes": 40,
+  "candidate_limit": null,
+  "worktree": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/claude-structure-solve",
+  "execution_host": "local Mac; serial AMD evaluation",
+  "brief_path": "experiments/briefs/claude-structure-solve.md",
+  "brief_sha256": "4016b3d9af7392ed5c9502cc43703ed56e1d351cec86b52c83f9054731484501",
+  "baseline_seconds": 23.84,
+  "runtime_commit": "6a1ac0e9276913f4ee564d4806d0e9701ec1e46c",
+  "operator_admission": "Proposed only; requires reviewed candidate-specific tuner"
+}
