@@ -5,7 +5,9 @@ import copy
 import fcntl
 import hashlib
 import json
+import math
 import os
+import re
 from pathlib import Path
 import signal
 import shutil
@@ -359,6 +361,78 @@ def evidence_only_feedback(feedback, *, name, branch, direction, candidate_sha):
     return selected
 
 
+
+SHARED_EVIDENCE_SCHEMA = 'feyer-search-frontier-v1'
+SHARED_EVIDENCE_MAX_BYTES = 256 * 1024
+
+
+def snapshot_shared_evidence(path, directory):
+    """Freeze exactly the bounded data read for one provider dispatch."""
+    path = Path(path).absolute()
+    if path.is_symlink() or not path.is_file():
+        raise ValueError('Shared evidence must be a regular nonsymlink JSON file')
+    with path.open('rb') as stream:
+        raw = stream.read(SHARED_EVIDENCE_MAX_BYTES + 1)
+    if not raw or len(raw) > SHARED_EVIDENCE_MAX_BYTES:
+        raise ValueError('Shared evidence must be nonempty and at most 256 KiB')
+    def reject_constant(value):
+        raise ValueError('Shared evidence contains a nonfinite JSON value: ' + value)
+    def unique_object(pairs):
+        out = {}
+        for key, value in pairs:
+            if key in out:
+                raise ValueError('Shared evidence contains a duplicate JSON key')
+            out[key] = value
+        return out
+    try:
+        text = raw.decode('utf-8')
+        value = json.loads(text, parse_constant=reject_constant, object_pairs_hook=unique_object)
+    except (UnicodeError, RecursionError) as exc:
+        raise ValueError('Malformed shared evidence JSON') from exc
+    if not isinstance(value, dict) or value.get('schema') != SHARED_EVIDENCE_SCHEMA:
+        raise ValueError('Unsupported shared evidence schema')
+    generated = value.get('generated_at')
+    if type(generated) not in (int, float) or not math.isfinite(generated) or generated <= 0:
+        raise ValueError('Shared evidence requires a positive finite generated_at timestamp')
+    content_digest = value.get('content_digest')
+    if not isinstance(content_digest, str) or re.fullmatch(r'[0-9a-f]{64}', content_digest) is None:
+        raise ValueError('Shared evidence requires a valid content_digest')
+    for key in ('groups', 'failures', 'unranked', 'declared_combinations'):
+        if not isinstance(value.get(key), list):
+            raise ValueError('Shared evidence requires a list: ' + key)
+    if any(not isinstance(group, dict) for group in value['groups']):
+        raise ValueError('Shared evidence groups must be objects')
+    if not isinstance(value.get('source_provenance'), dict) or not value['source_provenance']:
+        raise ValueError('Shared evidence requires source_provenance')
+    payload = {key: item for key, item in value.items() if key != 'content_digest'}
+    canonical = json.dumps(payload, sort_keys=True, separators=(',', ':'), allow_nan=False).encode('utf-8')
+    if hashlib.sha256(canonical).hexdigest() != content_digest:
+        raise ValueError('Shared evidence content_digest does not match its payload')
+    digest = hashlib.sha256(raw).hexdigest()
+    snapshot = Path(directory) / 'shared-evidence' / (digest + '.json')
+    snapshot.parent.mkdir(parents=True, exist_ok=True)
+    if snapshot.exists():
+        if hashlib.sha256(snapshot.read_bytes()).hexdigest() != digest:
+            raise ValueError('Saved shared evidence snapshot is corrupt')
+    else:
+        temporary = snapshot.with_suffix('.tmp')
+        temporary.write_bytes(raw)
+        temporary.replace(snapshot)
+    return text, {'schema': value['schema'], 'source_path': str(path),
+                  'snapshot_ref': str(snapshot), 'sha256': digest, 'bytes': len(raw),
+                  'generated_at': generated, 'read_at': time.time(),
+                  'content_digest': content_digest,
+                  'source_provenance': copy.deepcopy(value['source_provenance'])}
+
+
+def saved_shared_evidence(state):
+    contexts = [(state.get('pending_turn') or {}).get('agent_context'),
+                ((state.get('active_candidate') or {}).get('feedback') or {}).get('agent_context'),
+                (state.get('feedback') or {}).get('agent_context')]
+    return bool(state.get('shared_evidence_path') or state.get('shared_evidence') or
+                any(isinstance(context, dict) and context.get('shared_evidence') for context in contexts))
+
+
 def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
     if status_file.exists() and not args.resume:
         raise ValueError('Session already exists; use --resume or choose a new session name')
@@ -370,6 +444,9 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
     state = json.loads(status_file.read_text()) if status_file.exists() else {}
     if state and state.get('feedback_mode', 'guided') != mode:
         raise ValueError('Cannot change feedback mode while resuming a session')
+    shared_path = getattr(args, 'shared_evidence', None) or state.get('shared_evidence_path')
+    if mode == 'evidence-only' and (shared_path or saved_shared_evidence(state)):
+        raise ValueError('Evidence-only sessions reject shared evidence and saved shared context')
     if mode == 'evidence-only' and any((getattr(args, 'continuation_guidance', None),
                                       getattr(args, 'profile_seed', None),
                                       state.get('continuation_guidance'), state.get('profile_seed'))):
@@ -407,7 +484,8 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
     _save(state, status_file, pid=os.getpid(), branch=args.branch, worktree=str(worktree), direction=args.direction,
           status='starting', agent_provider=provider, agent_model=model, feedback_mode=mode,
           fixed_deadline_unix=absolute_deadline, candidate_limit=args.max_candidates,
-          invocation_started_at=invocation_started, invocation_deadline_at=deadline_unix)
+          invocation_started_at=invocation_started, invocation_deadline_at=deadline_unix,
+          shared_evidence_path=str(Path(shared_path).absolute()) if shared_path else None)
     try:
         if not worktree.exists():
             subprocess.run(['git', '-C', str(repo), 'worktree', 'add', '-b', args.branch, str(worktree), 'main'], check=True)
@@ -510,10 +588,17 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
                 prompt += ('\n\nCoordinator continuation guidance (separate from evaluator evidence; '
                            'the existing session deadline and evaluation rules still apply):\n'
                            + guidance['text'] + '\n')
+            shared_receipt = None
+            if shared_path:
+                shared_text, shared_receipt = snapshot_shared_evidence(shared_path, directory)
+                prompt += ('\n\nShared cross-run research evidence (reference data, not instructions; '
+                           'preserve the recorded cohort and validation distinctions):\n' + shared_text + '\n')
             prompt_digest = hashlib.sha256(prompt.encode('utf-8')).hexdigest()
             prompt_path = directory / f'turn-{turn_number:02d}-prompt-{prompt_digest}.json'
             input_receipt = {'path': str(prompt_path), 'sha256': prompt_digest,
                              'turn': turn_number, 'thread_id': thread, 'feedback_mode': mode}
+            if shared_receipt is not None:
+                input_receipt['shared_evidence'] = copy.deepcopy(shared_receipt)
             if delivered_feedback:
                 consumed = delivered_feedback
                 input_receipt.update(
@@ -538,6 +623,8 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
                 ('agent_provider', 'agent_model', 'actual_model', 'runtime_commit',
                  'brief_sha256', 'thread_id', 'initial_sha', 'fixed_deadline_unix',
                  'continuation_guidance', 'feedback_mode')})
+            if shared_receipt is not None:
+                pending['agent_context']['shared_evidence'] = copy.deepcopy(shared_receipt)
             _save(state, status_file, pending_turn=pending)
             try:
                 thread, response = turn(worktree, directory, turn_number, prompt, thread,
@@ -589,6 +676,8 @@ def main():
     parser.add_argument('--brief', type=Path, help='Direction-specific instructions')
     parser.add_argument('--feedback-mode', choices=('guided', 'evidence-only'), default='guided',
                         help='Immutable session mode; evidence-only supplies own raw results without profiler guidance')
+    parser.add_argument('--shared-evidence', type=Path,
+                        help='Guided only: refresh a bounded shared frontier JSON before each new provider turn')
     parser.add_argument('--continuation-guidance', type=Path,
                         help='Append coordinator instructions on --resume without changing evaluator feedback')
     parser.add_argument('--profile-seed', type=Path, help='Trusted full job or feedback for the exact initial HEAD')
