@@ -34,3 +34,26 @@
   noise relL2 2.3e-8; carrier relL2 4.8e-12; powers 6.7e-12; gradient relL2 8.7e-8,
   strict (rtol 1e-7) fails 3/193 at indices 161 (rel 7.8e-7), 33 (6.9e-7), 180 (5.1e-7) — the
   same indices that failed strict for every earlier factorization change (dense shared-LU).
+- SHA `0dea4ec707f970e2003cd8f43fcb629be710d5ac`. Screen `b24872db821b4678a6be01a63ff9233c`
+  (request e27eb152-95f8-4351-915a-d738da086424): first run **8.525 s** (parent 19.567 s full;
+  screen profile runs no official checks); wall 9.05 s; peak RSS 0.80 GB (parent ~14 GB).
+- Cross-setup harness (coordinator's /tmp/claude-gencheck, vs pristine): FAILS on 4/8 setups —
+  max |dlog S| voyager 3.4e-3, uifo_rand1 2.2e-4, uifo_rand3 5.8e-5, uifo_20_5000 2.8e-5.
+- Diagnosis with extended-precision (x86 clongdouble residual) iterative refinement as a truth
+  proxy (refinement converges to 1e-16 in 2 steps):
+  - voyager noise^2: dense LU error 6.3e-13, plain SuperLU 5.5e-3 (COLAMD/MMD/Equil same;
+    NATURAL ordering 1.1e-12), SuperLU + 1 double-precision refinement step 6.0e-13.
+  - uifo_rand1 noise^2: dense 1.3e-12, SuperLU 4.4e-16. |detected| (2-port differential):
+    **dense 2.6e-4**, SuperLU 6.6e-5, SuperLU + 1 refinement 9.1e-11.
+  - uifo_rand3 |detected|: **dense 3.8e-5**, SuperLU 2.0e-8, + refinement 2.5e-8.
+  - => plain SuperLU is not accurate enough; on rand1/rand3 the pristine dense result itself is
+    the inaccurate one, so "match pristine" is not the right target there.
+- Decision: reject candidate 1 for numerics (fast, but voyager/uifo_20_5000 wrong).
+
+## Candidate 2 — candidate 1 + iterative refinement in every sparse solve
+- `_host_solve`: after the SuperLU solve, refine x += solve(b - op(A) x) (double precision),
+  1 to 3 steps, stop when max|dx| <= 1e-14 max|x|. Applies to forward and backward solves.
+- Cross-setup (vs pristine): aligo 1.3e-10, dev 6.7e-8, dev_perturbed 3.3e-8, uifo_20_5000
+  4.9e-11, uifo_rand2 9.7e-10, voyager 1.0e-11 (all OK); uifo_rand1 2.0e-4 and uifo_rand3
+  5.8e-5 differ from pristine where pristine itself deviates from the refined truth (above).
+  Gradient relL2 vs pristine <= 1.5e-5 everywhere (rand3); dev 8.7e-8.

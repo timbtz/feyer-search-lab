@@ -98,8 +98,25 @@ def _host_solve(pattern: SparsePattern, transpose: bool, values, rhs):
     for item in range(values.shape[0]):
         matrix = csc_matrix((values[item], pattern.indices, pattern.indptr), shape=shape)
         factor = splu(matrix, permc_spec="COLAMD")
-        result[item] = factor.solve(np.ascontiguousarray(rhs[item].T), trans=trans).T
+        operator = matrix.T if transpose else matrix
+        right = np.ascontiguousarray(rhs[item].T)
+        solution = factor.solve(right, trans=trans)
+        # Iterative refinement. The systems are badly scaled (cond ~ 1e30), so the
+        # sparse pivot order alone can lose accuracy in derived quantities such as
+        # quantum noise; refinement restores (and on some setups exceeds) the
+        # accuracy of the dense reference. At least one step, at most REFINEMENT_STEPS.
+        for _ in range(REFINEMENT_STEPS):
+            correction = factor.solve(right - operator @ solution, trans=trans)
+            solution = solution + correction
+            if np.max(np.abs(correction)) <= REFINEMENT_TOLERANCE * np.max(np.abs(solution)):
+                break
+        result[item] = solution.T
     return result.reshape(lead + (count, size))
+
+
+# Maximum refinement steps per solve and the relative correction size that ends it.
+REFINEMENT_STEPS = 3
+REFINEMENT_TOLERANCE = 1e-14
 
 
 def _call(pattern, transpose, values, rhs):
