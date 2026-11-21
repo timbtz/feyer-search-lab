@@ -113,8 +113,9 @@ def update(
         Optional builder-produced structural partition of the function rows.
         `function_rows` has static function-ID keys and original input-row arrays;
         `output_rows` maps original output rows to concatenated group rows.
+        `parameter_indices`, when present, supplies prepared input indices per group.
         An optional `unique_matrix_indices` key marks verified distinct destinations.
-        Omit or rebuild metadata when changing selectors or matrix destinations.
+        Omit or rebuild metadata when changing selectors, input indices or matrix destinations.
 
     Returns
     -------
@@ -144,8 +145,12 @@ def update(
         function_rows = component_groups["function_rows"]
         for function_index in sorted(function_rows):
             rows = function_rows[function_index]
-            # Compose structural indices before gathering differentiable values.
-            group_inputs = parameters[function_input_indices[rows]]
+            # New builders compose these structural indices on the host.
+            if "parameter_indices" in component_groups:
+                input_indices = component_groups["parameter_indices"][function_index]
+            else:
+                input_indices = function_input_indices[rows]
+            group_inputs = parameters[input_indices]
             group_values.append(_evaluate_component_group(function_index, group_inputs))
         if group_values:
             output_matrix = jnp.concatenate(group_values, axis=0)
