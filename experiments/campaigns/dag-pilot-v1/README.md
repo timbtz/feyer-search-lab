@@ -1,8 +1,8 @@
 # Campaign dag-pilot-v1
 
-Export schema: `feyer-campaign-export-v1`. Snapshot: `88d10a1fd02ef692cfd3ba82ab48a0eb0ccacd5d515008d9ac341feb6d7c9dff`.
+Export schema: `feyer-campaign-export-v1`. Snapshot: `9b45c8407e51e1f219c89b6b6e1c1d69abd1591f27d086d4bcded67d18f60c05`.
 
-[Frozen proposer context](contexts/f8affc520d363706646f0bffb6d57d6bd6c9f0d6f57640fa69e540e5288c6587.json) — SHA256 `f8affc520d363706646f0bffb6d57d6bd6c9f0d6f57640fa69e540e5288c6587`.
+[Frozen proposer context](contexts/83ad5453fe05d5804bde25d432a241d9f3e651b04c8ab90986ebe0e58b82670c.json) — SHA256 `83ad5453fe05d5804bde25d432a241d9f3e651b04c8ab90986ebe0e58b82670c`.
 
 This is an evidence ledger. Scientific parents describe chosen inputs to an experiment; they are not necessarily Git parents. Phase changes are observations, not proof that one edit caused the difference. A failed attempt remains part of the history.
 
@@ -811,5 +811,6 @@ Frozen specification: `340b0328994b565ff10f277a62029154eed8346995b6ccec5a616e87b
 | 8 | evidence_observed | coordinator | {"candidate_id": "seed8", "category": "valid", "evidence_digest": "fd00ecb3420f8086341aa98abbea23f6ad20bbf19e7331993219037cb0324199", "evidence_id": "e6e5badb945c47ae927e511a3ff15fd7:820c7dfc19d0099d62f3b2315da0fb1dd7ee7ee9203b875447cfc2bd07d956a2", "job_id": "e6e5badb945c47ae927e511a3ff15fd7", "progress": null, "status": "valid", "strikes": 0} |
 | 9 | evidence_observed | coordinator | {"candidate_id": "seed8", "category": "valid", "evidence_digest": "125d6c2c23633f90c332fa3335c1140be43ba921ee2fa03b888d3b7ec2e64d02", "evidence_id": "415bab6b82ef42baa0e0a5277df7aeb9:49937d87a08c533f73470c9dcc48dbc7870c12f467d9a8b5de192dffb5484afa", "job_id": "415bab6b82ef42baa0e0a5277df7aeb9", "progress": null, "status": "valid", "strikes": 0} |
 | 10 | evidence_observed | coordinator | {"candidate_id": "seed8", "category": "valid", "evidence_digest": "b749c17cf48c04b1e780aeec1f0f2bf0a923112ea66497597c3c87831f15189b", "evidence_id": "882be0c143db470c9686cd2ba9e44c77:b547550f15337f868903dbcb118fa79d025993744270cf25cc8c7816a2e5616d", "job_id": "882be0c143db470c9686cd2ba9e44c77", "progress": null, "status": "valid", "strikes": 0} |
+| 11 | decision_recorded | coordinator | {"decision_id": "5ac3b5b375804ee8a55411e5c27b4e65", "payload": {"plan": {"action": "mutate", "attempted_parameters": [{"checkpoint": true, "map_batch_size": null, "prevent_cse": false}], "base_candidate": "seed8", "dimensions": ["checkpoint", "prevent_cse"], "lane_id": "checkpoint", "owner": "qwen-checkpoint", "parent_candidates": ["seed8"], "recipes": {"checkpoint": {"dimensions": ["checkpoint", "prevent_cse"]}, "mapping": {"dimensions": ["map_batch_size"]}}, "round_id": "round-001"}, "policy": "frozen-lane-three-strike-v1"}, "payload_digest": "3ffbef7c0b61e14d853336ac4ff544a09a83c46cc40c63cf33bb6efe791aedc7"} |
 
 Guidance may propose a new round. It cannot silently replace frozen operators, ownership, evaluation requirements or budgets. Only the coordinator can admit that round through the campaign state API. Publishing this ledger does not merge or promote candidate code.
