@@ -1,0 +1,15 @@
+{
+  "deadline_unix": 1795296029.2574458,
+  "max_total_evaluations": 40,
+  "allocations": {
+    "cpu2_seed_and_first_menu": 8,
+    "lane34_capacity_calibrations": 2,
+    "lane34_unseen_search": 16,
+    "finalist_reference_repeats": 14
+  },
+  "baseline_jobs": [
+    "7da252d634e542b6a3c64c7e743b77e3",
+    "be32d82593f043489d653a13f6e2694a"
+  ],
+  "policy": "Reservations sum to40; no automatic expansion beyonddeadline ornewcohort timing promotion."
+}

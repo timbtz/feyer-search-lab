@@ -1,0 +1,13 @@
+{
+  "controller_commit": "838a2370de8b5b97a3f204326f4f2363720ed877",
+  "base_policy_commit": "bea601a8799aea4173c6c98287bac98ef755ef2f",
+  "continuation_sha256": "de84e3a17cefe8e88adae95bb7cd036a319bd66d39dc15407f261b8114e7794a",
+  "deadline_unix": 1795296029.2574458,
+  "search_lane_root": "/workspace/feyer-lab-lane1",
+  "cpu": 34,
+  "memory_budget_bytes": 16000000000,
+  "new_search_jobs_reserved": 16,
+  "repeat_jobs_reserved": 14,
+  "all_lane_job_ceiling": 40,
+  "comparison_context": "Concurrent capacity-expansion epoch; not quiet serial promotion."
+}

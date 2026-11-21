@@ -1,0 +1,33 @@
+{
+  "repo": "/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/layout-numerical-lane1/worktree",
+  "branch": "explore/layout-numerical-lane1",
+  "campaign_id": "layout-numerical-lane1",
+  "policy": {
+    "worker_sha256": "d3c212da0ab1215187407d9cd21dc2cbb5f88dc0b5ee7885135bf7f002d14b58",
+    "evaluator_sha256": "d5950bbd872e5b00ad63f0bd7081e5096fb14ba9c96c80a6854a3b714719bd4e",
+    "comparison_evaluator_sha256": "1bc9b39fe0023afc3db93211b9e3d6cd37ed2b13ee281f142749c2237a16ea8f",
+    "reference_arrays_sha256": "c3f6cba045f8b41f488dc19c960f5056b5f2e75cfa64f9a687b52f2a9ba2751e",
+    "memory_budget_bytes": 16000000000,
+    "cpu": 34
+  },
+  "host": "amd-hackathon",
+  "root": "/workspace/feyer-lab-lane1",
+  "publish": true,
+  "selector": "topology-smac",
+  "optimizer": {
+    "version": "exact-topology-finite-v1",
+    "packages": {
+      "smac": "2.4.1",
+      "ConfigSpace": "1.2.2",
+      "numpy": "2.5.5",
+      "scipy": "1.18.1",
+      "scikit-learn": "1.9.1"
+    },
+    "n_trees": 32,
+    "seed": 0,
+    "source_hashes": {
+      "topology_smac.py": "06a56da6bc99447abfabcf11055873863e397412af99c4fe2a765f16f362cfcc",
+      "topology_tuning.py": "58b4c0d12c4dc871c3873eb75f03bdc1affe2489dba4b700b170f67f1bcee423"
+    }
+  }
+}

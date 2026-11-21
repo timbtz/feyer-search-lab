@@ -1,0 +1,17 @@
+{
+  "pid": 48985,
+  "started_at": 1795293461.2045891,
+  "deadline_unix": 1795296029.2574458,
+  "command": [
+    "/Users/t.betz/Documents/Feyer challenge/.lab/venv-topology-smac/bin/python",
+    "-u",
+    "-c",
+    "from pathlib import Path; import sys,json,time; from types import SimpleNamespace; from lab.topology_run import run; from lab.evolution_run import atomic_json; state=Path(sys.argv[1]); result=run(SimpleNamespace(state=state,once=False)); atomic_json(state / \"outcome.json\", dict(result, observed_at=time.time())); print(json.dumps(result),flush=True)",
+    "/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/layout-numerical-lane1"
+  ],
+  "cwd": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/topology-lane-policy",
+  "controller_commit": "838a2370de8b5b97a3f204326f4f2363720ed877",
+  "root": "/workspace/feyer-lab-lane1",
+  "cpu": 34,
+  "log": "/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/layout-numerical-lane1/controller.log"
+}
