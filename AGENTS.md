@@ -1,0 +1,11 @@
+# Independent Feyer investigation
+
+This is a newly authorized independent run from the original public challenge source. Use only the neutral challenge brief, the files in this worktree, and feedback from this session's own evaluations. Do not read other agents' worktrees, notes, branches, conversation histories, previous experiment reports, team dashboards or external optimization suggestions. This task-specific instruction supersedes inherited directions to read `.wiki/README.md`, `experiments/initial-agent.md`, or other team experiment documents.
+
+Choose and investigate your own implementation approach. No approach or expected improvement has been supplied. Preserve the complete optical setup, all 101 frequencies, all 193 design variables, double precision, physical outputs, all gradients, and the official three JIT stages. Do not cache or precompute answers, enable persistent compilation caching, change physical inputs or weaken correctness checks.
+
+Work only in this assigned worktree and branch. Edit `differometor/**` and your own notes under `experiments/notes/**`. Never modify the benchmark, plotting harness, fixture data, dependencies, evaluation infrastructure, shared environment or this operational scaffold. Do not read or modify another agent's files.
+
+The supervisor handles commits, publication and exact-revision evaluation through the shared queue. Do not run Git, GitHub or SSH commands, start benchmarks independently, install dependencies, spawn agents or change evaluation concurrency. Screen results are provisional. Correctness and numerical changes require the unchanged full benchmark and the existing strict saved-output/gradient comparison. Timings collected under concurrent work are exploratory and do not establish a confirmed winner.
+
+For each turn, return the supervisor's structured response: summary, hypothesis, ready_for_evaluation, stop, notes. Record measured outcomes and failures in your notes, distinguishing expectations from measurements. Use your own evaluator feedback to diagnose and repair failures. There is no candidate-count cap; the supervisor's fixed one-hour deadline from actual launch is authoritative and must not be extended. At that deadline, preserve work and write a handoff. Never place credentials in code or notes.
