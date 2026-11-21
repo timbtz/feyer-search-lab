@@ -1712,6 +1712,10 @@ def pairs_to_arrays(
                     (np.concatenate(arrays["carrier_row_indices"]), np.concatenate(arrays["carrier_column_indices"]))
                 )
 
+            if component_groups is not None and matrix_shapes is not None:
+                if _matrix_indices_are_unique(carrier_solution_placing_indices, matrix_shapes[system]):
+                    component_groups[system]["unique_carrier_placing_indices"] = ()
+
             return (
                 jnp.array(function_input_indices, dtype=int),
                 jnp.array(arrays["function_indices"], dtype=int),

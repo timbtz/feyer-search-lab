@@ -232,3 +232,42 @@ Proposal: check each system's full destination list at setup, normalize negative
 Hypothesis: exposing proven non-overlap may simplify scatter differentiation and compilation, particularly the forward AD residual preparation. No claim is made that current HLO contains redundant duplicate-resolution work or that the public fixture is proven unique before the builder runs. Setup checks count in the objective. Generic callers modifying selectors or destination indices must rebuild or omit grouping metadata. Require fresh full official and strict validation; candidate 5 remains fallback.
 
 Implemented the host-only proof and static key marker, with actual matrix shapes supplied by `run_build_step`. Absent metadata/shapes, unproved dummy updates, overlapping/aliased indices, unequal coordinate-list lengths and out-of-bounds indices retain `unique_indices=False`. Syntax and diff checks passed. Tested the extracted proof helper against an independent Python nested-list indexing oracle on 3600 cases over matrix dimensions 1–6, plus explicit negative aliases, duplicate and invalid cases; all passed. AST scope comparison confirms the physical `simulate` body is unchanged (documentation only), and modifications are limited to structural setup and the scatter hint. No local numerical/JAX execution or benchmark. Candidate SHA/run IDs and performance remain pending supervisor.
+
+## Candidate 6 evaluation and decision
+
+- SHA `4e8292e6dead5c681fd4622016c6ab614ccbde07`, immediate parent `1ccbecf572eb90c4866a8d077b5d15d6bd28124d`.
+- Screen `a3c3e46a7dde46a98937690fcdacd1b1`, request `f96d70255d954985b5424b50dc13eee9`: passed, first-run 25.750595091 s, compilation/lowering 10.601917751 s, process wall 26.985850697 s, peak RSS 13510388 KiB.
+- Full `56a6c98700e44d8db3aae748f5f87a92`, request `7208b5d5e9bc4a989f814c2b5b833baa`: official and strict passed; first-run 25.703418577 s, compilation/lowering 10.620367493 s, warm median 14.226642456 s, process wall 108.144107947 s, peak RSS 13515180 KiB. Full CPU2 workload/environment unchanged.
+
+| Full first-run phase | Seconds |
+| --- | ---: |
+| imports | 0.293313367 |
+| initialize | 0.002878660 |
+| load | 0.001419147 |
+| build | 0.807291880 |
+| forward lower | 0.691843785 |
+| forward compile | 7.299492361 |
+| forward execute | 12.128427580 |
+| sensitivity lower | 0.076930014 |
+| sensitivity compile | 0.483766779 |
+| sensitivity execute | 0.000862632 |
+| gradient lower | 0.188822137 |
+| gradient compile | 1.879512416 |
+| gradient execute | 1.848562000 |
+| host transfer | 0.000295816 |
+
+Comparison inspected: saved physical outputs, parameters and frequencies exactly match. Gradient max absolute error 1.5178830414797062e-18, relative L2 2.153189561034473e-23, normalized tolerance error 2.627152248723926e-11, no failures at unchanged strict tolerances. Loss unchanged at 9.793036291535532e-08, official gradient check passed, reference log-sensitivity error 5.374104176780747e-06. Saved comparison scope remains last warm evaluation.
+
+Decision: retain candidate 6 as lowest observed validated full first-run result. Versus candidate 5, first-run fell 0.285184 s, compilation/lowering fell 0.116989 s and warm median fell 0.247823 s. Single full timing is not repeat confirmation. The evaluator did not report which systems received the uniqueness marker, so no measured per-system application count or compiled-work removal is claimed.
+
+## Candidate 7 proposal
+
+Same thread `01a1fedf-f7aa-77b2-885d-75aceeb4c48c`; resumed with 1653 seconds remaining. Immediate numerical parent `4e8292e6dead5c681fd4622016c6ab614ccbde07`; no external combination.
+
+Source evidence: immediately after signal component assembly, `simulate` gathers carrier-coupled entries, scales them by the solved carrier, then overwrites them with another `.at[:, rows, columns].set(signal_entries)`. These destinations are separately available as host `carrier_solution_placing_indices` in the signal builder. Candidate 6's proof only applies to the component-update scatter and says nothing about this second destination list.
+
+Proposal: run the existing negative-alias-aware uniqueness proof independently on the carrier-coupling destination list. Store a separate static marker only on success and use it for this signal scaling scatter. Distinct row/column pairs imply disjoint updates across the leading frequency batch: each frequency has its own matrix, and the batch slice occurs once. No scaling arithmetic, carrier gather, destination ordering or conjugation change. Unknown/overlapping cases retain generic scatter behavior.
+
+Hypothesis: this independent hint may reduce duplicate-handling residual/compilation work for the large frequency-batched signal scatter. Its actual compiled effect is unmeasured, and extra setup also counts. Candidate 6 remains the validated fallback; require fresh official and strict validation.
+
+Implementation ready. Syntax/whitespace checks passed. Exact AST isolation verifies only the independently guarded builder marker and the signal-scaling scatter's `unique_indices` keyword changed relative to candidate 6. The existing proof helper is unchanged; batch-coordinate non-overlap was additionally checked for 1, 2 and 101 samples. No local simulator/benchmark run. Candidate SHA, run IDs and measurements pending supervisor.

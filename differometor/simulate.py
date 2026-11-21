@@ -370,7 +370,11 @@ def simulate(
         * carrier[:, signal_carrier_indices.flatten()]
     )
     signal_matrix = signal_matrix.at[:, signal_carrier_placing_indices[0], signal_carrier_placing_indices[1]].set(
-        signal_entries
+        signal_entries,
+        unique_indices=(
+            component_groups is not None
+            and "unique_carrier_placing_indices" in component_groups["signal"]
+        ),
     )
 
     # Apply conjugation rules to enforce upper and lower sideband symmetry.
