@@ -239,7 +239,7 @@ class Broker:
         model = (task['provider']['model'] if task['provider']['model_policy'] == 'specified'
                  else self.config['designated_model'])
         reasoning = task['provider'].get('reasoning') or self.config['designated_reasoning']
-        state.update(resolved_model=model, resolved_reasoning=reasoning)
+        state.update(resolved_model=model, resolved_reasoning=reasoning, model_started_at=time.time())
         write_json(directory / 'state.json', state)
         cmd = [self.config['codex'], 'exec', '--ignore-user-config', '-C', str(worktree), '--approve-for-me',
                '-m', model, '-c', 'model_reasoning_effort=' + json.dumps(reasoning),
@@ -282,6 +282,11 @@ class Broker:
             'campaign_id': task['campaign_id'], 'round_id': task['round_id'],
             'round_spec_sha256': task['round_spec_sha256'], 'kind': task['kind'],
             'parent_candidates': task['parent_candidates'], 'commit_sha': candidate,
+            'base_commit': task['parent_candidates'][0]['commit_sha'],
+            'scaffold_commit': state['prepared_sha'],
+            'changed_paths_scope': 'agent delta relative to scaffold_commit',
+            'scaffold_changed_paths': textgit(worktree, 'diff', '--name-only',
+                task['parent_candidates'][0]['commit_sha'], state['prepared_sha']).splitlines(),
             'content_sha256': digest(changes), 'assignment_commit': state['assignment_commit'],
             'task_sha256': state['task_sha256'], 'brief_sha256': task['brief']['sha256'],
             'context_sha256': task['context']['sha256'], 'runtime_commit': self.runtime,
@@ -296,6 +301,8 @@ class Broker:
             'parameters_after': json.loads(response['parameters_after_json']),
             'ready_for_evaluation': task['kind'] == 'candidate' and response['ready_for_evaluation'],
             'validation': 'not_evaluated', 'elapsed_seconds': time.time() - state['started_at'],
+            'task_started_at': state['started_at'], 'model_started_at': state.get('model_started_at'),
+            'model_completed_at': state.get('model_completed_at'),
             'deadline_unix': state['deadline_unix'], 'changed_paths': paths,
             'artifacts': {},
         }
@@ -395,7 +402,7 @@ class Broker:
             state.update(status='running', worktree=str(worktree), prepared_sha=prepared)
             write_json(state_path, state)
             self.turn(task, state, directory, brief, context, lock_fd)
-            state['status'] = 'responded'
+            state.update(status='responded', model_completed_at=time.time())
             write_json(state_path, state)
             self.finish(task, state, directory)
         except BaseException as exc:
