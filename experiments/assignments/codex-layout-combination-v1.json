@@ -1,7 +1,7 @@
 {
   "assignment_id": "codex-layout-combination-v1",
   "owner_session": "codex-profile-guided-v1",
-  "status": "prepared_for_next_safe_boundary",
+  "status": "withdrawn_before_delivery",
   "created_at": 1795292077.1311412,
   "component_parents": [
     "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
@@ -21,5 +21,8 @@
     }
   ],
   "candidate_sha": null,
-  "deadline_unix": 1795295364.088367
+  "deadline_unix": 1795295364.088367,
+  "transferred_at": 1795292807.38945,
+  "new_owner": "numerical campaign coordinator 01a1ff1a-68a0-7463-a800-57b9f7f48aba",
+  "reason": "User authorized fresh numerical campaign; split-layout source/menu ownership transferred to avoid duplicate authors. Astra never received this assignment."
 }

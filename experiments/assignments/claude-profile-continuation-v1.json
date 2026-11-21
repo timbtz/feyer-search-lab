@@ -1,0 +1,10 @@
+{
+  "status": "authorized_same_session_followup",
+  "at": 1795293390.936065,
+  "session_id": "a825c74d-c575-4b2c-bf1b-d3c07bcc2e26",
+  "deadline_unix": 1795294994.3922188,
+  "last_candidate": "d28804741cce249b28a88a1301f04fd7ebe14839",
+  "brief_path": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/profiler-session-records/experiments/briefs/claude-profile-continuation-v1.md",
+  "brief_sha256": "1026dff4e9f3c0025ce4ea45f5163c958797d55d3aef85a3d1c0db3f3c77d708",
+  "scope": "source-backed build reduction or precise diagnostic request; no extra budget"
+}
