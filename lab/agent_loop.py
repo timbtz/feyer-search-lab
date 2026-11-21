@@ -1,6 +1,7 @@
 """Run a bounded, resumable Codex conversation with measured evaluator feedback."""
 import argparse
 import contextlib
+import copy
 import fcntl
 import hashlib
 import json
@@ -319,10 +320,9 @@ def _commit_candidate(pending, args, worktree, state, status_file):
         current = git(worktree, 'rev-parse', 'HEAD')
     active = {'iteration': pending['iteration'], 'sha': current, 'response': response, 'jobs': {},
               'feedback': {'candidate_sha': current, 'agent_response': response,
+                           'input_receipt': pending.get('input_receipt'),
                            'provenance': {'parent_candidates': [state.get('candidate_sha') or state.get('initial_sha')]},
-                           'agent_context': {key: state.get(key) for key in
-                               ('agent_provider', 'agent_model', 'actual_model', 'runtime_commit',
-                                'brief_sha256', 'thread_id', 'initial_sha', 'fixed_deadline_unix')}}}
+                           'agent_context': copy.deepcopy(pending.get('agent_context'))}}
     _save(state, status_file, active_candidate=active, pending_turn=None,
           candidates=pending['iteration'], candidate_sha=current, status='candidate_ready')
     return active
@@ -333,6 +333,17 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
         raise ValueError('Session already exists; use --resume or choose a new session name')
     if args.resume and not status_file.exists():
         raise ValueError('No saved session exists to resume')
+    guidance = None
+    guidance_path = getattr(args, 'continuation_guidance', None)
+    if guidance_path:
+        if not args.resume:
+            raise ValueError('Continuation guidance requires --resume')
+        path = Path(guidance_path).resolve()
+        raw = path.read_bytes()
+        if len(raw) > 65536 or not raw.strip():
+            raise ValueError('Continuation guidance must be nonempty and at most 65536 bytes')
+        guidance = {'path': str(path), 'sha256': hashlib.sha256(raw).hexdigest(),
+                    'text': raw.decode('utf-8')}
     state = json.loads(status_file.read_text()) if status_file.exists() else {}
     provider = getattr(args, 'agent_provider', 'codex')
     model = getattr(args, 'agent_model', None)
@@ -370,9 +381,15 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
         if seed_path and not state.get('profile_seed'):
             state['profile_seed'] = load_seed(seed_path, git(worktree, 'rev-parse', 'HEAD'))
         runtime_root = Path(__file__).resolve().parent.parent
+        if guidance:
+            receipt = directory / 'continuation-guidance' / (guidance['sha256'] + '.json')
+            receipt.parent.mkdir(parents=True, exist_ok=True)
+            if not receipt.exists():
+                write_json(receipt, guidance)
         _save(state, status_file, initial_sha=state.get('initial_sha') or git(worktree, 'rev-parse', 'HEAD'),
               runtime_commit=git(runtime_root, 'rev-parse', 'HEAD'),
-              brief_sha256=hashlib.sha256(brief.encode()).hexdigest())
+              brief_sha256=hashlib.sha256(brief.encode()).hexdigest(),
+              continuation_guidance=guidance)
         if provider == 'claude':
             from .claude_turn import claude_turn
             turn, turn_options = claude_turn, {'model': model}
@@ -436,6 +453,29 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
             if not state.get('feedback') and state.get('profile_seed'):
                 prompt += 'Initial exact-parent evidence (including numerical comparison):\n' + json.dumps(state['profile_seed'], indent=2) + '\n'
             prompt += prompt_guidance(state.get('feedback') or state.get('profile_seed'))
+            if guidance:
+                prompt += ('\n\nCoordinator continuation guidance (separate from evaluator evidence; '
+                           'the existing session deadline and evaluation rules still apply):\n'
+                           + guidance['text'] + '\n')
+            prompt_digest = hashlib.sha256(prompt.encode('utf-8')).hexdigest()
+            prompt_path = directory / f'turn-{turn_number:02d}-prompt-{prompt_digest}.json'
+            input_receipt = {'path': str(prompt_path), 'sha256': prompt_digest,
+                             'turn': turn_number, 'thread_id': thread}
+            if state.get('feedback'):
+                consumed = state['feedback']
+                input_receipt.update(
+                    consumed_feedback_digest=hashlib.sha256(json.dumps(
+                        consumed, sort_keys=True, separators=(',', ':'), allow_nan=False
+                    ).encode('utf-8')).hexdigest(),
+                    consumed_candidate_sha=consumed.get('candidate_sha'))
+            if not prompt_path.exists():
+                write_json(prompt_path, dict(input_receipt, prompt=prompt))
+            pending['input_receipt'] = input_receipt
+            pending['agent_context'] = copy.deepcopy({key: state.get(key) for key in
+                ('agent_provider', 'agent_model', 'actual_model', 'runtime_commit',
+                 'brief_sha256', 'thread_id', 'initial_sha', 'fixed_deadline_unix',
+                 'continuation_guidance')})
+            _save(state, status_file, pending_turn=pending)
             try:
                 thread, response = turn(worktree, directory, turn_number, prompt, thread,
                                        max(0.01, deadline-time.monotonic()), lock_fds, **turn_options)
@@ -446,6 +486,8 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
                     return
                 raise
             pending['response'] = response
+            pending['agent_context'].update(thread_id=thread,
+                                            actual_model=model if provider == 'claude' else None)
             _save(state, status_file, thread_id=thread, last_response=response, pending_turn=pending,
                   actual_model=model if provider == 'claude' else None)
             if _commit_candidate(pending, args, worktree, state, status_file) is None:
@@ -482,6 +524,8 @@ def main():
     parser.add_argument('--agent-provider', choices=('codex', 'claude'), default='codex')
     parser.add_argument('--agent-model', help='Explicit Claude model; no automatic fallback')
     parser.add_argument('--brief', type=Path, help='Direction-specific instructions')
+    parser.add_argument('--continuation-guidance', type=Path,
+                        help='Append coordinator instructions on --resume without changing evaluator feedback')
     parser.add_argument('--profile-seed', type=Path, help='Trusted full job or feedback for the exact initial HEAD')
     parser.add_argument('--deadline-unix', type=float, help='Fixed absolute deadline, retained across resumes')
     parser.add_argument('--repo',type=Path,required=True)

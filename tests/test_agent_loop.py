@@ -1,5 +1,6 @@
 """Guards used before an autonomous edit becomes a committed candidate."""
 import subprocess
+import hashlib
 import json
 import tempfile
 import time
@@ -233,13 +234,16 @@ class AgentResumeTests(unittest.TestCase):
 
 
 class AgentLoopIntegrationTests(unittest.TestCase):
+    def test_resume_guidance_preserves_feedback_session_and_deadline(self):
+        self.exercise_loop(2, 2, resume_guidance=True)
+
     def test_two_candidates_keep_one_conversation_and_versioned_feedback(self):
         self.exercise_loop(2, 2)
 
     def test_no_count_limit_continues_past_four_candidates(self):
         self.exercise_loop(None, 5)
 
-    def exercise_loop(self, candidate_limit, expected_candidates):
+    def exercise_loop(self, candidate_limit, expected_candidates, resume_guidance=False):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             repo, worktree, origin = root / 'repo', root / 'worktree', root / 'origin.git'
@@ -259,6 +263,7 @@ class AgentLoopIntegrationTests(unittest.TestCase):
             args = SimpleNamespace(repo=repo, worktree=worktree, name='trial', branch='explore/trial',
                 direction='imports', resume=False, host='unused', github_repo='test/repo',
                 max_minutes=1, max_candidates=candidate_limit, baseline_seconds=36.177949)
+            args.deadline_unix = time.time() + 60
             calls = []
             submitted = {}
             client = Mock()
@@ -305,6 +310,65 @@ class AgentLoopIntegrationTests(unittest.TestCase):
             self.assertIsNone(state['active_candidate'])
             with self.assertRaisesRegex(ValueError, 'already exists'):
                 run(args)
+            if resume_guidance:
+                previous_feedback = state['feedback']
+                previous_report = (reports / 'candidate-02.json').read_bytes()
+                guidance = root / 'guidance.md'
+                guidance.write_text('Inspect build index packing; do not change the benchmark.')
+                args.resume = True
+                args.max_candidates = expected_candidates + 1
+                args.continuation_guidance = guidance
+                with patch('lab.agent_loop.Client', return_value=client), \
+                     patch('lab.agent_loop.codex_turn', side_effect=turn), \
+                     patch('lab.agent_loop.github_status'):
+                    run(args)
+                self.assertEqual(calls[-1][0], 'same-thread')
+                self.assertIn(guidance.read_text(), calls[-1][1])
+                self.assertIn(json.dumps(previous_feedback, indent=2), calls[-1][1])
+                self.assertEqual((reports / 'candidate-02.json').read_bytes(), previous_report)
+                resumed = json.loads((repo / '.lab/sessions/trial/status.json').read_text())
+                self.assertEqual(resumed['fixed_deadline_unix'], args.deadline_unix)
+                self.assertEqual(resumed['thread_id'], state['thread_id'])
+                third = json.loads((reports / 'candidate-03.json').read_text())
+                captured = json.loads(Path(third['input_receipt']['path']).read_text())
+                self.assertEqual(captured['prompt'], calls[-1][1])
+                self.assertEqual(captured['thread_id'], 'same-thread')
+                self.assertEqual(captured['consumed_candidate_sha'], previous_feedback['candidate_sha'])
+                self.assertEqual(captured['consumed_feedback_digest'], hashlib.sha256(json.dumps(
+                    previous_feedback, sort_keys=True, separators=(',', ':'), allow_nan=False
+                ).encode()).hexdigest())
+                receipt = third['agent_context']['continuation_guidance']
+                self.assertEqual(receipt['text'], guidance.read_text())
+                saved = repo / '.lab/sessions/trial/continuation-guidance' / (receipt['sha256'] + '.json')
+                self.assertEqual(json.loads(saved.read_text()), receipt)
+                # Recover an already returned response after the coordinator supplies
+                # different guidance. Its provenance belongs to the dispatched turn.
+                for has_context in (True, False):
+                    number = resumed['candidates'] + 1
+                    old_context = third['agent_context']
+                    pending = {'number': number, 'iteration': number,
+                               'before_sha': git(worktree, 'rev-parse', 'HEAD'),
+                               'input_receipt': third['input_receipt'],
+                               'response': {'summary': 'Recovered candidate', 'hypothesis': 'safe',
+                                            'ready_for_evaluation': True, 'stop': True, 'notes': ''}}
+                    if has_context:
+                        pending['agent_context'] = old_context
+                    resumed['pending_turn'] = pending
+                    (worktree / 'differometor/simulate.py').write_text(f'# recovered {number}\n')
+                    status_path = repo / '.lab/sessions/trial/status.json'
+                    status_path.write_text(json.dumps(resumed))
+                    guidance.write_text('Different instructions for future turns only.')
+                    args.max_candidates = number
+                    with patch('lab.agent_loop.Client', return_value=client), \
+                         patch('lab.agent_loop.codex_turn') as no_new_turn, \
+                         patch('lab.agent_loop.github_status'):
+                        run(args)
+                    no_new_turn.assert_not_called()
+                    recovered = json.loads((reports / f'candidate-{number:02d}.json').read_text())
+                    self.assertEqual(recovered['agent_context'], old_context if has_context else None)
+                    self.assertEqual(recovered['input_receipt'], third['input_receipt'])
+                    resumed = json.loads(status_path.read_text())
+                    self.assertEqual(resumed['fixed_deadline_unix'], args.deadline_unix)
 
 
 if __name__ == "__main__":
