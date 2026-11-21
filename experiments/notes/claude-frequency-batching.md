@@ -211,7 +211,34 @@ between A and A^H is introduced.
   (expected gradient exec ≈0.7–1.0 s, forward exec between 9 and 11.5 s; unmeasured). Risk: the
   stacked assembly outputs re-materialize ~1.8 GB, and assembly reverse in a scan may still round
   differently (component-function gradients), which would show as a different failing pattern.
-- SHA / runs: pending. If strict fails, revert the constants to None (candidate 5 state).
+- SHA `1d5a796faa16629e6300af4acb15bdb879d0721c`.
+- Screen `0ae5d95d04b6485fada7b28e6475b2c1` (request `dfb69db4310d42e3b3f56d81318be056`): first-run
+  23.517927 s; compile/lower 11.007; forward exec 9.312; gradient exec 2.076; RSS 10804436 KiB.
+- Full `9c1856ab35894f458e9fbfa5bf73d46b` (request `b2265e66589544b18e4ae201ae601517`): **official
+  PASS, strict PASS (validated)**. First-run 23.558115 s (parent 24.657326: −1.099 s, −4.5%; single
+  run, not repeat-confirmed). Phases: imports 0.291, build 0.822, forward lower 0.820 / compile
+  7.784 (parent 0.680 / 6.982), forward exec 9.305 (parent 11.508), gradient lower 0.177 /
+  compile 1.812 (parent 0.132 / 1.913), gradient exec 2.117 (parent 1.808). Compile/lower total
+  11.018 (parent 10.233, +0.785). Warm median 12.394 s (parent 13.802; warm forward 10.125,
+  gradient 2.084). Peak RSS 10798984 KiB (parent 12547788, −14%). Job wall 95.11 s (parent 104.70).
+- Comparison: all physical outputs exact; gradient max abs 4.547473508864641e-13, rel L2
+  6.65e-18, zero failures — identical to parent/candidate 5. Official FD check passed.
+- **Hypothesis partly confirmed**: assembly-only loop is strict-safe. The gain is in forward
+  execution (−2.2 s), not in reverse as predicted (reverse +0.31 s, compile +0.78 s). Corrected
+  attribution: per-frequency assembly speeds the forward pass; the large reverse saving of
+  candidates 1–3 came from the solve path in the loop (the strict-failing part).
+- Decision: candidate 6 is the best validated revision of this session (first operator value that
+  passes strict). Needs repeat full runs before any superiority claim.
+
+### Candidate 7 — scope "assemble" + explicit A^H built inside the loop
+- Change vs candidate 6: the assembly loop also emits `conj(transpose(A))` (A = signal matrix
+  without RHS) per frequency; `_solve_signal_and_noise` accepts it precomputed instead of
+  building the 0.9 GB batched transpose-conjugate at top level. Transpose/conjugate are exact.
+- Hypothesis: moves one more full-size strided copy into the cache-local loop → small further
+  forward reduction. Risk: the cotangent of A now merges contributions from the loop (A^H path) and
+  the batched solves in a different association order, which could perturb the gradient at the
+  rounding level and fail strict; outcome decides whether only assembly may enter the loop.
+- SHA / runs: pending. If strict fails or timing regresses, revert to candidate 6 state.
 
 ## Revised operator specification (proposal for coordinator review)
 
