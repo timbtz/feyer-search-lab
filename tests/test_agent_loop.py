@@ -172,6 +172,41 @@ class AgentResumeTests(unittest.TestCase):
         self.client.submit.assert_not_called()
         self.assertEqual(self.active['submitting_profile'], 'screen')
 
+    def test_durable_request_recovery_ignores_clock_skew(self):
+        request_id='1'*32
+        self.active.update(submitting_profile='screen',submission_started_at=999999,
+                           request_ids={'screen':request_id})
+        self.client.request.return_value={'id':'recovered','sha':'a'*40,'branch':self.args.branch,
+            'agent':self.args.name,'direction':self.args.direction,'hypothesis':'faster','profile':'screen',
+            'created_at':-999999,'request_id':request_id}
+        _recover_submission(self.active,self.args,self.client,self.state,self.status_file)
+        self.assertEqual(self.active['jobs']['screen'],'recovered')
+        self.client.request.assert_called_once_with({'action':'lookup_request','request_id':request_id})
+
+    def test_pre_enqueue_crash_resubmits_same_persisted_request_id(self):
+        request_id='2'*32
+        self.active.update(submitting_profile='screen',submission_started_at=100,
+                           request_ids={'screen':request_id})
+        self.client.request.return_value=None
+        def submit(*args,**kwargs):
+            saved=json.loads(self.status_file.read_text())['active_candidate']
+            self.assertEqual(saved['request_ids']['screen'],request_id)
+            self.assertEqual(saved['submitting_profile'],'screen')
+            self.assertEqual(kwargs['request_id'],request_id)
+            return {'id':'retried','status':'queued','profile':'screen','sha':'a'*40}
+        self.client.submit.side_effect=submit
+        self.client.wait.return_value={'id':'retried','status':'failed','profile':'screen','sha':'a'*40}
+        with patch('lab.agent_loop.github_status'),patch('lab.agent_loop._finish_record'):
+            self.assertTrue(self.advance(time.monotonic()+60))
+        self.client.submit.assert_called_once()
+
+    def test_recovered_request_rejects_payload_mismatch(self):
+        self.active.update(submitting_profile='screen',request_ids={'screen':'3'*32})
+        self.client.request.return_value={'id':'wrong','sha':'b'*40}
+        with self.assertRaisesRegex(RuntimeError,'different submission payload'):
+            _recover_submission(self.active,self.args,self.client,self.state,self.status_file)
+        self.client.submit.assert_not_called()
+
     def test_codex_failure_preserves_thread_identifier(self):
         process = Mock(returncode=1)
         def communicate(_prompt, timeout):
@@ -232,7 +267,8 @@ class AgentLoopIntegrationTests(unittest.TestCase):
                 (folder / 'differometor/simulate.py').write_text(f'# candidate {number}\n')
                 return 'same-thread', {'summary': f'Change {number}', 'hypothesis': 'faster',
                     'ready_for_evaluation': True, 'stop': number == expected_candidates, 'notes': ''}
-            def submit(folder, branch, agent, direction, hypothesis, profile, sha):
+            def submit(folder, branch, agent, direction, hypothesis, profile, sha, request_id=None):
+                self.assertIsNotNone(request_id)
                 job_id = f'job-{len(submitted) + 1}'
                 job = {'id': job_id, 'sha': sha, 'profile': profile, 'status': 'queued'}
                 submitted[job_id] = job

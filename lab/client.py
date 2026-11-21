@@ -69,15 +69,39 @@ class Client:
     def request(self, data):
         command = ['env', f'PYTHONPATH={self.root}/control', '/workspace/venv-feyer/bin/python',
                    '-m', 'lab.remote', '--root', self.root, 'request']
-        reply = subprocess.check_output(self.ssh + [shlex.join(command)], input=json.dumps(data), text=True, timeout=120)
+        try:
+            reply = subprocess.check_output(self.ssh + [shlex.join(command)], input=json.dumps(data),
+                                            text=True, timeout=120, stderr=subprocess.PIPE)
+        except subprocess.CalledProcessError as exc:
+            detail = exc.stderr or ''
+            if isinstance(detail, bytes):
+                detail = detail.decode(errors='replace')
+            if data.get('action') == 'lookup_request' and 'Unknown action: lookup_request' in detail:
+                raise RuntimeError('AMD evaluator does not support idempotent request lookup. Deploy the updated '
+                                   'lab/queue.py and lab/remote.py before using request IDs; no submission or '
+                                   'automatic fallback was attempted.') from exc
+            raise
         return json.loads(reply)
 
-    def submit(self, repo, branch, agent, direction, hypothesis, profile='screen', sha=None, publish=True):
+    def submit(self, repo, branch, agent, direction, hypothesis, profile='screen', sha=None, publish=True, request_id=None):
+        if request_id is not None:
+            from .queue import normalize_request_id
+            request_id = normalize_request_id(request_id)
         repo = Path(repo).resolve()
         sha = git(repo, 'rev-parse', '--verify', f'{sha or "HEAD"}^{{commit}}')
         git(repo, 'check-ref-format', '--branch', branch)
         if branch.startswith('-') or len(sha) != 40:
             raise ValueError('Invalid branch or SHA')
+        if request_id is not None:
+            # Capability check precedes publication/upload; old servers must not
+            # silently ignore the new field and create non-idempotent jobs.
+            existing = self.request({'action': 'lookup_request', 'request_id': request_id})
+            if existing is not None:
+                expected = dict(sha=sha, branch=branch, agent=agent, direction=direction,
+                                hypothesis=hypothesis, profile=profile, request_id=request_id)
+                if not isinstance(existing, dict) or any(existing.get(k) != v for k, v in expected.items()):
+                    raise ValueError('request_id already identifies a different submission payload')
+                return existing
         if publish:
             publish_candidate(repo, sha, branch)
         transfer = uuid.uuid4().hex
@@ -94,7 +118,8 @@ class Client:
                 subprocess.run(self.ssh + [command], input=payload, check=True, timeout=180)
                 return self.request(dict(action='ingest', transfer=transfer,
                     bundle_sha256=hashlib.sha256(payload).hexdigest(), sha=sha, branch=branch,
-                    agent=agent, direction=direction, hypothesis=hypothesis, profile=profile))
+                    agent=agent, direction=direction, hypothesis=hypothesis, profile=profile,
+                    request_id=request_id))
         finally:
             git(repo, 'update-ref', '-d', ref)
 
@@ -129,6 +154,7 @@ def main():
     for name in ('branch', 'agent', 'direction', 'hypothesis'):
         submit.add_argument('--' + name, required=True)
     submit.add_argument('--sha')
+    submit.add_argument('--request-id', help='Optional UUID; reuse only to retry the identical submission')
     submit.add_argument('--profile', choices=('screen', 'full'), default='screen')
     for name in ('status', 'wait', 'fetch'):
         cmd = sub.add_parser(name)
@@ -139,7 +165,8 @@ def main():
     args = parser.parse_args()
     client = Client(args.host, args.root)
     if args.command == 'submit':
-        result = client.submit(args.repo, args.branch, args.agent, args.direction, args.hypothesis, args.profile, args.sha)
+        result = client.submit(args.repo, args.branch, args.agent, args.direction, args.hypothesis, args.profile, args.sha,
+                               request_id=args.request_id)
     elif args.command == 'status': result = client.request({'action':'show','id':args.id})
     elif args.command == 'wait': result = client.wait(args.id, timeout=args.timeout)
     elif args.command == 'fetch': result = client.fetch(args.id, args.output or Path('.lab/results') / args.id)

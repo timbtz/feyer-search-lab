@@ -1,0 +1,469 @@
+{
+  "checked_at_utc": "2026-11-21T15:41:57.464951+00:00",
+  "method": "Read-only comparison of existing screening first-evaluation arrays against full benchmark last-warm-evaluation arrays; separate processes, same exact candidate SHA.",
+  "new_benchmarks_run": false,
+  "comparison_code_sha256": "1bc9b39fe0023afc3db93211b9e3d6cd37ed2b13ee281f142749c2237a16ea8f",
+  "candidates": [
+    {
+      "candidate": 2,
+      "sha": "7f3cf9c316ce87a98afccb402bffc34e4ff71532",
+      "screen_job": "c778afc254774a8fa06a48d537060e5f",
+      "full_job": "a7b341dc0cc64363922bcb3023a14537",
+      "screen_arrays": "/workspace/feyer-lab/runs/c778afc254774a8fa06a48d537060e5f/arrays.npz",
+      "full_arrays": "/workspace/feyer-lab/runs/a7b341dc0cc64363922bcb3023a14537/arrays.npz",
+      "comparison": {
+        "passed": true,
+        "rtol": 1e-07,
+        "scale_atol": 1e-12,
+        "checks": {
+          "carrier": {
+            "passed": true,
+            "finite": true,
+            "reference_scale": 2633.056540541363,
+            "max_absolute_error": 0.0,
+            "relative_l2_error": 0.0,
+            "exact_required": false,
+            "failing_count": 0,
+            "failing_indices": [],
+            "failures": [],
+            "failures_truncated": false,
+            "max_normalized_error": 0.0,
+            "max_normalized_error_is_infinite": false
+          },
+          "signal": {
+            "passed": true,
+            "finite": true,
+            "reference_scale": 7.489326011164141e+22,
+            "max_absolute_error": 0.0,
+            "relative_l2_error": 0.0,
+            "exact_required": false,
+            "failing_count": 0,
+            "failing_indices": [],
+            "failures": [],
+            "failures_truncated": false,
+            "max_normalized_error": 0.0,
+            "max_normalized_error_is_infinite": false
+          },
+          "noise": {
+            "passed": true,
+            "finite": true,
+            "reference_scale": 1.9731859703912042e-09,
+            "max_absolute_error": 0.0,
+            "relative_l2_error": 0.0,
+            "exact_required": false,
+            "failing_count": 0,
+            "failing_indices": [],
+            "failures": [],
+            "failures_truncated": false,
+            "max_normalized_error": 0.0,
+            "max_normalized_error_is_infinite": false
+          },
+          "sensitivity": {
+            "passed": true,
+            "finite": true,
+            "reference_scale": 1.8016255757391906e-24,
+            "max_absolute_error": 0.0,
+            "relative_l2_error": 0.0,
+            "exact_required": false,
+            "failing_count": 0,
+            "failing_indices": [],
+            "failures": [],
+            "failures_truncated": false,
+            "max_normalized_error": 0.0,
+            "max_normalized_error_is_infinite": false
+          },
+          "powers": {
+            "passed": true,
+            "finite": true,
+            "reference_scale": 3466493.3728438257,
+            "max_absolute_error": 0.0,
+            "relative_l2_error": 0.0,
+            "exact_required": false,
+            "failing_count": 0,
+            "failing_indices": [],
+            "failures": [],
+            "failures_truncated": false,
+            "max_normalized_error": 0.0,
+            "max_normalized_error_is_infinite": false
+          },
+          "gradient": {
+            "passed": true,
+            "finite": true,
+            "reference_scale": 57585.65368592672,
+            "max_absolute_error": 0.0,
+            "relative_l2_error": 0.0,
+            "exact_required": false,
+            "failing_count": 0,
+            "failing_indices": [],
+            "failures": [],
+            "failures_truncated": false,
+            "max_normalized_error": 0.0,
+            "max_normalized_error_is_infinite": false
+          },
+          "parameters": {
+            "passed": true,
+            "finite": true,
+            "reference_scale": 3999.999999606433,
+            "max_absolute_error": 0.0,
+            "relative_l2_error": 0.0,
+            "exact_required": true,
+            "failing_count": 0,
+            "failing_indices": [],
+            "failures": [],
+            "failures_truncated": false,
+            "max_normalized_error": 0.0,
+            "max_normalized_error_is_infinite": false
+          },
+          "frequencies": {
+            "passed": true,
+            "finite": true,
+            "reference_scale": 3000.0000000000014,
+            "max_absolute_error": 0.0,
+            "relative_l2_error": 0.0,
+            "exact_required": true,
+            "failing_count": 0,
+            "failing_indices": [],
+            "failures": [],
+            "failures_truncated": false,
+            "max_normalized_error": 0.0,
+            "max_normalized_error_is_infinite": false
+          }
+        },
+        "scope": "Additional regression check; stricter than official challenge checks."
+      },
+      "exact_checks": {
+        "carrier": {
+          "shape": [
+            286,
+            1
+          ],
+          "dtype": "complex128",
+          "same_shape": true,
+          "same_dtype": true,
+          "elementwise_equal": true,
+          "bitwise_equal": true,
+          "both_finite": true
+        },
+        "signal": {
+          "shape": [
+            751,
+            101
+          ],
+          "dtype": "complex128",
+          "same_shape": true,
+          "same_dtype": true,
+          "elementwise_equal": true,
+          "bitwise_equal": true,
+          "both_finite": true
+        },
+        "noise": {
+          "shape": [
+            101
+          ],
+          "dtype": "float64",
+          "same_shape": true,
+          "same_dtype": true,
+          "elementwise_equal": true,
+          "bitwise_equal": true,
+          "both_finite": true
+        },
+        "sensitivity": {
+          "shape": [
+            101
+          ],
+          "dtype": "float64",
+          "same_shape": true,
+          "same_dtype": true,
+          "elementwise_equal": true,
+          "bitwise_equal": true,
+          "both_finite": true
+        },
+        "powers": {
+          "shape": [
+            286,
+            1
+          ],
+          "dtype": "float64",
+          "same_shape": true,
+          "same_dtype": true,
+          "elementwise_equal": true,
+          "bitwise_equal": true,
+          "both_finite": true
+        },
+        "gradient": {
+          "shape": [
+            193
+          ],
+          "dtype": "float64",
+          "same_shape": true,
+          "same_dtype": true,
+          "elementwise_equal": true,
+          "bitwise_equal": true,
+          "both_finite": true
+        },
+        "parameters": {
+          "shape": [
+            193
+          ],
+          "dtype": "float64",
+          "same_shape": true,
+          "same_dtype": true,
+          "elementwise_equal": true,
+          "bitwise_equal": true,
+          "both_finite": true
+        },
+        "frequencies": {
+          "shape": [
+            101
+          ],
+          "dtype": "float64",
+          "same_shape": true,
+          "same_dtype": true,
+          "elementwise_equal": true,
+          "bitwise_equal": true,
+          "both_finite": true
+        }
+      },
+      "all_arrays_bitwise_equal": true,
+      "screen_evaluator_sha256": "5cb1e5b8013dde1249845e3d6ce24b1f85240a0fb14b5cb966340188559c390a",
+      "full_evaluator_sha256": "d5950bbd872e5b00ad63f0bd7081e5096fb14ba9c96c80a6854a3b714719bd4e",
+      "reported_loss": {
+        "screen": 9.869846767993566e-08,
+        "full": 9.869846767993566e-08,
+        "exactly_equal_as_json_float": true,
+        "absolute_difference": 0.0
+      }
+    },
+    {
+      "candidate": 8,
+      "sha": "1e552d675c3795265be8af1ac23ffb61f90f30b1",
+      "screen_job": "3acee14fc06b43b187d28b89a49cf4ae",
+      "full_job": "2cab1e4043ea42849eff58278d16bab6",
+      "screen_arrays": "/workspace/feyer-lab/runs/3acee14fc06b43b187d28b89a49cf4ae/arrays.npz",
+      "full_arrays": "/workspace/feyer-lab/runs/2cab1e4043ea42849eff58278d16bab6/arrays.npz",
+      "comparison": {
+        "passed": true,
+        "rtol": 1e-07,
+        "scale_atol": 1e-12,
+        "checks": {
+          "carrier": {
+            "passed": true,
+            "finite": true,
+            "reference_scale": 2633.056540541363,
+            "max_absolute_error": 0.0,
+            "relative_l2_error": 0.0,
+            "exact_required": false,
+            "failing_count": 0,
+            "failing_indices": [],
+            "failures": [],
+            "failures_truncated": false,
+            "max_normalized_error": 0.0,
+            "max_normalized_error_is_infinite": false
+          },
+          "signal": {
+            "passed": true,
+            "finite": true,
+            "reference_scale": 7.489326011164141e+22,
+            "max_absolute_error": 0.0,
+            "relative_l2_error": 0.0,
+            "exact_required": false,
+            "failing_count": 0,
+            "failing_indices": [],
+            "failures": [],
+            "failures_truncated": false,
+            "max_normalized_error": 0.0,
+            "max_normalized_error_is_infinite": false
+          },
+          "noise": {
+            "passed": true,
+            "finite": true,
+            "reference_scale": 1.9731859305556778e-09,
+            "max_absolute_error": 0.0,
+            "relative_l2_error": 0.0,
+            "exact_required": false,
+            "failing_count": 0,
+            "failing_indices": [],
+            "failures": [],
+            "failures_truncated": false,
+            "max_normalized_error": 0.0,
+            "max_normalized_error_is_infinite": false
+          },
+          "sensitivity": {
+            "passed": true,
+            "finite": true,
+            "reference_scale": 1.80162557500491e-24,
+            "max_absolute_error": 0.0,
+            "relative_l2_error": 0.0,
+            "exact_required": false,
+            "failing_count": 0,
+            "failing_indices": [],
+            "failures": [],
+            "failures_truncated": false,
+            "max_normalized_error": 0.0,
+            "max_normalized_error_is_infinite": false
+          },
+          "powers": {
+            "passed": true,
+            "finite": true,
+            "reference_scale": 3466493.3728438257,
+            "max_absolute_error": 0.0,
+            "relative_l2_error": 0.0,
+            "exact_required": false,
+            "failing_count": 0,
+            "failing_indices": [],
+            "failures": [],
+            "failures_truncated": false,
+            "max_normalized_error": 0.0,
+            "max_normalized_error_is_infinite": false
+          },
+          "gradient": {
+            "passed": true,
+            "finite": true,
+            "reference_scale": 57585.65088807538,
+            "max_absolute_error": 0.0,
+            "relative_l2_error": 0.0,
+            "exact_required": false,
+            "failing_count": 0,
+            "failing_indices": [],
+            "failures": [],
+            "failures_truncated": false,
+            "max_normalized_error": 0.0,
+            "max_normalized_error_is_infinite": false
+          },
+          "parameters": {
+            "passed": true,
+            "finite": true,
+            "reference_scale": 3999.999999606433,
+            "max_absolute_error": 0.0,
+            "relative_l2_error": 0.0,
+            "exact_required": true,
+            "failing_count": 0,
+            "failing_indices": [],
+            "failures": [],
+            "failures_truncated": false,
+            "max_normalized_error": 0.0,
+            "max_normalized_error_is_infinite": false
+          },
+          "frequencies": {
+            "passed": true,
+            "finite": true,
+            "reference_scale": 3000.0000000000014,
+            "max_absolute_error": 0.0,
+            "relative_l2_error": 0.0,
+            "exact_required": true,
+            "failing_count": 0,
+            "failing_indices": [],
+            "failures": [],
+            "failures_truncated": false,
+            "max_normalized_error": 0.0,
+            "max_normalized_error_is_infinite": false
+          }
+        },
+        "scope": "Additional regression check; stricter than official challenge checks."
+      },
+      "exact_checks": {
+        "carrier": {
+          "shape": [
+            286,
+            1
+          ],
+          "dtype": "complex128",
+          "same_shape": true,
+          "same_dtype": true,
+          "elementwise_equal": true,
+          "bitwise_equal": true,
+          "both_finite": true
+        },
+        "signal": {
+          "shape": [
+            751,
+            101
+          ],
+          "dtype": "complex128",
+          "same_shape": true,
+          "same_dtype": true,
+          "elementwise_equal": true,
+          "bitwise_equal": true,
+          "both_finite": true
+        },
+        "noise": {
+          "shape": [
+            101
+          ],
+          "dtype": "float64",
+          "same_shape": true,
+          "same_dtype": true,
+          "elementwise_equal": true,
+          "bitwise_equal": true,
+          "both_finite": true
+        },
+        "sensitivity": {
+          "shape": [
+            101
+          ],
+          "dtype": "float64",
+          "same_shape": true,
+          "same_dtype": true,
+          "elementwise_equal": true,
+          "bitwise_equal": true,
+          "both_finite": true
+        },
+        "powers": {
+          "shape": [
+            286,
+            1
+          ],
+          "dtype": "float64",
+          "same_shape": true,
+          "same_dtype": true,
+          "elementwise_equal": true,
+          "bitwise_equal": true,
+          "both_finite": true
+        },
+        "gradient": {
+          "shape": [
+            193
+          ],
+          "dtype": "float64",
+          "same_shape": true,
+          "same_dtype": true,
+          "elementwise_equal": true,
+          "bitwise_equal": true,
+          "both_finite": true
+        },
+        "parameters": {
+          "shape": [
+            193
+          ],
+          "dtype": "float64",
+          "same_shape": true,
+          "same_dtype": true,
+          "elementwise_equal": true,
+          "bitwise_equal": true,
+          "both_finite": true
+        },
+        "frequencies": {
+          "shape": [
+            101
+          ],
+          "dtype": "float64",
+          "same_shape": true,
+          "same_dtype": true,
+          "elementwise_equal": true,
+          "bitwise_equal": true,
+          "both_finite": true
+        }
+      },
+      "all_arrays_bitwise_equal": true,
+      "screen_evaluator_sha256": "5cb1e5b8013dde1249845e3d6ce24b1f85240a0fb14b5cb966340188559c390a",
+      "full_evaluator_sha256": "d5950bbd872e5b00ad63f0bd7081e5096fb14ba9c96c80a6854a3b714719bd4e",
+      "reported_loss": {
+        "screen": 9.793036291535532e-08,
+        "full": 9.793036291535532e-08,
+        "exactly_equal_as_json_float": true,
+        "absolute_difference": 0.0
+      }
+    }
+  ],
+  "limitations": "Observed saved arrays only; no universal guarantee of first-run/warm consistency, and no change to candidate acceptance status. Saved archive does not include scalar loss."
+}

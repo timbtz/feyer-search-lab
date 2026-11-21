@@ -16,24 +16,34 @@ def handle(root, request):
     root = Path(root).resolve()
     queue = Queue(root / 'state', root / 'repo.git')
     action = request['action']
+    if action == 'lookup_request':
+        return queue.get_by_request_id(request['request_id'])
     if action == 'ingest':
         transfer = request['transfer']
         if not re.fullmatch('[0-9a-f]{32}', transfer):
             raise ValueError('Invalid transfer ID')
         bundle = root / 'incoming' / (transfer + '.bundle')
-        if hashlib.sha256(bundle.read_bytes()).hexdigest() != request['bundle_sha256']:
-            raise ValueError('Bundle digest mismatch')
         ref = f'refs/lab/export/{transfer}'
         destination = f'refs/transfers/{transfer}'
-        queue._git('fetch', '--no-tags', str(bundle), f'{ref}:{destination}')
-        if queue._git('rev-parse', destination) != request['sha']:
-            raise ValueError('Bundle commit does not match submitted SHA')
-        job = queue.enqueue(**{k: request[k] for k in ('sha', 'branch', 'agent', 'direction', 'hypothesis', 'profile')})
-        queue._git('update-ref', '-d', destination)
-        bundle.unlink()
-        return job
+        payload = {k: request[k] for k in ('sha', 'branch', 'agent', 'direction', 'hypothesis', 'profile')}
+        payload['request_id'] = request.get('request_id')
+        try:
+            if payload['request_id'] and queue.get_by_request_id(payload['request_id']) is not None:
+                # Handles lost responses even when the original bundle was deleted.
+                # enqueue still rejects the same request ID with a changed payload.
+                return queue.enqueue(**payload)
+            if hashlib.sha256(bundle.read_bytes()).hexdigest() != request['bundle_sha256']:
+                raise ValueError('Bundle digest mismatch')
+            queue._git('fetch', '--no-tags', str(bundle), f'{ref}:{destination}')
+            if queue._git('rev-parse', destination) != request['sha']:
+                raise ValueError('Bundle commit does not match submitted SHA')
+            return queue.enqueue(**payload)
+        finally:
+            queue._git('update-ref', '-d', destination)
+            bundle.unlink(missing_ok=True)
     if action == 'enqueue':
-        return queue.enqueue(**{k: request[k] for k in ('sha', 'branch', 'agent', 'direction', 'hypothesis', 'profile')})
+        return queue.enqueue(**{k: request[k] for k in ('sha', 'branch', 'agent', 'direction', 'hypothesis', 'profile')},
+                             request_id=request.get('request_id'))
     if action == 'list':
         return queue.list_jobs(limit=request.get('limit', 50))
     if action in ('show', 'artifact'):

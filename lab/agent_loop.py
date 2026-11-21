@@ -9,6 +9,7 @@ from pathlib import Path
 import signal
 import subprocess
 import time
+import uuid
 
 from .client import Client, git
 
@@ -185,6 +186,22 @@ def _recover_submission(active, args, client, state, status_file):
     profile = active.get('submitting_profile')
     if not profile:
         return
+    request_id = active.get('request_ids', {}).get(profile)
+    if request_id:
+        job = client.request({'action': 'lookup_request', 'request_id': request_id})
+        if job is not None:
+            expected = {'sha': active['sha'], 'branch': args.branch, 'agent': args.name,
+                        'direction': args.direction, 'hypothesis': active['response']['hypothesis'], 'profile': profile}
+            if any(job.get(key) != value for key, value in expected.items()):
+                raise RuntimeError('Recovered request ID has a different submission payload')
+            active['jobs'][profile] = job['id']
+        # If not enqueued yet, retry the same durable key. A late original enqueue
+        # racing this retry is collapsed by the server's unique request ID.
+        active.pop('submitting_profile', None)
+        active.pop('submission_started_at', None)
+        _save(state, status_file, active_candidate=active)
+        return
+    # Legacy saved submissions lack a durable key: retain fail-closed recovery.
     candidates = client.request({'action': 'list', 'limit': 10000})
     matches = [job for job in candidates if job['sha'] == active['sha']
                and job['profile'] == profile and job['agent'] == args.name
@@ -243,9 +260,10 @@ def _advance_candidate(active, args, client, worktree, directory, state, status_
                 return False
             active['submitting_profile'] = profile
             active['submission_started_at'] = time.time()
+            request_id = active.setdefault('request_ids', {}).setdefault(profile, uuid.uuid4().hex)
             _save(state, status_file, status=f'submitting_{profile}', active_candidate=active)
             job = client.submit(worktree, args.branch, args.name, args.direction,
-                                active['response']['hypothesis'], profile, active['sha'])
+                                active['response']['hypothesis'], profile, active['sha'], request_id=request_id)
             active['jobs'][profile] = job['id']
             active.pop('submitting_profile', None)
             _save(state, status_file, active_candidate=active, job_id=job['id'])

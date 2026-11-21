@@ -27,6 +27,7 @@ The conservative decimal interpretation of 32 GB is about 29.8 GiB. If the organ
 - Strict comparison reports identify failing indices and per-entry actual/reference/error/allowance, preserving the existing acceptance inequality.
 - The misleading screening log message about finite-difference testing was corrected. Screening still omits that check and declares it not run.
 - The phase ledger now includes manually submitted jobs, calibration runs and independent repetitions by job ID. Reporting compares evaluator/timing schemas as well as workloads and environment settings.
+- New supervised submissions persist an idempotency UUID before uploading. Identical retries return the same queued job; conflicting payloads reject. Atomic database migration and recovery cover response loss and duplicate requests without relying on clock synchronization. Older in-flight records without a UUID retain fail-closed recovery.
 - CI installs the pinned NumPy version so numerical comparison tests execute rather than being silently omitted. Local environments without NumPy explicitly report those tests as skipped; the fixed remote environment also runs them.
 
 ## Important numerical distinctions
@@ -36,6 +37,8 @@ Candidate 2 passes the official checks but exceeds the internal gradient toleran
 The strict tolerance uses a global absolute floor across derivatives with different physical units. It is a regression guard, not a calibrated physical error bound. See [the numerical audit](../experiments/audits/numerical.md) for exact values, limitations and the proposed independent derivative protocol.
 
 The official full benchmark validates and saves the last warm repetition's outputs. Screening validates the timed first-run outputs. For pure deterministic code these should agree, but the official full harness does not independently validate both executions. A first-versus-warm consistency diagnostic would be additional evidence, not a change to the official harness.
+
+That diagnostic was performed on existing candidate-2 and candidate-8 artifacts: all eight saved arrays are bitwise identical between screen-first and full-last-warm, and the recorded scalar losses match exactly. This is positive evidence for those two cases, not a general guarantee for future rewrites. See [the first-versus-warm evidence](../experiments/audits/first-warm.md).
 
 ## Resource utilization
 

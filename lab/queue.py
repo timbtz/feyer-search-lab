@@ -11,6 +11,18 @@ from pathlib import Path
 
 TERMINAL_STATUSES = frozenset({"completed", "failed", "timed_out", "interrupted", "rejected"})
 SHA_RE = re.compile(r"^[0-9a-fA-F]{40}$")
+REQUEST_FIELDS = ('sha', 'branch', 'agent', 'direction', 'hypothesis', 'profile')
+
+
+def normalize_request_id(value):
+    if value is None:
+        return None
+    if not isinstance(value, str) or len(value) not in (32, 36):
+        raise ValueError('request_id must be a UUID')
+    try:
+        return uuid.UUID(value).hex
+    except (ValueError, AttributeError) as exc:
+        raise ValueError('request_id must be a UUID') from exc
 
 
 class Queue:
@@ -37,6 +49,13 @@ class Queue:
                     event TEXT NOT NULL, detail_json TEXT NOT NULL
                 );
             """)
+            # Serialize migration with other constructors. NULL keeps legacy jobs
+            # and intentionally independent submissions fully backward compatible.
+            db.execute('BEGIN IMMEDIATE')
+            columns = {row['name'] for row in db.execute('PRAGMA table_info(jobs)')}
+            if 'request_id' not in columns:
+                db.execute('ALTER TABLE jobs ADD COLUMN request_id TEXT')
+            db.execute('CREATE UNIQUE INDEX IF NOT EXISTS jobs_request_id ON jobs(request_id) WHERE request_id IS NOT NULL')
 
     def _connect(self):
         db = sqlite3.connect(self.db_path, timeout=30)
@@ -64,10 +83,11 @@ class Queue:
         db.execute("INSERT INTO events(job_id,at,event,detail_json) VALUES(?,?,?,?)",
                    (job_id, time.time(), event, json.dumps(detail or {}, allow_nan=False)))
 
-    def enqueue(self, sha, branch, agent, direction, hypothesis="", profile="screen"):
+    def enqueue(self, sha, branch, agent, direction, hypothesis="", profile="screen", request_id=None):
         if not isinstance(sha, str) or not SHA_RE.fullmatch(sha):
             raise ValueError("sha must be a full 40-character hexadecimal commit ID")
         sha = sha.lower()
+        request_id = normalize_request_id(request_id)
         if profile not in {"screen", "full"}:
             raise ValueError("profile must be screen or full")
         for name, value in (("branch", branch), ("agent", agent), ("direction", direction)):
@@ -80,21 +100,39 @@ class Queue:
             raise ValueError("Invalid hypothesis")
         if self._git("cat-file", "-t", sha) != "commit":
             raise ValueError("sha must identify a commit already fetched into the mirror")
-        job_id = uuid.uuid4().hex
-        ref = f"refs/candidates/{job_id}"
-        self._git("update-ref", ref, sha)
-        now = time.time()
+        payload = dict(sha=sha, branch=branch, agent=agent, direction=direction, hypothesis=hypothesis, profile=profile)
+        ref = None
         try:
             with self._connect() as db:
+                db.execute('BEGIN IMMEDIATE')
+                if request_id is not None:
+                    existing = db.execute('SELECT * FROM jobs WHERE request_id=?', (request_id,)).fetchone()
+                    if existing is not None:
+                        if any(existing[key] != payload[key] for key in REQUEST_FIELDS):
+                            raise ValueError('request_id already identifies a different submission payload')
+                        return self._record(existing)
+                job_id = uuid.uuid4().hex
+                ref = f"refs/candidates/{job_id}"
+                self._git("update-ref", ref, sha)
+                now = time.time()
                 db.execute("""INSERT INTO jobs
-                    (id,sha,branch,agent,direction,hypothesis,profile,status,created_at,updated_at)
-                    VALUES(?,?,?,?,?,?,?,'queued',?,?)""",
-                    (job_id, sha, branch, agent, direction, hypothesis, profile, now, now))
+                    (id,sha,branch,agent,direction,hypothesis,profile,status,created_at,updated_at,request_id)
+                    VALUES(?,?,?,?,?,?,?,'queued',?,?,?)""",
+                    (job_id, sha, branch, agent, direction, hypothesis, profile, now, now, request_id))
                 self._event(db, job_id, "queued", {"ref": ref})
         except BaseException:
-            self._git("update-ref", "-d", ref, sha)
+            if ref is not None:
+                self._git("update-ref", "-d", ref, sha)
             raise
         return self.get(job_id)
+
+    def get_by_request_id(self, request_id):
+        request_id = normalize_request_id(request_id)
+        if request_id is None:
+            raise ValueError('request_id is required for lookup')
+        with self._connect() as db:
+            row = db.execute('SELECT * FROM jobs WHERE request_id=?', (request_id,)).fetchone()
+        return self._record(row)
 
     def get(self, job_id):
         with self._connect() as db:

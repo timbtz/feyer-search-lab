@@ -54,3 +54,17 @@ The queue API caps listing at 10,000 jobs. Sync reports `truncated: true` at tha
 - Read-only live sync retrieved all 22 jobs visible at that point, with `truncated: false`, and rendered 11 evaluation rows including calibration jobs that were absent from the earlier worktree-only collector.
 - The generated viewer passed a Node DOM smoke check: table rows, chart rendering, changing axes and selecting a candidate.
 - `git diff --check` passed for the working changes. No generated `experiments/analysis` snapshot was edited by this subagent; root owns regeneration/publication.
+
+## Addendum: durable idempotent submission recovery implemented
+
+The earlier timestamp-recovery limitation is now fixed for **new submissions with request IDs**, following the coordinator's authorization. Legacy saved submissions without IDs deliberately retain fail-closed recovery.
+
+- `Queue` migrates an existing database under `BEGIN IMMEDIATE`, adding nullable `request_id` and a unique partial index. Existing jobs retain NULL IDs. Concurrent initializers serialize the migration.
+- Request UUIDs normalize to 32 hexadecimal characters. The same UUID and identical SHA/branch/agent/direction/hypothesis/profile return the existing job, even after process restart. Changing any payload field with that UUID rejects the request. Requests without IDs and deliberate reruns with new IDs remain independent jobs.
+- The remote API accepts IDs for `enqueue` and `ingest`; `lookup_request` returns the existing job or null. Retrying after a lost enqueue response works even after the original bundle has been deleted. Redundant retry uploads and transfer refs are cleaned up.
+- The supervisor stores one UUID per screen/full submission in durable active-candidate state **before** calling the client, which can publish or upload. Recovery looks up the UUID without relying on clock synchronization. If absent, it retains that UUID and safely retries; a late original request and the retry converge on one unique database row. A conflicting recovered payload fails closed.
+- `Client.submit(..., request_id=...)` preflights `lookup_request` before publication/upload. Old servers that reject this action produce an actionable deployment-required error and no submission; there is no silent fallback. Matching existing payloads return immediately, conflicting payloads reject. CLI users can supply `--request-id UUID`; omitting it intentionally keeps legacy independent-submission behavior.
+
+Deployment order: install the new remote queue/API first, then run new supervisors. Do not mutate a currently executing queue manually. Existing read-only API clients and old branch clients without request IDs remain compatible. No live remote database, deployment or supervisor state was changed by this subagent.
+
+New regression coverage exercises legacy-database migration with concurrent initialization, concurrent duplicate enqueue collapse, conflicting retries, persistence after reopen, retry after response loss and bundle cleanup, absent pre-enqueue recovery using the same ID, payload-mismatch recovery, legacy fail-closed recovery, client preflight compatibility and the pre-network durable-state boundary.

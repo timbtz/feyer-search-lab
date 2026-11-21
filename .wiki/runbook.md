@@ -57,6 +57,8 @@ python3 -m lab.client list
 
 Submission defaults to that checkout's `HEAD`; the resulting run must record its full SHA. The client defaults to `amd-hackathon` and `/workspace/feyer-lab`; override them with the global `--host` and `--root` options before the command.
 
+New supervised submissions persist a UUID before any upload. Retrying the same request ID and identical payload returns the existing job, including after a lost SSH response. A conflicting payload is rejected. Manual submissions can pass `--request-id UUID`; retain that UUID for retries, and use a new one for each intentionally independent measurement. Clients supplying an ID first verify server support and fail before uploading if the server needs upgrading. Legacy saved submissions without IDs retain conservative operator-assisted recovery.
+
 The first supervised agent uses a separate worktree:
 
 ```bash
