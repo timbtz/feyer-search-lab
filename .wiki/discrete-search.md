@@ -5,6 +5,8 @@ The existing campaign runner now supports `--selector enumeration` and
 screen/full pipeline, strict numerical comparison, resource checks and evidence
 ledger as the Qwen recipe pilot. They require no API credentials or model calls.
 The selector and a zero model-call budget are frozen at campaign initialization.
+The CLI also supports SMAC3 and an automatic choice at initialization; see
+[SMAC3 integration](smac-search.md) for the selection policy and separate dependencies.
 
 The current space has 15 legal configurations of component checkpointing,
 `prevent_cse` and mapping batch size. This is optimization of implementation
