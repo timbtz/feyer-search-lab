@@ -92,8 +92,8 @@ def _save_assembly_indices(primitive, *avals, **params):
     )
 
 
-@partial(jit, static_argnums=(0,), inline=True)
-
+@partial(jit, static_argnums=(0,), inline=False)
+@partial(jax.checkpoint, static_argnums=(0,), prevent_cse=False, policy=_save_assembly_indices)
 def _evaluate_component_group(function_index, function_inputs):
     """Recompute one component type, retaining its gathered inputs outside."""
     return vmap(FUNCTIONS[function_index])(function_inputs)
