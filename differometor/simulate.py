@@ -508,14 +508,22 @@ def simulate(
             def block_assemble(blocks):
                 block_parameters, block_entries = blocks
                 block_signal_matrix, block_noise_matrix = assemble(block_parameters, block_entries)
+                if SPLIT_SIGNAL_RHS:
+                    signal_parts = (block_signal_matrix[:, :, :-1], block_signal_matrix[:, :, -1])
+                else:
+                    signal_parts = (block_signal_matrix,)
                 if reuse_noise:
-                    return (block_signal_matrix,)
-                return block_signal_matrix, block_noise_matrix
+                    return signal_parts
+                return signal_parts + (block_noise_matrix,)
 
             assembled = _map_row_chunks(block_assemble, (parameters, row_carrier_entries), chunk_size)
             assembled_signal = assembled[0]
-            assembled_noise = broadcast_noise(assembled[1] if len(assembled) > 1 else None)
-            signal, noise = _solve_signal_and_noise(assembled_signal, assembled_noise, base_carrier_selections)
+            assembled_rhs = assembled[1] if SPLIT_SIGNAL_RHS else None
+            noise_index = 2 if SPLIT_SIGNAL_RHS else 1
+            assembled_noise = broadcast_noise(assembled[noise_index] if len(assembled) > noise_index else None)
+            signal, noise = _solve_signal_and_noise(
+                assembled_signal, assembled_noise, base_carrier_selections, assembled_rhs
+            )
         else:
             raise ValueError(f"Unknown FREQUENCY_LOOP_SCOPE {FREQUENCY_LOOP_SCOPE!r}")
 
@@ -555,6 +563,10 @@ NOISE_FACTOR_REUSE: str = "off"
 # jnp.linalg.solve; A^H noise weights keep their separate factorization.
 # Ignored when NOISE_FACTOR_REUSE != "off". False = two separate solve calls.
 MERGE_SAME_MATRIX_SOLVES: bool = True
+# Ported from 423bcc4: split coefficient/RHS blocks before stacking the assembly
+# loop outputs. Combined with guarded noise reuse from 28566a64. Both direct-LU
+# and multi-RHS solvers consume the same separated arrays; arithmetic is unchanged.
+SPLIT_SIGNAL_RHS: bool = True
 
 
 def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):
@@ -670,13 +682,19 @@ def _assemble_signal_and_noise(
     return signal_matrix, noise_matrix
 
 
-def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections):
+def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections, signal_rhs=None):
     """Solve the signal and quantum-noise systems for B assembled signal rows.
 
     `signal_matrix` (B, SN, SN + 1), `noise_matrix` (B, NN, NN) and detector
     selections (D, 1 or B, SN). Returns the signal solution (B, SN) and the
-    unsqueezed noise amplitude spectral density (D, B).
+    unsqueezed noise amplitude spectral density (D, B). When signal_rhs (B, SN)
+    is supplied, signal_matrix contains only coefficients (B, SN, SN).
     """
+    if signal_rhs is None:
+        coefficients = signal_matrix[:, :, :-1]
+        signal_rhs = signal_matrix[:, :, -1]
+    else:
+        coefficients = signal_matrix
     carrier_selections = base_carrier_selections
     carrier_selections = jnp.broadcast_to(
         carrier_selections,
@@ -690,7 +708,7 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
         # solve (A^H y = s via trans=2) and the covariance solve. Each solve is a
         # custom_linear_solve whose matvec depends differentiably on A, mirroring
         # jnp.linalg.solve's structure (factorization of stop_gradient(A)).
-        system = signal_matrix[:, :, :-1].astype(jnp.complex128)
+        system = coefficients.astype(jnp.complex128)
         lu_matrix, lu_pivots, _ = jax.lax.linalg.lu(lax.stop_gradient(system))
         factors = (lu_matrix, lu_pivots)
 
@@ -715,21 +733,21 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
                 transpose_solve=lambda _, x: jnp.conjugate(lu_apply(jnp.conjugate(x), 0)),
             )
 
-        signal = direct_solve(signal_matrix[:, :, -1])
+        signal = direct_solve(signal_rhs)
         if NOISE_FACTOR_REUSE == "all":
             # Failed strict gradient (candidate 3, bb9a183): A^H via A's LU drifts.
             noise_weights = vmap(adjoint_solve)(carrier_selections)
         else:
             # "direct": keep the original separate LU of A^H for the noise weights.
-            transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(signal_matrix[:, :, :-1]), (0, 2, 1))
+            transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(coefficients), (0, 2, 1))
             noise_weights = vmap(vmap(solve), in_axes=(None, 0))(
                 transposed_conjugated_signal_matrix, carrier_selections
             )
     else:
         if not MERGE_SAME_MATRIX_SOLVES:
-            signal = vmap(solve)(signal_matrix[:, :, :-1], signal_matrix[:, :, -1])
+            signal = vmap(solve)(coefficients, signal_rhs)
         # Back-propagate detector weights by solving the transposed conjugated signal system.
-        transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(signal_matrix[:, :, :-1]), (0, 2, 1))
+        transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(coefficients), (0, 2, 1))
         noise_weights = vmap(vmap(solve), in_axes=(None, 0))(transposed_conjugated_signal_matrix, carrier_selections)
 
     def matmul_single_batch(matrix_batch: jnp.ndarray, vector_batch: jnp.ndarray) -> jnp.ndarray:
@@ -762,13 +780,13 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
         # Adapted from 4c12600: signal RHS and the D noise sources share A (same
         # transpose mode) -> one multi-RHS solve. Columns: [signal, noise 0..D-1].
         right_hand_sides = jnp.concatenate(
-            [signal_matrix[:, :, -1:], jnp.moveaxis(noise_sources, 0, 2)], axis=2
+            [signal_rhs[:, :, None], jnp.moveaxis(noise_sources, 0, 2)], axis=2
         )
-        solutions = solve(signal_matrix[:, :, :-1], right_hand_sides)
+        solutions = solve(coefficients, right_hand_sides)
         signal = solutions[:, :, 0]
         covariances = jnp.moveaxis(solutions[:, :, 1:], 2, 0)
     else:
-        covariances = vmap(vmap(solve), in_axes=(None, 0))(signal_matrix[:, :, :-1], noise_sources)
+        covariances = vmap(vmap(solve), in_axes=(None, 0))(coefficients, noise_sources)
 
     # Convert propagated covariances into amplitude spectral density.
     temporary_sum = jnp.sum(jnp.real(covariances * jnp.conjugate(carrier_selections)), axis=2)
