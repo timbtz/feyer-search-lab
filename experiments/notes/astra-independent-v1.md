@@ -186,3 +186,40 @@ are required. This is a scheduling change, not a reduced physical model.
 Local checks: AST and git diff --check passed; inspected the complete diff for
 matching matrix indices, carrier broadcasting, detector axes, and output
 transposes. Numerical evaluation awaits the supervisor; no local benchmark.
+
+### Candidate 5 evaluator outcome: exact outputs, one strict gradient failure
+
+SHA `9ff447d60cf6ab0835b9658dad45248eff7bcade`; screen
+`f6587f3b2db342c4b250a200b167fd56`: 22.350963 s, limited checks passed.
+Full `5fbfc1512ac84b30bacffb4030b31fbf`: official checks passed, strict gradient
+comparison FAILED. First run 22.401851 s; warm median 8.707511 s; evaluator
+wall 76.047509 s; peak RSS 5,566,096 KiB. Forward lower/compile/execute
+0.888603 / 8.910299 / 7.911867 s; gradient lower/compile/execute
+0.215357 / 2.409403 / 0.787720 s. Mapping improved observed execution and
+memory, but forward compilation increased. Queue delay is outside these times.
+
+Official log sensitivity error 5.374104176780747e-6, gradient norm
+70517.10692796242, spot-check AD 7.616169106791797e-5; both finite differences
+passed (same finite differences as candidate 1). All physical outputs,
+sensitivity, powers, parameters and frequencies were EXACT in strict comparison.
+Gradient max absolute error 5.609358777292073e-5, relative L2
+9.182434417064018e-10. Only index 161 failed: reference -29.61288925877842,
+candidate -29.61289475536926, absolute error 5.496590841147508e-6,
+tolerance 3.0188745767659174e-6, normalized error 1.820741704027975.
+Candidate 5 is not yet a strictly validated replacement.
+
+## Candidate 6: retain unit batching within the frequency map
+
+Set `lax.map(..., batch_size=1)` to retain a vectorized frequency dimension
+inside each iteration. The complete equations, factorization choices, and
+frequency coverage are unchanged. This invokes batched transformation rules
+while preserving per-frequency temporary storage.
+
+Hypothesis (unmeasured): the one-entry strict discrepancy with exact physical
+outputs is caused by reverse-mode operation ordering after removing the batch
+axis. Restoring that axis may align complex derivative arithmetic with the
+validated batched implementation. This is a numerical diagnosis to be tested,
+not an assertion that the strict failure is harmless. No tolerance changes or
+parameter-specific adjustments are made.
+
+Local AST and diff checks passed; full numerical evaluation pending.

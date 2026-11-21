@@ -424,7 +424,12 @@ def simulate(
         noise_row = jnp.sqrt(2 * temporary_sum * UNIT_VACUUM * H_PLANCK * F0 * 0.25)
         return signal_row, noise_row
 
-    signal, noise = lax.map(frequency_step, (parameters, carrier_rows, selections))
+    # Retain a vectorized frequency axis within each step. This keeps the
+    # batching rules used for complex solve derivatives while limiting dense
+    # temporary storage to one frequency.
+    signal, noise = lax.map(
+        frequency_step, (parameters, carrier_rows, selections), batch_size=1
+    )
     return carrier.T, signal.T, noise.T.squeeze()
 
 
