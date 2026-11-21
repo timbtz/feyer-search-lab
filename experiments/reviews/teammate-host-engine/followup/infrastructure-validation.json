@@ -1,0 +1,34 @@
+{
+  "observed_at": 1795302030.7674592,
+  "python_command": "PYTHONPATH=tests:. <controller-python> -m unittest lab.test_jaxcompat tests.test_verification tests.test_research_batch tests.test_team_search tests.test_research_lineage tests.test_evolution_evidence",
+  "python_passed": 59,
+  "frontend_revision": "7f39810",
+  "frontend_commands": [
+    "npm run check",
+    "npm test",
+    "npm run test:server"
+  ],
+  "frontend_js_tests_passed": 36,
+  "frontend_python_tests_passed": 6,
+  "browser": {
+    "url": "http://localhost:8770",
+    "checks": [
+      "exact candidate detail",
+      "expanded rand1 failure",
+      "pending GPU",
+      "193-coordinate check",
+      "desktop and mobile width",
+      "no page errors"
+    ],
+    "passed": true,
+    "width": 390,
+    "document_width": 390
+  },
+  "failed_attempts": [
+    "Initial unit invocation omitted tests from PYTHONPATH; corrected invocation passed59.",
+    "Browser launch required host execution due macOS sandbox.",
+    "Live8765 was restarted from another session worktree; tested combined frontend on8770 without modifying its server.",
+    "Mobile first smoke found long evidence IDs overflowing; wrapping fix passed.",
+    "Receipt generation initially omitted required policy purpose; corrected schema passed."
+  ]
+}

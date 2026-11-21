@@ -30,6 +30,7 @@
       <button type="button" data-view="workflow" id="tab-workflow" aria-controls="workflow">Architecture</button>
       <button type="button" data-view="profiler" id="tab-profiler" aria-controls="profiler">Timing profile</button>
       <button type="button" data-view="results" id="tab-results" aria-controls="results">Results</button>
+      <button type="button" data-view="generalization" id="tab-generalization" aria-controls="generalization">Robustness</button>
     </p-tabs-bar>
     <div class="round-bar"><div><label for="campaign">Search round</label><select id="campaign"><option value="">Loading…</option></select></div><p id="round-caption"></p></div>
     <div id="notice" class="notice" hidden role="status"></div>
@@ -116,6 +117,11 @@
       <div class="section-intro"><h2>Where the time goes.</h2><p>Recorded benchmark phases for one exact job. First-run, warm timing, and job wall time remain separate.</p></div>
       <div class="profiler-controls"><label>Find an exact job or commit<input id="profiler-filter" type="search" placeholder="Job ID or candidate SHA"></label><label>Recorded evaluation<select id="profiler-select"></select></label></div>
       <p id="profiler-source" class="meta-line" role="status"></p><div id="profiler-detail"></div>
+    </section>
+    <section id="generalization" class="view" role="tabpanel" aria-labelledby="tab-generalization" hidden>
+      <div class="section-intro"><h2>Does it hold beyond the benchmark?</h2><p>Additional setup and transformation checks are internal review evidence, separate from official benchmark acceptance. Each candidate is compared with the unchanged simulator on other setups (same three-stage pipeline, outputs and gradient) and under other JAX transformations.</p></div>
+      <div class="profiler-controls"><label>Find a commit or label<input id="generalization-filter" type="search" placeholder="Candidate SHA or label"></label><label>Candidate<select id="generalization-select"></select></label></div>
+      <p id="generalization-source" class="meta-line" role="status"></p><div id="generalization-detail"></div>
     </section>
     <footer><span id="freshness">Waiting for evidence.</span><button id="technical-toggle" class="text-button">Technical details</button></footer>
     <section id="technical" hidden aria-label="Technical details"><div class="technical-heading"><h2>Technical details</h2><p>Source records and logs for debugging. This view is read-only.</p></div><div id="technical-content"></div></section>

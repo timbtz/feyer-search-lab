@@ -1,0 +1,99 @@
+{
+  "status": "passed",
+  "passed": true,
+  "setup": "voyager",
+  "required_tests": [
+    "value_and_grad_jit",
+    "descent_3_steps",
+    "vmap_value_and_grad",
+    "jvp",
+    "jacfwd_2",
+    "hvp_fwd_over_rev",
+    "hvp_rev_over_rev",
+    "eager_value_and_grad",
+    "public_run",
+    "checkpoint_grad",
+    "second_setup_same_process"
+  ],
+  "tolerance": 1e-06,
+  "checks": [
+    {
+      "test": "value_and_grad_jit",
+      "status": "passed",
+      "max_relative_difference": 8.493907781417032e-19,
+      "issues": [],
+      "passed": true
+    },
+    {
+      "test": "descent_3_steps",
+      "status": "passed",
+      "max_relative_difference": 8.07793566891957e-31,
+      "issues": [],
+      "passed": true
+    },
+    {
+      "test": "vmap_value_and_grad",
+      "status": "passed",
+      "max_relative_difference": 2.54817233442511e-18,
+      "issues": [],
+      "passed": true
+    },
+    {
+      "test": "jvp",
+      "status": "passed",
+      "max_relative_difference": 0.0,
+      "issues": [],
+      "passed": true
+    },
+    {
+      "test": "jacfwd_2",
+      "status": "passed",
+      "max_relative_difference": 0.0,
+      "issues": [],
+      "passed": true
+    },
+    {
+      "test": "hvp_fwd_over_rev",
+      "status": "passed",
+      "max_relative_difference": 1.4660677149001313e-21,
+      "issues": [],
+      "passed": true
+    },
+    {
+      "test": "hvp_rev_over_rev",
+      "status": "passed",
+      "max_relative_difference": 1.0980595858708005e-15,
+      "issues": [],
+      "passed": true
+    },
+    {
+      "test": "eager_value_and_grad",
+      "status": "passed",
+      "max_relative_difference": 1.956996352838476e-14,
+      "issues": [],
+      "passed": true
+    },
+    {
+      "test": "public_run",
+      "status": "passed",
+      "max_relative_difference": 3.2182863741325787e-15,
+      "issues": [],
+      "passed": true
+    },
+    {
+      "test": "checkpoint_grad",
+      "status": "passed",
+      "max_relative_difference": 8.493907781417032e-19,
+      "issues": [],
+      "passed": true
+    },
+    {
+      "test": "second_setup_same_process",
+      "status": "passed",
+      "max_relative_difference": 6.765201856792499e-17,
+      "issues": [],
+      "passed": true
+    }
+  ],
+  "issues": []
+}

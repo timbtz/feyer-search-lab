@@ -1,0 +1,70 @@
+{
+  "schema": "feyer-verification-decision-v1",
+  "candidate_sha": "cb502e8a5a15689e6f41971bd4a611cf6612283f",
+  "policy_id": "bounded-voyager-first-order-review-v1",
+  "policy_digest": "420248cc7bd36d85a10b5d993700dfb8e5ae37ba04b8171cb3ffcf092c5a1d1d",
+  "scope": "internal_opt_in",
+  "status": "satisfied",
+  "requirements_satisfied": true,
+  "requirements": [
+    {
+      "requirement_id": "bounded_descent_3_steps",
+      "capability": "bounded_descent_3_steps",
+      "setup": "voyager-bounded-40freq-45params",
+      "binding": {
+        "setup_digest": "2c875861636a0a0f71c91c83823f36cbdf42761aa219211b26c3f68c5c6ecb0d",
+        "harness_digest": "2c0dee744118d2324c4a09db5cec76c15822c7095ba198a00f73453911a8dd16",
+        "environment_digest": "3d71b534e4f904a39838439d79bfaec287ba6d6bd32b60d1cc6e67e9763edc3a",
+        "acceptance_digest": "7628f3eb554f0a41565b9c1965ab49aa4f2d8d28e8eab4c57f2d723927ca270d"
+      },
+      "status": "satisfied",
+      "reason": "Required exact bound observations passed.",
+      "pass_count": 1,
+      "minimum_passes": 1,
+      "observations": [
+        {
+          "check_id": "bounded_descent_3_steps",
+          "status": "passed",
+          "source_ref": "experiments/reviews/teammate-host-engine/followup/bounded-comparison.json",
+          "source_digest": "8d03f46080c7b1d37d78186fa510a2fb51c96a05404ade36fb14dd62459e36f2"
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "requirement_id": "bounded_vmap_value_and_grad",
+      "capability": "bounded_vmap_value_and_grad",
+      "setup": "voyager-bounded-40freq-45params",
+      "binding": {
+        "setup_digest": "2c875861636a0a0f71c91c83823f36cbdf42761aa219211b26c3f68c5c6ecb0d",
+        "harness_digest": "2c0dee744118d2324c4a09db5cec76c15822c7095ba198a00f73453911a8dd16",
+        "environment_digest": "3d71b534e4f904a39838439d79bfaec287ba6d6bd32b60d1cc6e67e9763edc3a",
+        "acceptance_digest": "7628f3eb554f0a41565b9c1965ab49aa4f2d8d28e8eab4c57f2d723927ca270d"
+      },
+      "status": "satisfied",
+      "reason": "Required exact bound observations passed.",
+      "pass_count": 1,
+      "minimum_passes": 1,
+      "observations": [
+        {
+          "check_id": "bounded_vmap_value_and_grad",
+          "status": "passed",
+          "source_ref": "experiments/reviews/teammate-host-engine/followup/bounded-comparison.json",
+          "source_digest": "8d03f46080c7b1d37d78186fa510a2fb51c96a05404ade36fb14dd62459e36f2"
+        }
+      ],
+      "excluded": []
+    }
+  ],
+  "verification_digests": [
+    "6a36be51dbb1c945701d87616eddb09e7601ebad05b1f96891ca046f0f6a7c64"
+  ],
+  "issues": [],
+  "official_benchmark": "unchanged; not evaluated or overridden by this module",
+  "limits": [
+    "This gate is additional internal policy, not an organizer requirement or a scored timing.",
+    "A pass covers only the recorded setups/capabilities; it is not universal correctness.",
+    "Caller must trust receipt provenance; content digests are not authentication.",
+    "Historical matching failures require review; no automatic supersession or promotion."
+  ]
+}

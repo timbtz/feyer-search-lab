@@ -1,0 +1,32 @@
+{
+  "schema": "feyer-verification-policy-v1",
+  "policy_id": "bounded-voyager-first-order-review-v1",
+  "purpose": "Require both bounded Voyager trajectory checks only; broader JAX and official benchmark remain separate.",
+  "scope": "internal_opt_in",
+  "requirements": [
+    {
+      "id": "bounded_descent_3_steps",
+      "capability": "bounded_descent_3_steps",
+      "setup": "voyager-bounded-40freq-45params",
+      "binding": {
+        "setup_digest": "2c875861636a0a0f71c91c83823f36cbdf42761aa219211b26c3f68c5c6ecb0d",
+        "harness_digest": "2c0dee744118d2324c4a09db5cec76c15822c7095ba198a00f73453911a8dd16",
+        "environment_digest": "3d71b534e4f904a39838439d79bfaec287ba6d6bd32b60d1cc6e67e9763edc3a",
+        "acceptance_digest": "7628f3eb554f0a41565b9c1965ab49aa4f2d8d28e8eab4c57f2d723927ca270d"
+      },
+      "minimum_passes": 1
+    },
+    {
+      "id": "bounded_vmap_value_and_grad",
+      "capability": "bounded_vmap_value_and_grad",
+      "setup": "voyager-bounded-40freq-45params",
+      "binding": {
+        "setup_digest": "2c875861636a0a0f71c91c83823f36cbdf42761aa219211b26c3f68c5c6ecb0d",
+        "harness_digest": "2c0dee744118d2324c4a09db5cec76c15822c7095ba198a00f73453911a8dd16",
+        "environment_digest": "3d71b534e4f904a39838439d79bfaec287ba6d6bd32b60d1cc6e67e9763edc3a",
+        "acceptance_digest": "7628f3eb554f0a41565b9c1965ab49aa4f2d8d28e8eab4c57f2d723927ca270d"
+      },
+      "minimum_passes": 1
+    }
+  ]
+}

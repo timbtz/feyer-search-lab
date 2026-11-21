@@ -1,0 +1,324 @@
+{
+  "setup": {
+    "setup": "voyager",
+    "pairs": [
+      [
+        "l0",
+        "power"
+      ],
+      [
+        "prm",
+        "reflectivity"
+      ],
+      [
+        "prm",
+        "tuning"
+      ],
+      [
+        "bs",
+        "reflectivity"
+      ],
+      [
+        "bs",
+        "tuning"
+      ],
+      [
+        "itmy",
+        "reflectivity"
+      ],
+      [
+        "itmy",
+        "tuning"
+      ],
+      [
+        "etmy",
+        "reflectivity"
+      ],
+      [
+        "etmy",
+        "tuning"
+      ],
+      [
+        "itmx",
+        "reflectivity"
+      ],
+      [
+        "itmx",
+        "tuning"
+      ],
+      [
+        "etmx",
+        "reflectivity"
+      ],
+      [
+        "etmx",
+        "tuning"
+      ],
+      [
+        "srm",
+        "reflectivity"
+      ],
+      [
+        "srm",
+        "tuning"
+      ],
+      [
+        "sq",
+        "db"
+      ],
+      [
+        "sq",
+        "angle"
+      ],
+      [
+        "fm1",
+        "reflectivity"
+      ],
+      [
+        "fm1",
+        "tuning"
+      ],
+      [
+        "fm2",
+        "reflectivity"
+      ],
+      [
+        "fm2",
+        "tuning"
+      ],
+      [
+        "bhbs",
+        "reflectivity"
+      ],
+      [
+        "bhbs",
+        "tuning"
+      ],
+      [
+        "lo",
+        "power"
+      ],
+      [
+        "prmsus",
+        "mass"
+      ],
+      [
+        "bssus",
+        "mass"
+      ],
+      [
+        "itmysus",
+        "mass"
+      ],
+      [
+        "etmysus",
+        "mass"
+      ],
+      [
+        "itmxsus",
+        "mass"
+      ],
+      [
+        "etmxsus",
+        "mass"
+      ],
+      [
+        "srmsus",
+        "mass"
+      ],
+      [
+        "l0_prm",
+        "length"
+      ],
+      [
+        "prm_bs",
+        "length"
+      ],
+      [
+        "bs_itmy",
+        "length"
+      ],
+      [
+        "itmy_etmy",
+        "length"
+      ],
+      [
+        "bs_itmx",
+        "length"
+      ],
+      [
+        "itmx_etmx",
+        "length"
+      ],
+      [
+        "bs_srm",
+        "length"
+      ],
+      [
+        "srm_dbs1",
+        "length"
+      ],
+      [
+        "sq_dbs2",
+        "length"
+      ],
+      [
+        "dbs1_dbs2",
+        "length"
+      ],
+      [
+        "dbs2_fm1",
+        "length"
+      ],
+      [
+        "fm1_fm2",
+        "length"
+      ],
+      [
+        "dbs1_bhbs",
+        "length"
+      ],
+      [
+        "lo_bhbs",
+        "length"
+      ]
+    ],
+    "initial": [
+      153.0,
+      0.950999754998775,
+      0.0,
+      0.4999974999875,
+      63.63961030678928,
+      0.99799998999995,
+      0.0,
+      0.9999849999249997,
+      0.0,
+      0.99799998999995,
+      0.0,
+      0.9999849999249997,
+      0.0,
+      0.95399976999885,
+      90.0,
+      10.0,
+      0.0,
+      0.998999994999975,
+      0.0,
+      0.9999849999249997,
+      -0.014,
+      0.4999974999875,
+      1e-07,
+      0.01,
+      29.243802983873618,
+      48.634040943805395,
+      200.0,
+      200.0,
+      200.0,
+      200.0,
+      50.0,
+      1.0,
+      1.0,
+      1.0,
+      4000.0,
+      1.0,
+      4000.0,
+      10.0,
+      1.0,
+      1.0,
+      10.0,
+      1.0,
+      300.0,
+      1.0,
+      10.0
+    ],
+    "frequencies": [
+      20.000000000000004,
+      23.04175937155262,
+      26.546133746826644,
+      30.583481301971602,
+      35.23486084522042,
+      40.59365925428552,
+      46.76746642740235,
+      53.880235391868524,
+      62.07477093910238,
+      71.51559675115222,
+      82.39225858265198,
+      94.92312981701038,
+      109.35979580191028,
+      125.99210498948727,
+      145.15398829415807,
+      167.23016350475768,
+      192.66385935710144,
+      221.9657143450495,
+      255.72402893367064,
+      294.61657701067975,
+      339.4242137175293,
+      391.0465528678882,
+      450.5200287128502,
+      519.0387046833238,
+      597.9782468917756,
+      688.9235437151584,
+      793.7005259840992,
+      914.4128266400184,
+      1053.4840158850286,
+      1213.7062597899867,
+      1398.2963792914006,
+      1610.9604350872871,
+      1855.968135118648,
+      2138.238558533658,
+      2463.4389172354026,
+      2838.0983378728147,
+      3269.73894870344,
+      3767.0269031909065,
+      4339.946372474493,
+      4999.999999999999
+    ],
+    "projection": {
+      "unit_interval_margin": 1e-06,
+      "positive_floor": 1e-12
+    }
+  },
+  "harness": {
+    "files": {
+      "jaxcompat.py": "ef1462e924f260fce2bd4f87ee12f87f9876935aa482902acbad4e0b144d8db9",
+      "bounded_jaxcompat.py": "b0b72d904b0df706bb5c6dcc8face992bb2737b0c54167cdc77e37b3c9808c14",
+      "custom_linear_solve_probe.py": "59f39821a70d80b41ea1787f45be2b08846eef5b6261319a8722251ed00851d3"
+    },
+    "runs": [
+      {
+        "command": "env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 JAX_PLATFORMS=cpu JAX_ENABLE_X64=true JAX_ENABLE_COMPILATION_CACHE=false taskset -c 101 /workspace/venv-feyer/bin/python -u /tmp/feyer-independent-bounded-review/bounded_jaxcompat.py run --tree /workspace/feyer-pristine --out /tmp/feyer-independent-bounded-review/bounded-reference.json",
+        "started_at": 1795301663.088692,
+        "finished_at": 1795301688.171893,
+        "returncode": 0
+      },
+      {
+        "command": "env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 JAX_PLATFORMS=cpu JAX_ENABLE_X64=true JAX_ENABLE_COMPILATION_CACHE=false taskset -c 101 /workspace/venv-feyer/bin/python -u /tmp/feyer-independent-bounded-review/bounded_jaxcompat.py run --tree /tmp/feyer-independent-review-cb502e8/code --out /tmp/feyer-independent-bounded-review/bounded-candidate.json",
+        "started_at": 1795301688.1732101,
+        "finished_at": 1795301691.965206,
+        "returncode": 0
+      },
+      {
+        "command": "env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 JAX_PLATFORMS=cpu JAX_ENABLE_X64=true JAX_ENABLE_COMPILATION_CACHE=false taskset -c 101 /workspace/venv-feyer/bin/python -u /tmp/feyer-independent-bounded-review/bounded_jaxcompat.py compare /tmp/feyer-independent-bounded-review/bounded-reference.json /tmp/feyer-independent-bounded-review/bounded-candidate.json --out /tmp/feyer-independent-bounded-review/bounded-comparison.json",
+        "started_at": 1795301691.966411,
+        "finished_at": 1795301695.311719,
+        "returncode": 0
+      }
+    ]
+  },
+  "environment": {
+    "identity": {
+      "python": "3.12.15",
+      "jax": "0.9.0",
+      "numpy": "2.5.5",
+      "platform": "Linux-6.8.0-79-generic-x86_64-with-glibc2.35",
+      "x64": true
+    },
+    "cpu": 101,
+    "command": "env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 JAX_PLATFORMS=cpu JAX_ENABLE_X64=true JAX_ENABLE_COMPILATION_CACHE=false taskset -c 101 /workspace/venv-feyer/bin/python -u /tmp/feyer-independent-bounded-review/bounded_jaxcompat.py run --tree /tmp/feyer-independent-review-cb502e8/code --out /tmp/feyer-independent-bounded-review/bounded-candidate.json"
+  },
+  "acceptance": {
+    "reference_sha": "02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f",
+    "reference_report_sha256": "770443ad0c0a1238f20a9d76242ed281fa0618702a30c7852b7e7a7f0c5d62ba",
+    "tolerance": 1e-06,
+    "comparator_source_sha256": "b0b72d904b0df706bb5c6dcc8face992bb2737b0c54167cdc77e37b3c9808c14"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "scope": "unscored sequential pinned CPU101 diagnostics",
+  "harness_commit": "18b8e51",
+  "candidate_sha": "cb502e8a5a15689e6f41971bd4a611cf6612283f",
+  "files": {
+    "jaxcompat.py": "ef1462e924f260fce2bd4f87ee12f87f9876935aa482902acbad4e0b144d8db9",
+    "bounded_jaxcompat.py": "b0b72d904b0df706bb5c6dcc8face992bb2737b0c54167cdc77e37b3c9808c14",
+    "custom_linear_solve_probe.py": "59f39821a70d80b41ea1787f45be2b08846eef5b6261319a8722251ed00851d3"
+  },
+  "runs": [
+    {
+      "command": "env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 JAX_PLATFORMS=cpu JAX_ENABLE_X64=true JAX_ENABLE_COMPILATION_CACHE=false taskset -c 101 /workspace/venv-feyer/bin/python -u /tmp/feyer-independent-bounded-review/bounded_jaxcompat.py run --tree /workspace/feyer-pristine --out /tmp/feyer-independent-bounded-review/bounded-reference.json",
+      "started_at": 1795301663.088692,
+      "finished_at": 1795301688.171893,
+      "returncode": 0
+    },
+    {
+      "command": "env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 JAX_PLATFORMS=cpu JAX_ENABLE_X64=true JAX_ENABLE_COMPILATION_CACHE=false taskset -c 101 /workspace/venv-feyer/bin/python -u /tmp/feyer-independent-bounded-review/bounded_jaxcompat.py run --tree /tmp/feyer-independent-review-cb502e8/code --out /tmp/feyer-independent-bounded-review/bounded-candidate.json",
+      "started_at": 1795301688.1732101,
+      "finished_at": 1795301691.965206,
+      "returncode": 0
+    },
+    {
+      "command": "env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 JAX_PLATFORMS=cpu JAX_ENABLE_X64=true JAX_ENABLE_COMPILATION_CACHE=false taskset -c 101 /workspace/venv-feyer/bin/python -u /tmp/feyer-independent-bounded-review/bounded_jaxcompat.py compare /tmp/feyer-independent-bounded-review/bounded-reference.json /tmp/feyer-independent-bounded-review/bounded-candidate.json --out /tmp/feyer-independent-bounded-review/bounded-comparison.json",
+      "started_at": 1795301691.966411,
+      "finished_at": 1795301695.311719,
+      "returncode": 0
+    },
+    {
+      "command": "env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 JAX_PLATFORMS=cpu JAX_ENABLE_X64=true JAX_ENABLE_COMPILATION_CACHE=false taskset -c 101 /workspace/venv-feyer/bin/python -u /tmp/feyer-independent-bounded-review/custom_linear_solve_probe.py --out /tmp/feyer-independent-bounded-review/linear-solve-probe.json",
+      "started_at": 1795301695.312772,
+      "finished_at": 1795301709.5002592,
+      "returncode": 0
+    }
+  ]
+}

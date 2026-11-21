@@ -1,0 +1,62 @@
+{
+  "schema": "feyer-verification-v1",
+  "candidate_sha": "cb502e8a5a15689e6f41971bd4a611cf6612283f",
+  "checks": [
+    {
+      "id": "bounded_descent_3_steps",
+      "capability": "bounded_descent_3_steps",
+      "setup": "voyager-bounded-40freq-45params",
+      "method": "Sequential pinned CPU101 run against clean unchanged02ec741; saved input trajectories checked",
+      "status": "passed",
+      "evidence_kind": "independent_measurement",
+      "source_ref": "experiments/reviews/teammate-host-engine/followup/bounded-comparison.json",
+      "source_digest": "8d03f46080c7b1d37d78186fa510a2fb51c96a05404ade36fb14dd62459e36f2",
+      "observed_at": 1795301695.311719,
+      "binding": {
+        "setup_digest": "2c875861636a0a0f71c91c83823f36cbdf42761aa219211b26c3f68c5c6ecb0d",
+        "harness_digest": "2c0dee744118d2324c4a09db5cec76c15822c7095ba198a00f73453911a8dd16",
+        "environment_digest": "3d71b534e4f904a39838439d79bfaec287ba6d6bd32b60d1cc6e67e9763edc3a",
+        "acceptance_digest": "7628f3eb554f0a41565b9c1965ab49aa4f2d8d28e8eab4c57f2d723927ca270d"
+      },
+      "outputs": {
+        "test": "bounded_descent_3_steps",
+        "status": "passed",
+        "passed": true,
+        "issues": [],
+        "max_relative_difference": 5.248394315899152e-10
+      },
+      "summary": "Valid-input diagnostic only; does not replace historical stress or certify full JAX.",
+      "thresholds": {
+        "relative_output_tolerance": 1e-06
+      }
+    },
+    {
+      "id": "bounded_vmap_value_and_grad",
+      "capability": "bounded_vmap_value_and_grad",
+      "setup": "voyager-bounded-40freq-45params",
+      "method": "Sequential pinned CPU101 run against clean unchanged02ec741; saved input trajectories checked",
+      "status": "passed",
+      "evidence_kind": "independent_measurement",
+      "source_ref": "experiments/reviews/teammate-host-engine/followup/bounded-comparison.json",
+      "source_digest": "8d03f46080c7b1d37d78186fa510a2fb51c96a05404ade36fb14dd62459e36f2",
+      "observed_at": 1795301695.311719,
+      "binding": {
+        "setup_digest": "2c875861636a0a0f71c91c83823f36cbdf42761aa219211b26c3f68c5c6ecb0d",
+        "harness_digest": "2c0dee744118d2324c4a09db5cec76c15822c7095ba198a00f73453911a8dd16",
+        "environment_digest": "3d71b534e4f904a39838439d79bfaec287ba6d6bd32b60d1cc6e67e9763edc3a",
+        "acceptance_digest": "7628f3eb554f0a41565b9c1965ab49aa4f2d8d28e8eab4c57f2d723927ca270d"
+      },
+      "outputs": {
+        "test": "bounded_vmap_value_and_grad",
+        "status": "passed",
+        "passed": true,
+        "issues": [],
+        "max_relative_difference": 1.6487996628387612e-13
+      },
+      "summary": "Valid-input diagnostic only; does not replace historical stress or certify full JAX.",
+      "thresholds": {
+        "relative_output_tolerance": 1e-06
+      }
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "test": "bounded_descent_3_steps",
+      "status": "passed",
+      "passed": true,
+      "issues": [],
+      "max_relative_difference": 5.248394315899152e-10
+    },
+    {
+      "test": "bounded_vmap_value_and_grad",
+      "status": "passed",
+      "passed": true,
+      "issues": [],
+      "max_relative_difference": 1.6487996628387612e-13
+    }
+  ],
+  "issues": [],
+  "tolerance": 1e-06,
+  "scope": "bounded Voyager trajectory agreement only"
+}

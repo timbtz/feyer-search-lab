@@ -1,0 +1,8 @@
+value passed
+grad passed
+jvp passed
+jacfwd passed
+hessian passed
+hvp_rev_over_rev passed
+vmap_grad passed
+jit_grad passed
