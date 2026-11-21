@@ -1,0 +1,21 @@
+{
+  "agent_id": "claude-setup-audit",
+  "provider": "claude",
+  "model": "claude-opus-5-5",
+  "kind": "guidance",
+  "direction": "setup-and-matrix-assembly-audit",
+  "branch": "explore/claude-setup-audit",
+  "parent_candidates": [
+    "1e552d675c3795265be8af1ac23ffb61f90f30b1"
+  ],
+  "budget_minutes": 20,
+  "max_turns": 1,
+  "allowed_paths": [
+    "experiments/notes/claude-setup-audit.md"
+  ],
+  "brief_path": "experiments/briefs/claude-setup-audit.md",
+  "brief_sha256": "5c1b07aef183ddc58ae907639189f07ce41530c4f1f905f59ef6d730019e79f2",
+  "runner_sha256": "ee0e38f8cda20054f553fe7c1e016cd043bcb6990808bc6de951cb1295284889",
+  "status_path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-setup-audit/status.json",
+  "evaluation_policy": "No evaluations; guidance only. Coordinator must review before any new round or candidate."
+}
