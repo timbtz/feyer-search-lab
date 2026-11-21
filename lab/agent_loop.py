@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import signal
+import shutil
 import subprocess
 import time
 import uuid
@@ -48,6 +49,8 @@ def validate_changes(repo, paths):
 
 
 def github_status(slug, job, target=None):
+    if not slug or not shutil.which("gh"):
+        return
     result=job.get('result') or {}
     if job['status'] in ('queued','running'):
         state,description='pending',f'{job["profile"]} queued on AMD CPU 2'
@@ -102,6 +105,8 @@ def read_thread_id(events, previous=None):
                 continue
             if event.get('type') == 'thread.started':
                 previous = event['thread_id']
+            elif event.get('type') == 'system' and event.get('subtype') == 'init':
+                previous = event.get('session_id') or previous
     return previous
 
 
@@ -217,6 +222,8 @@ def _recover_submission(active, args, client, state, status_file):
 
 def _finish_record(active, args, worktree, directory, state, status_file):
     feedback = active['feedback']
+    from .profiler import feedback_profile
+    feedback['profiler'] = feedback_profile(feedback)
     records = worktree / 'experiments' / 'runs' / args.name
     records.mkdir(parents=True, exist_ok=True)
     record = records / f'candidate-{active["iteration"]:02d}.json'
@@ -311,7 +318,11 @@ def _commit_candidate(pending, args, worktree, state, status_file):
         subprocess.run(['git', '-C', str(worktree), 'commit', '-m', subject], check=True)
         current = git(worktree, 'rev-parse', 'HEAD')
     active = {'iteration': pending['iteration'], 'sha': current, 'response': response, 'jobs': {},
-              'feedback': {'candidate_sha': current, 'agent_response': response}}
+              'feedback': {'candidate_sha': current, 'agent_response': response,
+                           'provenance': {'parent_candidates': [state.get('candidate_sha') or state.get('initial_sha')]},
+                           'agent_context': {key: state.get(key) for key in
+                               ('agent_provider', 'agent_model', 'actual_model', 'runtime_commit',
+                                'brief_sha256', 'thread_id', 'initial_sha', 'fixed_deadline_unix')}}}
     _save(state, status_file, active_candidate=active, pending_turn=None,
           candidates=pending['iteration'], candidate_sha=current, status='candidate_ready')
     return active
@@ -323,23 +334,50 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
     if args.resume and not status_file.exists():
         raise ValueError('No saved session exists to resume')
     state = json.loads(status_file.read_text()) if status_file.exists() else {}
+    provider = getattr(args, 'agent_provider', 'codex')
+    model = getattr(args, 'agent_model', None)
+    if state and (state.get('agent_provider', 'codex') != provider or state.get('agent_model') != model):
+        raise ValueError('Cannot change provider or model while resuming a session')
     for key, expected in (('branch', args.branch), ('worktree', str(worktree)), ('direction', args.direction)):
         if key in state and state[key] != expected:
             raise ValueError(f'Resume {key} does not match the saved session')
     invocation_started = time.time()
-    deadline = time.monotonic() + args.max_minutes * 60
+    deadline_unix = invocation_started + args.max_minutes * 60
+    absolute_deadline = getattr(args, 'deadline_unix', None)
+    if state.get('fixed_deadline_unix') is not None:
+        if absolute_deadline is not None and absolute_deadline != state['fixed_deadline_unix']:
+            raise ValueError('Cannot change the fixed session deadline on resume')
+        absolute_deadline = state['fixed_deadline_unix']
+    if absolute_deadline is not None:
+        deadline_unix = min(deadline_unix, absolute_deadline)
+    deadline = time.monotonic() + max(0, deadline_unix - invocation_started)
     _save(state, status_file, pid=os.getpid(), branch=args.branch, worktree=str(worktree), direction=args.direction,
-          status='starting', candidate_limit=args.max_candidates, invocation_started_at=invocation_started,
-          invocation_deadline_at=invocation_started + args.max_minutes * 60)
+          status='starting', agent_provider=provider, agent_model=model,
+          fixed_deadline_unix=absolute_deadline, candidate_limit=args.max_candidates,
+          invocation_started_at=invocation_started, invocation_deadline_at=deadline_unix)
     try:
         if not worktree.exists():
             subprocess.run(['git', '-C', str(repo), 'worktree', 'add', '-b', args.branch, str(worktree), 'main'], check=True)
         if git(worktree, 'branch', '--show-current') != args.branch:
             raise ValueError('Worktree branch does not match assigned direction')
-        if changed_paths(worktree) and not args.resume:
+        if not args.resume and changed_paths(worktree):
             raise ValueError('Initial agent worktree must be clean')
         client = Client(args.host)
-        brief = (repo / 'experiments' / 'initial-agent.md').read_text()
+        brief_path = getattr(args, 'brief', None) or (repo / 'experiments' / 'initial-agent.md')
+        brief = Path(brief_path).read_text()
+        from .profiler_feedback import load_seed, prompt_guidance
+        seed_path = getattr(args, 'profile_seed', None)
+        if seed_path and not state.get('profile_seed'):
+            state['profile_seed'] = load_seed(seed_path, git(worktree, 'rev-parse', 'HEAD'))
+        runtime_root = Path(__file__).resolve().parent.parent
+        _save(state, status_file, initial_sha=state.get('initial_sha') or git(worktree, 'rev-parse', 'HEAD'),
+              runtime_commit=git(runtime_root, 'rev-parse', 'HEAD'),
+              brief_sha256=hashlib.sha256(brief.encode()).hexdigest())
+        if provider == 'claude':
+            from .claude_turn import claude_turn
+            turn, turn_options = claude_turn, {'model': model}
+        else:
+            turn, turn_options = codex_turn, {}
         while True:
             active = state.get('active_candidate')
             if active:
@@ -351,7 +389,10 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
             pending = state.get('pending_turn')
             if pending:
                 number = pending['number']
-                state['thread_id'] = read_thread_id(directory / f'turn-{number:02d}.jsonl', state.get('thread_id'))
+                recovered_thread = read_thread_id(directory / f'turn-{number:02d}.jsonl', state.get('thread_id'))
+                if provider == 'claude' and state.get('thread_id') and recovered_thread != state['thread_id']:
+                    raise ValueError('Interrupted Claude turn changed the saved conversation identity')
+                state['thread_id'] = recovered_thread
                 output = directory / f'turn-{number:02d}.json'
                 if 'response' not in pending and output.exists():
                     try:
@@ -392,9 +433,12 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
             prompt += f'Remaining session seconds: {max(0, int(deadline-time.monotonic()))}.\n'
             if state.get('feedback'):
                 prompt += 'Evaluator feedback:\n' + json.dumps(state['feedback'], indent=2) + '\n'
+            if not state.get('feedback') and state.get('profile_seed'):
+                prompt += 'Initial exact-parent evidence (including numerical comparison):\n' + json.dumps(state['profile_seed'], indent=2) + '\n'
+            prompt += prompt_guidance(state.get('feedback') or state.get('profile_seed'))
             try:
-                thread, response = codex_turn(worktree, directory, turn_number, prompt, thread,
-                                              max(0.01, deadline-time.monotonic()), lock_fds)
+                thread, response = turn(worktree, directory, turn_number, prompt, thread,
+                                       max(0.01, deadline-time.monotonic()), lock_fds, **turn_options)
             except CodexTurnError as exc:
                 _save(state, status_file, thread_id=exc.thread_id or state.get('thread_id'),
                       status='budget_exhausted' if exc.timed_out else 'failed', error=str(exc))
@@ -402,7 +446,8 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
                     return
                 raise
             pending['response'] = response
-            _save(state, status_file, thread_id=thread, last_response=response, pending_turn=pending)
+            _save(state, status_file, thread_id=thread, last_response=response, pending_turn=pending,
+                  actual_model=model if provider == 'claude' else None)
             if _commit_candidate(pending, args, worktree, state, status_file) is None:
                 return
     except BaseException as exc:
@@ -434,6 +479,11 @@ def run(args):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--agent-provider', choices=('codex', 'claude'), default='codex')
+    parser.add_argument('--agent-model', help='Explicit Claude model; no automatic fallback')
+    parser.add_argument('--brief', type=Path, help='Direction-specific instructions')
+    parser.add_argument('--profile-seed', type=Path, help='Trusted full job or feedback for the exact initial HEAD')
+    parser.add_argument('--deadline-unix', type=float, help='Fixed absolute deadline, retained across resumes')
     parser.add_argument('--repo',type=Path,required=True)
     parser.add_argument('--worktree',type=Path,required=True)
     parser.add_argument('--branch',default='explore/seed-agent')
@@ -449,6 +499,12 @@ def main():
     args=parser.parse_args()
     if (args.max_candidates is not None and args.max_candidates<1) or args.max_minutes<=0 or '/' in args.name or args.name in ('','.','..'):
         parser.error('Invalid session name or budget')
+    if args.agent_model and args.agent_provider != 'claude':
+        parser.error('--agent-model applies only to Claude')
+    if args.deadline_unix is not None:
+        import math
+        if not math.isfinite(args.deadline_unix) or args.deadline_unix <= 0:
+            parser.error('--deadline-unix must be a positive finite Unix timestamp')
     run(args)
 
 

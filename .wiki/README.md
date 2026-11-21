@@ -8,6 +8,7 @@ The team repository is [timbtz/feyer-search-lab](https://github.com/timbtz/feyer
 
 - [Team search across three instances](team-search.md) coordinates personal Claude/Codex sessions through GitHub claims, evidence and combination tasks; no Qwen or SMAC dependency.
 - [Prepare a new AMD evaluator](portable-amd.md) reproduces the fixed environment, local baseline and serial worker on a colleague's instance.
+- [Profiling feedback](profiling.md) ranks measured first-run costs and feeds exact-candidate evidence into each proposal.
 - [Architecture](architecture.md) explains branches, candidates, agent sessions and the worker queue.
 - [Live search dashboard](live-dashboard.md) runs the localhost architecture graph, candidate DAG, worker status and evaluation explorer.
 - [Runbook](runbook.md) covers access, evaluation and recovery.

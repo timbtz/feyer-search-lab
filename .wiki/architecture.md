@@ -72,3 +72,20 @@ The operating-system process may end between steps, but the recorded Codex conve
 The agent response contains `summary`, `hypothesis`, `ready_for_evaluation`, `stop` and `notes`. When both readiness and stop are true, the supervisor evaluates that last candidate before finishing. Codex uses its ordinary workspace sandbox with automatic approval review; the supervisor does not bypass approval or sandbox checks. The model and provider inherit the user's configuration.
 
 Start with a serial evaluator. If agents later run on the AMD instance, account for their profiling and compilation processes in the same resource budget. Final comparisons should run without competing experiments. Additional agents and evaluator slots require a deliberate concurrency change, not ad hoc terminal launches.
+
+## Measured profiling feedback
+
+The [phase profiler](profiling.md) reads existing synchronized evaluator reports and ranks where each exact candidate spends its complete first-run time. The supervisor stores that attribution in candidate feedback and supplies it to the next Codex or Claude turn. The same versioned report feeds the read-only frontend. This adds no physics execution or overhead to the official benchmark.
+
+```mermaid
+flowchart LR
+    R[Exact SHA and evaluator report] --> P[Rank 14 measured phases]
+    P --> A[Agent names phase, run and mechanism]
+    A --> C[Supervisor commits one candidate]
+    C --> Q[Serial screen and full queue]
+    Q --> R
+    P --> D[Read-only profiling dashboard]
+    P --> S[Review a future discrete operator space]
+```
+
+This is operational feedback, separate from candidate ancestry. Complete first-run time remains the objective; screens, warm timings and hypothetical phase savings cannot establish a winner. Native operator attribution remains unknown without a separately admitted diagnostic. A fixed `--deadline-unix` is retained across resumes; the profiler grants no additional budget or evaluator concurrency.
