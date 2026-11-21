@@ -44215,6 +44215,56 @@
         ],
         "target_evidence": []
       }
+    },
+    {
+      "seq": 22,
+      "at": 1795294493.704417,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "feedback-b10b2a7d3c02dd6eb4b3419dedd283061df882c9dde1e47a6bbd89a6c88580aa",
+        "executor": {
+          "kind": "supervisor",
+          "id": "claude-structure-solve"
+        },
+        "kind": "explore",
+        "status": "completed",
+        "candidate_sha": "4c12600ce07d6d46518c230bae17248d9df75a39",
+        "parents": [
+          "d09dc1d08fb046d08b3b699685d8ff780d611e87"
+        ],
+        "target_phases": [],
+        "hypothesis": "Doing both A-solves in one call guarantees a single LU(A) per frequency. That saves one n\u2248751 complex LU per frequency if XLA did not already merge the duplicate LU (not checked against HLO). It also replaces two custom_linear_solve and triangular-solve paths with one, in both the forward and reverse passes, so execution and compile time may drop. The gain is unmeasured and may be about zero if the LU was already merged. Numerically the factorization and pivots are the same. Only the multi-column triangular solves and the order in which A's cotangent terms are added change, at rounding level, much like frequency-batching candidate 7, which passed the strict check. The main risk is strict gradient index 161.",
+        "change_summary": "Candidate 1 is ready for evaluation. It has not been run or checked here. The signal solve solve(A, b) and the noise-covariance solve solve(A, N w_d) use the same untransposed signal matrix A, and neither depends on the other's result. This change does them as one multi-RHS solve(A, [b | N w_0..D-1]), controlled by a new trace-time constant, differometor.simulate.MERGE_SAME_MATRIX_SOLVES = True. It is in _solve_signal_and_noise. Setting the constant to False gives back the parent code path. The A^H noise-weight solve is unchanged, because sharing its LU failed the strict check before. Assembly-only k=1 frequency loop, all frequencies, design variables, topology, precision and the three JIT stages are unchanged. Notes are in experiments/notes/claude-structure-solve.md.",
+        "stopping_reason": null,
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d96d9188640ef34204f53ccc9612a3dff6268f52/experiments/runs/claude-structure-solve/candidate-01.json",
+        "source_digest": "b10b2a7d3c02dd6eb4b3419dedd283061df882c9dde1e47a6bbd89a6c88580aa",
+        "source_digest_kind": "canonical_json_sha256",
+        "feedback_ref": {
+          "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/d96d9188640ef34204f53ccc9612a3dff6268f52/experiments/runs/claude-structure-solve/candidate-01.json",
+          "artifact_digest": "b10b2a7d3c02dd6eb4b3419dedd283061df882c9dde1e47a6bbd89a6c88580aa",
+          "digest_kind": "canonical_json_sha256"
+        },
+        "session_id": "aaad90d2-50c7-4334-ad32-331fbe033d3c",
+        "iteration": null,
+        "checkpoint": null,
+        "next_input": null,
+        "input_receipt": null,
+        "evaluations": [
+          {
+            "job_id": "5b2c3e3993814b98ad2eb1d9ec40e8c2",
+            "candidate_sha": "4c12600ce07d6d46518c230bae17248d9df75a39",
+            "profile": "screen"
+          },
+          {
+            "job_id": "2183e6e63bcd4e9aa91e6e7313ad6107",
+            "candidate_sha": "4c12600ce07d6d46518c230bae17248d9df75a39",
+            "profile": "full"
+          }
+        ],
+        "target_evidence": []
+      }
     }
   ],
   "comparison_regime": {
@@ -44485,6 +44535,50 @@
         {
           "job_id": "4c7f84023bf343f3a746bf2578f13c78",
           "candidate_sha": "28566a64a9efbdddc104762ac1f8212eb1d8370c",
+          "profile": "full"
+        }
+      ],
+      "target_evidence": []
+    },
+    "feedback-b10b2a7d3c02dd6eb4b3419dedd283061df882c9dde1e47a6bbd89a6c88580aa": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "feedback-b10b2a7d3c02dd6eb4b3419dedd283061df882c9dde1e47a6bbd89a6c88580aa",
+      "executor": {
+        "kind": "supervisor",
+        "id": "claude-structure-solve"
+      },
+      "kind": "explore",
+      "status": "completed",
+      "candidate_sha": "4c12600ce07d6d46518c230bae17248d9df75a39",
+      "parents": [
+        "d09dc1d08fb046d08b3b699685d8ff780d611e87"
+      ],
+      "target_phases": [],
+      "hypothesis": "Doing both A-solves in one call guarantees a single LU(A) per frequency. That saves one n\u2248751 complex LU per frequency if XLA did not already merge the duplicate LU (not checked against HLO). It also replaces two custom_linear_solve and triangular-solve paths with one, in both the forward and reverse passes, so execution and compile time may drop. The gain is unmeasured and may be about zero if the LU was already merged. Numerically the factorization and pivots are the same. Only the multi-column triangular solves and the order in which A's cotangent terms are added change, at rounding level, much like frequency-batching candidate 7, which passed the strict check. The main risk is strict gradient index 161.",
+      "change_summary": "Candidate 1 is ready for evaluation. It has not been run or checked here. The signal solve solve(A, b) and the noise-covariance solve solve(A, N w_d) use the same untransposed signal matrix A, and neither depends on the other's result. This change does them as one multi-RHS solve(A, [b | N w_0..D-1]), controlled by a new trace-time constant, differometor.simulate.MERGE_SAME_MATRIX_SOLVES = True. It is in _solve_signal_and_noise. Setting the constant to False gives back the parent code path. The A^H noise-weight solve is unchanged, because sharing its LU failed the strict check before. Assembly-only k=1 frequency loop, all frequencies, design variables, topology, precision and the three JIT stages are unchanged. Notes are in experiments/notes/claude-structure-solve.md.",
+      "stopping_reason": null,
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d96d9188640ef34204f53ccc9612a3dff6268f52/experiments/runs/claude-structure-solve/candidate-01.json",
+      "source_digest": "b10b2a7d3c02dd6eb4b3419dedd283061df882c9dde1e47a6bbd89a6c88580aa",
+      "source_digest_kind": "canonical_json_sha256",
+      "feedback_ref": {
+        "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/d96d9188640ef34204f53ccc9612a3dff6268f52/experiments/runs/claude-structure-solve/candidate-01.json",
+        "artifact_digest": "b10b2a7d3c02dd6eb4b3419dedd283061df882c9dde1e47a6bbd89a6c88580aa",
+        "digest_kind": "canonical_json_sha256"
+      },
+      "session_id": "aaad90d2-50c7-4334-ad32-331fbe033d3c",
+      "iteration": null,
+      "checkpoint": null,
+      "next_input": null,
+      "input_receipt": null,
+      "evaluations": [
+        {
+          "job_id": "5b2c3e3993814b98ad2eb1d9ec40e8c2",
+          "candidate_sha": "4c12600ce07d6d46518c230bae17248d9df75a39",
+          "profile": "screen"
+        },
+        {
+          "job_id": "2183e6e63bcd4e9aa91e6e7313ad6107",
+          "candidate_sha": "4c12600ce07d6d46518c230bae17248d9df75a39",
           "profile": "full"
         }
       ],

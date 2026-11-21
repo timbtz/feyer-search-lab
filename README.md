@@ -32,6 +32,7 @@ graph TD
   c7["f3139c71ae2a"]
   c2 -->|combine| c1
   c5 -->|explore| c0
+  c5 -->|explore| c2
   c5 -->|explore| c3
   c5 -->|explore| c4
   c5 -->|explore| c6
@@ -41,7 +42,7 @@ graph TD
 
 Every edge records intended inputs, not proof of speedup.
 
-Recorded jobs: 13. Decisions/events: 21.
+Recorded jobs: 13. Decisions/events: 22.
 
 ## External research records
 
@@ -53,5 +54,6 @@ Recorded jobs: 13. Decisions/events: 21.
 | claude-noise-reuse | explore | 96474bdd4d83 | unknown | completed |
 | claude-noise-reuse | explore | 05508471e6b6 | unknown | completed |
 | claude-noise-reuse | combine | 28566a64a9ef | unknown | completed |
+| claude-structure-solve | explore | 4c12600ce07d | unknown | completed |
 
 These records are evidence, not competing task claims or winner declarations.
