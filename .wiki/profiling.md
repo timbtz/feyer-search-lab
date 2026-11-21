@@ -89,4 +89,21 @@ The watcher reads local evidence only and adds no evaluator jobs. The local dash
 
 The supervisor attaches `feedback.profiler` to versioned receipts and recalculates prompt guidance from raw evidence when resuming. Start a new isolated session with `--agent-provider claude --agent-model claude-opus-5-5`, the committed direction `--brief`, `--profile-seed` containing a trusted eligible full job for the exact initial HEAD, and a fixed `--deadline-unix`. Seed numerical errors remain in the prompt, alongside phase attribution. The adapter verifies the actual model and conversation identity before accepting a successful turn.
 
+To redirect an existing conversation, use `--resume --continuation-guidance PATH`.
+Unlike the initial brief, this text is appended to resumed prompts separately from
+the evaluator evidence. It does not extend the saved deadline or change archived
+results. The supervisor reads the file once per invocation (UTF-8, at most 64 KiB),
+retains a content-addressed guidance receipt, and records its text and digest in
+subsequent candidate context. Supply the option again on later invocations when
+the guidance should continue to apply.
+
+New dispatched turns also retain their complete prompt in the ignored session
+directory as `turn-NN-prompt-SHA256.json`. Candidate feedback links that artifact
+through `input_receipt` (`path`, prompt `sha256`, `turn`, preceding `thread_id`).
+This is the exact constructed input, including runtime instructions and feedback;
+the transcript may contain additional provider-side context. Historical turns
+without this artifact must not be presented as exact captured inputs. A local
+artifact path is not a downloadable hosted link. Keep full prompts private and
+expose only reviewed evidence in shared graph cards.
+
 Fable 5.2 was verified as the current high-capability option, but its account preflight returned a usage-credit requirement. The user explicitly selected Opus 5.5 instead, conditional on completed integration, tests, commits, coordination and hosting. This is an explicit selection, not a silent fallback. Existing agent deadlines and frozen SMAC campaigns remain unchanged.
