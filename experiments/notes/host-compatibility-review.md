@@ -34,3 +34,9 @@ Not executed by this sub-agent: pinned JAX tests, official benchmark, strict sav
 ```
 
 The exact candidate needs unchanged full evaluation before any correctness or speed promotion. Preserve any existing strict mismatch and generalization failures; this patch does not claim to repair sparse-solver roundoff, all-coordinate gradient failures, or broader transform support.
+
+## Pinned follow-up
+
+The primary's pinned run of `cb502e8` executed seven probe tests: six passed, including real/complex absolute-value comparison and direct custom-derivative rejection. The fallback test failed in its fixture before reaching the interpreter: replacing the shared component registry entry invalidated the builder's identity lookup for `laser`. The corrected fixture temporarily replaces only the interpreter's registry with a copied list, preserving builder and component export identities. Its pinned rerun is pending; the two NumPy checks and syntax/diff checks passed again locally.
+
+The primary also reported a singular carrier solve during a three-step descent probe. This needs comparison with the reference trajectory and valid parameter bounds; it is not evidence that changing solve semantics or physics is justified. No additional simulator change was made for that failure.

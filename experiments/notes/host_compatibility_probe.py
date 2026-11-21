@@ -106,12 +106,14 @@ if not args.numpy_only:
                 kernel(fn, (1,))
 
         def test_component_custom_jvp_selects_traced_fallback(self):
-            # Install a local test wrapper for one existing component, preserving
-            # its actual JAX derivative. Restore it even if the build fails.
+            # Override only the interpreter registry with an equivalent wrapper.
+            # Build instructions look functions up by identity in the shared
+            # registry, so mutating that list would invalidate the fixture.
             import json
             import warnings
+            from unittest.mock import patch
             import differometor as df
-            from differometor.components import FUNCTIONS
+            import differometor.host as host
             from differometor.setups import constrain_inter_grid_cell_spaces
             fixture = json.loads((ROOT / 'examples/data/uifo_800_3000.json').read_text())
             setup = df.Setup.from_data(fixture)
@@ -121,22 +123,21 @@ if not args.numpy_only:
             ordinary, *_ = df.run_build_step(setup, [('f', 'frequency')], freqs, pairs)
             self.assertIsNotNone(ordinary['plan'].host_simulate)
             index = ordinary['plan'].carrier_groups[0][0]
-            original = FUNCTIONS[index]
+            original = host.FUNCTIONS[index]
             @jax.custom_jvp
             def wrapped(x):
                 return original(x)
             @wrapped.defjvp
             def wrapped_jvp(primals, tangents):
                 return jax.jvp(original, primals, tangents)
-            try:
-                FUNCTIONS[index] = wrapped
+            interpreter_functions = list(host.FUNCTIONS)
+            interpreter_functions[index] = wrapped
+            with patch.object(host, 'FUNCTIONS', interpreter_functions):
                 with warnings.catch_warnings(record=True) as messages:
                     warnings.simplefilter('always')
                     fallback, *_ = df.run_build_step(setup, [('f', 'frequency')], freqs, pairs)
                 self.assertIsNone(fallback['plan'].host_simulate)
                 self.assertTrue(any('custom_jvp_call' in str(m.message) for m in messages))
-            finally:
-                FUNCTIONS[index] = original
 
 
 if __name__ == '__main__':
