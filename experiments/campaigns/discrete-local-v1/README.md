@@ -1,8 +1,8 @@
 # Campaign discrete-local-v1
 
-Export schema: `feyer-campaign-export-v1`. Snapshot: `c4ca0cbe548aae672582da72898cbb6f7fb146756b0b6fdc568ec2d364865e57`.
+Export schema: `feyer-campaign-export-v1`. Snapshot: `5aeeffe3933029036e6f4cbcad40f319a78fcee8d7be638896acc4207dc877a4`.
 
-[Frozen proposer context](contexts/5db991e997f8ed430f38d5eeaa2d25c014b0c6b3c1fccafb4ee6f25e9f983957.json) — SHA256 `5db991e997f8ed430f38d5eeaa2d25c014b0c6b3c1fccafb4ee6f25e9f983957`.
+[Frozen proposer context](contexts/511d15a1c4641b309911661ff759320ed63928833d60a48986895d64413d38c0.json) — SHA256 `511d15a1c4641b309911661ff759320ed63928833d60a48986895d64413d38c0`.
 
 This is an evidence ledger. Scientific parents describe chosen inputs to an experiment; they are not necessarily Git parents. Phase changes are observations, not proof that one edit caused the difference. A failed attempt remains part of the history.
 
@@ -24,8 +24,10 @@ graph LR
   n1["import-42aaabf394d2d9bf5618b6802eb1e11315e85030 seed valid"]
   n2["78273c30837743b594ef628e5c0056f2 mutate valid"]
   n3["1480647fdf514cc7a7a47e78c11dbfbb mutate valid"]
+  n4["ec31cf4665ed49c38ce6e1c5b5df8708 mutate proposed"]
   n0 -->|mutate| n2
   n0 -->|mutate| n3
+  n0 -->|mutate| n4
 ```
 
 ## Candidate outcomes
@@ -36,6 +38,7 @@ graph LR
 | import-42aaabf394d2d9bf5618b6802eb1e11315e85030 | round-001 / discrete | root | 42aaabf394d2d9bf5618b6802eb1e11315e85030 | valid | 28.6478 | 7f9a3863201d4908b9e2607e8b925bdc:70e1da46befd5d0fd365188a88a91391f95e2df62042e7a6687de8abbaf8c611 |
 | 78273c30837743b594ef628e5c0056f2 | round-001 / discrete | seed8 | 2994693a064e90850c710bd3b3f3317ba525f81b | valid | 36.8441 | 5b3af3628df54f778c117ffaad033a5e:34f77add4e58cd3f92f928160be72ce5d3350ed3868f51fb1e1c1a0fc5e1c9c9, cde035e7126e4e00a4eccc5192f41d86:97a7e880e414101b6593ca85de16889e7fe6e0c28c1e57ad796fb9a0660824be |
 | 1480647fdf514cc7a7a47e78c11dbfbb | round-001 / discrete | seed8 | 0955a78b6b96a3aba4bc3eeb1649b211ebf314c1 | valid | 50.1969 | f1c5134330144123bf6a90b7d712a544:663b207a2fd05652d225a8e39268e3768d8906f21c2b46fabb5257540816bac4, 8d433ae433e5496b89cb4de587c0862f:e73ec4d8e0e0b141c91c65a03e7de4e446cb51042c5f42264060bcc887a94bbf |
+| ec31cf4665ed49c38ce6e1c5b5df8708 | round-001 / discrete | seed8 | 71c96d778a8f8df5d5bbda23c6e623cf38de40f0 | proposed | unknown | none |
 
 ## Round decisions and stalled work
 
@@ -105,7 +108,7 @@ Frozen specification: `c9eef3c088d8fc7635ca176417db487b5d2b4472ff28d94dfbae02855
 }
 ```
 
-- round-001/discrete: ready; owner coordinator; strikes 2; reason not recorded
+- round-001/discrete: active; owner coordinator; strikes 2; reason not recorded
 
 ## Candidate evidence and proposed changes
 
@@ -2133,6 +2136,132 @@ Frozen specification: `c9eef3c088d8fc7635ca176417db487b5d2b4472ff28d94dfbae02855
 }
 ```
 
+### ec31cf4665ed49c38ce6e1c5b5df8708
+
+```json
+{
+  "cohort_digest": null,
+  "commit_sha": "71c96d778a8f8df5d5bbda23c6e623cf38de40f0",
+  "content_sha256": "81def4cea2d03e38f2ba34b0ad041837d52af1b302b57a4739f6b3470994367b",
+  "context_sha256": null,
+  "evaluation_requests": [],
+  "evidence": [],
+  "evidence_ids": [],
+  "git_parents": null,
+  "heuristic_id": null,
+  "hypothesis": null,
+  "improved": false,
+  "kind": "mutate",
+  "lane_id": "discrete",
+  "metrics": null,
+  "model_manifest": null,
+  "owner": "coordinator",
+  "owner_version": 1,
+  "parameters": {
+    "checkpoint": true,
+    "map_batch_size": 4,
+    "prevent_cse": false
+  },
+  "parameters_after": {
+    "checkpoint": true,
+    "map_batch_size": 4,
+    "prevent_cse": false
+  },
+  "parameters_before": null,
+  "parents": [
+    "seed8"
+  ],
+  "prompt_sha256": null,
+  "proposal": {
+    "candidate_id": "ec31cf4665ed49c38ce6e1c5b5df8708",
+    "commit_sha": "71c96d778a8f8df5d5bbda23c6e623cf38de40f0",
+    "content_sha256": "81def4cea2d03e38f2ba34b0ad041837d52af1b302b57a4739f6b3470994367b",
+    "kind": "mutate",
+    "lane_id": "discrete",
+    "parameters": {
+      "checkpoint": true,
+      "map_batch_size": 4,
+      "prevent_cse": false
+    },
+    "parents": [
+      "seed8"
+    ],
+    "proposal_id": "ec31cf4665ed49c38ce6e1c5b5df8708",
+    "provenance": {
+      "acceptance": {
+        "absolute_seconds": 0.02,
+        "noise_guard": "maximum observed range of both candidates",
+        "relative": 0.01
+      },
+      "context": {
+        "bytes": 2890,
+        "path": "contexts/b9d7f0e2bfa60ccb1072a4a9c1ece852c35e711f6ff7942041da3b02d9bfcafb.json",
+        "sha256": "b9d7f0e2bfa60ccb1072a4a9c1ece852c35e711f6ff7942041da3b02d9bfcafb"
+      },
+      "context_sha256": "b9d7f0e2bfa60ccb1072a4a9c1ece852c35e711f6ff7942041da3b02d9bfcafb",
+      "controller_commit": "5549b087ed6433a8af9a0cde4212e1f5f1ec5b5b",
+      "git_parent_sha": "8dbf7bb6b17105f6bfa09d86b34251e48dd86dc9",
+      "heuristic_id": "discrete-search-v1-local-search",
+      "hypothesis": "Measure registered configuration using local-search at categorical distance 1 from the noise-qualified incumbent; improvement is unmeasured.",
+      "incumbent_candidate": "seed8",
+      "model_calls": 0,
+      "neighborhood_radius": 1,
+      "operator_version": "seed8-component-execution-v1",
+      "parameters_before": {
+        "checkpoint": true,
+        "map_batch_size": null,
+        "prevent_cse": false
+      },
+      "remaining_configurations": 11,
+      "target_symbols": [
+        "simulate._evaluate_component",
+        "simulate.update"
+      ]
+    },
+    "recipe": "discrete",
+    "round_id": "round-001"
+  },
+  "proposal_id": "ec31cf4665ed49c38ce6e1c5b5df8708",
+  "provenance": {
+    "acceptance": {
+      "absolute_seconds": 0.02,
+      "noise_guard": "maximum observed range of both candidates",
+      "relative": 0.01
+    },
+    "context": {
+      "bytes": 2890,
+      "path": "contexts/b9d7f0e2bfa60ccb1072a4a9c1ece852c35e711f6ff7942041da3b02d9bfcafb.json",
+      "sha256": "b9d7f0e2bfa60ccb1072a4a9c1ece852c35e711f6ff7942041da3b02d9bfcafb"
+    },
+    "context_sha256": "b9d7f0e2bfa60ccb1072a4a9c1ece852c35e711f6ff7942041da3b02d9bfcafb",
+    "controller_commit": "5549b087ed6433a8af9a0cde4212e1f5f1ec5b5b",
+    "git_parent_sha": "8dbf7bb6b17105f6bfa09d86b34251e48dd86dc9",
+    "heuristic_id": "discrete-search-v1-local-search",
+    "hypothesis": "Measure registered configuration using local-search at categorical distance 1 from the noise-qualified incumbent; improvement is unmeasured.",
+    "incumbent_candidate": "seed8",
+    "model_calls": 0,
+    "neighborhood_radius": 1,
+    "operator_version": "seed8-component-execution-v1",
+    "parameters_before": {
+      "checkpoint": true,
+      "map_batch_size": null,
+      "prevent_cse": false
+    },
+    "remaining_configurations": 11,
+    "target_symbols": [
+      "simulate._evaluate_component",
+      "simulate.update"
+    ]
+  },
+  "recipe": "discrete",
+  "response_sha256": null,
+  "round_id": "round-001",
+  "target_symbols": null,
+  "uncertainty": "No repeat-confirmation or causality is inferred from this export. Inspect exact job evidence and matching cohorts.",
+  "valid": false
+}
+```
+
 ## Decision and failure trail
 
 | Sequence | Event | Actor | Detail |
@@ -2166,5 +2295,6 @@ Frozen specification: `c9eef3c088d8fc7635ca176417db487b5d2b4472ff28d94dfbae02855
 | 27 | evidence_observed | coordinator | {"candidate_id": "1480647fdf514cc7a7a47e78c11dbfbb", "category": "valid", "evidence_digest": "becce5c3e245e12424f0b8b8c996884ca6f3c16fdb24c8543e85c809dd26237d", "evidence_id": "8d433ae433e5496b89cb4de587c0862f:e73ec4d8e0e0b141c91c65a03e7de4e446cb51042c5f42264060bcc887a94bbf", "job_id": "8d433ae433e5496b89cb4de587c0862f", "progress": {"axes": ["compilation", "runtime", "peak_rss_bytes"], "meaningful_pareto": false, "meaningful_total": false, "policy": {"absolute": 0.02, "relative": 0.01}, "reference_best_total": 28.09352152608335, "reference_parents": ["seed8"]}, "status": "valid", "strikes": 2} |
 | 28 | decision_recorded | coordinator | {"decision_id": "2ee14c71ca4a46bab856e2a1cf1a49b3", "payload": {"plan": {"action": "mutate", "attempted_parameters": [{"checkpoint": true, "map_batch_size": null, "prevent_cse": false}, {"checkpoint": true, "map_batch_size": null, "prevent_cse": true}, {"checkpoint": true, "map_batch_size": 1, "prevent_cse": false}, {"checkpoint": true, "map_batch_size": 2, "prevent_cse": false}], "base_candidate": "seed8", "dimensions": ["checkpoint", "prevent_cse", "map_batch_size"], "lane_id": "discrete", "owner": "coordinator", "parent_candidates": ["seed8", "import-42aaabf394d2d9bf5618b6802eb1e11315e85030", "78273c30837743b594ef628e5c0056f2", "1480647fdf514cc7a7a47e78c11dbfbb"], "recipes": {"discrete… [full detail in events.jsonl] |
 | 29 | decision_recorded | coordinator | {"decision_id": "ec31cf4665ed49c38ce6e1c5b5df8708", "payload": {"acceptance": {"absolute_seconds": 0.02, "noise_guard": "maximum observed range of both candidates", "relative": 0.01}, "context": {"bytes": 2890, "path": "contexts/b9d7f0e2bfa60ccb1072a4a9c1ece852c35e711f6ff7942041da3b02d9bfcafb.json", "sha256": "b9d7f0e2bfa60ccb1072a4a9c1ece852c35e711f6ff7942041da3b02d9bfcafb"}, "heuristic_id": "discrete-search-v1-local-search", "hypothesis": "Measure registered configuration using local-search at categorical distance 1 from the noise-qualified incumbent; improvement is unmeasured.", "incumbent_candidate": "seed8", "neighborhood_radius": 1, "remaining_configurations": 11}, "payload_digest":… [full detail in events.jsonl] |
+| 30 | candidate_proposed | coordinator | {"candidate_id": "ec31cf4665ed49c38ce6e1c5b5df8708", "duplicate_of": null, "owner_version": 1, "proposal_digest": "7ddfd2f7c5a063ac19bbbe91ccd1cd731f0d7858b5042aeb1ee1ad3969cd8235", "proposal_id": "ec31cf4665ed49c38ce6e1c5b5df8708"} |
 
 Guidance may propose a new round. It cannot silently replace frozen operators, ownership, evaluation requirements or budgets. Only the coordinator can admit that round through the campaign state API. Publishing this ledger does not merge or promote candidate code.
