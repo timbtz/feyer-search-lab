@@ -80,6 +80,9 @@ class Client:
                 raise RuntimeError('AMD evaluator does not support idempotent request lookup. Deploy the updated '
                                    'lab/queue.py and lab/remote.py before using request IDs; no submission or '
                                    'automatic fallback was attempted.') from exc
+            if data.get('action') == 'capabilities' and 'Unknown action: capabilities' in detail:
+                raise RuntimeError('Evaluator lacks diagnostic capability discovery. Deploy the diagnostic release '
+                                   'and switch an idle worker before submitting diagnostics; no fallback attempted.') from exc
             raise
         return json.loads(reply)
 
@@ -102,6 +105,10 @@ class Client:
                 if not isinstance(existing, dict) or any(existing.get(k) != v for k, v in expected.items()):
                     raise ValueError('request_id already identifies a different submission payload')
                 return existing
+        if profile == 'diagnostic':
+            capabilities = self.request({'action': 'capabilities'})
+            if not isinstance(capabilities, dict) or capabilities.get('diagnostic_schema') != 'feyer-compiler-diagnostic-v1':
+                raise RuntimeError('Evaluator does not advertise compiler diagnostics; no submission attempted')
         if publish:
             publish_candidate(repo, sha, branch)
         transfer = uuid.uuid4().hex
@@ -155,7 +162,7 @@ def main():
         submit.add_argument('--' + name, required=True)
     submit.add_argument('--sha')
     submit.add_argument('--request-id', help='Optional UUID; reuse only to retry the identical submission')
-    submit.add_argument('--profile', choices=('screen', 'full'), default='screen')
+    submit.add_argument('--profile', choices=('screen', 'full', 'diagnostic'), default='screen')
     for name in ('status', 'wait', 'fetch'):
         cmd = sub.add_parser(name)
         cmd.add_argument('id')

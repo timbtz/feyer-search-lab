@@ -16,6 +16,9 @@ def handle(root, request):
     root = Path(root).resolve()
     queue = Queue(root / 'state', root / 'repo.git')
     action = request['action']
+    if action == 'capabilities':
+        from .diagnostic import SCHEMA
+        return {'profiles': ['screen', 'full', 'diagnostic'], 'diagnostic_schema': SCHEMA}
     if action == 'lookup_request':
         return queue.get_by_request_id(request['request_id'])
     if action == 'ingest':
@@ -51,9 +54,13 @@ def handle(root, request):
         run = root / 'runs' / job['id']
         if action == 'artifact':
             files = {}
-            for name in ('job.json', 'result.json', 'report.json', 'comparison.json', 'stdout.log', 'time.txt', 'report.png'):
+            names = ('job.json', 'result.json', 'report.json', 'comparison.json', 'stdout.log', 'time.txt', 'report.png')
+            if job['profile'] == 'diagnostic':
+                from .diagnostic import ARTIFACTS
+                names += ('diagnostic.json',) + ARTIFACTS
+            for name in names:
                 path = run / name
-                if path.is_file() and path.stat().st_size <= 4 * 1024 * 1024:
+                if path.is_file() and not path.is_symlink() and path.stat().st_size <= 4 * 1024 * 1024:
                     files[name] = base64.b64encode(path.read_bytes()).decode()
             return files
         for name in ('stdout.log', 'comparison.log'):
@@ -62,9 +69,10 @@ def handle(root, request):
                 with path.open('rb') as stream:
                     stream.seek(max(0, path.stat().st_size - 16000))
                     job[name] = stream.read().decode(errors='replace')
-        for name in ('report.json', 'comparison.json'):
+        names = ('diagnostic.json',) if job['profile'] == 'diagnostic' else ('report.json', 'comparison.json')
+        for name in names:
             path = run / name
-            if path.is_file():
+            if path.is_file() and not path.is_symlink() and path.stat().st_size <= 4 * 1024 * 1024:
                 try:
                     job[name] = json.loads(path.read_text())
                 except json.JSONDecodeError:

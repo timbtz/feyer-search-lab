@@ -120,11 +120,18 @@ class Worker:
             raise RejectedCandidate("Protected challenge files changed: " + ", ".join(changed.splitlines()))
 
     def _build_command(self, job, code, run):
-        evaluator = self.evaluator_root / "screen.py" if job["profile"] == "screen" else code / "benchmark.py"
+        if job['profile'] not in ('screen', 'full', 'diagnostic'):
+            raise ValueError('Unknown evaluation profile')
+        evaluator = (self.evaluator_root / 'diagnostic.py' if job['profile'] == 'diagnostic' else
+                     self.evaluator_root / 'screen.py' if job['profile'] == 'screen' else code / 'benchmark.py')
         if not evaluator.is_file():
             raise FileNotFoundError(f"Evaluator missing: {evaluator}")
         command = ["/usr/bin/time", "-v", "-o", str(run / "time.txt"),
                    "taskset", "-c", str(self.cpu), self.python_path, "-u", str(evaluator)]
+        if job["profile"] == "diagnostic":
+            command += ["--repo", str(code), "--sha", job["sha"], "--cpus", "1",
+                        "--output", str(run / "diagnostic.json")]
+            return command, evaluator
         if job["profile"] == "screen":
             command += ["--repo", str(code)]
         command += ["--cpus", "1", "--output", str(run / "report.json"),
@@ -280,6 +287,11 @@ class Worker:
                   "baseline_sha": self.baseline_sha,
                   "artifacts": {name: str(run / name) for name in
                                 ("report.json", "arrays.npz", "stdout.log", "time.txt")}}
+        if job["profile"] == "diagnostic":
+            from .diagnostic import ARTIFACTS
+            result["ranking_eligible"] = False
+            result["artifacts"] = {name: str(run / name) for name in
+                                   ("diagnostic.json", "stdout.log", "time.txt") + ARTIFACTS}
         atomic_json(run / "job.json", job)
         status, error = "failed", None
         interrupted = None
@@ -304,6 +316,18 @@ class Worker:
                 status, error = "timed_out", f"Evaluation exceeded {self.timeout:g} seconds"
             elif returncode:
                 error = f"Evaluator exited with code {returncode}; see stdout.log"
+            elif job["profile"] == "diagnostic":
+                from .diagnostic import MAX_REPORT_BYTES, validate_report
+                path = run / "diagnostic.json"
+                if path.is_symlink() or path.stat().st_size > MAX_REPORT_BYTES:
+                    raise ValueError("Diagnostic summary is a symlink or oversized")
+                report = json.loads(path.read_text())
+                validate_report(report, job["sha"], result["evaluator_sha256"],
+                                hashlib.sha256((code / "benchmark.py").read_bytes()).hexdigest(),
+                                self.cpu, FIXTURE_SHA256, REFERENCE_SHA256)
+                result.update(verdict="diagnostic_completed", reported_environment=report["environment"],
+                              diagnostic_schema=report["schema"])
+                status = "completed"
             else:
                 report = json.loads((run / "report.json").read_text())
                 total = self._validate_report(report, job["profile"], expected_sha=job["sha"],
