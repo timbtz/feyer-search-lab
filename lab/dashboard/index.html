@@ -36,8 +36,13 @@
     <div id="comparison-mode" class="notice" hidden role="status"></div>
 
     <section id="graph" class="view" role="tabpanel" aria-labelledby="tab-graph">
-      <div class="map-heading"><div><span class="micro-label">THE SEARCH SPACE</span><p id="progress-subtitle">Recorded research and its evidence</p></div><div class="map-controls"><button id="progress-focus" class="text-button">Focus map</button><div class="map-switch" aria-label="Map view"><button data-map-mode="progression" aria-pressed="true">Search progression</button><button data-map-mode="evidence" aria-pressed="false">Exact evidence DAG</button></div></div></div>
-      <div id="progression">
+      <div class="map-heading"><div><span class="micro-label">THE SEARCH SPACE</span><p id="progress-subtitle">Recorded research and its evidence</p></div><div class="map-controls"><button id="progress-focus" class="text-button">Focus map</button><div class="map-switch" aria-label="Map view"><button data-map-mode="topology" aria-pressed="true">Topology map</button><button data-map-mode="progression" aria-pressed="false">Run cards</button><button data-map-mode="evidence" aria-pressed="false">Exact evidence DAG</button></div></div></div>
+      <div id="topology-map">
+        <div class="topology-toolbar"><div id="topology-filter" class="topology-filters" aria-label="Topology focus"></div><label class="topology-zoom">Zoom <input id="topology-zoom" type="range" min="35" max="120" value="80"><output id="topology-scale">80%</output></label><button id="topology-collapse" class="text-button">Collapse all</button></div>
+        <div class="topology-viewport" tabindex="0" aria-label="Topology graph. Scroll to explore; expand nodes for profiler feedback or decisions."><div id="topology-plane" style="zoom:.8"><svg id="topology-lines" aria-hidden="true"></svg><div id="topology-nodes"></div></div></div>
+        <p id="topology-count" class="meta-line"></p><p id="topology-note" class="meta-line"></p>
+      </div>
+      <div id="progression" hidden>
         <div class="progress-overline"><span id="research-count"></span><label class="run-screens"><input id="progress-screens" type="checkbox" checked> Include screen runs</label><button id="progress-more" class="text-button" hidden>Show all directions</button></div>
         <div id="progress-canvas" class="progress-canvas">
           <svg id="progress-lines" aria-hidden="true"></svg>
@@ -52,8 +57,9 @@
         </div>
         <div class="progress-key"><span><i class="key-wire"></i> Intended progression</span><span><i class="key-dot"></i> Exact run receipt</span><span class="delta-gain">Green: observed decrease</span><span class="delta-loss">Red: observed increase</span><span>Expand metrics and recorded feedback</span></div>
         <p id="progress-source" class="meta-line"></p><button id="progress-unlinked" class="text-button" hidden></button>
-        <aside id="progress-detail" class="progress-detail" hidden aria-label="Research evidence"><button id="progress-close" class="text-button">Close details</button><div id="progress-detail-content"></div></aside>
+        
       </div>
+      <aside id="progress-detail" class="progress-detail" hidden aria-label="Research evidence"><button id="progress-close" class="text-button">Close details</button><div id="progress-detail-content"></div></aside>
       <div id="evidence-map" hidden>
 
       <div id="team-summary" class="team-summary" role="status"></div>

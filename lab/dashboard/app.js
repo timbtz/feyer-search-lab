@@ -310,6 +310,35 @@ const RunMetrics=(()=>{
 })();
 if(typeof module!=='undefined')module.exports.Metrics=RunMetrics;
 
+/* Candidate map: grouping explains scope; only declared parents create arrows. */
+const TopologyMap=(()=>{
+ function build(data){
+  const model=SearchProgression.build(data),records=Object.values(data.team_search?.research_records||{}),nodes=new Map(),edges=[],issues=[];
+  const ensure=sha=>{if(!nodes.has(sha))nodes.set(sha,{id:sha,sha,runs:[],records:[],spaces:[],parents:[],workers:[]});return nodes.get(sha);};
+  for(const r of model.measurements){const n=ensure(r.sha);if(!n.runs.some(x=>x.job_id===r.job_id))n.runs.push(r);}
+  for(const j of data.jobs||[]){if(!j.sha||!j.id)continue;const n=ensure(j.sha);if(!n.runs.some(x=>x.job_id===j.id))n.runs.push({...j,job_id:j.id,research_records:records.filter(r=>r.candidate_sha===j.sha)});}
+  for(const c of data.campaigns||[])for(const a of c.candidates||[]){if(!a.commit_sha)continue;const n=ensure(a.commit_sha);n.spaces.push({id:c.campaign?.spec?.space_version||c.id,label:c.campaign?.spec?.space_version||c.id,campaign:c.id});for(const id of a.parents||[]){const parent=(c.candidates||[]).find(x=>x.candidate_id===id)?.commit_sha;if(parent)n.parents.push(parent);}}
+  for(const r of records){if(r.candidate_sha){const n=ensure(r.candidate_sha);n.records.push(r);n.parents.push(...(r.parents||[]));}else if(r.hypothesis){nodes.set('plan:'+r.record_id,{id:'plan:'+r.record_id,sha:null,runs:[],records:[r],spaces:[],parents:r.parents||[],workers:[],planned:true});}}
+  for(const n of nodes.values()){
+   for(const r of n.runs){const p=RunMetrics.parents(r);if(p.conflict){n.conflict=true;issues.push('Conflicting parents for '+n.id);}else n.parents.push(...p.shas);}
+   n.parents=[...new Set(n.parents)].filter(p=>p!==n.sha);if(n.conflict)n.parents=[];
+   n.phases=[...new Set(n.records.flatMap(r=>r.target_phases||[]))].sort();
+   const named=n.records.find(r=>typeof r.topology_id==='string'||typeof r.topology_name==='string');
+   n.group=named?'topology:'+(named.topology_id||named.topology_name):n.spaces.length?'space:'+n.spaces[0].id:n.phases.length?'phase:'+n.phases.join('+'):'unknown';
+   n.groupLabel=named?(named.topology_name||named.topology_id):n.spaces.length?n.spaces[0].label:n.phases.length?n.phases.map(p=>RunMetrics.names[p]||p).join(' + '):'Topology not yet classified';
+   n.groupKind=named?'Declared topology':n.spaces.length?'Admitted implementation space':n.phases.length?'Declared phase focus':'Unclassified evidence';
+   n.latest=[...n.runs].sort((a,b)=>(b.created_at||0)-(a.created_at||0))[0];
+   const a=n.latest?RunMetrics.annotation(n.latest):{};n.title=n.records.find(r=>r.hypothesis)?.hypothesis||a.summary||a.hypothesis||(n.planned?'Proposed research':'Candidate '+String(n.sha).slice(0,8));
+   n.workers=(data.workers||[]).filter(w=>n.runs.some(r=>r.branch===w.branch)||n.records.some(r=>r.executor?.id===w.id)).map(w=>w.model&&w.model!=='inherited / not recorded'?w.model:w.name||w.id);
+  }
+  for(const n of [...nodes.values()])for(const parent of n.parents){if(!nodes.has(parent))nodes.set(parent,{id:parent,sha:parent,runs:[],records:[],spaces:[],parents:[],phases:[],workers:[],group:'inputs',groupLabel:'Recorded starting inputs',groupKind:'Exact parent revisions',title:'Input '+parent.slice(0,8)});edges.push({source:parent,target:n.id});}
+  const visiting=new Set(),done=new Set();function rank(n){if(done.has(n.id))return n.rank;if(visiting.has(n.id)){issues.push('Cyclic parent declarations');return 0;}visiting.add(n.id);n.rank=0;for(const e of edges.filter(e=>e.target===n.id))n.rank=Math.max(n.rank,rank(nodes.get(e.source))+1);visiting.delete(n.id);done.add(n.id);return n.rank;}for(const n of nodes.values())rank(n);
+  return {nodes:[...nodes.values()],edges,issues,measurements:[...nodes.values()].flatMap(n=>n.runs)};
+ }
+ return {build};
+})();
+if(typeof module!=='undefined')module.exports.TopologyMap=TopologyMap;
+
 /* Read-only presentation of existing campaign evidence. PDS v4 supplies UI primitives. */
 'use strict';
 (() => {
@@ -524,7 +553,7 @@ if(typeof module!=='undefined')module.exports.Metrics=RunMetrics;
     }
   }
 
-  const P={all:false,selected:null,model:null,signature:'',mode:'progression',paths:[],showScreens:true};
+  const P={all:false,selected:null,model:null,signature:'',mode:'topology',paths:[],showScreens:true};
   const metricTime=v=>!numeric(v)?'—':v>0&&v<.01?`${(v*1000).toFixed(2)} ms`:`${v.toFixed(v<1?3:2)} s`;
   const metricDelta=d=>d.seconds===null?'No comparison':`${d.seconds<0?'−':d.seconds>0?'+':''}${metricTime(Math.abs(d.seconds))}${d.percent===null?'':` (${d.percent<0?'−':'+'}${Math.abs(d.percent).toFixed(1)}%)`}`;
   function metricTree(key,values,reference,depth=0){
@@ -577,7 +606,7 @@ if(typeof module!=='undefined')module.exports.Metrics=RunMetrics;
     card.querySelectorAll('details').forEach((d,i)=>{d.dataset.key=`run-${r.job_id}-${i}`;});return card;
   }
 
-  function progressMode(mode){P.mode=mode;$('progression').hidden=mode!=='progression';$('evidence-map').hidden=mode!=='evidence';for(const b of document.querySelectorAll('[data-map-mode]'))b.setAttribute('aria-pressed',String(b.dataset.mapMode===mode));if(mode==='evidence')requestAnimationFrame(openGraph);}
+  function progressMode(mode){P.mode=mode;$('topology-map').hidden=mode!=='topology';$('progression').hidden=mode!=='progression';$('evidence-map').hidden=mode!=='evidence';for(const b of document.querySelectorAll('[data-map-mode]'))b.setAttribute('aria-pressed',String(b.dataset.mapMode===mode));if(mode==='evidence')requestAnimationFrame(openGraph);if(mode==='topology')requestAnimationFrame(drawTopologyLines);}
   function inspectProgress(type,record){
     P.selected={type,record};const panel=$('progress-detail');panel.hidden=false;const target=clear('progress-detail-content');
     if(type==='branch'){
@@ -611,6 +640,36 @@ if(typeof module!=='undefined')module.exports.Metrics=RunMetrics;
     }
     $('progress-close').focus({preventScroll:true});
   }
+  const T={signature:'',group:'all',scale:.8,model:null};
+  function renderTopology(){
+    const data=TopologyMap.build(S.data||{});T.model=data;const groups=[...new Map(data.nodes.map(n=>[n.group,{id:n.group,label:n.groupLabel,kind:n.groupKind}])).values()];
+    const signature=JSON.stringify([data,T.group]);if(signature===T.signature)return;T.signature=signature;
+    const filters=clear('topology-filter');for(const g of [{id:'all',label:'All topologies'},...groups]){const button=make('button','topology-filter',human(g.label));button.setAttribute('aria-pressed',String(g.id===T.group));button.addEventListener('click',()=>{T.group=g.id;renderTopology();});filters.append(button);}
+    let nodes=data.nodes.filter(n=>T.group==='all'||n.group===T.group);const wanted=new Set(nodes.map(n=>n.id));for(const e of data.edges)if(wanted.has(e.target))wanted.add(e.source);nodes=data.nodes.filter(n=>wanted.has(n.id));
+    const shownGroups=groups.filter(g=>nodes.some(n=>n.group===g.id)),grid=clear('topology-nodes');grid.style.gridTemplateColumns=`repeat(${Math.max(1,shownGroups.length)}, 240px)`;
+    shownGroups.forEach((g,col)=>{const h=make('button','topology-group');h.addEventListener('click',()=>{T.group=g.id;renderTopology();});add(h,make('span','micro-label',g.kind),make('h3','',human(g.label)));h.style.gridColumn=col+1;h.style.gridRow=1;grid.append(h);});
+    const occupied=new Map(),positions=new Map();for(const n of nodes.sort((a,b)=>a.rank-b.rank||a.id.localeCompare(b.id))){const col=shownGroups.findIndex(g=>g.id===n.group);let row=Math.max(2,n.rank+2,...data.edges.filter(e=>e.target===n.id).map(e=>(positions.get(e.source)||1)+1));while(occupied.has(`${col}:${row}`))row++;occupied.set(`${col}:${row}`,true);positions.set(n.id,row);
+      const card=make('article',`topology-node${n.planned?' proposed':''}`);card.dataset.topologyNode=n.id;card.style.gridColumn=col+1;card.style.gridRow=row;
+      const head=make('div','topology-node-head');add(head,make('span','micro-label',n.planned?'Research assignment':n.spaces.length?'Numerical / topology':'Research candidate'),make('code','',n.sha?short(n.sha):human(n.records[0]?.status||'proposed')));card.append(head);const title=make('button','topology-node-title',n.title.length>85?n.title.slice(0,82)+'…':n.title);title.title=n.title;title.addEventListener('click',()=>{$('topology-nodes').querySelectorAll('.selected').forEach(el=>el.classList.remove('selected'));card.classList.add('selected');if(n.latest)inspectProgress('record',n.latest);else{const panel=$('progress-detail');panel.hidden=false;const target=clear('progress-detail-content');add(target,make('h2','',n.title));for(const r of n.records)disclosure(target,'Recorded research assignment',r,'map-inspect-'+r.record_id);if(n.sha)add(target,commitLink(n.sha));}});card.append(title);
+      if(n.workers.length)card.append(make('p','topology-worker',[...new Set(n.workers)].join(' · ')));
+      if(n.latest){const v=RunMetrics.values(n.latest),verdict=SearchProgression.verdict(n.latest),ref=RunMetrics.reference(n.latest,data.measurements,S.data?.historical?.baseline),d=RunMetrics.delta(v.total,'total',ref),stats=make('div','topology-stats');add(stats,make('strong','',metricTime(v.total)),make('span',`metric-delta ${d.tone}`,metricDelta(d)),make('span',`run-verdict ${verdict.tone}`,verdict.label));card.append(stats);card.append(make('p','topology-job',`${n.runs.length} evaluation${n.runs.length===1?'':'s'} · latest ${short(n.latest.job_id)}`));
+        const profile=make('details','topology-profile');profile.dataset.key='map-profile-'+n.id;profile.append(make('summary','','Profiler feedback'));const body=make('div','topology-profile-body');for(const k of RunMetrics.objectives)body.append(metricTree(k,v,ref));body.append(make('p','run-comparator',ref.label||ref.reason));profile.append(body);card.append(profile);
+      }else card.append(make('p','topology-job',n.planned?'No measured output attached':'Input evidence unavailable here'));
+      const detail=make('details','topology-expand');detail.dataset.key='map-details-'+n.id;detail.append(make('summary','','Decisions & run details'));const body=make('div','topology-detail-body');
+      detail.addEventListener('toggle',()=>{if(detail.open&&!body.childElementCount){for(const r of n.records){add(body,make('p','micro-label',human(r.status)),make('p','',r.change_summary||r.hypothesis));disclosure(body,'Research decision receipt',r,'map-record-'+r.record_id);}if(n.runs.length)for(const [i,r]of n.runs.entries())body.append(runCard(r,i));else if(n.sha)body.append(commitLink(n.sha));}requestAnimationFrame(drawTopologyLines);});detail.append(body);card.append(detail);grid.append(card);
+    }
+    $('topology-count').textContent=`${nodes.length} revisions / assignments · ${data.edges.filter(e=>wanted.has(e.source)&&wanted.has(e.target)).length} declared parent links`;
+    $('topology-note').textContent='Solid arrows are declared scientific parents. Columns separate declared topology, admitted parameter space, or phase focus; an unknown topology stays unclassified. '+(data.issues.length?data.issues.join(' · '):'Worker names are supporting context.');
+    grid.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>requestAnimationFrame(drawTopologyLines)));requestAnimationFrame(drawTopologyLines);
+  }
+  function drawTopologyLines(){
+    if($('topology-map').hidden)return;const grid=$('topology-nodes'),lines=clear('topology-lines'),bounds=grid.getBoundingClientRect(),z=T.scale;lines.setAttribute('width',grid.offsetWidth);lines.setAttribute('height',grid.offsetHeight);const boxes=new Map([...grid.querySelectorAll('[data-topology-node]')].map(el=>[el.dataset.topologyNode,el.getBoundingClientRect()]));
+    for(const e of T.model?.edges||[]){const a=boxes.get(e.source),b=boxes.get(e.target);if(!a||!b)continue;const x1=(a.left+a.width/2-bounds.left)/z,y1=(a.bottom-bounds.top)/z,x2=(b.left+b.width/2-bounds.left)/z,y2=(b.top-bounds.top)/z,mid=(y1+y2)/2;lines.append(svg('path',{d:`M${x1} ${y1} C${x1} ${mid},${x2} ${mid},${x2} ${y2}`,class:'topology-edge'}));lines.append(svg('path',{d:`M${x2-4} ${y2-6} L${x2} ${y2} L${x2+4} ${y2-6}`,class:'topology-edge'}));}
+  }
+  $('topology-collapse').addEventListener('click',()=>{$('topology-nodes').querySelectorAll('details').forEach(d=>{d.open=false;});requestAnimationFrame(drawTopologyLines);});
+  $('topology-zoom').addEventListener('input',e=>{T.scale=Number(e.target.value)/100;$('topology-plane').style.zoom=T.scale;$('topology-scale').textContent=e.target.value+'%';requestAnimationFrame(drawTopologyLines);});
+  new ResizeObserver(()=>requestAnimationFrame(drawTopologyLines)).observe($('topology-nodes'));
+
   function renderProgression(){
     const model=SearchProgression.build(S.data||{});P.model=model;
     P.paths=P.paths.filter(id=>model.research.some(b=>b.id===id));for(const b of model.research)if(P.paths.length<3&&!P.paths.includes(b.id))P.paths.push(b.id);
@@ -624,7 +683,6 @@ if(typeof module!=='undefined')module.exports.Metrics=RunMetrics;
       const path=make('article',`research-path${b.active?' path-active':''}${b.stalled?' path-stalled':''}`),header=make('button','path-header');
       const worker=b.workers.at(-1),state=b.active?(S.data?.snapshot?'Observed active':'Active research'):b.stalled?'Branch stalled':worker?`${human(worker.status)}${worker.stale?' · stale':''}`:'Recorded branch';
       add(header,make('span','path-state',state),make('h3','',b.title),make('span','path-model',worker&&worker.model!=='inherited / not recorded'?worker.model:worker?human(worker.provider):b.tasks.length?'Shared research task':'Recorded research branch'));header.addEventListener('click',()=>inspectProgress('branch',b));path.append(header);
-      if(!P.all){const choose=make('select','path-selector');choose.setAttribute('aria-label',`Choose research path ${branches.indexOf(b)+1}`);for(const option of model.research){const o=new Option(option.title,option.id);o.disabled=P.paths.includes(option.id)&&option.id!==b.id;choose.append(o);}choose.value=b.id;choose.addEventListener('change',()=>{P.paths[branches.indexOf(b)]=choose.value;renderProgression();});path.insertBefore(choose,header);}
       const shown=b.records.filter(r=>P.showScreens||r.profile==='full');
       path.append(make('p','run-sequence-label',`${shown.length} ${P.showScreens?'evaluations':'full evaluations'} · chronological sequence`));
       const stack=make('div','run-stack');shown.forEach((r,i)=>stack.append(runCard(r,i)));path.append(stack);
@@ -737,7 +795,7 @@ if(typeof module!=='undefined')module.exports.Metrics=RunMetrics;
     else if(pending&&c?.controller?.process_alive===false){notice.textContent='The local controller has stopped with work still pending. Remote results remain available; see technical details.';notice.hidden=false;}
     else if(S.data?.queue?.enabled&&S.data.queue.stale&&S.data.queue.error){notice.textContent='The AMD connection is unavailable. Showing the last recorded results.';notice.hidden=false;}
     $('round-caption').textContent=c?`${statusLabel(c)}${c.source_updated_at?` · last evidence ${time(c.source_updated_at)}`:''}`:'No search evidence available.';
-    renderProfiler();renderTeam();renderProgression();renderGraph();renderSummary();renderNow();drawTable($('latest'),rows().filter(r=>r.kind!=='seed').slice(-3).reverse(),true);renderWorkflow();renderResults();renderTechnical();
+    renderProfiler();renderTeam();renderProgression();renderTopology();renderGraph();renderSummary();renderNow();drawTable($('latest'),rows().filter(r=>r.kind!=='seed').slice(-3).reverse(),true);renderWorkflow();renderResults();renderTechnical();
     for(const d of document.querySelectorAll('details[data-key]'))d.open=opened.includes(d.dataset.key);
     if(focused&&document.activeElement===document.body&&$(focused))$(focused).focus({preventScroll:true});
     $('freshness').textContent=`${S.data?.snapshot?'Saved snapshot · source time':S.data?.demo?'Synthetic demo · example time':'Read-only · refreshed'} ${time(S.data?.generated_at)}${S.data?.queue?.enabled&&!S.data?.snapshot?` · AMD ${S.data.queue.stale?'last observation':'connected'}`:''}`;
@@ -748,7 +806,7 @@ if(typeof module!=='undefined')module.exports.Metrics=RunMetrics;
     const index=['graph','overview','workflow','profiler','results'].indexOf(view);$('navigation').setAttribute('active-tab-index',String(index));if(customElements.get('p-tabs-bar'))$('navigation').activeTabIndex=index;
     for(const button of document.querySelectorAll('[data-view]'))button.setAttribute('aria-selected',String(button.dataset.view===view));
     document.body.classList.toggle('showing-graph',view==='graph');
-    if(view==='graph')requestAnimationFrame(drawProgressLines);
+    if(view==='graph'){requestAnimationFrame(drawProgressLines);requestAnimationFrame(drawTopologyLines);}
     if(view==='graph'&&G.graph&&!G.initialized){G.initialized=true;requestAnimationFrame(openGraph);}
 
   }

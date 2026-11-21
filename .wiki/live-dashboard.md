@@ -100,3 +100,5 @@ Dashed guide lines express intended progression, not measured ancestry. The firs
 ## Expandable run cards
 
 Search progression retains each exact evaluation. Use **Expand decisions & feedback** to open recorded changes, targets, five timing objectives, nested 14 phases, validation evidence and checkpoint/input receipts. Scientific/execution graph consumes `search_lineage`; control feedback is an optional separate overlay. Absent history is unknown. Parent timing deltas require compatible exact evidence; cross-host or cross-regime results are not ranked together.
+
+The default Topology map uses compact candidate nodes and declared parent arrows. Direct node selection opens the side inspector; profiler and run details can expand locally. Collapse all restores the overview. Topology, admitted implementation space, and declared phase focus are labelled distinctly; absent topology stays unclassified. Branch dropdowns have been removed.
