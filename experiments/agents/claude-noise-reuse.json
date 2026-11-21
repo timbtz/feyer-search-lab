@@ -1,0 +1,29 @@
+{
+  "agent_id": "claude-noise-reuse",
+  "provider": "claude",
+  "model": "claude-opus-5-5",
+  "branch": "explore/claude-noise-reuse",
+  "direction": "guarded-noise-construction-reuse",
+  "starting_revision": "d09dc1d08fb046d08b3b699685d8ff780d611e87",
+  "parent_candidates": [
+    "d09dc1d08fb046d08b3b699685d8ff780d611e87"
+  ],
+  "combined_candidates": [],
+  "approach_tags": [
+    "guarded-noise-construction-reuse"
+  ],
+  "touched_components": [
+    "simulate",
+    "build"
+  ],
+  "deadline_unix": 1795288990,
+  "budget_minutes": 40,
+  "candidate_limit": null,
+  "worktree": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/claude-noise-reuse",
+  "execution_host": "local Mac; serial AMD evaluation",
+  "brief_path": "experiments/briefs/claude-noise-reuse.md",
+  "brief_sha256": "1fe439faac72d1cb82bd591947a3ccee3d610ac9b50875e442b5c86aa2b6f04a",
+  "baseline_seconds": 23.84,
+  "runtime_commit": "6a1ac0e9276913f4ee564d4806d0e9701ec1e46c",
+  "operator_admission": "Proposed only; requires reviewed candidate-specific tuner"
+}
