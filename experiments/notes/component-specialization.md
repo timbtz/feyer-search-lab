@@ -154,3 +154,42 @@ Rationale: checkpoint placement was previously evaluated around heterogeneous di
 Candidate 4 SHA and run IDs pending supervisor; candidate 2/3 remain validated fallbacks. No local benchmark or numerical execution.
 
 Implementation ready. Syntax and whitespace checks passed; AST comparison to candidate 3 confirms only the homogeneous helper body changed. The dynamic fallback checkpoint and every builder, reconstruction, component and solve operation remain unchanged. Numerical correctness and timing require the supervisor's new evaluation.
+
+## Candidate 4 evaluation and decision
+
+- SHA `4ffe2a0bd4dec631e36d037a8f922880446312e7`, immediate parent `e82b74c1d27425b9e0b44a377c222fb1654b895b`.
+- Screen `ca4797d991fe4223aafe067223960b67`, request `f3ce5fca656f454593fa9dddc2a44810`: passed; first-run 26.392501418 s, compilation/lowering 11.211467676 s, process wall 27.700641869 s, peak RSS 13551036 KiB.
+- Full `d8bc935d342d4c879f784ab3282bd813`, request `a68f850431654bcf95065d591299b4dd`: official and strict passed; first-run 26.431100650 s, compilation/lowering 11.240360152 s, warm median 14.477085605 s, process wall 108.898283318 s, peak RSS 13565068 KiB. CPU2, precision and complete workload unchanged.
+
+| Full first-run phase | Seconds |
+| --- | ---: |
+| imports | 0.289147345 |
+| initialize | 0.002909500 |
+| load | 0.001511564 |
+| build | 0.774656579 |
+| forward lower | 0.711232491 |
+| forward compile | 7.806842657 |
+| forward execute | 12.277531415 |
+| sensitivity lower | 0.073109210 |
+| sensitivity compile | 0.388262665 |
+| sensitivity execute | 0.000846399 |
+| gradient lower | 0.195211111 |
+| gradient compile | 2.065702019 |
+| gradient execute | 1.843756368 |
+| host transfer | 0.000381326 |
+
+Comparison inspected: all saved physical outputs, parameters and frequencies match exactly. Gradient maximum absolute error 2.168404344971009e-18, relative L2 3.0759654812695556e-23, normalized tolerance error 3.7530746410341796e-11, zero failures at unchanged strict tolerances. Loss unchanged at 9.793036291535532e-08; official finite-difference gradient check passed. Maximum reference log-sensitivity error remains 5.374104176780747e-06. Saved comparison is of the last warm evaluation.
+
+Decision: retain candidate 4 as lowest observed validated first-run result. Versus candidate 3, forward compilation rose from 4.843 to 7.807 s while reverse compilation fell from 5.327 to 2.066 s. Total fell by 0.455985 s; full peak RSS rose by 265820 KiB and warm median rose by 0.184436 s. The expected reverse-compilation reduction occurred, but with material phase tradeoffs; repeated full measurements are still required for superiority claims.
+
+## Candidate 5 proposal
+
+Same thread `01a1fedf-f7aa-77b2-885d-75aceeb4c48c`; resumed with 2318 seconds remaining. Immediate numerical parent `4ffe2a0bd4dec631e36d037a8f922880446312e7`; no external candidate combination.
+
+Source evidence: candidate 4 concatenates groups, scatters the resulting K-by-4 array back into original function-row order, then gathers `output_indices`. The permutation is already completely determined by the builder's function-index list. If concatenated group order is `p`, construct `inverse[p[j]] = j` during setup. Then `restored[output_rows, columns]` equals `concatenated[inverse[output_rows], columns]`. This removes the floating-point reconstruction scatter and its derivative while retaining all rows and the exact final matrix-update sequence.
+
+Proposal: store a sorted function-group dictionary plus this inverse permutation in structural metadata; gather selected outputs directly from concatenated results. Explicitly sort function IDs in both builder and consumer, avoiding dependence on dictionary insertion order versus JAX pytree traversal. Existing dynamic function-index arrays, input rows, output indices and final matrix indices stay unchanged. Legacy calls without metadata keep the dynamic fallback. The experimental grouping metadata changes representation and must be rebuilt with the new builder; it is not an array of physical answers.
+
+Hypothesis: replacing output reconstruction with an integer index gather reduces assembly/transpose compilation and work. Extra setup permutation construction and runtime index gathering may offset the gain. No entries, parameter-dependent zeros or gradient coordinates are omitted. No solve change or HLO claim. New full official and strict checks required; candidate 4 remains the fallback.
+
+Implemented `function_rows` and `output_rows` metadata, with direct grouped-output selection. Syntax and whitespace checks passed. AST scope checks found only `_group_component_indices`, its caller's documentation and `update` changed relative to candidate 4; `pairs_to_arrays` executable body is identical. Executed the actual host grouping helper using an array-construction stub on 104 cases: the inverse permutation covers every row and preserves selected values and final writes, including repeated output selections, overlapping destinations, zeros and all function IDs. No JAX/physics execution locally. Candidate SHA/run IDs and measurements remain pending supervisor.

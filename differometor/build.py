@@ -1443,11 +1443,18 @@ def build(setup: Setup):
 
 
 def _group_component_indices(function_indices):
-    """Classify host-side instructions without inspecting parameter values."""
+    """Classify instructions and map original rows to grouped output rows."""
     groups = defaultdict(list)
     for row, function_index in enumerate(function_indices):
         groups[int(function_index)].append(row)
-    return {index: jnp.array(rows, dtype=int) for index, rows in groups.items()}
+    grouped_rows = [row for index in sorted(groups) for row in groups[index]]
+    output_rows = [0] * len(function_indices)
+    for grouped_row, original_row in enumerate(grouped_rows):
+        output_rows[original_row] = grouped_row
+    return {
+        "function_rows": {index: jnp.array(groups[index], dtype=int) for index in sorted(groups)},
+        "output_rows": jnp.array(output_rows, dtype=int),
+    }
 
 
 def pairs_to_arrays(
@@ -1492,8 +1499,8 @@ def pairs_to_arrays(
         List of pairs `(component, parameter)` indicating parameters changed over a sweep.
     component_groups:
         Optional output dictionary filled with structural function groups for each
-        system. Integer keys identify functions; array leaves contain original
-        function-row indices. Rebuild these groups if function selectors change.
+        system. Each contains `function_rows` keyed by function ID and `output_rows`
+        mapping original rows to concatenated group rows. Rebuild if selectors change.
 
     Returns
     -------

@@ -111,7 +111,8 @@ def update(
         Values index into the global `FUNCTIONS` list.
     component_groups : dict | None
         Optional builder-produced structural partition of the function rows.
-        Function IDs are dictionary keys, so remain static under JAX tracing.
+        `function_rows` has static function-ID keys and original input-row arrays;
+        `output_rows` maps original output rows to concatenated group rows.
         Omit or rebuild the groups when changing function selectors.
 
     Returns
@@ -126,6 +127,7 @@ def update(
     tracing, which keeps the function jittable as long as the list is stable.
     """
     function_inputs = parameters[function_input_indices]
+    output_rows = output_indices[0]
     # Keep the function selector scalar so only the selected component branch
     # executes. The outer vmap in simulate still batches frequency samples.
     if component_groups is None:
@@ -134,21 +136,20 @@ def update(
             (function_indices, function_inputs),
         )
     else:
-        # Restore original function-row order before selecting matrix updates.
-        # In particular, do not reorder the final scatter's possibly overlapping
-        # destinations, or omit entries whose current parameter value is zero.
-        output_matrix = jnp.zeros((function_inputs.shape[0], 4), dtype=jnp.complex128)
-        group_rows = []
+        # Select directly from grouped outputs using the builder's permutation.
+        # The final matrix scatter retains its original update order, including
+        # possibly overlapping destinations and parameter-dependent zeros.
         group_values = []
-        for function_index, rows in component_groups.items():
-            group_rows.append(rows)
+        function_rows = component_groups["function_rows"]
+        for function_index in sorted(function_rows):
+            rows = function_rows[function_index]
             group_values.append(_evaluate_component_group(function_index, function_inputs[rows]))
         if group_values:
-            # Groups partition the function rows; restore them in one scatter.
-            output_matrix = output_matrix.at[jnp.concatenate(group_rows)].set(
-                jnp.concatenate(group_values, axis=0)
-            )
-    outputs = output_matrix[output_indices[0], output_indices[1]]
+            output_matrix = jnp.concatenate(group_values, axis=0)
+            output_rows = component_groups["output_rows"][output_rows]
+        else:
+            output_matrix = jnp.zeros((function_inputs.shape[0], 4), dtype=jnp.complex128)
+    outputs = output_matrix[output_rows, output_indices[1]]
     return matrix.at[matrix_indices[0], matrix_indices[1]].set(outputs)
 
 
