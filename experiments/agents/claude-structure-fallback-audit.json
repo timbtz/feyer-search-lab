@@ -1,0 +1,30 @@
+{
+  "agent_id": "claude-structure-solve",
+  "provider": "claude",
+  "model": "claude-opus-5-5",
+  "branch": "explore/claude-structure-solve",
+  "direction": "structural-linear-system-representation",
+  "starting_revision": "423bcc4ad6e99b85cd651980bee541612ed2ee20",
+  "parent_candidates": [
+    "423bcc4ad6e99b85cd651980bee541612ed2ee20"
+  ],
+  "combined_candidates": [],
+  "approach_tags": [
+    "structural-linear-system-representation"
+  ],
+  "touched_components": [
+    "simulate",
+    "build"
+  ],
+  "deadline_unix": 1795288990,
+  "budget_minutes": 40,
+  "candidate_limit": null,
+  "worktree": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/claude-structure-solve",
+  "execution_host": "local Mac; serial AMD evaluation",
+  "brief_path": "experiments/briefs/claude-structure-fallback-audit.md",
+  "brief_sha256": "5115dab84d5ba4761035f9b8a06a5b90018579eb0a5b447e53d238f95d4f617b",
+  "baseline_seconds": 23.84,
+  "runtime_commit": "6a1ac0e9276913f4ee564d4806d0e9701ec1e46c",
+  "operator_admission": "Proposed only; requires reviewed candidate-specific tuner",
+  "followup": "User-authorized final source audit within original40min"
+}
