@@ -151,6 +151,27 @@ class TeamSearchTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             apply(self.state, 'candidate', 'bob', {**data, 'task':'other', 'claim_id':'two'})
 
+    def test_reclaim_checks_retained_branches_and_preserves_history(self):
+        self.claim()
+        data = dict(task='solver', sha=CHILD, claim_id='claim-one', code_branch='explore/alice/solver')
+        self.state, _ = apply(self.state, 'candidate', 'alice', data)
+        self.state, _ = apply(self.state, 'release', 'alice', dict(
+            task='solver', claim_id='claim-one', reason='All jobs drained'))
+        self.state, _ = apply(self.state, 'add', 'coordinator', spec('other'))
+        self.state, _ = apply(self.state, 'claim', 'bob', dict(task='other', instance='amd-b', claim_id='two'))
+        self.state, _ = apply(self.state, 'candidate', 'bob', {**data, 'task':'other', 'claim_id':'two'})
+        before = copy.deepcopy(self.state)
+        with self.assertRaisesRegex(ValueError, 'retained writable code branch'):
+            apply(self.state, 'claim', 'alice', dict(task='solver', instance='amd-a', claim_id='three'))
+        self.assertEqual(self.state, before)
+        self.state, _ = apply(self.state, 'release', 'bob', dict(
+            task='other', claim_id='two', reason='All jobs drained'))
+        self.state, task = apply(self.state, 'claim', 'alice', dict(
+            task='solver', instance='amd-a', claim_id='three'))
+        self.assertEqual(task['candidate_branches'], {CHILD: data['code_branch']})
+        self.assertEqual(task['candidates'], [CHILD])
+        self.assertEqual(task['claim_id'], 'three')
+
     def test_real_git_concurrent_claim_has_one_winner(self):
         with tempfile.TemporaryDirectory() as directory:
             remote = str(Path(directory) / 'remote.git')

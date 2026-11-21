@@ -194,6 +194,11 @@ def apply(state, command, actor, data, now=None):
                 raise ValueError('Task deadline exhausted; coordinator must admit new work')
             if any(state['tasks'][d]['status'] not in ('done', 'stalled') for d in task['depends_on']):
                 raise ValueError('Prerequisite tasks have not finished')
+            retained_branches = set(task['candidate_branches'].values())
+            if any(other['id'] != task['id'] and other['status'] == 'claimed'
+                   and retained_branches.intersection(other['candidate_branches'].values())
+                   for other in state['tasks'].values()):
+                raise ValueError('Another claimed task already owns a retained writable code branch')
             task.update(status='claimed', owner=actor, instance=name(data['instance']),
                         claim_id=data['claim_id'], claimed_at=now)
         else:

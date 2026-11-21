@@ -52,6 +52,8 @@ succeeds. Save the returned `claim_id` and
 task specification in your ignored `.lab/` directory. A claim never expires
 automatically: after a crashed laptop, the same owner reads it with `list` and
 resumes, or explicitly hands it back after checking that all jobs have drained.
+Reclaiming also checks retained code branches against other active tasks; history
+is preserved, and a branch cannot acquire two active writers during recovery.
 If a command loses its network reply, inspect `list` before trying another claim.
 
 The actor name is cooperative attribution, **not authentication**. Repository
@@ -216,6 +218,9 @@ need eligible full evidence; combinations need at least two distinct eligible
 parents. They need not share a host to propose a combination, but **comparison**
 requires measuring both on the chosen destination host/cohort. The CLI never
 automatically dispatches a model, executes a merge, or starts a benchmark.
+Admission is permission to investigate, not confirmation of a winner. If a parent
+also has a scientific failure in the comparison cohort, `assess` requires numerical
+review even when other full runs passed; successful repeats cannot hide that failure.
 
 Use this team layer for human assignments. Existing `Campaign`/`topology_run`
 controllers remain the richer per-campaign option for admitted finite searches.
