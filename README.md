@@ -26,39 +26,42 @@ graph TD
   c1["211f65a5f18d"]
   c2["28566a64a9ef"]
   c3["39b23e3c6e84"]
-  c4["3e94580ec446"]
-  c5["423bcc4ad6e9"]
-  c6["4c12600ce07d"]
-  c7["7d1ccc59cef3"]
-  c8["7d6f99624be6"]
-  c9["96474bdd4d83"]
-  c10["aa2b1ab44180"]
-  c11["bb9a183fd64f"]
-  c12["d09dc1d08fb0"]
-  c13["d947905c9b73"]
-  c14["e0a1dc69f495"]
-  c15["e525ee5ee4ef"]
-  c16["f3139c71ae2a"]
-  c1 -->|explore| c7
-  c2 -->|combine| c14
-  c4 -->|explore| c5
-  c5 -->|combine| c14
-  c6 -->|combine| c2
-  c10 -->|explore| c8
-  c12 -->|explore| c0
-  c12 -->|explore| c3
-  c12 -->|explore| c4
-  c12 -->|explore| c6
-  c12 -->|explore| c9
-  c12 -->|explore| c11
-  c12 -->|explore| c15
-  c12 -->|explore| c16
-  c16 -->|combine| c2
+  c4["3b805077bb5c"]
+  c5["3e94580ec446"]
+  c6["423bcc4ad6e9"]
+  c7["4c12600ce07d"]
+  c8["633689f9bf05"]
+  c9["7d1ccc59cef3"]
+  c10["7d6f99624be6"]
+  c11["96474bdd4d83"]
+  c12["aa2b1ab44180"]
+  c13["bb9a183fd64f"]
+  c14["d09dc1d08fb0"]
+  c15["d947905c9b73"]
+  c16["e0a1dc69f495"]
+  c17["e525ee5ee4ef"]
+  c18["f3139c71ae2a"]
+  c1 -->|explore| c9
+  c2 -->|combine| c16
+  c4 -->|explore| c8
+  c5 -->|explore| c6
+  c6 -->|combine| c16
+  c7 -->|combine| c2
+  c12 -->|explore| c10
+  c14 -->|explore| c0
+  c14 -->|explore| c3
+  c14 -->|explore| c5
+  c14 -->|explore| c7
+  c14 -->|explore| c11
+  c14 -->|explore| c13
+  c14 -->|explore| c17
+  c14 -->|explore| c18
+  c18 -->|combine| c2
 ```
 
 Every edge records intended inputs, not proof of speedup.
 
-Recorded jobs: 13. Decisions/events: 37.
+Recorded jobs: 13. Decisions/events: 38.
 
 ## External research records
 
@@ -86,5 +89,6 @@ Recorded jobs: 13. Decisions/events: 37.
 | claude-guided-v2 | combine | unknown | setup, compilation | current |
 | astra-guided-v2 | explore | unknown | compilation, forward, gradient | current |
 | astra-group-numerical-v3 | refine | unknown | gradient_compile, forward_compile, gradient, forward | current |
+| claude-guided-v2 | explore | 633689f9bf05 | unknown | completed |
 
 These records are evidence, not competing task claims or winner declarations.

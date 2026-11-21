@@ -45051,6 +45051,87 @@
         "launch_ref": "https://github.com/timbtz/feyer-search-lab/blob/0624a77bf07dc27d955783fe48468e58f67e382b/experiments/control/astra-numerical-v3/group-receipts/launch.json",
         "launch_digest": "442c001ef4db283bebc7ff8c3c6a4faccc32fd632a75081dc6d85700c193fd04"
       }
+    },
+    {
+      "seq": 38,
+      "at": 1795298092.02444,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "feedback-43d333953fb339c8c2a194dd5d7f428e1f8802526aaa4f33faac80f39c5a4403",
+        "executor": {
+          "kind": "supervisor",
+          "id": "claude-guided-v2"
+        },
+        "kind": "explore",
+        "status": "completed",
+        "candidate_sha": "633689f9bf054a90ca21b7b6087120cd86fa0d0e",
+        "parents": [
+          "3b805077bb5c61d85115faf38af243cc001d0fee"
+        ],
+        "target_phases": [],
+        "hypothesis": "Target phases: forward compile (6.47 s) and gradient compile (1.29 s) in job 57ef1df7 (3b80507). Mechanism: the slot masks are per group, so if any single row reads an optimized index in a slot, every row's input in that slot carries a tangent. Examples are surface reflectivity and tuning on non-optimized mirrors, and space length on non-optimized spaces. Splitting off the all-constant rows and gradient-stopping all their slots removes their residuals and transposes. The forward computation is the same elementwise math on the same inputs, with an exactly remapped output selection. Prediction: forward and gradient compile decrease by about 0.1\u20130.5 s, depending on the share of constant rows, which is unknown. Execute is unchanged or slightly lower. Forward outputs should be bitwise identical, assuming XLA kernels are per-element identical across batch sizes (unverified; strict rtol covers it). The gradient should be identical or within reordering. Reject on a strict failure or a total slower than 19.57 s beyond noise.",
+        "change_summary": "Candidate 3 (3b80507, LOWER_SLOT_PRUNING) passed official and strict checks in full job 57ef1df7 and is kept as the new branch best. The first run took 19.567 s, against 19.766 s for 10a311f; forward compile dropped by 0.15 s and gradient compile by 0.03 s. Forward outputs were bitwise identical, and the gradient's max normalized error stayed at 1.6e-8. This is the lowest full-valid total observed in cohort 10567ad0 so far, but it is one observation and not yet confirmed. Candidate 4 adds row-level pruning. Each mixed component group is reordered on the host as [rows that read an optimized or linked index, all-constant rows], with parameter_indices and output_rows remapped to match. update() then evaluates the constant rows with every slot gradient-stopped, so they get no linearization. Only simulate.py changed; setting ROW_SPLIT_PRUNING=False restores 3b80507.",
+        "stopping_reason": null,
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/ae180410c4375fff1ca3f755fb057ffc0641db75/experiments/runs/claude-guided-v2/candidate-04.json",
+        "source_digest": "43d333953fb339c8c2a194dd5d7f428e1f8802526aaa4f33faac80f39c5a4403",
+        "source_digest_kind": "canonical_json_sha256",
+        "feedback_ref": {
+          "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/ae180410c4375fff1ca3f755fb057ffc0641db75/experiments/runs/claude-guided-v2/candidate-04.json",
+          "artifact_digest": "43d333953fb339c8c2a194dd5d7f428e1f8802526aaa4f33faac80f39c5a4403",
+          "digest_kind": "canonical_json_sha256"
+        },
+        "session_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+        "iteration": null,
+        "checkpoint": null,
+        "next_input": null,
+        "input_receipt": {
+          "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-guided-v2/turn-04-prompt-3db42c636a2415a19dd2a8fa5011fc01093ed7cef6ffe52a4eceaf6997650133.json",
+          "sha256": "3db42c636a2415a19dd2a8fa5011fc01093ed7cef6ffe52a4eceaf6997650133",
+          "turn": 4,
+          "thread_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+          "feedback_mode": "guided",
+          "shared_evidence": {
+            "schema": "feyer-search-frontier-v1",
+            "source_path": "/Users/t.betz/Documents/Feyer challenge/.lab/frontier/current.json",
+            "snapshot_ref": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-guided-v2/shared-evidence/f1f7e15896f7d0b93abad9caa0f3149a5ee03ccd3d124d9bb4540cdf1a770cde.json",
+            "sha256": "f1f7e15896f7d0b93abad9caa0f3149a5ee03ccd3d124d9bb4540cdf1a770cde",
+            "bytes": 96811,
+            "generated_at": 1795297160.0057821,
+            "read_at": 1795297175.3264809,
+            "age_seconds": 15.320698738098145,
+            "freshness_policy": {
+              "max_age_seconds": 300,
+              "future_skew_seconds": 30
+            },
+            "content_digest": "830129b2c6845a0bd61d74fa63db3d7ebde514ff33840a4673df688d2dd320c0",
+            "source_provenance": {
+              "team_digest": "922c284037a5d8f7be5e5b299abffb478d7441b59b987196ed74184b846da99d",
+              "policy_digest": "54fffa2b291a30d2d20eb7b881da57f3f127ed0d3559330d7d5685838532e01c",
+              "policy_source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d3e5e4de995914819631acdf9980c00fd95a47b3/experiments/deployments/amd-two-lanes-v1.json",
+              "evidence_digest": "859932fcb8882901762741169295231f86a2c1885405cc2adf2a12c4255049ad",
+              "collector": "trusted-local-artifacts-v1",
+              "instance": "amd-tim"
+            }
+          },
+          "consumed_feedback_digest": "f188b6777904d6920f17b1b695a7f1031ac9c074f03b297a4cd59b7379640ecf",
+          "consumed_candidate_sha": "3b805077bb5c61d85115faf38af243cc001d0fee"
+        },
+        "evaluations": [
+          {
+            "job_id": "afdab87c297048ffb88f4f38a6fa9eda",
+            "candidate_sha": "633689f9bf054a90ca21b7b6087120cd86fa0d0e",
+            "profile": "screen"
+          },
+          {
+            "job_id": "ef7e77be6044490e8d7dc99e41d0ecf6",
+            "candidate_sha": "633689f9bf054a90ca21b7b6087120cd86fa0d0e",
+            "profile": "full"
+          }
+        ],
+        "target_evidence": []
+      }
     }
   ],
   "comparison_regime": {
@@ -46065,6 +46146,81 @@
       },
       "launch_ref": "https://github.com/timbtz/feyer-search-lab/blob/0624a77bf07dc27d955783fe48468e58f67e382b/experiments/control/astra-numerical-v3/group-receipts/launch.json",
       "launch_digest": "442c001ef4db283bebc7ff8c3c6a4faccc32fd632a75081dc6d85700c193fd04"
+    },
+    "feedback-43d333953fb339c8c2a194dd5d7f428e1f8802526aaa4f33faac80f39c5a4403": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "feedback-43d333953fb339c8c2a194dd5d7f428e1f8802526aaa4f33faac80f39c5a4403",
+      "executor": {
+        "kind": "supervisor",
+        "id": "claude-guided-v2"
+      },
+      "kind": "explore",
+      "status": "completed",
+      "candidate_sha": "633689f9bf054a90ca21b7b6087120cd86fa0d0e",
+      "parents": [
+        "3b805077bb5c61d85115faf38af243cc001d0fee"
+      ],
+      "target_phases": [],
+      "hypothesis": "Target phases: forward compile (6.47 s) and gradient compile (1.29 s) in job 57ef1df7 (3b80507). Mechanism: the slot masks are per group, so if any single row reads an optimized index in a slot, every row's input in that slot carries a tangent. Examples are surface reflectivity and tuning on non-optimized mirrors, and space length on non-optimized spaces. Splitting off the all-constant rows and gradient-stopping all their slots removes their residuals and transposes. The forward computation is the same elementwise math on the same inputs, with an exactly remapped output selection. Prediction: forward and gradient compile decrease by about 0.1\u20130.5 s, depending on the share of constant rows, which is unknown. Execute is unchanged or slightly lower. Forward outputs should be bitwise identical, assuming XLA kernels are per-element identical across batch sizes (unverified; strict rtol covers it). The gradient should be identical or within reordering. Reject on a strict failure or a total slower than 19.57 s beyond noise.",
+      "change_summary": "Candidate 3 (3b80507, LOWER_SLOT_PRUNING) passed official and strict checks in full job 57ef1df7 and is kept as the new branch best. The first run took 19.567 s, against 19.766 s for 10a311f; forward compile dropped by 0.15 s and gradient compile by 0.03 s. Forward outputs were bitwise identical, and the gradient's max normalized error stayed at 1.6e-8. This is the lowest full-valid total observed in cohort 10567ad0 so far, but it is one observation and not yet confirmed. Candidate 4 adds row-level pruning. Each mixed component group is reordered on the host as [rows that read an optimized or linked index, all-constant rows], with parameter_indices and output_rows remapped to match. update() then evaluates the constant rows with every slot gradient-stopped, so they get no linearization. Only simulate.py changed; setting ROW_SPLIT_PRUNING=False restores 3b80507.",
+      "stopping_reason": null,
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/ae180410c4375fff1ca3f755fb057ffc0641db75/experiments/runs/claude-guided-v2/candidate-04.json",
+      "source_digest": "43d333953fb339c8c2a194dd5d7f428e1f8802526aaa4f33faac80f39c5a4403",
+      "source_digest_kind": "canonical_json_sha256",
+      "feedback_ref": {
+        "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/ae180410c4375fff1ca3f755fb057ffc0641db75/experiments/runs/claude-guided-v2/candidate-04.json",
+        "artifact_digest": "43d333953fb339c8c2a194dd5d7f428e1f8802526aaa4f33faac80f39c5a4403",
+        "digest_kind": "canonical_json_sha256"
+      },
+      "session_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+      "iteration": null,
+      "checkpoint": null,
+      "next_input": null,
+      "input_receipt": {
+        "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-guided-v2/turn-04-prompt-3db42c636a2415a19dd2a8fa5011fc01093ed7cef6ffe52a4eceaf6997650133.json",
+        "sha256": "3db42c636a2415a19dd2a8fa5011fc01093ed7cef6ffe52a4eceaf6997650133",
+        "turn": 4,
+        "thread_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+        "feedback_mode": "guided",
+        "shared_evidence": {
+          "schema": "feyer-search-frontier-v1",
+          "source_path": "/Users/t.betz/Documents/Feyer challenge/.lab/frontier/current.json",
+          "snapshot_ref": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-guided-v2/shared-evidence/f1f7e15896f7d0b93abad9caa0f3149a5ee03ccd3d124d9bb4540cdf1a770cde.json",
+          "sha256": "f1f7e15896f7d0b93abad9caa0f3149a5ee03ccd3d124d9bb4540cdf1a770cde",
+          "bytes": 96811,
+          "generated_at": 1795297160.0057821,
+          "read_at": 1795297175.3264809,
+          "age_seconds": 15.320698738098145,
+          "freshness_policy": {
+            "max_age_seconds": 300,
+            "future_skew_seconds": 30
+          },
+          "content_digest": "830129b2c6845a0bd61d74fa63db3d7ebde514ff33840a4673df688d2dd320c0",
+          "source_provenance": {
+            "team_digest": "922c284037a5d8f7be5e5b299abffb478d7441b59b987196ed74184b846da99d",
+            "policy_digest": "54fffa2b291a30d2d20eb7b881da57f3f127ed0d3559330d7d5685838532e01c",
+            "policy_source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d3e5e4de995914819631acdf9980c00fd95a47b3/experiments/deployments/amd-two-lanes-v1.json",
+            "evidence_digest": "859932fcb8882901762741169295231f86a2c1885405cc2adf2a12c4255049ad",
+            "collector": "trusted-local-artifacts-v1",
+            "instance": "amd-tim"
+          }
+        },
+        "consumed_feedback_digest": "f188b6777904d6920f17b1b695a7f1031ac9c074f03b297a4cd59b7379640ecf",
+        "consumed_candidate_sha": "3b805077bb5c61d85115faf38af243cc001d0fee"
+      },
+      "evaluations": [
+        {
+          "job_id": "afdab87c297048ffb88f4f38a6fa9eda",
+          "candidate_sha": "633689f9bf054a90ca21b7b6087120cd86fa0d0e",
+          "profile": "screen"
+        },
+        {
+          "job_id": "ef7e77be6044490e8d7dc99e41d0ecf6",
+          "candidate_sha": "633689f9bf054a90ca21b7b6087120cd86fa0d0e",
+          "profile": "full"
+        }
+      ],
+      "target_evidence": []
     }
   }
 }
