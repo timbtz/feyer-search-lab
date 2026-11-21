@@ -1,0 +1,25 @@
+{
+  "assignment_id": "codex-layout-combination-v1",
+  "owner_session": "codex-profile-guided-v1",
+  "status": "prepared_for_next_safe_boundary",
+  "created_at": 1795292077.1311412,
+  "component_parents": [
+    "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+    "423bcc4ad6e99b85cd651980bee541612ed2ee20"
+  ],
+  "patch_base": "3e94580ec44609e7156f7f0acad1f2884db8b030",
+  "brief_path": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/profiler-session-records/experiments/briefs/codex-layout-combination-v1.md",
+  "brief_sha256": "d8e3429c195237e9b7fc034c912ad8cd59014bb6cee180cccf9695bc444b7a95",
+  "context": [
+    {
+      "path": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/profiler-session-records/experiments/context/codex-layout-combination-v1/parent-A-simulate.py.txt",
+      "sha256": "d7bacdd996e29bc33fb0abd3e6bb404ae9ce47bec2fa691d4f02d46b110884be"
+    },
+    {
+      "path": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/profiler-session-records/experiments/context/codex-layout-combination-v1/layout-only.patch.txt",
+      "sha256": "91b771221295d33b7aafad47323b22d46551ced2ae97a5e06e9d1436981791b1"
+    }
+  ],
+  "candidate_sha": null,
+  "deadline_unix": 1795295364.088367
+}
