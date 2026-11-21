@@ -1,0 +1,18 @@
+{
+  "kind": "source-audit",
+  "status": "source-only review; proposed tests not executed",
+  "session_id": "aaad90d2-50c7-4334-ad32-331fbe033d3c",
+  "model": "claude-opus-5-5",
+  "candidate_sha": "423bcc4ad6e99b85cd651980bee541612ed2ee20",
+  "observed_at": 1795288697.334579,
+  "source_unchanged_verified": true,
+  "response": {
+    "summary": "Candidate 4 (423bcc4) passed both the official and strict checks: first run 22.361 s, physical outputs bitwise exact, largest normalized gradient error 1.10e-6. I had predicted its gradient would match candidate 1 bit for bit; it does not, it differs at about the 1e-10 level, cause unknown. The timing is within the spread of the merged-RHS runs (22.495, 22.423 and now 22.361 s), so I'm not claiming it is faster. This turn changed only experiments/notes/claude-structure-solve.md: candidate 4's results, a final source audit and a five-test plan. No simulator file changed after 423bcc4. The audit covers D detectors, D=0, carrier batch above 1, partial chunks, the legacy and split RHS callers, and component_groups None. It found no bug. Only D=1, carrier batch 1, k=1, the \"assemble\" scope and grouped components are exercised by the benchmark; the other cases are untested.",
+    "hypothesis": "No new hypothesis; this turn was an audit only. The shape and dependency-path proof obligations are written out in the notes, along with the cases the benchmark does not test.",
+    "ready_for_evaluation": false,
+    "stop": true,
+    "notes": "Best validated revisions are 4c12600 or 3e94580 (merge-only) and 423bcc4 (merge plus split RHS). All three passed official and strict, at 22.36\u201322.50 s against the parent's 23.840 s. Rejected: slice conjugation. Still open: which mechanism gives the speedup (no HLO evidence), why the split changes the gradient at rounding level, and the multi-detector, carrier-sweep, chunk-padding and ungrouped paths (test plan T1\u2013T5 in the notes). Do not combine the merged solve with solve-in-scan scopes without a strict re-check."
+  },
+  "notes_sha256": "dd4a8005fb2c5e465a06893f994773fb94f98ab2c8bec39e6857bd41ac49cd43",
+  "deadline_unix": 1795288990
+}
