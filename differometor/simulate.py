@@ -179,7 +179,21 @@ def _component_values(
                 input_indices = component_groups["parameter_indices"][function_index]
             else:
                 input_indices = function_input_indices[rows]
-            group_inputs = parameters[input_indices]
+            prepared_indices = component_groups.get("normalized_parameter_indices", {})
+            if function_index in prepared_indices and parameters.ndim == 1:
+                # Host-normalized, bounds-checked indices need no traced negative
+                # index normalization. Repeated parameter reads remain allowed.
+                group_inputs = lax.gather(
+                    parameters,
+                    input_indices[..., None],
+                    lax.GatherDimensionNumbers(
+                        offset_dims=(), collapsed_slice_dims=(0,), start_index_map=(0,),
+                    ),
+                    slice_sizes=(1,),
+                    mode="promise_in_bounds",
+                )
+            else:
+                group_inputs = parameters[input_indices]
             diff_slots = component_groups.get("diff_slots")
             if (
                 diff_slots is not None
@@ -272,6 +286,8 @@ def update(
         `function_rows` has static function-ID keys and original input-row arrays;
         `output_rows` maps original output rows to concatenated group rows.
         `parameter_indices`, when present, supplies prepared input indices per group.
+        `normalized_parameter_indices` marks groups whose input indices are
+        normalized and bounds-checked; rebuild when selectors or vector length change.
         An optional `unique_matrix_indices` key marks verified distinct destinations.
         `flat_matrix_indices` supplies normalized, in-bounds row-major destinations.
         `flat_output_indices` supplies composed, in-bounds component output offsets.
@@ -1096,6 +1112,26 @@ def run_build_step(
                     (new_position[flat // 4] * 4 + flat % 4).astype(flat.dtype)
                 )
             group["row_split"] = row_split
+
+    # Prepare gathers only after any dependency-based row permutation above.
+    # Static proof keys add no array leaves to the simulation's input pytree.
+    parameter_count = simulation_arrays["parameters"].shape[-1]
+    for name in ("carrier", "signal", "noise"):
+        group = component_groups.get(name)
+        if not isinstance(group, dict):
+            continue
+        prepared_indices = {}
+        for function_index, indices in group.get("parameter_indices", {}).items():
+            indices = np.asarray(indices)
+            if indices.ndim != 2 or not np.issubdtype(indices.dtype, np.integer):
+                continue
+            normalized = np.where(indices < 0, indices + parameter_count, indices)
+            if np.all((normalized >= 0) & (normalized < parameter_count)):
+                if np.any(indices < 0):
+                    group["parameter_indices"][function_index] = jnp.asarray(normalized)
+                prepared_indices[function_index] = ()
+        if prepared_indices:
+            group["normalized_parameter_indices"] = prepared_indices
 
     simulation_arrays["component_groups"] = component_groups
 
