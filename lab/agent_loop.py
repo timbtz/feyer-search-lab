@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import signal
+import shutil
 import subprocess
 import time
 import uuid
@@ -48,6 +49,9 @@ def validate_changes(repo, paths):
 
 
 def github_status(slug, job, target=None):
+    if not slug or not shutil.which('gh'):
+        print('GitHub status badge skipped; versioned evaluation records remain authoritative', flush=True)
+        return
     result=job.get('result') or {}
     if job['status'] in ('queued','running'):
         state,description='pending',f'{job["profile"]} queued on AMD CPU 2'
@@ -102,6 +106,8 @@ def read_thread_id(events, previous=None):
                 continue
             if event.get('type') == 'thread.started':
                 previous = event['thread_id']
+            elif event.get('type') == 'system' and event.get('subtype') == 'init':
+                previous = event.get('session_id') or previous
     return previous
 
 
@@ -311,7 +317,8 @@ def _commit_candidate(pending, args, worktree, state, status_file):
         subprocess.run(['git', '-C', str(worktree), 'commit', '-m', subject], check=True)
         current = git(worktree, 'rev-parse', 'HEAD')
     active = {'iteration': pending['iteration'], 'sha': current, 'response': response, 'jobs': {},
-              'feedback': {'candidate_sha': current, 'agent_response': response}}
+              'feedback': {'candidate_sha': current, 'agent_response': response, 'provenance': state.get('provenance', {}),
+                           'agent_context': {k: state.get(k) for k in ('agent_provider', 'agent_model', 'runtime_commit', 'brief_sha256', 'thread_id')}}}
     _save(state, status_file, active_candidate=active, pending_turn=None,
           candidates=pending['iteration'], candidate_sha=current, status='candidate_ready')
     return active
@@ -323,13 +330,19 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
     if args.resume and not status_file.exists():
         raise ValueError('No saved session exists to resume')
     state = json.loads(status_file.read_text()) if status_file.exists() else {}
+    provider = getattr(args, 'agent_provider', 'codex')
+    model = getattr(args, 'agent_model', None)
+    if state and state.get('agent_model') != model:
+        raise ValueError('Cannot change the model while resuming a session')
+    if state and state.get('agent_provider', 'codex') != provider:
+        raise ValueError('Cannot resume a session with a different agent provider')
     for key, expected in (('branch', args.branch), ('worktree', str(worktree)), ('direction', args.direction)):
         if key in state and state[key] != expected:
             raise ValueError(f'Resume {key} does not match the saved session')
     invocation_started = time.time()
     deadline = time.monotonic() + args.max_minutes * 60
     _save(state, status_file, pid=os.getpid(), branch=args.branch, worktree=str(worktree), direction=args.direction,
-          status='starting', candidate_limit=args.max_candidates, invocation_started_at=invocation_started,
+          status='starting', agent_provider=provider, agent_model=model, candidate_limit=args.max_candidates, invocation_started_at=invocation_started,
           invocation_deadline_at=invocation_started + args.max_minutes * 60)
     try:
         if not worktree.exists():
@@ -338,8 +351,29 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
             raise ValueError('Worktree branch does not match assigned direction')
         if changed_paths(worktree) and not args.resume:
             raise ValueError('Initial agent worktree must be clean')
-        client = Client(args.host)
-        brief = (repo / 'experiments' / 'initial-agent.md').read_text()
+        if getattr(args, 'transport', 'ssh') == 'local':
+            from .local_client import LocalClient
+            client = LocalClient(root=getattr(args, 'queue_root', '/workspace/feyer-lab'))
+        else:
+            client = Client(args.host)
+        brief_path = getattr(args, 'brief', None) or (repo / 'experiments' / 'initial-agent.md')
+        brief = Path(brief_path).read_text()
+        manifest_path = getattr(args, 'manifest', None)
+        manifest = json.loads(Path(manifest_path).read_text()) if manifest_path else {}
+        if manifest and manifest.get('branch') != args.branch:
+            raise ValueError('Manifest branch does not match assigned branch')
+        provenance = {k: manifest[k] for k in ('parent_candidates', 'combined_candidates', 'approach_tags', 'touched_components') if k in manifest}
+        runtime_sha = git(Path(__file__).resolve().parent.parent, 'rev-parse', 'HEAD')
+        _save(state, status_file, runtime_commit=runtime_sha, runtime_root=str(Path(__file__).resolve().parent.parent),
+              transport=getattr(args, 'transport', 'ssh'), brief_path=str(brief_path),
+              brief_sha256=hashlib.sha256(brief.encode()).hexdigest(), provenance=provenance, manifest=manifest)
+        if provider == 'claude':
+            from .claude_turn import claude_turn
+            turn = claude_turn
+            turn_options = {'model': model}
+        else:
+            turn = codex_turn
+            turn_options = {}
         while True:
             active = state.get('active_candidate')
             if active:
@@ -393,8 +427,8 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
             if state.get('feedback'):
                 prompt += 'Evaluator feedback:\n' + json.dumps(state['feedback'], indent=2) + '\n'
             try:
-                thread, response = codex_turn(worktree, directory, turn_number, prompt, thread,
-                                              max(0.01, deadline-time.monotonic()), lock_fds)
+                thread, response = turn(worktree, directory, turn_number, prompt, thread,
+                                              max(0.01, deadline-time.monotonic()), lock_fds, **turn_options)
             except CodexTurnError as exc:
                 _save(state, status_file, thread_id=exc.thread_id or state.get('thread_id'),
                       status='budget_exhausted' if exc.timed_out else 'failed', error=str(exc))
@@ -434,12 +468,18 @@ def run(args):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--agent-provider', choices=('codex', 'claude'), default='codex')
+    parser.add_argument('--agent-model', help='Explicit Claude model; omit to use the account default')
+    parser.add_argument('--brief', type=Path, help='Direction-specific agent instructions')
     parser.add_argument('--repo',type=Path,required=True)
     parser.add_argument('--worktree',type=Path,required=True)
     parser.add_argument('--branch',default='explore/seed-agent')
     parser.add_argument('--name',default='seed-agent')
     parser.add_argument('--direction',default='first-pass')
     parser.add_argument('--host',default='amd-hackathon')
+    parser.add_argument('--transport', choices=('ssh', 'local'), default='ssh')
+    parser.add_argument('--queue-root', default='/workspace/feyer-lab')
+    parser.add_argument('--manifest', type=Path, help='Versioned direction and candidate ancestry metadata')
     parser.add_argument('--github-repo',default='timbtz/feyer-search-lab')
     parser.add_argument('--max-candidates',type=int,default=None,
                         help='Optional candidate-count limit; omitted means no count limit')
@@ -449,6 +489,8 @@ def main():
     args=parser.parse_args()
     if (args.max_candidates is not None and args.max_candidates<1) or args.max_minutes<=0 or '/' in args.name or args.name in ('','.','..'):
         parser.error('Invalid session name or budget')
+    if args.agent_model and args.agent_provider != 'claude':
+        parser.error('--agent-model currently applies only to Claude')
     run(args)
 
 
