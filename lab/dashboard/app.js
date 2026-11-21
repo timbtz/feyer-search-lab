@@ -1,240 +1,175 @@
-/* Read-only, dependency-free observatory. All text from evidence is rendered as text. */
+/* Read-only presentation of existing campaign evidence. PDS v4 supplies UI primitives. */
 'use strict';
 (() => {
   const $ = id => document.getElementById(id);
-  const NS = 'http://www.w3.org/2000/svg';
   const REPO = 'https://github.com/timbtz/feyer-search-lab';
-  const state = {data: null, campaignId: '', view: 'infrastructure', filter: 'all', selected: null, graph: null, bounds: null, camera: {x: 0, y: 0, scale: 1}, refreshTimer: null, fetching: false, fittedKey: '', lastSuccess: null};
-  const titles = {
-    infrastructure: ['Architecture', 'From idea to evidence.', 'Follow the execution path. Inspect the state behind every step.', 'Execution architecture', 'Acyclic execution path · feedback creates the next round'],
-    search: ['Search DAG', 'Every branch has a history.', 'Trace candidates, parents, parameter choices, and measured outcomes.', 'Candidate lineage', 'Scientific ancestry · each node is an immutable candidate'],
-    runs: ['Runs & objectives', 'Correct first. Then faster.', 'Compare complete first-run times and the phase tradeoffs behind them.', 'Validated measurements', 'Only complete, comparable full runs establish improvements'],
-    activity: ['Activity & logs', 'The reasoning trail.', 'Inspect decisions, dispatches, evidence, and controller logs.', 'Campaign activity', 'Append-only events · proposer outputs remain distinct from evidence']
-  };
-  const arr = value => Array.isArray(value) ? value : (value && typeof value === 'object' ? Object.values(value) : []);
-  const text = value => value === null || value === undefined ? '—' : String(value);
-  const short = (value, length = 9) => text(value).length > length ? text(value).slice(0, length) : text(value);
-  const label = (value, length) => text(value).length > length ? text(value).slice(0, length - 1) + '…' : text(value);
-  const finite = value => typeof value === 'number' && Number.isFinite(value);
-  const number = (value, digits = 2) => finite(value) ? value.toLocaleString(undefined, {maximumFractionDigits: digits, minimumFractionDigits: digits}) : '—';
-  const secs = value => finite(value) ? `${number(value, 3)} s` : '—';
-  const gib = value => finite(value) ? `${number(value / 1073741824, 2)} GiB` : '—';
-  const human = value => text(value).replace(/[_-]+/g, ' ');
-  const timestamp = value => {
-    if (value === null || value === undefined || value === '') return null;
-    const ms = typeof value === 'number' ? (value < 1e12 ? value * 1000 : value) : Date.parse(value);
-    return Number.isFinite(ms) ? ms : null;
-  };
-  const datetime = value => { const ms = timestamp(value); return ms === null ? 'Unknown' : new Date(ms).toLocaleString(); };
-  const ago = value => { const ms = timestamp(value); if (ms === null) return 'Not observed'; const n = Math.max(0, (Date.now() - ms) / 1000); return n < 60 ? `${Math.floor(n)}s ago` : n < 3600 ? `${Math.floor(n / 60)}m ago` : `${Math.floor(n / 3600)}h ago`; };
-  function el(tag, className, content) { const item = document.createElement(tag); if (className) item.className = className; if (content !== undefined) item.textContent = text(content); return item; }
-  function svg(tag, attributes = {}, content) { const item = document.createElementNS(NS, tag); for (const [key, value] of Object.entries(attributes)) item.setAttribute(key, String(value)); if (content !== undefined) item.textContent = text(content); return item; }
-  function clear(id) { const item = typeof id === 'string' ? $(id) : id; item.replaceChildren(); return item; }
-  function link(label, url, className = 'detail-link') { const a = el('a', className, label); a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; }
-  function commitLink(sha, label) { return /^[0-9a-f]{7,40}$/i.test(String(sha || '')) ? link(label || `Commit ${short(sha)} ↗`, `${REPO}/commit/${sha}`) : null; }
-  function branchLink(branch, label) { return typeof branch === 'string' && /^[\w./-]+$/.test(branch) && !branch.includes('..') ? link(label || `${branch} ↗`, `${REPO}/tree/${branch.split('/').map(encodeURIComponent).join('/')}`) : null; }
-  function badge(label, value = label) { return el('span', `badge ${tone(value)}`, human(label)); }
-  function tone(status) {
-    const s = String(status || '').toLowerCase();
-    if (/invalid|reject|fail|error|crash/.test(s)) return 'bad';
-    if (/stale|block|attention|exhaust|stop|expired|pending.review/.test(s)) return 'warn';
-    if (/running|evaluating|screened|reserved|queued|coding|in.progress|provisional/.test(s)) return 'active';
-    if (/^valid$|^pass$|^passed$|^complete$|^completed$|^healthy$|^eligible$/.test(s)) return 'good';
-    return '';
+  const S = {data:null, campaign:'', view:'overview', step:0, selected:null, filter:'all', fetching:false};
+  const list = v => Array.isArray(v) ? v : [];
+  const numeric = v => typeof v === 'number' && Number.isFinite(v);
+  const seconds = v => numeric(v) ? `${v.toFixed(2)} s` : '—';
+  const memory = v => numeric(v) ? `${(v/1073741824).toFixed(2)} GiB` : '—';
+  const short = v => String(v || '').slice(0,8);
+  const stamp = v => !v ? null : typeof v==='number' ? v*1000 : Date.parse(v);
+  const time = v => stamp(v) ? new Date(stamp(v)).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : 'not recorded';
+  const human = v => String(v || 'unknown').replace(/[_-]+/g,' ');
+  const make = (tag, cls, text) => { const n=document.createElement(tag); if(cls)n.className=cls; if(text!==undefined)n.textContent=text; return n; };
+  const clear = target => { const n=typeof target==='string'?$(target):target;n.replaceChildren();return n; };
+  const link = (label,url) => { const a=make('a','',label);a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a; };
+  const commitLink = sha => /^[0-9a-f]{40}$/i.test(sha||'') ? link(`Code · ${short(sha)}`,`${REPO}/commit/${sha}`) : null;
+  const branchLink = branch => typeof branch==='string' && /^[\w./-]+$/.test(branch) && !branch.includes('..') ? link('Open branch on GitHub',`${REPO}/tree/${branch.split('/').map(encodeURIComponent).join('/')}`) : null;
+  const add = (parent,...items) => items.filter(Boolean).forEach(x=>parent.append(x));
+  const pill = (text,tone='') => make('span',`status ${tone}`,text);
+  const spec = c => c?.campaign?.spec || {};
+  const history = () => ({id:'history',status:'historical',selector:'mixed',source_updated_at:S.data?.historical?.generated_at,
+    candidates:list(S.data?.historical?.candidates).map((r,i)=>({candidate_id:r.run_key||r.job_id||`history-${i}`,commit_sha:r.sha,
+      status:r.validated?'valid':r.official_check==='failed'||r.strict_check==='failed'?'invalid':'unconfirmed',valid:r.validated===true,
+      owner:r.agent,parameters:{},parents:r.parent_run_key?[r.parent_run_key]:[],metrics:r.metrics,full_run_count:r.profile==='full'?1:0,
+      historical:r,provenance:{hypothesis:r.hypothesis},created_at:r.created_at})),events:[],guidance:[],evaluations:[]});
+  const current = () => S.campaign==='history'?history():list(S.data?.campaigns).find(c=>c.id===S.campaign);
+  const rows = () => list(current()?.candidates);
+  const seed = () => rows().find(c=>c.kind==='seed');
+  const round = () => list(current()?.rounds).filter(r=>!r.closed).at(-1)||list(current()?.rounds).at(-1);
+  const comparable = (a,b) => a?.valid && b?.valid && a.cohort_digest && a.cohort_digest===b.cohort_digest;
+  const reduction = c => {const b=seed();return comparable(c,b)&&numeric(c.metrics?.total)&&b.metrics?.total>0 ?100*(b.metrics.total-c.metrics.total)/b.metrics.total:null;};
+  const kind = c => c.valid ? ['Full pass','valid'] : /invalid/.test(c.status||'') ? ['Check failed','failed'] : /screened/.test(c.status||'') ? ['Screen passed','pending'] : /evaluating|proposed|queued/.test(c.status||'') ? ['In progress','running'] : ['Unconfirmed',''];
+  function candidateName(c) {
+    if(c.kind==='seed')return 'Reference implementation';
+    if(c.historical)return c.historical.idea || human(c.historical.direction) || `Attempt ${short(c.commit_sha)}`;
+    const p=c.parameters||{}, bits=[];
+    if(p.checkpoint===false)bits.push('Checkpointing off');
+    if(p.prevent_cse===true)bits.push('CSE prevention on');
+    if(p.map_batch_size!==undefined&&p.map_batch_size!==null)bits.push(`Component batch ${p.map_batch_size}`);
+    return bits.join(' · ')||`Attempt ${short(c.commit_sha||c.candidate_id)}`;
   }
-  function color(status) { return {good: '#64dfbd', active: '#b6a0ff', warn: '#f0bd70', bad: '#f58c97'}[tone(status)] || '#8b9db2'; }
-  function historyCampaign() {
-    const h=state.data?.historical||{};
-    const items=arr(h.candidates).map((x,index)=>{const m={...x.metrics};if(!finite(m.runtime)&&finite(m.forward))m.runtime=(m.forward||0)+(m.sensitivity||0)+(m.gradient||0)+(m.transfer||0);if(!finite(m.peak_rss_bytes)&&finite(x.peak_rss_kib))m.peak_rss_bytes=x.peak_rss_kib*1024;const valid=x.profile==='full'&&x.validated===true&&x.official_check==='passed'&&x.strict_check==='passed';return {candidate_id:x.run_key||x.job_id||`${x.sha}-${index}`,commit_sha:x.sha,display_name:x.name,kind:'historical',owner:x.agent,parents:x.parent_run_key?[x.parent_run_key]:[],parameters:{},status:valid?'valid':x.profile==='screen'?'provisional':x.official_check==='failed'||x.strict_check==='failed'?'invalid':x.execution_status||'unknown',valid,metrics:m,full_run_count:x.profile==='full'?1:0,exact_pareto:false,hypothesis:x.hypothesis,cohort_digest:null,historical_record:x};});
-    return {id:'Historical experiments',historical:true,status:'recorded',selector:'Historical selectors',source_updated_at:h.generated_at,candidates:items,evaluations:arr(h.candidates).map(x=>({candidate_id:x.run_key||x.job_id,job_id:x.job_id,profile:x.profile,status:x.execution_status})),events:[],rounds:[],lanes:[],guidance:[],controller:{status:'Historical evidence, not a live controller'},alerts:[{level:'info',message:'Historical experiments retain their original screening/full checks and phase reports. These records do not share one frozen campaign cohort; no combined winner or Pareto set is inferred.'}]};
+  function phaseFacts(parent,data) {
+    const dl=make('dl','phase-list');
+    for(const [name,value]of data){const d=make('div');add(d,make('dt','',name),make('dd','',value));dl.append(d);}parent.append(dl);
   }
-  function campaign() { if(state.campaignId==='__history__')return historyCampaign();return arr(state.data?.campaigns).find(c => c.id === state.campaignId) || arr(state.data?.campaigns)[0] || null; }
-  function candidates(c = campaign()) { return arr(c?.candidates); }
-  function spec(c = campaign()) { return c?.spec || c?.campaign?.spec || {}; }
-  function budget(c = campaign()) { return c?.budget || spec(c).budget || {}; }
-  function rounds(c = campaign()) { return arr(c?.rounds); }
-  function activeRound(c = campaign()) { const rs = rounds(c); return rs.filter(r => !r.closed).at(-1) || rs.at(-1) || null; }
-  function selector(c = campaign()) { return c?.selector || spec(c).selector || 'Not reported'; }
-  function best(c = campaign()) { return candidates(c).filter(x => x.valid === true && finite(x.metrics?.total)).sort((a, b) => a.metrics.total - b.metrics.total)[0]; }
-  function seed(c = campaign()) { return candidates(c).find(x => x.kind === 'seed' && x.valid === true); }
-  function improvement(candidate, baseline = seed()) { if (!candidate || !baseline || !finite(candidate.metrics?.total) || !finite(baseline.metrics?.total) || baseline.metrics.total <= 0 || candidate.cohort_digest !== baseline.cohort_digest) return null; return 100 * (baseline.metrics.total - candidate.metrics.total) / baseline.metrics.total; }
-  function tableMetric(label, value, note, primary = false, tag = '') { const box = el('div', `metric${primary ? ' primary' : ''}`); const title = el('div', 'metric-label', label); if (tag) title.append(el('span', 'metric-tag', tag)); box.append(title, el('div', 'metric-value', value), el('div', 'metric-note', note)); return box; }
-  function renderMetrics() {
-    const c = campaign(), winner = best(c), valid = candidates(c).filter(x => x.valid), b = budget(c), usage = c?.usage || {}, base = seed(c), diff = improvement(winner, base);
-    const box = clear('metrics');
-    if(c?.historical){box.append(tableMetric('Historical observations',String(candidates(c).length),'Screen and full profiles kept separate'),tableMetric('Full accepted',String(valid.length),'Official + strict checks recorded'),tableMetric('Recorded agents',String(new Set(candidates(c).map(x=>x.owner).filter(Boolean)).size),'Original ownership preserved'),tableMetric('Cross-campaign winner','Not inferred','Inspect hardware, policy and cohort per run'));return;}
-    box.append(tableMetric('Best validated total', winner ? secs(winner.metrics.total) : '—', winner ? `${winner.full_run_count || 1} full measurement${winner.full_run_count === 1 ? '' : 's'} · ${short(winner.commit_sha)}` : 'Awaiting complete full evidence', true, winner?.full_run_count > 1 ? 'REPEATED' : winner ? 'SINGLE RUN' : ''));
-    box.append(tableMetric('Vs. campaign seed', diff !== null ? `${diff >= 0 ? '+' : ''}${number(diff, 1)}%` : '—', base ? `Seed ${secs(base.metrics?.total)} · same cohort only` : 'No comparable validated seed'));
-    box.append(tableMetric('Validated candidates', `${valid.length} / ${candidates(c).length}`, 'Full acceptance · screening does not count'));
-    const used = usage.evaluations, limit = b.max_evaluations;
-    box.append(tableMetric('Evaluation budget', finite(used) ? `${used}${finite(limit) ? ` / ${limit}` : ''}` : '—', b.deadline_unix ? `Deadline ${datetime(b.deadline_unix)}` : 'No campaign deadline reported'));
+  function facts(parent,data) {
+    const dl=make('dl','facts');for(const [name,value]of data){const d=make('div');add(d,make('dt','',name),make('dd','',value));dl.append(d);}parent.append(dl);
   }
-  function renderAlerts() {
-    const c = campaign(); const alerts = [...arr(state.data?.alerts), ...arr(c?.alerts)];
-    if (c?.stale && !/stopped|complete|expired|exhausted|historical/i.test(c.status || '')) alerts.push({message: 'This campaign source is stale. Recorded states are historical observations, not proof that a process is running.', level: 'warning'});
-    if (state.data?.queue?.stale) alerts.push({message: `Queue observation is stale${state.data.queue.error ? `: ${state.data.queue.error}` : '.'}`, level: 'warning'});
-    const target = clear('alerts');
-    for (const item of alerts.slice(0, 5)) { const message = typeof item === 'string' ? item : item.message || item.detail || item.reason || JSON.stringify(item); const row = el('div', `alert${item.level === 'info' ? ' info' : ''}`); row.append(el('span', 'alert-icon', item.level === 'info' ? 'ⓘ' : '!'), el('span', '', message)); target.append(row); }
+  function disclosure(parent,title,value,key=title) {
+    const d=make('details');d.dataset.key=key;add(d,make('summary','',title),make('pre','',typeof value==='string'?value:JSON.stringify(value,null,2)));parent.append(d);
   }
-  function renderCampaignOptions() {
-    const select = $('campaign-select'); const cs = arr(state.data?.campaigns); const previous = state.campaignId;
-    clear(select);
-    if (!cs.length) { const option = el('option', '', 'No campaign evidence'); option.value = ''; select.append(option); return; }
-    for (const c of cs) { const option = el('option', '', `${c.id} · ${human(c.status || 'unknown')}`); option.value = c.id; select.append(option); }
-    if(arr(state.data?.historical?.candidates).length){const option=el('option','','All historical experiments');option.value='__history__';select.append(option);}
-    state.campaignId = previous==='__history__'||cs.some(c => c.id === previous) ? previous : cs.at(-1).id; select.value = state.campaignId;
+  function options() {
+    const sel=$('campaign'), campaigns=list(S.data?.campaigns);
+    if(!S.campaign||S.campaign!=='history'&&!campaigns.some(c=>c.id===S.campaign)) S.campaign=(campaigns.find(c=>c.status==='running')||campaigns.at(-1))?.id||'';
+    sel.replaceChildren();for(const c of campaigns)sel.append(new Option(c.id,c.id));
+    if(list(S.data?.historical?.candidates).length)sel.append(new Option('Earlier agent experiments','history'));
+    if(!campaigns.length&&!sel.options.length)sel.append(new Option('No search rounds yet',''));
+    sel.value=S.campaign;
   }
-  function renderTopology() {
-    const c = campaign(), r = activeRound(c), body = el('div', 'topology-body'); clear('topology').append(body);
-    $('round-label').textContent = r?.round_id || 'No round';
-    const dims = r?.spec?.dimensions || r?.dimensions || {};
-    if (!Object.keys(dims).length) body.append(el('p', 'detail-note', 'No frozen dimensions are available in this source.'));
-    for (const [key, value] of Object.entries(dims)) { const row = el('div', 'knob'); const chips = el('div', 'knob-values'); const values = Array.isArray(value) ? value : value?.values || [value]; for (const v of values) chips.append(el('span', 'knob-chip', v === null ? 'None' : typeof v === 'object' ? JSON.stringify(v) : String(v))); row.append(el('span', 'knob-name', key), chips); body.append(row); }
-    const note = el('div', 'topology-note');
-    note.append(el('p', '', `Selector: ${human(selector(c))}. Physical design variables are fixed; these are implementation choices.`));
-    const lanes = arr(c?.lanes); if (lanes.length) note.append(el('p', '', `${lanes.length} lane${lanes.length === 1 ? '' : 's'} · ${lanes.filter(l => l.status === 'stalled').length} stalled. Read the frozen lane policy in the inspector.`));
-    note.append(el('p', '', 'New operators or combinations require an explicitly reviewed, frozen next round. Infrastructure failures do not count as scientific non-improvements.'));
-    body.append(note);
+  function statusLabel(c) { return c?.status==='running'?'Search running':c?.status==='historical'?'Earlier experiments':c?.status==='budget_exhausted'?'Evaluation budget used':c?.status==='stopped'?'Search stopped':c?.status==='deadline_reached'?'Time limit reached':c?.status==='stop_requested'?'Finishing current work':'Status not confirmed'; }
+  function renderSummary() {
+    const target=clear('summary'), c=current(), b=seed();
+    const eligible=rows().filter(r=>r.valid&&numeric(r.metrics?.total)&&(!spec(c).cohort_digest||r.cohort_digest===spec(c).cohort_digest));
+    const best=S.campaign==='history'?null:[...eligible].sort((x,y)=>x.metrics.total-y.metrics.total)[0];
+    const delta=best?reduction(best):null;
+    const items=[['Best validated time',seconds(best?.metrics?.total),best?`${best.full_run_count||1} full measurement${best.full_run_count===1?'':'s'}${best.full_run_count>1?' · median':' · needs confirmation'}`:'Choose a search round for a comparable result'],
+      ['Change from reference',delta===null?'—':`${Math.abs(delta).toFixed(1)}% ${delta<0?'slower':delta>0?'faster':'change'}`,b?`Reference: ${seconds(b.metrics?.total)}`:'Results use different reference cohorts'],
+      ['Fully validated',`${rows().filter(r=>r.valid).length} / ${rows().length}`,'Correctness passed · speed assessed separately']];
+    for(const [label,value,note]of items){const box=make('div','summary-item');add(box,make('p','summary-label',label),make('p','summary-value',value),make('p','summary-note',note));target.append(box);}
   }
-  function workerName(worker) { return worker.name || worker.actor || worker.id || worker.provider || 'Worker'; }
-  function renderWorkers() {
-    const target = clear('worker-list'); const workers = arr(state.data?.workers);
-    if (!workers.length) target.append(el('div', 'empty-state', 'No worker observations available. Configured providers are not assumed to be running.'));
-    for (const w of workers) {
-      const row = el('div', 'worker-row'); row.tabIndex = 0; row.setAttribute('role', 'button'); row.setAttribute('aria-label', `Inspect ${workerName(w)}`);
-      const info = el('div'); info.append(el('div', 'worker-name', workerName(w)), el('div', 'worker-meta', [w.host, w.model || w.provider, w.observed_at ? ago(w.observed_at) : 'Observation time unknown'].filter(Boolean).join(' · ')));
-      row.append(el('div', 'worker-avatar', short(w.provider || workerName(w), 1).toUpperCase()), info, badge(w.status || 'unknown'));
-      const select = () => { state.selected = {type: 'worker', id: w.id || w.actor || workerName(w), data: w}; renderInspector(); };
-      row.addEventListener('click', select); row.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(); } }); target.append(row);
-    }
-    for(const host of arr(state.data?.infrastructure)){const row=el('div','worker-row');row.tabIndex=0;row.setAttribute('role','button');const info=el('div');info.append(el('div','worker-name',host.name),el('div','worker-meta',`${host.host||'Host'} · ${host.observed_at?ago(host.observed_at):'Not independently probed'}`));row.append(el('div','worker-avatar','⌘'),info,badge(host.status||'unknown'));const select=()=>{state.selected={type:'infrastructure',id:host.id,data:host};renderInspector();};row.addEventListener('click',select);row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select();}});target.append(row);}
+  function renderNow() {
+    const c=current(), target=clear('search-status'), running=c?.status==='running';
+    const line=make('div','status-line');line.append(pill(statusLabel(c),running?'running':''));target.append(line);
+    const selector=c?.selector, budget=c?.budget||{};
+    target.append(make('h3','',selector==='smac'?(running?'SMAC is choosing what to try next.':'A search guided by full results.'):selector==='qwen'?'A bounded model proposal round.':selector==='local-search'||selector==='enumeration'?'A defined set of implementation choices.':'Recorded optimization experiments.'));
+    target.append(make('p','search-description',selector==='smac'?'A statistical model learns from full evaluations and ranks the remaining legal configurations. It does not call an LLM.':selector==='qwen'?'Qwen proposes a narrow parameter choice. The same screening and full-validation gates apply.':'Each attempt uses an exact code commit. Screening and full validation run through the shared AMD queue.'));
+    const pending=list(c?.evaluations).filter(e=>e.status==='reserved');
+    target.append(make('p','meta-line',S.campaign==='history'?'Historical reports; no global winner inferred.':`${c?.usage?.evaluations||0} of ${budget.max_evaluations??'—'} evaluation slots used${pending.length?` · ${pending.length} pending`:''}${budget.deadline_unix?` · deadline ${time(budget.deadline_unix)}`:''}`));
+    const agents=clear('agents');
+    const active=list(S.data?.workers).filter(w=>/codex|claude|qwen/i.test(String(w.provider))&& !w.stale && /running|coding|evaluating/.test(w.status));
+    if(!active.length)agents.append(make('p','empty','No research agent is currently confirmed running.'));
+    for(const w of active.slice(0,4)){const item=make('div','agent-row'),desc=make('div');add(desc,make('strong','',w.model||human(w.provider)),make('p','',human(w.direction||w.name||w.id)),make('p','',w.deadline_unix?`Until ${time(w.deadline_unix)} · ${w.host}`:w.host));add(item,desc,pill('Working','running'));agents.append(item);}
+    if(active.length>4)agents.append(make('p','meta-line',`${active.length-4} more workers in technical details.`));
   }
-  function stageJobs(profile) {
-    const c = campaign(); const ids = new Set(arr(c?.evaluations).filter(e => e.profile === profile).map(e => e.job_id));
-    const jobs = [...arr(state.data?.jobs), ...arr(state.data?.queue?.jobs)].filter(j => ids.has(j.id) || j.campaign_id === c?.id && j.profile === profile);
-    return jobs.sort((a, b) => (timestamp(b.updated_at) || 0) - (timestamp(a.updated_at) || 0));
+  function drawTable(target,candidates,compact=false) {
+    clear(target);if(!candidates.length){target.append(make('p','empty','No matching results yet.'));return;}
+    const wrap=make('div','table-wrap'),table=make('table'),head=make('thead'),hr=make('tr');
+    for(const title of ['Implementation','Validation','First-run time',...(compact?[]:['Change']), ''])hr.append(make('th','',title));head.append(hr);table.append(head);
+    const body=make('tbody');for(const c of candidates){const tr=make('tr',S.selected===c.candidate_id?'selected-row':''),name=make('td');add(name,make('div','',candidateName(c)),make('p','cell-subtitle',c.kind==='seed'?'Repeated reference':`${c.full_run_count||0} full run${c.full_run_count===1?'':'s'}`));const validation=make('td');validation.append(pill(...kind(c)));add(tr,name,validation,make('td','number',seconds(c.metrics?.total)));
+      if(!compact){const d=reduction(c);tr.append(make('td',`number ${d>0?'positive':d<0?'negative':''}`,d===null?'—':d===0?'Reference':`${Math.abs(d).toFixed(1)}% ${d>0?'faster':'slower'}`));}
+      const action=make('td'),button=make('button','text-button','View');button.type='button';button.setAttribute('aria-label',`View ${candidateName(c)}`);button.addEventListener('click',()=>{S.selected=c.candidate_id;showView('results');renderResults();$('result-detail').scrollIntoView({behavior:'smooth',block:'start'});});action.append(button);tr.append(action);body.append(tr);
+    }table.append(body);wrap.append(table);target.append(wrap);
   }
-  function stageStatus(profile) { const jobs=stageJobs(profile),j=jobs[0];if(!j)return arr(campaign()?.evaluations).some(e=>e.profile===profile)?'recorded':'not observed';if(j.official_check==='failed'||j.strict_check==='failed')return 'invalid';if(/running|queued/.test(j.status||''))return j.status;if(profile==='screen'&&j.official_check==='passed')return 'provisional';if(profile==='full'&&j.official_check==='passed'&&j.strict_check==='passed')return 'valid';return /fail|error/.test(j.status||'')?'error':'recorded'; }
-  function architecture() {
-    const c = campaign(), r = activeRound(c), currentSelector = selector(c), workers = arr(state.data?.workers), strong = workers.filter(w => /codex|claude/i.test(`${w.provider} ${workerName(w)}`));
-    const running = strong.filter(w => !w.stale && /running|coding/i.test(w.status || ''));
-    const round = r?.spec || {}, cs = candidates(c), valid = cs.filter(x => x.valid), active = arr(c?.evaluations).filter(e => /reserved|queued|running/.test(e.status || ''));
-    const nodes = [
-      {id: 'round', x: 278, y: 27, title: 'Frozen round', kicker: 'COORDINATOR', subtitle: r?.round_id || 'No round observed', value: 'Owners · scope · deadline', status: r ? (r.closed ? 'closed' : 'configured') : 'unknown', description: 'The coordinator freezes legal implementation choices, ownership, evaluation limits, and acceptance rules. A new search topology requires a new round.', data: r || {}},
-      {id: 'agents', x: 70, y: 157, title: 'Codex / Claude', kicker: 'STRONG PROPOSERS', subtitle: 'Code changes + new hypotheses', value: running.length ? `${running.length} reported running` : 'See worker observations', status: running.length ? 'running' : 'configured', description: 'Headless agents implement new approaches or produce bounded guidance in isolated branches. A guidance note is not a validated candidate. Qwen is optional for separately assigned narrow tasks.', data: {workers: strong}},
-      {id: 'selector', x: 485, y: 157, title: human(currentSelector), kicker: 'PARAMETER SELECTION', subtitle: /smac/i.test(currentSelector) ? 'Learned ask / tell selection' : /local|enumeration/i.test(currentSelector) ? 'Deterministic finite search' : /qwen/i.test(currentSelector) ? 'Bounded model proposal' : 'Selector not reported', value: /local|enumeration/i.test(currentSelector) ? 'Zero model calls' : 'Uses frozen legal choices', status: c?.controller?.process_alive === true ? 'running' : c?.controller?.status || 'unknown', description: 'The selector chooses legal implementation parameters. Enumeration covers a small finite menu; SMAC uses observations to propose configurations when that selector is explicitly enabled. Installing SMAC does not imply a running SMAC campaign.', data: {selector: currentSelector, controller: c?.controller, budget: budget(c), usage: c?.usage, optimizer: spec(c).optimizer, selection_policy: spec(c).selection_policy, latest_decisions: arr(c?.decisions).slice(-3)}},
-      {id: 'candidate', x: 278, y: 287, title: 'Immutable candidate', kicker: 'GIT + MATERIALIZER', subtitle: 'Exact source SHA + parent links', value: `${cs.length} recorded candidate${cs.length === 1 ? '' : 's'}`, status: cs.length ? 'recorded' : 'unknown', description: 'Every candidate records a source commit, parent candidates, hypothesis, selected parameters, and owner. Branches are workspaces; immutable commits identify the code actually evaluated.', data: {branch: c?.branch, candidates: cs.map(x => ({id: x.candidate_id, sha: x.commit_sha, parents: x.parents}))}},
-      {id: 'queue', x: 278, y: 417, title: 'Durable evaluator queue', kicker: 'AMD CPU WORKER', subtitle: 'Serial jobs · fixed environment', value: active.length ? `${active.length} unresolved reservation${active.length === 1 ? '' : 's'}` : 'No unresolved reservations', status: state.data?.queue?.stale ? 'stale' : state.data?.queue?.enabled ? 'observed' : 'unknown', description: 'The controller records a durable request ID before submitting a specific commit. Screening and full evaluation run on the AMD CPU worker with fixed affinity and thread limits. Reservations alone do not prove that a job is still running.', data: {queue: state.data?.queue, evaluations: c?.evaluations}},
-      {id: 'screen', x: 70, y: 547, title: 'Provisional screening', kicker: 'FEASIBILITY · SCREEN', subtitle: 'Complete physical workload', value: 'Partial correctness checks', status: stageStatus('screen'), description: 'The shorter screening path still computes all 101 frequencies and 193 gradients. It omits the supplied finite-difference gradient sanity check and strict saved-array comparison, so a screen pass is provisional and cannot promote a candidate.', data: {profile: 'screen', jobs: stageJobs('screen'), reservations: arr(c?.evaluations).filter(e => e.profile === 'screen')}},
-      {id: 'full', x: 485, y: 547, title: 'Full validation', kicker: 'FEASIBILITY · FULL', subtitle: 'Official checks + saved-array checks', value: 'First-run timing + all phases', status: stageStatus('full'), description: 'The unchanged official benchmark performs the complete workload and supplied gradient sanity check. The additional comparison checks saved physical outputs and all gradients. Correctness is separate from performance; a passing run can be slower.', data: {profile: 'full', jobs: stageJobs('full'), reservations: arr(c?.evaluations).filter(e => e.profile === 'full')}},
-      {id: 'compare', x: 278, y: 677, title: 'Objectives & Pareto set', kicker: 'EVIDENCE + POLICY', subtitle: 'Same cohort · noise-aware progress', value: `${valid.length} full validated · ${valid.filter(x => x.exact_pareto).length} exact Pareto`, status: valid.length ? 'recorded' : 'unknown', description: 'The primary objective minimizes complete first-run time. Compilation, runtime and peak RSS expose tradeoffs. Exact Pareto membership is distinct from a meaningful improvement beyond the recorded noise threshold. Single runs are not repeat-confirmed gains.', data: {objective: spec(c).objective, progress: round.progress, lanes: c?.lanes}},
-      {id: 'archive', x: 278, y: 807, title: 'Published evidence', kicker: 'GITHUB + NEXT-ROUND INPUT', subtitle: 'Outcomes · decisions · guidance', value: 'Review before topology expansion', status: c?.branch ? 'configured' : 'unknown', description: 'GitHub preserves candidate commits, experiment context, decisions, and exported results. A stalled lane can trigger combination or new guidance according to its frozen policy. The next round is a new DAG; there is no backward execution edge in this one.', data: {branch: c?.branch, guidance: c?.guidance, decisions: c?.decisions}}
-    ];
-    const edges = [['round','agents'],['round','selector'],['agents','candidate'],['selector','candidate'],['candidate','queue'],['queue','screen'],['screen','full'],['full','compare'],['compare','archive']].map(([from,to]) => ({from,to, dashed: from === 'agents'}));
-    return {nodes, edges, width: 830, height: 935};
+  const steps=[
+    {title:'Develop an idea',summary:'Codex or Claude investigates a change.',description:'A research agent works on one approach in its own branch. It explains the hypothesis and produces either a code change or guidance for a future search round.',input:'A validated starting point and a bounded brief.',output:'An isolated implementation or a documented proposal.',where:'Your Mac or the Hetzner agent broker.',note:'Guidance is an idea, not an evaluated improvement.'},
+    {title:'Choose what to test',summary:'Search within reviewed implementation choices.',description:'The coordinator freezes a legal parameter menu. Enumeration covers small spaces; SMAC learns from full results to select promising untested choices. A materializer produces an exact Git commit.',input:'Allowed parameters, constraints, parents, and a fixed budget.',output:'One candidate commit and its recorded selection rationale.',where:'Coordinator on your Mac; SMAC helper on Hetzner.',note:'The 193 physical design variables are part of the fixed workload. These search parameters change how the simulator is implemented.'},
+    {title:'Screen feasibility',summary:'Reject obvious failures before full validation.',description:'The shorter evaluation still computes all 101 frequencies and 193 gradients. It checks the public sensitivity criteria and finite outputs, but omits the finite-difference sanity check and strict saved-array comparison.',input:'An exact commit and a durable queue request.',output:'A provisional pass or a recorded failure.',where:'The shared AMD CPU evaluator.',note:'A screen pass cannot establish full correctness or promote a candidate.'},
+    {title:'Validate and measure',summary:'Run the official test and the extra comparison.',description:'The unchanged official benchmark runs the full setup and gradient sanity check. A separate comparison checks saved physical outputs and all 193 gradients. Every phase and the complete first-run time are recorded.',input:'A screened candidate in the fixed environment.',output:'Separate correctness verdicts, timings, and memory evidence.',where:'AMD, one logical CPU and one benchmark at a time.',note:'The 32 GB policy uses a sampled RSS watchdog. It is not a kernel-enforced container limit.'},
+    {title:'Learn and continue',summary:'Keep useful results and choose the next attempt.',description:'Only eligible full results from the same cohort inform the validated comparison. The selector learns from those results. The coordinator can combine compatible ideas or review a new operator when the frozen round stalls or ends.',input:'Full validation, phase times, and the recorded baseline.',output:'The next choice, a combination, or a reviewed new round.',where:'Campaign ledger and published GitHub evidence.',note:'A Pareto tradeoff is different from a repeatable total-time win. New combinations require their own evaluation.'}
+  ];
+  function renderWorkflow() {
+    const target=clear('steps');steps.forEach((step,i)=>{const li=make('li'),button=make('button','step-button');button.type='button';button.id=`step-${i}`;button.setAttribute('aria-pressed',String(i===S.step));button.setAttribute('aria-controls','step-detail');const label=make('span');add(label,make('span','step-title',step.title),make('span','step-subtitle',step.summary));add(button,make('span','step-number',String(i+1)),label);button.addEventListener('click',()=>{S.step=i;renderWorkflow();});li.append(button);target.append(li);});
+    const step=steps[S.step],detail=clear('step-detail');add(detail,make('p','eyebrow',`Step ${S.step+1} of ${steps.length}`),make('h3','',step.title),make('p','step-description',step.description));facts(detail,[['Input',step.input],['Output',step.output],['Runs on',step.where]]);detail.append(make('p','step-footnote',step.note));
+    if(S.step===1){const latest=list(current()?.decisions).filter(d=>d.payload?.selection_origin).at(-1)?.payload;if(latest){const box=make('div','detail-section');box.append(make('h3','','Latest recorded choice'));phaseFacts(box,[['Trained on',`${latest.training_configurations} full configurations`],['Selection method',latest.model_trained?'Learned acquisition ranking':'Startup selection'],['Chosen rank',String(latest.acquisition_rank??'—')]]);detail.append(box);}}
+    const topo=clear('topology'),dimensions=round()?.spec?.dimensions||{};
+    topo.append(make('p','','These are implementation choices, not changes to the physical problem. A new choice requires a reviewed round specification.'));
+    const descriptions={checkpoint:['Checkpointing','Controls recomputation during differentiation.'],prevent_cse:['Prevent common-subexpression elimination','A checkpoint compilation option.'],map_batch_size:['Component mapping batch size','How component updates are grouped.']};
+    for(const [key,values]of Object.entries(dimensions)){const row=make('div','topology-row'),left=make('div'),desc=descriptions[key]||[human(key),'Registered implementation option.'];add(left,make('strong','',desc[0]),make('p','',desc[1]));const choices=make('div','choices');for(const v of list(values))choices.append(make('span','choice',v===null?'Default':v===true?'On':v===false?'Off':String(v)));add(row,left,choices);topo.append(row);}
+    const limits=Object.values(round()?.spec?.lanes||{}).map(l=>l.stall_limit??3);if(limits.length)topo.append(make('p','step-footnote',`This round uses a stall limit of ${[...new Set(limits)].join(' / ')} terminal non-improvements. Infrastructure failures do not count. Its deadline is fixed.`));
+    if(!Object.keys(dimensions).length)topo.append(make('p','empty','Select a search round to see its frozen parameter menu.'));
   }
-  function candidateGraph() {
-    const all = candidates(), byId = new Map(all.map(x => [x.candidate_id, x]));
-    const keep = new Set(all.filter(x => state.filter === 'all' || state.filter === 'valid' && x.valid || state.filter === 'pending' && !x.valid && !/^invalid/.test(x.status) || state.filter === 'invalid' && /^invalid/.test(x.status) || state.filter === 'pareto' && x.exact_pareto).map(x => x.candidate_id));
-    const contexts = new Set(); const visiting = new Set();
-    function ancestors(id) { if (visiting.has(id)) return; visiting.add(id); for (const parent of arr(byId.get(id)?.parents)) { const pid = typeof parent === 'string' ? parent : parent.candidate_id; if (!pid) continue; if (!keep.has(pid)) contexts.add(pid); keep.add(pid); ancestors(pid); } }
-    [...keep].forEach(ancestors);
-    const depths = new Map(); function depth(id, trail = new Set()) { if (depths.has(id)) return depths.get(id); if (trail.has(id)) return 0; const next = new Set(trail); next.add(id); const parents = arr(byId.get(id)?.parents).map(p => typeof p === 'string' ? p : p.candidate_id).filter(p => keep.has(p) && p !== id); const d = parents.length ? 1 + Math.max(...parents.map(p => depth(p, next))) : 0; depths.set(id, d); return d; }
-    const groups = new Map(); for (const id of keep) { const d = depth(id); if (!groups.has(d)) groups.set(d, []); groups.get(d).push(id); }
-    const nodes = [], edges = []; let offset = 0, maxCols = 1;
-    for (const [d, ids] of [...groups].sort((a,b) => a[0]-b[0])) { const cols = Math.min(4, ids.length); maxCols = Math.max(maxCols, cols); ids.forEach((id,index) => { const c = byId.get(id) || {candidate_id:id,status:'external parent'}; const params = Object.entries(c.parameters || {}).map(([k,v]) => `${k === 'map_batch_size' ? 'batch' : k === 'prevent_cse' ? 'CSE' : k === 'checkpoint' ? 'ckpt' : k}=${v === null ? 'None' : v}`).join(' · '); nodes.push({id, x: 30 + (index%4)*269, y: 34+(offset+Math.floor(index/4))*142, title:c.kind === 'seed' ? 'Validated seed' : `Candidate ${short(id,7)}`, kicker: c.kind === 'seed' ? 'REFERENCE' : `${c.owner || 'UNKNOWN OWNER'}`.toUpperCase(), subtitle: params || human(c.status), value: finite(c.metrics?.total) ? `${secs(c.metrics.total)} · ${c.full_run_count || 1} full run${c.full_run_count === 1 ? '' : 's'}` : `${human(c.status || 'unknown')}`, status: contexts.has(id) ? 'ancestor context' : c.status || 'unknown', data:c, candidate:true, context:contexts.has(id), depth:d}); for (const p of arr(c.parents)) { const pid = typeof p === 'string' ? p : p.candidate_id; if (keep.has(pid)) edges.push({from:pid,to:id}); } }); offset += Math.ceil(ids.length/4); }
-    return {nodes,edges,width:Math.max(640, maxCols*269+40),height:Math.max(400,offset*142+70)};
+  function renderResults() {
+    let cs=rows();if(S.filter==='valid')cs=cs.filter(c=>c.valid);if(S.filter==='improved')cs=cs.filter(c=>c.valid&&(c.progress?.meaningful_total||c.progress?.meaningful_pareto));
+    drawTable($('results-table'),[...cs].sort((a,b)=>(a.metrics?.total??Infinity)-(b.metrics?.total??Infinity)));
+    const c=rows().find(x=>x.candidate_id===S.selected),target=clear('result-detail');target.hidden=!c;if(!c)return;
+    const header=make('div','detail-header'),title=make('div');add(title,make('h2','',candidateName(c)),make('p','',c.provenance?.hypothesis||c.historical?.hypothesis||'Exact implementation measured under the recorded validation contract.'));const close=make('button','text-button','Close');close.addEventListener('click',()=>{S.selected=null;renderResults();});add(header,title,close);target.append(header);
+    const grid=make('div','detail-grid'),timing=make('div'),validation=make('div');timing.append(make('h3','','Timing breakdown'));
+    const metrics=c.metrics||{};phaseFacts(timing,[['Complete first run',seconds(metrics.total)],['Setup & imports',seconds(metrics.setup)],['Compilation',seconds(metrics.compilation)],['Forward simulation',seconds(metrics.forward)],['Sensitivity',seconds(metrics.sensitivity)],['Gradients',seconds(metrics.gradient)],['Result transfer',seconds(metrics.transfer)],['Peak memory',memory(metrics.peak_rss_bytes)]]);
+    validation.append(make('h3','','What the result means'));const ev=list(current()?.evidence).filter(e=>list(c.evidence_ids).includes(e.evidence_id)&&e.profile==='full').at(-1);phaseFacts(validation,[['Full eligibility',c.valid?'Passed':kind(c)[0]],['Full measurements',String(c.full_run_count||0)],['Meaningful total gain',c.progress?c.progress.meaningful_total?'Yes':'No':'Not assessed'],['Meaningful Pareto gain',c.progress?c.progress.meaningful_pareto?'Yes':'No':'Not assessed'],['Exact Pareto member',c.valid&&typeof c.exact_pareto==='boolean'?c.exact_pareto?'Yes':'No':'Not assessed']]);
+    validation.append(make('p','table-note',c.full_run_count>1?'Repeated full measurements are recorded. Inspect their variation before drawing conclusions.':'This is a single measurement or an incomplete evaluation. A speed gain needs repeated confirmation.'));add(grid,timing,validation);target.append(grid);
+    const prov=c.provenance||{};if(prov.selection_origin){const section=make('div','detail-section');section.append(make('h3','','Why SMAC selected this attempt'));phaseFacts(section,[['Origin',prov.selection_origin],['Training configurations',String(prov.training_configurations??'—')],['Surrogate trained',prov.model_trained?'Yes':'No / startup'],['Acquisition rank',String(prov.acquisition_rank??'—')],['Acquisition score',numeric(prov.acquisition_score)?prov.acquisition_score.toPrecision(4):'—']]);disclosure(section,'Ranked alternatives',prov.ranked_options||[],'ranks');target.append(section);}
+    const ancestry=make('div','detail-section');ancestry.append(make('h3','','Implementation history'));const chain=make('div','lineage');for(const parent of list(c.parents)){const p=rows().find(x=>x.candidate_id===parent);chain.append(make('span','lineage-item',p?candidateName(p):short(parent)));chain.append(make('span','lineage-line'));}chain.append(make('span','lineage-item',candidateName(c)));ancestry.append(chain);target.append(ancestry);
+    const links=make('div','links');add(links,commitLink(c.commit_sha),branchLink(c.historical?.branch||current()?.branch));target.append(links);
+    const evidence={candidate:c,full_evidence:ev||null,evaluations:list(current()?.evaluations).filter(e=>e.candidate_id===c.candidate_id)};disclosure(target,'Validation and provenance records',evidence,'result-record');
   }
-  function renderGraph(forceFit = false) {
-    if (!['infrastructure','search'].includes(state.view)) return;
-    const graph = state.view === 'search' ? candidateGraph() : architecture(); state.graph = graph;
-    const scene = clear('graph-scene'); $('graph-empty').classList.toggle('hidden', graph.nodes.length !== 0); const lookup = new Map(graph.nodes.map(n=>[n.id,n]));
-    for (const e of graph.edges) {
-      const a = lookup.get(e.from), b = lookup.get(e.to); if (!a || !b) continue;
-      const sameRow = a.y === b.y; const start = sameRow ? {x:a.x+230,y:a.y+48} : {x:a.x+115,y:a.y+94}; const end = sameRow ? {x:b.x,y:b.y+48} : {x:b.x+115,y:b.y};
-      const curve = sameRow ? `M${start.x},${start.y} C${start.x+40},${start.y} ${end.x-40},${end.y} ${end.x},${end.y}` : `M${start.x},${start.y} C${start.x},${(start.y+end.y)/2} ${end.x},${(start.y+end.y)/2} ${end.x},${end.y}`;
-      scene.append(svg('path',{d:curve,class:`edge${e.dashed?' dashed':''}`}));
-    }
-    for (const n of graph.nodes) {
-      const selected = state.selected?.id === n.id && state.selected?.type === (n.candidate ? 'candidate':'architecture');
-      const node = svg('g',{class:`node${selected?' selected':''}`,transform:`translate(${n.x},${n.y})`,role:'button',tabindex:'0','aria-label':`${n.title}, ${human(n.status)}. Inspect details.`});
-      node.append(svg('rect',{class:'node-box',width:230,height:94,rx:10}),svg('rect',{x:0,y:20,width:3,height:54,rx:1.5,fill:color(n.status)}),svg('text',{x:15,y:18,class:'node-kicker'},short(n.kicker,32)),svg('circle',{cx:213,cy:16,r:3,fill:color(n.status)}),svg('text',{x:15,y:39,class:'node-title'},short(n.title,28)),svg('text',{x:15,y:60,class:'node-subtitle'},short(n.subtitle,30)),svg('text',{x:15,y:80,class:'node-value'},short(n.value,27)));
-      const select = () => { state.selected={type:n.candidate?'candidate':'architecture',id:n.id,data:n.data,node:n}; renderInspector(); renderGraph(); };
-      node.addEventListener('click', e=>{if(!state.didDrag){e.stopPropagation();select();}}); node.addEventListener('keydown', e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select();}}); scene.append(node);
-    }
-    const key = `${state.view}:${state.campaignId}:${state.filter}`;
-    if(forceFit || state.fittedKey!==key){state.fittedKey=key;fitGraph(!forceFit);}else applyCamera();
+  function renderTechnical() {
+    const target=clear('technical-content'),c=current();
+    disclosure(target,'Workers and infrastructure',{workers:S.data?.workers,infrastructure:S.data?.infrastructure},'workers');
+    disclosure(target,'Search decisions and guidance',{decisions:c?.decisions,guidance:c?.guidance,rounds:c?.rounds},'decisions');
+    disclosure(target,'Evaluation queue',{observed_at:S.data?.queue?.observed_at,stale:S.data?.queue?.stale,jobs:S.data?.queue?.jobs},'queue');
+    disclosure(target,'Campaign event history',c?.events||[],'events');
+    disclosure(target,'Controller log',c?.controller?.log_tail||'No log available.','logs');
+    disclosure(target,'System notices',S.data?.alerts||[],'notices');
   }
-  function applyCamera() { const {x,y,scale}=state.camera; $('graph-scene').setAttribute('transform',`translate(${x},${y}) scale(${scale})`); }
-  function fitGraph(readable=false) { if(!state.graph)return;const r=$('graph').getBoundingClientRect();if(!r.width||!r.height)return;const fitted=Math.min((r.width-24)/state.graph.width,(r.height-35)/state.graph.height,1.15);const scale=readable?Math.max(.85,fitted):fitted;state.camera={scale,x:(r.width-state.graph.width*scale)/2,y:12};applyCamera(); }
-  function zoom(factor, px, py) { const rect=$('graph').getBoundingClientRect();const x=px??rect.width/2,y=py??rect.height/2,old=state.camera.scale,next=Math.max(.25,Math.min(2.5,old*factor));state.camera.x=x-(x-state.camera.x)*next/old;state.camera.y=y-(y-state.camera.y)*next/old;state.camera.scale=next;applyCamera(); }
-  function pair(parent, name, value) { const row=el('div','detail-pair');row.append(el('span','',name),el('span','',value));parent.append(row); }
-  function section(parent,title) { const box=el('section','detail-section');box.append(el('h3','',title));parent.append(box);return box; }
-  function rawDetails(parent, data, title='Raw evidence') { const d=el('details','detail-disclosure');d.append(el('summary','',title),el('pre','code-block',JSON.stringify(data,null,2)));parent.append(d); }
-  function showCandidate(parent,c) {
-    const all=candidates(), baseline=seed(), diff=improvement(c,baseline), ev=arr(campaign()?.evidence).filter(e=>e.candidate_id===c.candidate_id || arr(c.evidence_ids).includes(e.evidence_id));
-    parent.append(el('div','detail-icon','⑂'),el('h2','detail-title',c.kind==='seed'?'Validated seed':`Candidate ${short(c.candidate_id,12)}`),badge(c.status||'unknown'));
-    parent.append(el('p','detail-description',c.proposal?.hypothesis||c.provenance?.hypothesis||c.hypothesis||'An exact committed revision evaluated under the campaign’s frozen policy.'));
-    const identity=section(parent,'IDENTITY & LINEAGE');pair(identity,'Candidate',c.candidate_id);pair(identity,'Owner',c.owner);pair(identity,'Round / lane',`${c.round_id||'—'} / ${c.lane_id||'—'}`);pair(identity,'Parents',arr(c.parents).map(p=>typeof p==='string'?short(p):short(p.candidate_id)).join(', ')||'None · reference');const a=commitLink(c.commit_sha);if(a)identity.append(a);
-    const params=section(parent,'IMPLEMENTATION CHOICES');for(const[k,v]of Object.entries(c.parameters||{}))pair(params,k,v===null?'None':JSON.stringify(v));
-    const proposal=c.provenance||{};if(proposal.selection_origin){const choice=section(parent,'WHY THIS CONFIGURATION');pair(choice,'Selector origin',proposal.selection_origin);pair(choice,'Surrogate trained',proposal.model_trained===true?'Yes':'No / startup');pair(choice,'Training configurations',proposal.training_configurations);pair(choice,'Acquisition rank',proposal.acquisition_rank);pair(choice,'Acquisition score',proposal.acquisition_score);pair(choice,'Selection wall time',secs(proposal.fit_and_select_seconds));if(proposal.ranked_options)rawDetails(choice,proposal.ranked_options,'Ranked legal alternatives');}
-    const checks=section(parent,'ACCEPTANCE');pair(checks,'Full eligibility',c.valid===true?'Accepted':c.status==='invalid'?'Rejected':'Not established');pair(checks,'Full observations',c.full_run_count||0);pair(checks,'Exact Pareto member',c.historical_record ? 'Not recomputed across campaigns' : c.valid ? c.exact_pareto ? 'Yes' : 'No' : 'Not eligible');pair(checks,'Meaningful total gain',c.progress ? c.progress.meaningful_total?'Yes':'No':'Not assessed');pair(checks,'Meaningful Pareto gain',c.progress ? c.progress.meaningful_pareto?'Yes':'No':'Not assessed');checks.append(el('p','detail-note',c.full_run_count>1?'Repeated full observations are recorded. Compare the same cohort and inspect variation.':'A single full run can establish recorded acceptance, but does not confirm a repeatable speed gain.'));
-    const metrics=section(parent,'OBJECTIVE MEASUREMENTS');for(const[k,v]of Object.entries(c.metrics||{})){pair(metrics,human(k),k.includes('bytes')?gib(v):finite(v)?secs(v):v);}if(diff!==null)pair(metrics,'Reduction vs seed',`${number(diff,2)}%`);if(c.metric_ranges&&Object.keys(c.metric_ranges).length)rawDetails(metrics,c.metric_ranges,'Observed metric ranges');
-    const jobs=arr(campaign()?.evaluations).filter(e=>e.candidate_id===c.candidate_id);const stages=section(parent,'EVALUATION STEPS');if(!jobs.length)stages.append(el('p','detail-note','No evaluation reservations recorded.'));for(const j of jobs){pair(stages,`${j.profile||'job'} · ${human(j.status)}`,short(j.job_id||j.request_id,14));}if(ev.length)rawDetails(stages,ev,'Normalized validation evidence');
-    if(c.historical_record){const h=c.historical_record;const s=section(parent,'ORIGINAL HISTORICAL REPORT');pair(s,'Profile',h.profile);pair(s,'Official checks',h.official_check);pair(s,'Strict checks',h.strict_check);pair(s,'Classification',human(h.classification));pair(s,'Observed historical frontier',h.observed_pareto_frontier?'Yes (original report)':'No');rawDetails(s,h.phases,'Individual timing phases');rawDetails(s,h.phase_delta,'Phase changes vs original baseline');}
-    const related=all.filter(x=>arr(x.parents).some(p=>(typeof p==='string'?p:p.candidate_id)===c.candidate_id));if(related.length)pair(identity,'Direct descendants',related.length);
-    rawDetails(parent,c,'Complete candidate record');
+  function render() {
+    const focused=document.activeElement?.id;
+    const opened=[...document.querySelectorAll('details[open]')].map(n=>n.dataset.key);
+    const c=current(), notice=$('notice');
+    const pending=list(c?.lanes).some(l=>l.inflight_candidate), errors=list(c?.alerts);
+    notice.hidden=true;
+    if(S.data?.storage?.free_bytes<100_000_000){notice.textContent='Local storage is almost full. New result logging may be interrupted.';notice.hidden=false;}
+    else if(pending&&c?.controller?.process_alive===false){notice.textContent='The local controller has stopped with work still pending. Remote results remain available; see technical details.';notice.hidden=false;}
+    else if(S.data?.queue?.enabled&&S.data.queue.stale&&S.data.queue.error){notice.textContent='The AMD connection is unavailable. Showing the last recorded results.';notice.hidden=false;}
+    $('round-caption').textContent=c?`${statusLabel(c)}${c.source_updated_at?` · last evidence ${time(c.source_updated_at)}`:''}`:'No search evidence available.';
+    renderSummary();renderNow();drawTable($('latest'),rows().filter(r=>r.kind!=='seed').slice(-3).reverse(),true);renderWorkflow();renderResults();renderTechnical();
+    for(const d of document.querySelectorAll('details[data-key]'))d.open=opened.includes(d.dataset.key);
+    if(focused&&document.activeElement===document.body&&$(focused))$(focused).focus({preventScroll:true});
+    $('freshness').textContent=`Read-only · refreshed ${time(S.data?.generated_at)}${S.data?.queue?.enabled?` · AMD ${S.data.queue.stale?'last observation':'connected'}`:''}`;
   }
-  function renderInspector() {
-    const target=clear('inspector-content');let selection=state.selected;
-    if(selection?.type==='candidate'){const current=candidates().find(x=>x.candidate_id===selection.id);if(current)selection={...selection,data:current};showCandidate(target,selection.data);return;}
-    if(selection?.type==='architecture'){const node=architecture().nodes.find(n=>n.id===selection.id)||selection.node;target.append(el('div','detail-icon','⌘'),el('h2','detail-title',node.title),badge(node.status),el('p','detail-description',node.description));const d=section(target,'RECORDED STATE');if(node.id==='round'){const r=activeRound();pair(d,'Round',r?.round_id);pair(d,'Spec hash',r?.spec_digest||r?.digest||r?.spec_sha256);pair(d,'Owner policy','Frozen per round');pair(d,'Deadline',datetime(budget().deadline_unix));}if(node.id==='selector'){pair(d,'Selected algorithm',selector());pair(d,'Controller',campaign()?.controller?.status||'Unknown');pair(d,'Process observed alive',campaign()?.controller?.process_alive===true?'Yes':campaign()?.controller?.process_alive===false?'No':'Unknown');pair(d,'Model calls used',campaign()?.usage?.model_calls);}if(node.id==='screen'||node.id==='full'){const jobs=stageJobs(node.id);pair(d,'Locally available reports',jobs.length);pair(d,'Latest observed state',jobs[0]?.status||'No recent job observation');pair(d,'Observation time',datetime(jobs[0]?.updated_at));}if(node.id==='compare'){pair(d,'Primary objective','Minimize first-run total');pair(d,'Pareto axes','Compilation / runtime / RSS');pair(d,'Full validated',candidates().filter(x=>x.valid).length);pair(d,'One scientific stall','A terminal non-improvement');}if(node.id==='queue'){pair(d,'Host','AMD instance');pair(d,'CPU policy','One logical CPU · serial');pair(d,'RAM policy','32,000,000,000-byte sampled RSS');pair(d,'Observed',datetime(state.data?.queue?.observed_at));}if(node.id==='agents'){for(const w of arr(node.data.workers))pair(d,workerName(w),human(w.status||'unknown'));}const branch=branchLink(campaign()?.branch);if(branch)target.append(branch);rawDetails(target,node.data,'Source records');return;}
-    if(selection?.type==='worker'){const w=arr(state.data?.workers).find(x=>(x.id||x.actor||workerName(x))===selection.id)||selection.data;target.append(el('div','detail-icon',short(w.provider||'W',1).toUpperCase()),el('h2','detail-title',workerName(w)),badge(w.status||'unknown'));target.append(el('p','detail-description',w.description||w.summary||'This is an observed worker record. An installed CLI or an existing session is not proof of an active optimization run.'));const d=section(target,'RUNTIME');for(const key of ['host','provider','model','pid','session_id','task_id','branch','runtime_commit'])if(w[key]!==undefined)pair(d,human(key),w[key]);pair(d,'Last observed',datetime(w.observed_at));if(w.deadline_unix)pair(d,'Deadline',datetime(w.deadline_unix));if(w.branch){const a=branchLink(w.branch);if(a)d.append(a);}if(w.commit_sha){const a=commitLink(w.commit_sha);if(a)d.append(a);}rawDetails(target,w);return;}
-    if(selection?.type==='infrastructure'){const h=arr(state.data?.infrastructure).find(x=>x.id===selection.id)||selection.data;target.append(el('div','detail-icon','⌘'),el('h2','detail-title',h.name),badge(h.status),el('p','detail-description',h.description));pair(target,'Host',h.host);pair(target,'Observed',datetime(h.observed_at));rawDetails(target,h);return;}
-    if(selection?.type==='event'||selection?.type==='job'||selection?.type==='guidance'){const item=selection.data;target.append(el('div','detail-icon','≋'),el('h2','detail-title',human(item.type||item.profile||selection.type)),badge(item.status||item.category||'recorded'));const d=section(target,'PROVENANCE');pair(d,'Recorded',datetime(item.at||item.updated_at));pair(d,'Actor',item.actor||item.agent);if(item.id||item.job_id)pair(d,'Job',item.id||item.job_id);const sha=item.sha||item.commit_sha||item.payload?.commit_sha||item.payload?.guidance_commit;const a=commitLink(sha);if(a)d.append(a);rawDetails(target,item,'Complete source record');return;}
-    target.append(el('div','detail-icon','⌘'),el('h2','detail-title','An inspectable search.'),el('p','detail-description','Select a graph node, candidate, worker, or event to inspect its source records. The dashboard observes the system; it does not launch jobs or change search policy.'));
-    const d=section(target,'READ THE GRAPH');pair(d,'Architecture','Execution and infrastructure');pair(d,'Search DAG','Candidate ancestry');pair(d,'Runs & objectives','Full results and tradeoffs');pair(d,'Activity','Decisions and logs');const c=campaign();if(c){const s=section(target,'CURRENT CAMPAIGN');pair(s,'Name',c.id);pair(s,'Controller state',c.controller?.status||c.status||'Unknown');pair(s,'Source updated',datetime(c.source_updated_at));pair(s,'Selector',human(selector(c)));const a=branchLink(c.branch);if(a)s.append(a);}
-    target.append(el('p','detail-note','A smaller screening run is not full validation. A full pass is not automatically faster. A Pareto point is not automatically a noise-qualified improvement.'));
-  }
-  function renderRuns() {
-    const target=clear('runs-wrap'), cs=candidates(), baseline=seed();
-    target.append(el('p','table-explanation','Complete first-run total is the ranking objective. Rows without full validation are provisional. Green percentages indicate a lower measured total in the same cohort; repeat count and noise-qualified progress remain separate.'));
-    if(!cs.length){target.append(el('div','empty-state','No candidates have been recorded.'));return;}
-    const wrap=el('div','table-wrap'),table=el('table'),head=el('thead'),hr=el('tr');for(const label of ['Candidate','Acceptance','Total','Compile','Runtime','Peak RAM','Vs. seed','Full runs'])hr.append(el('th','',label));head.append(hr);table.append(head);const body=el('tbody');
-    for(const c of [...cs].sort((a,b)=>(a.metrics?.total??Infinity)-(b.metrics?.total??Infinity))){const row=el('tr',state.selected?.id===c.candidate_id?'selected':'');row.tabIndex=0;row.setAttribute('role','button');row.setAttribute('aria-label',`Inspect ${c.candidate_id}`);const name=el('td');name.append(el('div','cell-title',c.kind==='seed'?'Seed reference':short(c.candidate_id,9)),el('div','cell-subtitle',short(c.commit_sha,9)));const status=el('td');status.append(badge(c.valid?'Full accepted':c.status||'unknown'));const delta=improvement(c,baseline);row.append(name,status,el('td','',secs(c.metrics?.total)),el('td','',secs(c.metrics?.compilation)),el('td','',secs(c.metrics?.runtime)),el('td','',gib(c.metrics?.peak_rss_bytes)),el('td',delta>0?'improvement':delta<0?'regression':'',delta===null?'—':`${delta>0?'+':''}${number(delta,1)}%`),el('td','',c.full_run_count||0));const select=()=>{state.selected={type:'candidate',id:c.candidate_id,data:c};renderInspector();renderRuns();};row.addEventListener('click',select);row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select();}});body.append(row);}table.append(body);wrap.append(table);target.append(wrap);
-    const valid=cs.filter(c=>c.valid&&finite(c.metrics?.total)).sort((a,b)=>a.metrics.total-b.metrics.total).slice(0,12);if(valid.length){const chart=el('div','phase-chart');chart.append(el('h3','','First-run phase balance'));const max=Math.max(...valid.map(c=>c.metrics.total));for(const c of valid){const row=el('div','phase-row'),bar=el('div','phase-bar');bar.style.width=`${Math.max(2,100*c.metrics.total/max)}%`;const compile=Math.max(0,c.metrics.compilation||0),runtime=Math.max(0,c.metrics.runtime||0),other=Math.max(0,c.metrics.total-compile-runtime),sum=compile+runtime+other;for(const [key,val]of[['compile',compile],['runtime',runtime],['other',other]]){const segment=el('span',`phase-segment ${key}`);segment.style.width=`${sum?100*val/sum:0}%`;segment.title=`${human(key)}: ${secs(val)}`;bar.append(segment);}row.append(el('span','',c.kind==='seed'?'Seed':short(c.candidate_id,7)),bar,el('span','phase-total',number(c.metrics.total,2)));chart.append(row);}const legend=el('div','chart-legend');for(const[label,fill]of[['Compilation','#a08bdd'],['Runtime','#61bdab'],['Other overhead','#526a80']]){const span=el('span');const swatch=el('i');swatch.style.background=fill;span.append(swatch,document.createTextNode(label));legend.append(span);}chart.append(legend);chart.append(el('p','detail-note','Metric medians may be computed independently across repetitions. Phase bars show reported aggregate phases, not a decomposition of one selected repetition.'));target.append(chart);}
-    const jobs=stageJobs('full');if(jobs.length){const extra=el('div','activity-logs');extra.append(el('h3','','Full-job phase detail'));for(const j of jobs.slice(0,8)){const d=el('details','detail-disclosure');d.append(el('summary','',`${short(j.id,12)} · ${human(j.status)} · ${secs(j.metrics?.total)}`),el('pre','code-block',JSON.stringify({id:j.id,sha:j.sha,official_check:j.official_check,strict_check:j.strict_check,phases:j.phases,metrics:j.metrics},null,2)));extra.append(d);}target.append(extra);}
-  }
-  function renderActivity() {
-    const target=clear('activity-wrap'),c=campaign(),events=[...arr(c?.events)].sort((a,b)=>(b.seq||0)-(a.seq||0));const heading=el('div','activity-header');heading.append(el('span','',`${events.length} recorded events`),el('span','small-label',c?.source_updated_at?`Source ${ago(c.source_updated_at)}`:'Observation time unknown'));target.append(heading);
-    if(!events.length)target.append(el('div','empty-state','No campaign events are available.'));
-    for(const event of events.slice(0,150)){const row=el('div','activity-row');row.tabIndex=0;row.setAttribute('role','button');const dot=el('i','legend-dot');dot.style.background=color(event.payload?.status||event.payload?.category);const content=el('div');content.append(el('div','activity-title',human(event.type)),el('div','activity-meta',[event.actor,event.payload?.candidate_id?`candidate ${short(event.payload.candidate_id)}`:null,event.payload?.job_id?`job ${short(event.payload.job_id)}`:null,event.payload?.reason].filter(Boolean).join(' · ')));row.append(dot,content,el('time','activity-time',timestamp(event.at)?new Date(timestamp(event.at)).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—'));const select=()=>{state.selected={type:'event',id:event.seq,data:event};renderInspector();};row.addEventListener('click',select);row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select();}});target.append(row);}
-    const guidance=arr(c?.guidance);if(guidance.length){const g=el('div','activity-logs');g.append(el('h3','','Guidance proposals · not numerical results'));for(const item of guidance){const d=el('details','detail-disclosure');d.append(el('summary','',`${item.actor||'Agent'} · ${item.payload?.heuristic_id||short(item.guidance_id)}`),el('pre','code-block',JSON.stringify(item,null,2)));g.append(d);}target.append(g);}
-    const logs=el('div','activity-logs');logs.append(el('h3','','Controller log · bounded local tail'));const tail=c?.controller?.log_tail||c?.log_tail||'';logs.append(el('pre','code-block',Array.isArray(tail)?tail.join('\n'):tail||'No controller log is available.'));target.append(logs);
-  }
-  function renderView() {
-    const labels=titles[state.view];$('page-breadcrumb').textContent=labels[0];$('page-title').textContent=labels[1];$('page-description').textContent=labels[2];$('panel-title').textContent=labels[3];$('panel-subtitle').textContent=labels[4];
-    document.querySelectorAll('.nav-button').forEach(b=>{b.classList.toggle('active',b.dataset.view===state.view);if(b.dataset.view===state.view)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
-    const graph=['infrastructure','search'].includes(state.view);$('graph-wrap').classList.toggle('architecture',state.view==='infrastructure');$('graph-wrap').classList.toggle('hidden',!graph);$('graph-legend').classList.toggle('hidden',!graph);$('runs-wrap').classList.toggle('hidden',state.view!=='runs');$('activity-wrap').classList.toggle('hidden',state.view!=='activity');for(const id of ['fit-graph','zoom-in','zoom-out'])$(id).classList.toggle('hidden',!graph);$('candidate-filter').classList.toggle('hidden',state.view!=='search');
-    renderMetrics();renderAlerts();renderTopology();renderWorkers();renderInspector();if(graph)renderGraph();if(state.view==='runs')renderRuns();if(state.view==='activity')renderActivity();
-    const c=campaign();$('source-note').textContent=c?`Source ${datetime(c.source_updated_at)} · read-only local evidence and remote queue polling`:'Read-only local evidence and optional remote queue polling';
+  function showView(view) {
+    if(!['overview','workflow','results'].includes(view))view='overview';S.view=view;
+    for(const id of ['overview','workflow','results'])$(id).hidden=id!==view;
+    const index=['overview','workflow','results'].indexOf(view);$('navigation').setAttribute('active-tab-index',String(index));if(customElements.get('p-tabs-bar'))$('navigation').activeTabIndex=index;
+    for(const button of document.querySelectorAll('[data-view]'))button.setAttribute('aria-selected',String(button.dataset.view===view));
+
   }
   async function refresh() {
-    if(state.fetching)return;state.fetching=true;$('refresh').disabled=true;
-    try { const response=await fetch('/api/state',{cache:'no-store',headers:{Accept:'application/json'}});if(!response.ok)throw new Error(`HTTP ${response.status}`);const data=await response.json();if(!data||!Array.isArray(data.campaigns))throw new Error('Unexpected state format');state.data=data;state.lastSuccess=Date.now();$('connection-dot').className='status-dot';$('connection-label').textContent=`Observed ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;renderCampaignOptions();renderView(); }
-    catch(error){$('connection-dot').className='status-dot error';$('connection-label').textContent=state.lastSuccess?`Disconnected · last ${ago(state.lastSuccess)}`:'Evidence unavailable';const target=clear('alerts');const alert=el('div','alert');alert.append(el('span','alert-icon','!'),el('span','',`Cannot refresh local evidence: ${error.message}. ${state.lastSuccess?'The displayed data is the last successful observation.':'Start the localhost observer and check its source paths.'}`));target.append(alert);}
-    finally{state.fetching=false;$('refresh').disabled=false;}
+    if(S.fetching)return;S.fetching=true;
+    try {const response=await fetch('/api/state',{cache:'no-store'});if(!response.ok)throw new Error(`HTTP ${response.status}`);const data=await response.json();if(!Array.isArray(data.campaigns))throw new Error('Unexpected data');S.data=data;options();render();$('connection').textContent=`Updated ${time(data.generated_at)}`;}
+    catch(e){$('connection').textContent='Connection unavailable';$('notice').hidden=false;$('notice').textContent='The dashboard cannot refresh. Any visible results are the last successful observation.';}
+    finally{S.fetching=false;}
   }
-  $('campaign-select').addEventListener('change',e=>{state.campaignId=e.target.value;if(state.campaignId==='__history__')state.view='runs';state.selected=null;state.fittedKey='';renderView();});
-  document.querySelectorAll('.nav-button').forEach(button=>button.addEventListener('click',()=>{state.view=button.dataset.view;state.selected=null;location.hash=state.view;renderView();}));
-  $('candidate-filter').addEventListener('change',e=>{state.filter=e.target.value;renderGraph(true);});$('refresh').addEventListener('click',refresh);$('fit-graph').addEventListener('click',()=>fitGraph(false));$('zoom-in').addEventListener('click',()=>zoom(1.2));$('zoom-out').addEventListener('click',()=>zoom(1/1.2));
-  let drag=null;
-  $('graph').addEventListener('pointerdown',e=>{if(e.button!==0)return;drag={px:e.clientX,py:e.clientY,x:state.camera.x,y:state.camera.y};state.didDrag=false;});
-  $('graph').addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.px,dy=e.clientY-drag.py;if(Math.abs(dx)+Math.abs(dy)>4){state.didDrag=true;$('graph').setPointerCapture(e.pointerId);$('graph').classList.add('dragging');state.camera.x=drag.x+dx;state.camera.y=drag.y+dy;applyCamera();}});
-  const stopDrag=()=>{drag=null;$('graph').classList.remove('dragging');setTimeout(()=>{state.didDrag=false;},0);};$('graph').addEventListener('pointerup',stopDrag);$('graph').addEventListener('pointercancel',stopDrag);
-  $('graph').addEventListener('wheel',e=>{e.preventDefault();const r=$('graph').getBoundingClientRect();zoom(Math.exp(-e.deltaY*.0015),e.clientX-r.left,e.clientY-r.top);},{passive:false});
-  window.addEventListener('resize',()=>{if(['infrastructure','search'].includes(state.view))fitGraph();});
+  $('campaign').addEventListener('change',e=>{S.campaign=e.target.value;S.selected=null;render();});
+  document.querySelector('.brand').addEventListener('click',e=>{e.preventDefault();showView('overview');window.scrollTo({top:0,behavior:'smooth'});});
+  for(const b of document.querySelectorAll('[data-view]'))b.addEventListener('click',()=>showView(b.dataset.view));
+  $('navigation').addEventListener('update',e=>{if(e.target===$('navigation'))showView(['overview','workflow','results'][e.detail.activeTabIndex]);});
+  for(const a of document.querySelectorAll('p-accordion'))a.addEventListener('update',e=>{if(e.target===a)a.open=e.detail.open;});
+  $('show-workflow').addEventListener('click',()=>showView('workflow'));$('show-results').addEventListener('click',()=>showView('results'));
+  $('result-filter').addEventListener('change',e=>{S.filter=e.target.value;renderResults();});
+  $('technical-toggle').addEventListener('click',()=>{$('technical').hidden=!$('technical').hidden;$('technical-toggle').textContent=$('technical').hidden?'Technical details':'Hide technical details';if(!$('technical').hidden)$('technical').scrollIntoView({behavior:'smooth'});});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
-  const hash=location.hash.slice(1);if(titles[hash])state.view=hash;
-  renderView();refresh();state.refreshTimer=setInterval(()=>{if(!document.hidden)refresh();},5000);
+  showView(location.hash.slice(1));refresh();setInterval(()=>{if(!document.hidden)refresh();},5000);
 })();

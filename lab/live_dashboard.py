@@ -185,8 +185,12 @@ class Observatory:
         stopped = (directory / 'STOP').exists()
         inflight = any(l.get('inflight_candidate') for l in data['lanes'])
         expired = time.time() >= spec['budget']['deadline_unix']
+        spent = any(data['usage'].get(k, 0) >= spec['budget']['max_' + k]
+                    for k in ('proposals', 'evaluations', 'model_calls')
+                    if spec['budget'].get('max_' + k, 0) > 0)
         status = ('stop_requested' if alive and stopped else 'running' if alive else
                   'interrupted' if alive is False and inflight else 'stopped' if stopped else
+                  'budget_exhausted' if spent and not inflight else
                   'deadline_reached' if expired else 'unknown')
         alerts = []
         if 'No space left on device' in log and inflight:
@@ -310,7 +314,7 @@ def handler_for(observatory):
                     self.send_error(503, 'Evidence snapshot temporarily unavailable')
                     return
                 mime = 'application/json; charset=utf-8'
-            elif path in ('/', '/index.html', '/app.js', '/style.css'):
+            elif path in ('/', '/index.html', '/app.js', '/style.css', '/pds-loader.js', '/pds-variables.css', '/pds-normalize.css', '/pds-font-face.css'):
                 name = 'index.html' if path == '/' else path[1:]
                 try:
                     body = (assets/name).read_bytes()
@@ -326,7 +330,7 @@ def handler_for(observatory):
             self.send_header('Content-Length', str(len(body)))
             self.send_header('Cache-Control', 'no-store')
             self.send_header('X-Content-Type-Options', 'nosniff')
-            self.send_header('Content-Security-Policy', "default-src 'self'; connect-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'")
+            self.send_header('Content-Security-Policy', "default-src 'self'; connect-src 'self' https://cdn.ui.porsche.com; script-src 'self' https://cdn.ui.porsche.com; style-src 'self' 'unsafe-inline'; font-src 'self' https://cdn.ui.porsche.com; img-src 'self' data: https://cdn.ui.porsche.com; object-src 'none'; frame-ancestors 'none'")
             self.end_headers()
             self.wfile.write(body)
     return Handler

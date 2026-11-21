@@ -59,6 +59,15 @@ class ObservatoryTests(unittest.TestCase):
         self.assertEqual(c['status'],'stopped')
         self.assertFalse(c['alerts'])  # An old log error does not undo reconciled state.
 
+    def test_spent_evaluation_budget_is_distinct_from_unknown_liveness(self):
+        snapshot=self.campaign.snapshot()
+        snapshot['usage']['evaluations']=20
+        with patch.object(ReadOnlyCampaign,'snapshot',return_value=snapshot):
+            self.assertEqual(self.obs.campaign(self.directory)['status'],'budget_exhausted')
+
+    def test_zero_model_budget_does_not_imply_finished(self):
+        self.assertEqual(self.obs.campaign(self.directory)['status'],'unknown')
+
     def test_credentials_redacted_from_structures_and_logs(self):
         secret='rc-'+'a'*48
         value=public({'token_hash':'sensitive','api_key':'secret','message':'Authorization: Bearer '+secret,

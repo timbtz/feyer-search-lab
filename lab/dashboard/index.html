@@ -3,47 +3,62 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="color-scheme" content="dark">
-  <title>Feyer · Search Observatory</title>
+  <meta name="color-scheme" content="light">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23010b13'/%3E%3Ctext x='10' y='24' font-family='Arial' font-size='24' fill='white'%3EF%3C/text%3E%3C/svg%3E">
+  <title>Feyer — Search lab</title>
+  <link rel="stylesheet" href="/pds-variables.css">
+  <link rel="stylesheet" href="/pds-normalize.css">
+  <link rel="stylesheet" href="/pds-font-face.css">
   <link rel="stylesheet" href="/style.css">
+  <script defer src="/pds-loader.js"></script>
   <script defer src="/app.js"></script>
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="sidebar" aria-label="Dashboard navigation">
-      <a class="brand" href="#infrastructure"><span class="brand-mark" aria-hidden="true">F</span><span>FEYER<span class="brand-subtitle">SEARCH OBSERVATORY</span></span></a>
-      <div class="side-caption">WORKSPACE</div>
-      <nav id="nav">
-        <button class="nav-button active" data-view="infrastructure"><span class="nav-icon" aria-hidden="true">⌘</span>Architecture</button>
-        <button class="nav-button" data-view="search"><span class="nav-icon" aria-hidden="true">⑂</span>Search DAG</button>
-        <button class="nav-button" data-view="runs"><span class="nav-icon" aria-hidden="true">▥</span>Runs &amp; objectives</button>
-        <button class="nav-button" data-view="activity"><span class="nav-icon" aria-hidden="true">≋</span>Activity &amp; logs</button>
-      </nav>
-      <div class="side-rule"></div>
-      <div class="side-caption">EXECUTION CONTRACT</div>
-      <div class="contract"><span>Workload</span><strong>101 frequencies<br>193 design variables</strong><span>Precision</span><strong>Float64 / complex128</strong><span>Primary objective</span><strong>Complete first-run time</strong><span>Acceptance</span><strong>Full official + strict checks</strong></div>
-      <div class="side-footer"><span class="read-only-label">READ-ONLY OBSERVER</span><p>Inspect evidence. Search policies and workers remain controlled by their assigned owners.</p><a href="https://github.com/timbtz/feyer-search-lab" target="_blank" rel="noopener noreferrer">Open GitHub repository ↗</a></div>
-    </aside>
-    <main>
-      <header class="topbar"><div class="breadcrumb">Feyer Lab <span>/</span> <strong id="page-breadcrumb">Architecture</strong></div><div class="connection"><span id="connection-dot" class="status-dot neutral"></span><span id="connection-label">Connecting</span><button id="refresh" class="icon-button" title="Refresh evidence" aria-label="Refresh evidence">↻</button></div></header>
-      <div class="page">
-        <div class="page-heading"><div><div class="eyebrow">OPTIMIZATION CONTROL PLANE</div><h1 id="page-title">From idea to evidence.</h1><p id="page-description">Follow the execution path. Inspect the state behind every step.</p></div><label class="campaign-picker">Campaign<select id="campaign-select" aria-label="Select campaign"><option>Loading campaigns…</option></select></label></div>
-        <div id="alerts" class="alerts" aria-live="polite"></div>
-        <div id="metrics" class="metrics"></div>
-        <section class="workspace" id="workspace" aria-label="Optimization explorer">
-          <div class="work-panel">
-            <div class="panel-toolbar"><div><h2 id="panel-title">Execution architecture</h2><p id="panel-subtitle">Acyclic execution path · feedback creates the next round</p></div><div class="toolbar-actions"><label id="filter-label" class="sr-only" for="candidate-filter">Filter candidates</label><select id="candidate-filter" class="compact-select" aria-labelledby="filter-label"><option value="all">All candidates</option><option value="valid">Full validated</option><option value="pending">Pending / provisional</option><option value="invalid">Rejected</option><option value="pareto">Exact Pareto set</option></select><button id="fit-graph" class="subtle-button">Fit graph</button><button id="zoom-out" class="icon-button" aria-label="Zoom out">−</button><button id="zoom-in" class="icon-button" aria-label="Zoom in">+</button></div></div>
-            <div id="graph-wrap" class="graph-wrap"><svg id="graph" xmlns="http://www.w3.org/2000/svg" aria-label="Interactive optimization graph" role="img"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#536273"/></marker></defs><g id="graph-scene"></g></svg><div class="graph-help">Drag to pan · scroll to zoom · select a node to inspect</div><div id="graph-empty" class="empty-state hidden">Waiting for campaign evidence.</div></div>
-            <div id="runs-wrap" class="runs-wrap hidden"></div>
-            <div id="activity-wrap" class="activity-wrap hidden"></div>
-            <div id="graph-legend" class="graph-legend"><span><i class="legend-dot teal"></i>Full validated</span><span><i class="legend-dot violet"></i>In progress / provisional</span><span><i class="legend-dot amber"></i>Needs attention</span><span><i class="legend-dot muted"></i>Configured / unknown</span></div>
-          </div>
-          <aside id="inspector" class="inspector" aria-label="Selected node details"><div class="inspector-heading"><span class="eyebrow">INSPECTOR</span><span class="small-label">Select any node</span></div><div id="inspector-content"></div></aside>
-        </section>
-        <section class="bottom-grid"><div class="info-panel"><div class="panel-heading"><h2>Workers &amp; hosts</h2><span class="small-label">Observed state</span></div><div id="worker-list"></div></div><div class="info-panel"><div class="panel-heading"><h2>Frozen search space</h2><span id="round-label" class="small-label">Round specification</span></div><div id="topology"></div></div></section>
-        <footer class="page-footer"><span id="source-note">Read-only local evidence and optional remote queue polling</span><span>Screening is provisional. Full acceptance and speed improvement are separate.</span></footer>
-      </div>
-    </main>
-  </div>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="#overview" aria-label="Feyer search lab home">FEYER<span>Search lab</span></a>
+    <div class="header-right"><span id="connection" role="status">Connecting…</span><a href="https://github.com/timbtz/feyer-search-lab" target="_blank" rel="noopener noreferrer">GitHub</a></div>
+  </header>
+  <main id="main">
+    <div class="intro">
+      <p class="eyebrow">Faster physics. Measured progress.</p>
+      <p-heading tag="h1" size="xx-large">The optimization lab.</p-heading>
+      <p class="lead">Follow what we are trying, how we test it, and what actually gets faster.</p>
+    </div>
+    <p-tabs-bar id="navigation" compact="true" active-tab-index="0" aria="{'aria-label':'Search lab views'}">
+      <button type="button" data-view="overview" id="tab-overview" aria-controls="overview">Overview</button>
+      <button type="button" data-view="workflow" id="tab-workflow" aria-controls="workflow">How it works</button>
+      <button type="button" data-view="results" id="tab-results" aria-controls="results">Results</button>
+    </p-tabs-bar>
+    <div class="round-bar"><div><label for="campaign">Search round</label><select id="campaign"><option value="">Loading…</option></select></div><p id="round-caption"></p></div>
+    <div id="notice" class="notice" hidden role="status"></div>
+
+    <section id="overview" class="view" role="tabpanel" aria-labelledby="tab-overview" tabindex="0" aria-label="Overview">
+      <div id="summary" class="summary-grid"></div>
+      <div class="section-heading"><h2>What’s happening</h2><button class="text-button" id="show-workflow">Understand the process</button></div>
+      <div class="now-grid"><article class="surface-card" id="search-status"></article><article class="surface-card"><h3>Research agents</h3><p class="muted card-caption">Agents develop ideas. The evaluator measures them.</p><div id="agents"></div></article></div>
+      <div class="section-heading"><h2>Latest outcomes</h2><button class="text-button" id="show-results">View all results</button></div>
+      <div id="latest"></div>
+      <div class="contract-note">The workload stays fixed: <strong>101 frequencies, 193 design variables, double precision.</strong></div>
+    </section>
+
+    <section id="workflow" class="view" role="tabpanel" aria-labelledby="tab-workflow" tabindex="0" hidden aria-label="How it works">
+      <div class="section-intro"><h2>From an idea to a verified improvement.</h2><p>Five steps. Each result informs the next attempt. Select a step to see what it does.</p></div>
+      <div class="walkthrough"><ol id="steps" class="steps"></ol><article id="step-detail" class="step-detail" aria-live="polite"></article></div>
+      <p-accordion id="topology-accordion" ><h3 slot="summary">What can the search change?</h3><div class="accordion-body" id="topology"></div></p-accordion>
+      <p-accordion ><h3 slot="summary">Where does everything run?</h3><div class="accordion-body host-grid"><div><h3>Your Mac</h3><p>This dashboard, the coordinator, and local Claude or Codex sessions.</p></div><div><h3>Hetzner</h3><p>The native Codex broker and the SMAC selection helper.</p></div><div><h3>AMD instance</h3><p>One CPU evaluation at a time, in the fixed benchmark environment.</p></div><div><h3>GitHub</h3><p>Source commits, owned branches, hypotheses, and published results.</p></div></div></p-accordion>
+    </section>
+
+    <section id="results" class="view" role="tabpanel" aria-labelledby="tab-results" tabindex="0" hidden aria-label="Results">
+      <div class="section-intro result-heading"><div><h2>What improved?</h2><p>Compare complete first-run time. A correct result is not automatically a faster one.</p></div><label class="filter-label">Show<select id="result-filter"><option value="all">All attempts</option><option value="valid">Full validation passed</option><option value="improved">Meaningful improvements</option></select></label></div>
+      <div id="results-table"></div>
+      <p class="table-note">Times are medians of recorded full runs where available. Single measurements need confirmation. Comparisons stay within the same hardware and validation cohort.</p>
+      <div id="result-detail" class="result-detail" hidden></div>
+      <p-accordion ><h3 slot="summary">How we judge an improvement</h3><div class="accordion-body prose"><h3>Primary objective</h3><p>Minimize complete first-run time: imports and setup, compilation, forward simulation, sensitivity, gradients, and result transfer.</p><h3>Useful tradeoffs</h3><p>Compilation, execution time, and peak memory also form a Pareto comparison. A gain in one can come with a cost in another. Exact Pareto membership and improvement beyond measurement noise are recorded separately.</p><h3>Correctness first</h3><p>Screening is provisional. Full acceptance requires the official benchmark and our separate saved-output and all-gradient comparison to pass.</p></div></p-accordion>
+    </section>
+    <footer><span id="freshness">Waiting for evidence.</span><button id="technical-toggle" class="text-button">Technical details</button></footer>
+    <section id="technical" hidden aria-label="Technical details"><div class="technical-heading"><h2>Technical details</h2><p>Source records and logs for debugging. This view is read-only.</p></div><div id="technical-content"></div></section>
+  </main>
+  <noscript>This dashboard requires JavaScript to read local campaign evidence.</noscript>
 </body>
 </html>

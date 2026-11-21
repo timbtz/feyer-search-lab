@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "@porsche-design-system/components-js": "4.10.1"
+  },
+  "name": "feyer-search-dashboard",
+  "private": true,
+  "scripts": {
+    "build:pds": "node build-pds.cjs",
+    "check": "node --check app.js"
+  }
+}

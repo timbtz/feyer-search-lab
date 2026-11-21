@@ -18,24 +18,25 @@ Campaigns are discovered from `.lab/campaigns/*/campaign.sqlite3`; legacy worker
 
 Stop the foreground server with Ctrl-C. This only stops the dashboard; it does not cancel a remote evaluation or agent.
 
-## Run locally
+## Interface and design system
 
-From the checkout containing `lab/live_dashboard.py`:
+The interface has three views: **Overview** for current work and comparable outcomes, **How it works** for a selectable five-step walkthrough, and **Results** for full measurements and implementation history. Raw event records, queue payloads and bounded log tails are behind **Technical details**. Individual results expose phase timings, validation records, SMAC acquisition ranks, and GitHub links on demand.
+
+The frontend uses the actual [Porsche Design System v4](https://designsystem.porsche.com/v4/), pinned to `@porsche-design-system/components-js@4.10.1`, with Feyer branding. The official loader and global CSS are generated without modification from the npm package. Component chunks and font resources load from `https://cdn.ui.porsche.com`; the server permits only that additional asset origin in its CSP. Local campaign data stays on the existing localhost API. No Porsche logo, crest or wordmark is used. The package license and third-party notices are retained in `lab/dashboard`.
+
+The generated assets are committed, so starting the Python server does not require npm. To reproduce them:
 
 ```bash
-python3 -m lab.live_dashboard \
-  --repo "/Users/t.betz/Documents/Feyer challenge" \
-  --port 8765 \
-  --sync-remote
+npm ci --prefix lab/dashboard --ignore-scripts
+npm run build:pds --prefix lab/dashboard
+npm run check --prefix lab/dashboard
 ```
 
-Open `http://localhost:8765`. `--repo` points to the main repository containing `.lab` campaign/session data, even when the dashboard code runs from an isolated worktree. Omit `--sync-remote` for local records only. Remote refresh uses the existing SSH configuration to read queue lists and reports; it does not submit work. The default evaluator alias is `amd-hackathon`.
-
-The server binds only to `127.0.0.1`. Stop the foreground process with Ctrl-C. Refreshing the page does not restart workers or change their budgets.
+If the design-system CDN is unavailable, native navigation and readable content remain available with fallback styling. The dashboard still cannot mutate workers or evaluations.
 
 ## How the system fits together
 
-The scientific lineage is a directed acyclic graph: immutable candidate commits point to their parent candidates. The execution pipeline has feedback: a completed evaluation informs the next proposal. The dashboard separates these two views so that a feedback loop is not mistaken for a cycle in candidate ancestry.
+The scientific lineage is a directed acyclic graph: immutable candidate commits point to their parent candidates. The execution pipeline has feedback: a completed evaluation informs the next proposal. The walkthrough explains the execution steps; the result detail shows parent-to-candidate history. Feedback is a decision to create a subsequent attempt, not a backwards edge in source ancestry.
 
 1. A coordinator assigns a bounded task to headless Codex or Claude. Strong agents investigate an approach and propose code or a future operator. Qwen is optional for narrow tasks.
 2. Reviewed operators become a frozen round: legal parameters, constraints, parent candidates, objective, ownership and budget are recorded before search begins. The 193 physical variables and 101 frequencies remain fixed workload requirements.
