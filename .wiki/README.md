@@ -8,6 +8,7 @@ The team repository is [timbtz/feyer-search-lab](https://github.com/timbtz/feyer
 
 - [Team search across three instances](team-search.md) coordinates personal Claude/Codex sessions through GitHub claims, evidence and combination tasks; no Qwen or SMAC dependency.
 - [Expanded CPU capacity](capacity.md) records lane ownership, new budgets, contention receipts and quiet serial confirmation.
+- [Research lineage and feedback](research-lineage.md) defines declared phase targets, exact evaluation links, external research records and separate operational feedback edges.
 - [Prepare a new AMD evaluator](portable-amd.md) reproduces the fixed environment, local baseline and serial worker on a colleague's instance.
 - [Profiling feedback](profiling.md) ranks measured first-run costs and feeds exact-candidate evidence into each proposal.
 - [Architecture](architecture.md) explains branches, candidates, agent sessions and the worker queue.

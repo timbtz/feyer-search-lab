@@ -51,6 +51,10 @@ def check_lineage(state, parents, child):
     for task in state['tasks'].values():
         for parent in task['parents']:
             edges.setdefault(parent, set()).update(task['candidates'])
+    for record in state.get('research_records', {}).values():
+        if record.get('candidate_sha'):
+            for parent in record['parents']:
+                edges.setdefault(parent, set()).add(record['candidate_sha'])
     pending, seen = [child], set()
     while pending:
         node = pending.pop()
@@ -122,7 +126,22 @@ def apply(state, command, actor, data, now=None):
     state = copy.deepcopy(state)
     actor = name(actor)
     now = time.time() if now is None else now
-    if command == 'comparison-regime':
+    if command == 'research':
+        if actor != state['coordinator']:
+            raise ValueError('Only the coordinator imports external research records')
+        from .research_lineage import validate_record
+        record = validate_record(data)
+        records = state.setdefault('research_records', {})
+        previous = records.get(record['record_id'])
+        if previous:
+            if previous != record:
+                raise ValueError('Research records are immutable; append a new sourced record')
+            return state, previous
+        if record.get('candidate_sha'):
+            check_lineage(state, record['parents'], record['candidate_sha'])
+        records[record['record_id']] = record
+        output = record
+    elif command == 'comparison-regime':
         if actor != state['coordinator']:
             raise ValueError('Only the coordinator changes the comparison regime')
         if data.get('mode') not in ('serial', 'concurrent'):
@@ -308,7 +327,9 @@ def render(state):
                   'Concurrent and unverified timing imports are exploratory and excluded from winner assessment.',
                   '', f"Receipt: {regime['receipt']}", '', regime['reason']]
     lines += ['', '## Scientific lineage', '', '```mermaid', 'graph TD']
-    shas = sorted({s for t in state['tasks'].values() for s in t['parents'] + t['candidates']})
+    research = list(state.get('research_records', {}).values())
+    shas = sorted({s for t in state['tasks'].values() for s in t['parents'] + t['candidates']}
+                  | {s for r in research for s in r['parents'] + ([r['candidate_sha']] if r.get('candidate_sha') else [])})
     ids = {s: f'c{i}' for i, s in enumerate(shas)}
     for sha, node in ids.items():
         lines.append(f'  {node}["{sha[:12]}"]')
@@ -318,10 +339,21 @@ def render(state):
             for parent in task['parents']:
                 if child != parent:
                     edges.add((parent, child, task['kind']))
+    for record in research:
+        if record.get('candidate_sha'):
+            edges.update((parent, record['candidate_sha'], record['kind']) for parent in record['parents'])
     for parent, child, kind in sorted(edges):
         lines.append(f'  {ids[parent]} -->|{kind}| {ids[child]}')
     lines += ['```', '', 'Every edge records intended inputs, not proof of speedup.', '',
               f"Recorded jobs: {len(state['observations'])}. Decisions/events: {len(state['events'])}.", '']
+    if research:
+        lines += ['## External research records', '',
+                  '| Executor | Kind | Candidate | Target phases | Recorded status |',
+                  '| --- | --- | --- | --- | --- |']
+        for r in research:
+            lines.append(f"| {r['executor']['id']} | {r['kind']} | {(r.get('candidate_sha') or 'unknown')[:12]} | "
+                         + (', '.join(r['target_phases']) or 'unknown') + f" | {r['status']} |")
+        lines += ['', 'These records are evidence, not competing task claims or winner declarations.', '']
     return '\n'.join(lines)
 
 
@@ -418,6 +450,12 @@ def main(argv=None):
     sub.add_parser('init')
     sub.add_parser('list')
     sub.add_parser('next')
+    research = sub.add_parser('research')
+    source = research.add_mutually_exclusive_group(required=True)
+    source.add_argument('--spec', type=Path)
+    source.add_argument('--feedback', type=Path)
+    research.add_argument('--executor')
+    research.add_argument('--source-ref')
     regime = sub.add_parser('comparison-regime')
     regime.add_argument('--mode', choices=('serial', 'concurrent'), required=True)
     regime.add_argument('--reason', required=True)
@@ -447,6 +485,14 @@ def main(argv=None):
     else:
         data = {}
         if args.command == 'add': data = json.loads(args.spec.read_text())
+        elif args.command == 'research':
+            if args.spec:
+                data = json.loads(args.spec.read_text())
+            else:
+                if not args.executor or not args.source_ref:
+                    parser.error('--feedback requires --executor and --source-ref')
+                from .research_lineage import from_feedback
+                data = from_feedback(json.loads(args.feedback.read_text()), args.executor, args.source_ref)
         elif args.command == 'comparison-regime':
             data = dict(mode=args.mode, reason=args.reason, receipt=args.receipt)
         elif args.command == 'claim': data = dict(task=args.task, instance=args.instance, claim_id=uuid.uuid4().hex)
