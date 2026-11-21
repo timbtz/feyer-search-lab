@@ -76,6 +76,41 @@ def _evaluate_component_group(function_index, function_inputs):
     return vmap(FUNCTIONS[function_index])(function_inputs)
 
 
+class _ParameterSlots:
+    """Integer-indexable stand-in for a component's parameter vector.
+
+    Each slot is a separate scalar, so slots under `lax.stop_gradient` carry
+    symbolic-zero tangents and their derivative terms are never formed.
+    """
+
+    __slots__ = ("values",)
+
+    def __init__(self, values):
+        self.values = values
+
+    def __getitem__(self, index):
+        if isinstance(index, (int, np.integer)):
+            return self.values[index]
+        return jnp.stack(self.values)[index]
+
+
+@partial(jit, static_argnums=(0, 1), inline=True)
+def _evaluate_component_group_slots(function_index, differentiable, function_inputs):
+    """Like `_evaluate_component_group`, with constant input slots gradient-stopped.
+
+    `differentiable` is a static per-slot mask from the builder: a slot is False
+    only when no row of the group reads a parameter that depends on the optimized
+    values (optimized or linked indices), so its true derivative is exactly zero.
+    Forward values are unchanged (stop_gradient is the identity).
+    """
+    function = FUNCTIONS[function_index]
+    columns = tuple(
+        function_inputs[:, slot] if keep else lax.stop_gradient(function_inputs[:, slot])
+        for slot, keep in enumerate(differentiable)
+    )
+    return vmap(lambda *values: function(_ParameterSlots(values)))(*columns)
+
+
 def update(
     parameters: jnp.ndarray,
     matrix: jnp.ndarray,
@@ -153,7 +188,21 @@ def update(
             else:
                 input_indices = function_input_indices[rows]
             group_inputs = parameters[input_indices]
-            group_values.append(_evaluate_component_group(function_index, group_inputs))
+            diff_slots = component_groups.get("diff_slots")
+            if (
+                COMPONENT_SLOT_PRUNING
+                and diff_slots is not None
+                and function_index in diff_slots
+                and group_inputs.ndim == 2
+            ):
+                differentiable = tuple(
+                    slot in diff_slots[function_index] for slot in range(group_inputs.shape[1])
+                )
+                group_values.append(
+                    _evaluate_component_group_slots(function_index, differentiable, group_inputs)
+                )
+            else:
+                group_values.append(_evaluate_component_group(function_index, group_inputs))
         if group_values:
             output_matrix = jnp.concatenate(group_values, axis=0)
             output_rows = component_groups["output_rows"][output_rows]
@@ -545,7 +594,13 @@ FREQUENCY_LOOP_SCOPE: str = "assemble"
 # (jax.checkpoint, nothing saved but loop inputs). Intended to shrink the forward vjp
 # program (no stacked per-row assembly residuals) at the cost of a larger reverse
 # program and recomputed assembly in the gradient. False is the validated aa2b1ab path.
-ASSEMBLY_REMAT: bool = True
+# Candidate 1 (5b21696, full 01ae3245): official+strict PASS but compile only moved
+# (forward compile -2.92 s, gradient compile +2.81 s); first run 21.72 s vs 21.55 s.
+ASSEMBLY_REMAT: bool = False
+# Gradient-stop component input slots that never read an optimized/linked parameter
+# (builder-provided static masks, component_groups[...]["diff_slots"]). Their true
+# derivative is zero; this skips forming those derivative terms in the vjp.
+COMPONENT_SLOT_PRUNING: bool = True
 # Build the noise source matrix once and broadcast it across signal rows when the
 # builder proved (host-side, before dummy filling) that no noise input index is a
 # real changing index. False always uses the per-row noise assembly.
@@ -882,6 +937,31 @@ def run_build_step(
         noise_inputs |= {int(i) for i in np.asarray(indices).ravel()}
     if real_changing.isdisjoint(noise_inputs):
         component_groups["noise_row_reuse"] = ()
+
+    # Static differentiable-slot masks (dict keys only; empty-tuple values add no
+    # pytree leaves). A slot is differentiable when any row of the group reads an
+    # optimized index or a linking output; other slots read constants only.
+    differentiable_indices = {
+        int(i) for i in np.asarray(simulation_arrays["optimized_parameter_indices"]).ravel()
+    }
+    differentiable_indices |= {
+        int(i) for i in np.asarray(simulation_arrays["indices_to_link"]).ravel()
+    }
+    for name in ("carrier", "signal", "noise"):
+        group = component_groups.get(name)
+        if not isinstance(group, dict) or "parameter_indices" not in group:
+            continue
+        diff_slots = {}
+        for function_index, indices in group["parameter_indices"].items():
+            indices = np.asarray(indices)
+            if indices.ndim != 2:
+                continue
+            diff_slots[function_index] = {
+                slot: ()
+                for slot in range(indices.shape[1])
+                if any(int(i) in differentiable_indices for i in indices[:, slot])
+            }
+        group["diff_slots"] = diff_slots
 
     simulation_arrays["component_groups"] = component_groups
 

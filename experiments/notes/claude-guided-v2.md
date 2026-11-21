@@ -65,5 +65,54 @@ This is my own hypothesis. It is *not* a transfer of 7d1ccc5's code, which I cou
 - **Fallback:** `ASSEMBLY_REMAT=False`, which is byte-equivalent behaviour to aa2b1ab.
 - **Source delta vs aa2b1ab:** `differometor/simulate.py` only — the new flag and a 4-line wrap of `block_assemble`. `build.py` is unchanged.
 
+### Results: SHA `5b2169697d359f6a1c1f7fd6b5f66e08e9906969` — official PASS, strict PASS, **no gain (not kept)**
+
+**Screen** (`630661aa`): 21.781 s. Provisional.
+
+**Full** (`01ae3245`):
+
+| Phase | Candidate 1 | aa2b1ab (`35abe628`) | Change |
+| --- | --- | --- | --- |
+| Complete first run | 21.725 | 21.550 | +0.18 |
+| Forward lower | 0.701 | 0.789 | −0.09 |
+| Forward compile | 4.703 | 7.622 | **−2.92** |
+| Forward execute | 8.500 | 8.432 | +0.07 |
+| Gradient lower | 0.315 | 0.181 | +0.13 |
+| Gradient compile | 4.774 | 1.959 | **+2.81** |
+| Gradient execute | 1.602 | 1.519 | +0.08 |
+
+- Warm median: 10.588 s. Total job wall time: 87.3 s. Peak RSS: 7.81 GB (parent 8.05 GB).
+- Strict comparison: carrier, signal, noise, sensitivity and powers are all bitwise identical (error 0). Gradient max absolute error 2.9e-11, max normalized error 1.1e-6 (parent: 1.6e-8). The run passes, with a smaller margin than the parent.
+- **Interpretation:**
+  - Remat moved about 2.9 s of compile from the forward program to the gradient program almost one-for-one. Total compile time is essentially unchanged.
+  - Measured inference: about 2.9 s of compile is attributable to the assembly *linearization* (the derivative residuals of the component functions), wherever it is placed.
+  - 7d1ccc5's lower total compile must therefore come from something other than plain remat.
+- **Decision:** not kept. `ASSEMBLY_REMAT=False` is restored in candidate 2.
+
+## Candidate 2: gradient-stop constant component input slots (`COMPONENT_SLOT_PRUNING=True`)
+
+### Hypothesis
+- **Target:** the compile cost of the assembly linearization: about 2.9 s, attributed by candidate 1, inside forward compile (7.62 s, job `35abe628`), plus the matching transposes in gradient compile (1.96 s).
+- **Mechanism:**
+  - After `expand_parameters`, the whole parameter row carries one dense tangent. So JAX forms derivative terms for *every* component input, including inputs that never depend on a design variable: frequency, loss, refractive indices and incidence angle. For `surface`, 5 of 7 inputs are like this.
+  - On the host, the builder now records per function group which input slots read an optimized index or a linking output (`component_groups[name]["diff_slots"]`). It is stored as static dict keys with empty-tuple values, so it adds no traced leaves.
+  - `update` passes each group's columns as separate scalars, with `lax.stop_gradient` on constant slots, through a `_ParameterSlots` stand-in for the parameter vector. Their tangents are symbolic zeros, so neither their residuals nor their transposes are generated.
+- **Exactness:**
+  - The derivative of a constant slot is exactly zero, and stop_gradient is the identity in the forward pass.
+  - Forward outputs are expected bitwise identical. The gradient is expected identical or within reordering: the dropped terms were exact `0*x` contributions.
+- **Prediction:**
+  - Forward compile and gradient compile decrease, and forward lower and gradient lower probably decrease slightly.
+  - Execute times are unchanged or slightly lower.
+  - Size unknown; the ceiling is well under the 2.9 s linearization share. The `*_lower` component variants re-stack their inputs into a dense vector, so they get no pruning.
+- **Reject if:** any forward output differs from the reference, or strict fails.
+- **Source delta vs aa2b1ab:** simulate.py only:
+  - `_ParameterSlots`;
+  - `_evaluate_component_group_slots`;
+  - a branch in `update`;
+  - `diff_slots` computed in `run_build_step`;
+  - the `ASSEMBLY_REMAT` flag, now False.
+  
+  Fallback: `COMPONENT_SLOT_PRUNING=False`.
+
 ### Results
 - Pending.
