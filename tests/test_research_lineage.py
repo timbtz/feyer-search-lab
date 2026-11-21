@@ -124,6 +124,29 @@ class ResearchLineageTests(unittest.TestCase):
         self.assertTrue(any(e['source']=='candidate:' + A and e['target']=='candidate:' + C for e in g['edges']))
         self.assertFalse(any(n.get('status')=='menu_exhausted' for n in g['nodes']))
 
+    def test_proposed_phase_research_links_inputs_without_inventing_output(self):
+        r = {**record(), 'record_id':'planned', 'candidate_sha':None,
+             'status':'proposed', 'evaluations':[]}
+        g = build_lineage({'team_search':{'research_records':{'planned':r}}})
+        inputs = [e for e in g['edges'] if e['kind']=='research_input']
+        self.assertEqual({e['source'] for e in inputs}, {'candidate:' + A, 'candidate:' + B})
+        self.assertFalse(any(n.get('candidate_sha')==C for n in g['nodes']))
+        self.assertFalse(any(e['kind']=='hypothesis_combination' for e in g['edges']))
+
+    def test_assignment_update_preserves_proposed_receipt_and_declares_transition(self):
+        proposed = {**record(), 'record_id':'planned', 'candidate_sha':None,
+                    'status':'proposed', 'evaluations':[], 'assignment_id':'compiler-gap', 'observed_at':100}
+        state, _ = apply(initial_state('coordinator'), 'research', 'coordinator', proposed)
+        current = {**proposed, 'record_id':'dispatched', 'status':'current',
+                   'supersedes':'planned', 'observed_at':200}
+        state, _ = apply(state, 'research', 'coordinator', current)
+        self.assertEqual(state['research_records']['planned']['status'], 'proposed')
+        g = build_lineage({'team_search':state})
+        self.assertTrue(any(e['kind']=='record_update' and e['source']=='research:planned'
+                            and e['target']=='research:dispatched' for e in g['control_edges']))
+        with self.assertRaises(ValueError):
+            apply(state, 'research', 'coordinator', {**current, 'record_id':'bad', 'supersedes':'missing'})
+
     def test_actual_consumed_feedback_receipt_links_prior_turn_only(self):
         prior = {**record(), 'feedback_ref':dict(artifact_ref='prior.json', artifact_digest='7' * 64)}
         later = {**record(), 'record_id':'later', 'candidate_sha':'e' * 40, 'parents':[C],

@@ -77,6 +77,8 @@ def validate_record(value):
             raise ValueError('Artifact references require a location and SHA-256 digest')
     if r.get('iteration') is not None and (type(r['iteration']) is not int or r['iteration'] < 1):
         raise ValueError('Iteration must be a positive integer when recorded')
+    if r.get('supersedes') is not None and (not isinstance(r['supersedes'], str) or not r['supersedes']):
+        raise ValueError('Record supersession must name an earlier record ID')
     receipt = r.get('input_receipt')
     if receipt is not None and (not isinstance(receipt, dict) or not isinstance(receipt.get('path'), str)
             or not isinstance(receipt.get('sha256'), str) or not re.fullmatch('[0-9a-f]{64}', receipt['sha256'])):
@@ -217,6 +219,8 @@ def build_lineage(snapshot):
                 ('candidate_sha', 'target_phases', 'hypothesis', 'change_summary', 'executor',
                  'status', 'stopping_reason', 'source_ref', 'source_digest', 'menu',
                  'feedback_ref', 'checkpoint', 'next_input', 'session_id', 'iteration', 'input_receipt')})
+            for field in ('assignment_id', 'observed_at', 'supersedes'):
+                nodes[identity][field] = r.get(field)
             nodes[identity]['research_kind'] = r['kind']
             receipt = r.get('input_receipt')
             if receipt:
@@ -235,6 +239,9 @@ def build_lineage(snapshot):
                 phase_id = node('phase:' + phase, 'phase', phase_key=phase)
                 edge(phase_id, identity, 'targets_phase', r['source_ref'])
             child = r.get('candidate_sha')
+            if child is None:
+                for parent in r['parents']:
+                    edge(candidate(parent), identity, 'research_input', r['source_ref'])
             if child:
                 edge(identity, candidate(child), 'membership', r['source_ref'])
                 parents(r['parents'], child, r['source_ref'], r['kind'] == 'combine')
@@ -265,6 +272,12 @@ def build_lineage(snapshot):
     # Input receipts identify the prior feedback consumed by a later turn. These
     # operational links never become backwards scientific-parent edges.
     for r in records.values():
+        previous = r.get('supersedes')
+        if previous in records:
+            edge('research:' + previous, 'research:' + r['record_id'], 'record_update',
+                 r['source_ref'], control=True)
+        elif previous:
+            issues.append('Superseded record unavailable for ' + r['record_id'])
         receipt = r.get('input_receipt') or {}
         consumed = receipt.get('consumed_feedback_digest')
         prior_sha = receipt.get('consumed_candidate_sha')

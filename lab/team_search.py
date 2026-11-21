@@ -137,6 +137,8 @@ def apply(state, command, actor, data, now=None):
             if previous != record:
                 raise ValueError('Research records are immutable; append a new sourced record')
             return state, previous
+        if record.get('supersedes') and record['supersedes'] not in records:
+            raise ValueError('Supersession must reference an existing immutable research record')
         if record.get('candidate_sha'):
             check_lineage(state, record['parents'], record['candidate_sha'])
         records[record['record_id']] = record
