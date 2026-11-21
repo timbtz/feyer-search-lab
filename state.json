@@ -44315,6 +44315,56 @@
         ],
         "target_evidence": []
       }
+    },
+    {
+      "seq": 24,
+      "at": 1795294503.454402,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "feedback-b7ce45208c628648be2acae60617a1472c45c4fbdcdc242d517ce7aed85052df",
+        "executor": {
+          "kind": "supervisor",
+          "id": "claude-structure-solve"
+        },
+        "kind": "explore",
+        "status": "completed",
+        "candidate_sha": "3e94580ec44609e7156f7f0acad1f2884db8b030",
+        "parents": [
+          "d09dc1d08fb046d08b3b699685d8ff780d611e87"
+        ],
+        "target_phases": [],
+        "hypothesis": "Candidate 3 should reproduce candidate 1: about 22.5 s first run and the same gradient (8.08e-10 maximum absolute error against the reference). That gives a second full sample of the best validated computation.",
+        "change_summary": "Candidate 2 (39b23e3, slice-based conjugation) passed both the official and strict checks in its full run. Its gradient matched candidate 1 bit for bit, but it was slower: first run 22.794 s against 22.495 s. Reverse execution was about 0.2 s higher in every warm repeat. Candidate 3 sets SLICE_CONJUGATION = False, so the code that runs is candidate 1's again and the branch head sits on the best validated configuration. This is a repeat measurement of candidate 1, not a new idea. The notes record all run IDs, phase timings, the rejected idea and the final handoff with the operator JSON. The recommended operator is merge_same_matrix_solves with values {false, true}, from candidate 4c12600.",
+        "stopping_reason": null,
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d96d9188640ef34204f53ccc9612a3dff6268f52/experiments/runs/claude-structure-solve/candidate-03.json",
+        "source_digest": "b7ce45208c628648be2acae60617a1472c45c4fbdcdc242d517ce7aed85052df",
+        "source_digest_kind": "canonical_json_sha256",
+        "feedback_ref": {
+          "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/d96d9188640ef34204f53ccc9612a3dff6268f52/experiments/runs/claude-structure-solve/candidate-03.json",
+          "artifact_digest": "b7ce45208c628648be2acae60617a1472c45c4fbdcdc242d517ce7aed85052df",
+          "digest_kind": "canonical_json_sha256"
+        },
+        "session_id": "aaad90d2-50c7-4334-ad32-331fbe033d3c",
+        "iteration": null,
+        "checkpoint": null,
+        "next_input": null,
+        "input_receipt": null,
+        "evaluations": [
+          {
+            "job_id": "e61db6fefd344eab8d45592b009a7dcf",
+            "candidate_sha": "3e94580ec44609e7156f7f0acad1f2884db8b030",
+            "profile": "screen"
+          },
+          {
+            "job_id": "0e841841f0bc491fa29b6178a908ef4c",
+            "candidate_sha": "3e94580ec44609e7156f7f0acad1f2884db8b030",
+            "profile": "full"
+          }
+        ],
+        "target_evidence": []
+      }
     }
   ],
   "comparison_regime": {
@@ -44673,6 +44723,50 @@
         {
           "job_id": "4cc17640e44446f887b613d035af7125",
           "candidate_sha": "39b23e3c6e84b2a7498c7bce932a2f6ba41f227e",
+          "profile": "full"
+        }
+      ],
+      "target_evidence": []
+    },
+    "feedback-b7ce45208c628648be2acae60617a1472c45c4fbdcdc242d517ce7aed85052df": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "feedback-b7ce45208c628648be2acae60617a1472c45c4fbdcdc242d517ce7aed85052df",
+      "executor": {
+        "kind": "supervisor",
+        "id": "claude-structure-solve"
+      },
+      "kind": "explore",
+      "status": "completed",
+      "candidate_sha": "3e94580ec44609e7156f7f0acad1f2884db8b030",
+      "parents": [
+        "d09dc1d08fb046d08b3b699685d8ff780d611e87"
+      ],
+      "target_phases": [],
+      "hypothesis": "Candidate 3 should reproduce candidate 1: about 22.5 s first run and the same gradient (8.08e-10 maximum absolute error against the reference). That gives a second full sample of the best validated computation.",
+      "change_summary": "Candidate 2 (39b23e3, slice-based conjugation) passed both the official and strict checks in its full run. Its gradient matched candidate 1 bit for bit, but it was slower: first run 22.794 s against 22.495 s. Reverse execution was about 0.2 s higher in every warm repeat. Candidate 3 sets SLICE_CONJUGATION = False, so the code that runs is candidate 1's again and the branch head sits on the best validated configuration. This is a repeat measurement of candidate 1, not a new idea. The notes record all run IDs, phase timings, the rejected idea and the final handoff with the operator JSON. The recommended operator is merge_same_matrix_solves with values {false, true}, from candidate 4c12600.",
+      "stopping_reason": null,
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d96d9188640ef34204f53ccc9612a3dff6268f52/experiments/runs/claude-structure-solve/candidate-03.json",
+      "source_digest": "b7ce45208c628648be2acae60617a1472c45c4fbdcdc242d517ce7aed85052df",
+      "source_digest_kind": "canonical_json_sha256",
+      "feedback_ref": {
+        "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/d96d9188640ef34204f53ccc9612a3dff6268f52/experiments/runs/claude-structure-solve/candidate-03.json",
+        "artifact_digest": "b7ce45208c628648be2acae60617a1472c45c4fbdcdc242d517ce7aed85052df",
+        "digest_kind": "canonical_json_sha256"
+      },
+      "session_id": "aaad90d2-50c7-4334-ad32-331fbe033d3c",
+      "iteration": null,
+      "checkpoint": null,
+      "next_input": null,
+      "input_receipt": null,
+      "evaluations": [
+        {
+          "job_id": "e61db6fefd344eab8d45592b009a7dcf",
+          "candidate_sha": "3e94580ec44609e7156f7f0acad1f2884db8b030",
+          "profile": "screen"
+        },
+        {
+          "job_id": "0e841841f0bc491fa29b6178a908ef4c",
+          "candidate_sha": "3e94580ec44609e7156f7f0acad1f2884db8b030",
           "profile": "full"
         }
       ],
