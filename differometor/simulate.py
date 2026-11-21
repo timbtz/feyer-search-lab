@@ -21,6 +21,7 @@ import jax
 from time import time
 import jax.numpy as jnp
 from jax import lax, vmap, jit
+from jax.scipy.linalg import lu_factor, lu_solve
 
 from differometor.setups import Setup
 from differometor.build import build, pairs_to_arrays, prepare_arrays, LINKING_FUNCTIONS
@@ -57,6 +58,40 @@ def solve(matrix: jnp.ndarray, right_hand_side: jnp.ndarray) -> jnp.ndarray:
     right_hand_side = right_hand_side.astype(jnp.complex128)
     matrix = matrix.astype(jnp.complex128)
     return jnp.linalg.solve(matrix, right_hand_side)
+
+
+def solve_with_factors(matrix, factors, right_hand_side, adjoint=False):
+    """Solve with reusable LU factors and differentiate the defining equation.
+
+    Factors are computed from stop-gradient matrices within each simulation.
+    ``custom_linear_solve`` differentiates A x = b, including the dependence on
+    A, without differentiating the pivoting algorithm. JAX's transpose rule is
+    a plain transpose even for complex arrays, hence the explicit conjugations
+    in the transpose solver for an adjoint system.
+    """
+    if adjoint:
+        system = jnp.conjugate(matrix.T)
+
+        def solve_rhs(_, rhs):
+            return lu_solve(factors, rhs, trans=2)
+
+        def transpose_solve_rhs(_, rhs):
+            return jnp.conjugate(lu_solve(factors, jnp.conjugate(rhs), trans=0))
+    else:
+        system = matrix
+
+        def solve_rhs(_, rhs):
+            return lu_solve(factors, rhs, trans=0)
+
+        def transpose_solve_rhs(_, rhs):
+            return lu_solve(factors, rhs, trans=1)
+
+    return lax.custom_linear_solve(
+        lambda vector: system @ vector,
+        right_hand_side.astype(jnp.complex128),
+        solve=solve_rhs,
+        transpose_solve=transpose_solve_rhs,
+    )
 
 
 def update(
@@ -339,7 +374,11 @@ def simulate(
         jnp.conjugate(signal_matrix[:, carrier_size : carrier_size * 2, carrier_size * 2 :])
     )
 
-    signal = vmap(solve)(signal_matrix[:, :, :-1], signal_matrix[:, :, -1])
+    signal_system = signal_matrix[:, :, :-1]
+    signal_factors = vmap(lu_factor)(lax.stop_gradient(signal_system))
+    signal = vmap(solve_with_factors, in_axes=(0, 0, 0, None))(
+        signal_system, signal_factors, signal_matrix[:, :, -1], False
+    )
 
     # --------------------
     # Quantum noise solve
@@ -374,12 +413,14 @@ def simulate(
     ].set(lower_carrier_selections)
 
     # Back-propagate detector weights by solving the transposed conjugated signal system.
-    transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(signal_matrix[:, :, :-1]), (0, 2, 1))
     carrier_selections = jnp.broadcast_to(
         carrier_selections,
-        (carrier_selections.shape[0], transposed_conjugated_signal_matrix.shape[0], carrier_selections.shape[2]),
+        (carrier_selections.shape[0], signal_system.shape[0], carrier_selections.shape[2]),
     )
-    noise_weights = vmap(vmap(solve), in_axes=(None, 0))(transposed_conjugated_signal_matrix, carrier_selections)
+    solve_frequency_batch = vmap(solve_with_factors, in_axes=(0, 0, 0, None))
+    noise_weights = vmap(solve_frequency_batch, in_axes=(None, None, 0, None))(
+        signal_system, signal_factors, carrier_selections, True
+    )
 
     # Update noise source matrix (may depend on current parameters).
     noise_matrix = vmap(update, in_axes=(0, None, None, None, None, None))(
@@ -411,7 +452,9 @@ def simulate(
 
     # Project noise sources into the system and propagate through the signal matrix.
     noise_sources = vmap(matmul_single_batch, in_axes=(None, 0))(noise_matrix, noise_weights)
-    covariances = vmap(vmap(solve), in_axes=(None, 0))(signal_matrix[:, :, :-1], noise_sources)
+    covariances = vmap(solve_frequency_batch, in_axes=(None, None, 0, None))(
+        signal_system, signal_factors, noise_sources, False
+    )
 
     # Convert propagated covariances into amplitude spectral density.
     temporary_sum = jnp.sum(jnp.real(covariances * jnp.conjugate(carrier_selections)), axis=2)
