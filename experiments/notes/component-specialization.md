@@ -115,3 +115,42 @@ Proposal: concatenate all evaluated group outputs and their original row indices
 Hypothesis: one reconstruction scatter may reduce intermediate update/transpose work and compilation compared with a chain of per-type scatters. Concatenation costs may offset this benefit; backend elimination of the previous intermediates has not been measured. No HLO or speedup claim. Require fresh full official and strict checks before accepting candidate 3; candidate 2 remains the validated fallback.
 
 Implementation complete. Syntax and diff whitespace checks passed. AST comparison against candidate 2 confirms that only the grouped output-reconstruction branch changed. Executed the actual old and new reconstruction AST blocks with list-backed array/scatter stubs on 104 deterministic cases, including empty groups, all 19 possible IDs, shuffled group order and zero-valued entries: restored outputs matched in every case. This verifies indexing/ordering mechanics, not JAX lowering, derivatives or physics. No local simulator or benchmark run. Candidate SHA and evaluation run IDs pending supervisor.
+
+## Candidate 3 evaluation and decision
+
+- SHA `e82b74c1d27425b9e0b44a377c222fb1654b895b`, immediate implementation parent `1b0def4a91575f7fb5bf9d062b3bff46b6c1593d`. No external combination.
+- Screen `e79786a7df314069a9485c60fa61c566`, request `c743d7eb0161415b8a000a01fc890e95`: screening passed; first-run 26.790161006 s, compilation/lowering 11.584146068 s, process wall 27.945163185 s, peak RSS 13280664 KiB.
+- Full `d78ce650cedf4fce844709e3f9e7eddc`, request `d585118ae73a4815a223d326e0e6fe9c`: official and strict passed; first-run 26.887085902 s, compilation/lowering 11.671893857 s, warm median 14.292649498 s, process wall 109.722902566 s, peak RSS 13299248 KiB. Full CPU2 workload/environment unchanged.
+
+| Full first-run phase | Seconds |
+| --- | ---: |
+| imports | 0.291335378 |
+| initialize | 0.002913447 |
+| load | 0.001423476 |
+| build | 0.784298800 |
+| forward lower | 0.742282812 |
+| forward compile | 4.843130931 |
+| forward execute | 12.238698130 |
+| sensitivity lower | 0.079772426 |
+| sensitivity compile | 0.378169376 |
+| sensitivity execute | 0.000833191 |
+| gradient lower | 0.301539470 |
+| gradient compile | 5.326998843 |
+| gradient execute | 1.895360677 |
+| host transfer | 0.000328945 |
+
+Comparison inspected: carrier, signal, noise, sensitivity, powers, parameters and frequencies match exactly (zero maximum absolute/relative-L2 errors). Gradient maximum absolute error 2.168404344971009e-18, relative L2 3.0759654812695556e-23, normalized tolerance error 3.7530746410341796e-11 and zero failures, at unchanged rtol=1e-7/scale_atol=1e-12. Loss is unchanged at 9.793036291535532e-08 in the report. Official gradient check passed; reference log-sensitivity error remains 5.374104176780747e-06. Saved comparisons cover last warm evaluation.
+
+Decision: reconstruction consolidation is correctness-validated but has no demonstrated timing advantage. Its full first-run is 0.078546 s slower than candidate 2, whereas screen is faster; warm medians differ by only 0.001502 s. Peak RSS is 48632 KiB lower in the full run, but repeat evidence is absent. Retain this simpler single-scatter implementation for the next experiment, not as a claim of measured speedup. Candidate 2 still holds the lowest observed validated full first-run time.
+
+## Candidate 4 proposal
+
+Same session/thread `01a1fedf-f7aa-77b2-885d-75aceeb4c48c`, 2595 seconds remaining on resumption; continue beyond candidate 4 within the existing deadline. Immediate numerical parent is validated candidate 3 `e82b74c1d27425b9e0b44a377c222fb1654b895b`; seed8 remains the original ancestor, and no external candidate is combined.
+
+Focused change: remove `jax.checkpoint` only from `_evaluate_component_group`, leaving its static-ID JIT helper, `vmap`, grouping/reconstruction and all physical operations intact. The dynamic fallback keeps seed8's checkpointed scalar switch.
+
+Rationale: checkpoint placement was previously evaluated around heterogeneous dispatch. Homogeneous groups no longer share a switch residual structure, and candidate 3 still spends 5.327 s compiling the gradient. Test whether ordinary autodiff of each homogeneous function yields a smaller reverse compilation and avoids recomputation, at the expense of retaining more forward intermediates. This is a new execution structure, not a re-run of seed7/seed8 checkpoint placement. It may worsen forward compilation, residual memory or total time. No claim that checkpointing caused the measured gradient compilation cost, and no HLO inspection. The full first-run objective, memory and strict full gradient determine acceptance.
+
+Candidate 4 SHA and run IDs pending supervisor; candidate 2/3 remain validated fallbacks. No local benchmark or numerical execution.
+
+Implementation ready. Syntax and whitespace checks passed; AST comparison to candidate 3 confirms only the homogeneous helper body changed. The dynamic fallback checkpoint and every builder, reconstruction, component and solve operation remain unchanged. Numerical correctness and timing require the supervisor's new evaluation.

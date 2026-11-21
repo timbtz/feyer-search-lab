@@ -71,8 +71,7 @@ def _evaluate_component(function_and_inputs):
 @partial(jit, static_argnums=(0,))
 def _evaluate_component_group(function_index, function_inputs):
     """Vectorize one component type without batching a dynamic branch selector."""
-    function = jax.checkpoint(FUNCTIONS[function_index], prevent_cse=False)
-    return vmap(function)(function_inputs)
+    return vmap(FUNCTIONS[function_index])(function_inputs)
 
 
 def update(
