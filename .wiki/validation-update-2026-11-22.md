@@ -144,3 +144,32 @@ GitHub tests and SMAC jobs passed. Four synthetic legacy false-pass reproduction
 (changed power, NaN loss, float32 gradient, missing reference) are recorded and
 all fail under the new audit. The extension is a reviewed-branch candidate;
 historical queue verdicts, deployed workers and acceptance policy are untouched.
+
+## Review of the later guard and reproducibility report
+
+Guard commit `a5a1069` allows exactly two package-set flags: XLA optimization
+level zero and fusion emitters disabled. It leaves the inherited environment
+sanitization intact. Read-only verification after the reported deployment denial
+still found primary worker PID44394, release `861601b9`, worker digest
+`d3c212da0ab1215187407d9cd21dc2cbb5f88dc0b5ee7885135bf7f002d14b58`.
+No deployment or worker restart was performed by this audit.
+
+A future deployment also needs the report consumers updated/versioned:
+`lab.evolution_evidence.normalize_job` invokes its locally imported
+`Worker._validate_report`. Updating only the remote worker can leave current
+dashboard/search consumers rejecting the same reports under their old validator.
+The recorded launch environment should remain sanitized (`XLA_FLAGS=None`);
+package-set flags belong in the reported effective environment. New worker hashes
+and comparison-policy cohorts must be recorded, not substituted into old evidence.
+
+The later `0900bb4` reproducibility note is useful evidence of sensitivity to
+BLAS implementation, but its statement that candidate error "never exceeds"
+baseline self-variation is too strong: its own `dev` row gives candidate 6.8e-8
+versus baseline variation 5.8e-8. Both are below the public tolerance; the
+overstatement matters mainly for interpretation. Changing BLAS kernels and
+observing a larger baseline disagreement does not define a new acceptance
+tolerance, prove which result is closer to the physical solution, or establish
+the judges' final reference procedure. Organizer questions must distinguish
+experimental evidence from actual organizer confirmation. The new modulation
+cases are additional positive evidence, not a waiver of the flagged random cases
+or the elementwise strict checks reported above.
