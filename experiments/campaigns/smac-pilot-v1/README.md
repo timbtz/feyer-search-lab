@@ -1,8 +1,8 @@
 # Campaign smac-pilot-v1
 
-Export schema: `feyer-campaign-export-v1`. Snapshot: `888f6faa037abc82ef1493b5b0c9ff1e27437e01cbe885a3094a0707b7fed7fb`.
+Export schema: `feyer-campaign-export-v1`. Snapshot: `43ce23407ddc3fef4e3680c8d713c4a547738b0470c535f0e5019361d147a330`.
 
-[Frozen proposer context](contexts/02007fee7ebaa50447629a1ab12f98b9fbfddecdeadbe91c36579bba06477c19.json) — SHA256 `02007fee7ebaa50447629a1ab12f98b9fbfddecdeadbe91c36579bba06477c19`.
+[Frozen proposer context](contexts/bf4171f9c050f122b607043bc0fa52cb627302a7744bd25d4c962d10ba94321e.json) — SHA256 `bf4171f9c050f122b607043bc0fa52cb627302a7744bd25d4c962d10ba94321e`.
 
 This is an evidence ledger. Scientific parents describe chosen inputs to an experiment; they are not necessarily Git parents. Phase changes are observations, not proof that one edit caused the difference. A failed attempt remains part of the history.
 
@@ -27,8 +27,10 @@ graph LR
   n4["import-71c96d778a8f8df5d5bbda23c6e623cf38de40f0 seed valid"]
   n5["c9e3130ddf1849c38e95c6b346a1b9bf mutate valid"]
   n6["c449d36a32d740d1b6265d2c3f106539 mutate valid"]
+  n7["82a14a89f0c54743910d7a18c9180435 mutate proposed"]
   n0 -->|mutate| n5
   n0 -->|mutate| n6
+  n0 -->|mutate| n7
 ```
 
 ## Candidate outcomes
@@ -42,6 +44,7 @@ graph LR
 | import-71c96d778a8f8df5d5bbda23c6e623cf38de40f0 | round-001 / discrete | root | 71c96d778a8f8df5d5bbda23c6e623cf38de40f0 | valid | 59.3904 | ec26950f0788435dbf930f9c1fb7c4a2:b8fbf377b58c48325c564e832e5e8bde6789142ffb745a4617879420f56113c2 |
 | c9e3130ddf1849c38e95c6b346a1b9bf | round-001 / discrete | seed8 | e1943cc1a433b736acf9d2462fe2cdf1e8b2e554 | valid | 29.2047 | 1cc208770b824cd1b23496e996972136:7155c1256fe3c6fbc3bb5fa6e1629b4d04db9d7744b054fe0a0d4ab0b75b6131, 0cab447d06c64b75bc7a04d93157aba3:f86bc41287a7d9566bc410c5f0ff6698ab5ea3200df226e17e75eb2cb5a0ce68 |
 | c449d36a32d740d1b6265d2c3f106539 | round-001 / discrete | seed8 | 117aeb29827cc84fbd34bed9ac519aee38e4512c | valid | 36.9376 | a7356c9700264509a9ca435ee63644c8:c43e8a1c116d77fe45406efbbe0bf2ef3dba5a88c8e2308b182977b81b9176d8, 00a050455c7446998974d85bb501ae60:5eac24ab30bb397a898e16903be1c1a0f95268f8dfbc358618408febd904e37d |
+| 82a14a89f0c54743910d7a18c9180435 | round-001 / discrete | seed8 | 984ea16695678254e5466b967e23f2d2108e61c1 | proposed | unknown | none |
 
 ## Round decisions and stalled work
 
@@ -111,7 +114,7 @@ Frozen specification: `8845f4d41a65ad79387ce3c77379b2938f526d89a6b392a20a17e4ffb
 }
 ```
 
-- round-001/discrete: ready; owner coordinator; strikes 2; reason not recorded
+- round-001/discrete: active; owner coordinator; strikes 2; reason not recorded
 
 ## Candidate evidence and proposed changes
 
@@ -3439,6 +3442,326 @@ Frozen specification: `8845f4d41a65ad79387ce3c77379b2938f526d89a6b392a20a17e4ffb
 }
 ```
 
+### 82a14a89f0c54743910d7a18c9180435
+
+```json
+{
+  "cohort_digest": null,
+  "commit_sha": "984ea16695678254e5466b967e23f2d2108e61c1",
+  "content_sha256": "58c60042111b88953587bbac665f8a1b040599208dd93b2924c39da08db9efd0",
+  "context_sha256": null,
+  "evaluation_requests": [],
+  "evidence": [],
+  "evidence_ids": [],
+  "git_parents": null,
+  "heuristic_id": null,
+  "hypothesis": null,
+  "improved": false,
+  "kind": "mutate",
+  "lane_id": "discrete",
+  "metrics": null,
+  "model_manifest": null,
+  "owner": "coordinator",
+  "owner_version": 1,
+  "parameters": {
+    "checkpoint": false,
+    "map_batch_size": 8,
+    "prevent_cse": false
+  },
+  "parameters_after": {
+    "checkpoint": false,
+    "map_batch_size": 8,
+    "prevent_cse": false
+  },
+  "parameters_before": null,
+  "parents": [
+    "seed8"
+  ],
+  "prompt_sha256": null,
+  "proposal": {
+    "candidate_id": "82a14a89f0c54743910d7a18c9180435",
+    "commit_sha": "984ea16695678254e5466b967e23f2d2108e61c1",
+    "content_sha256": "58c60042111b88953587bbac665f8a1b040599208dd93b2924c39da08db9efd0",
+    "kind": "mutate",
+    "lane_id": "discrete",
+    "parameters": {
+      "checkpoint": false,
+      "map_batch_size": 8,
+      "prevent_cse": false
+    },
+    "parents": [
+      "seed8"
+    ],
+    "proposal_id": "82a14a89f0c54743910d7a18c9180435",
+    "provenance": {
+      "acquisition_rank": 1,
+      "acquisition_score": 1.6015065146098777e-05,
+      "context": {
+        "bytes": 8824,
+        "path": "contexts/ba15b7d55bb250e306a01d1e529a8ce7ab31db462ba3b67f83be8bb0870bdd0f.json",
+        "sha256": "ba15b7d55bb250e306a01d1e529a8ce7ab31db462ba3b67f83be8bb0870bdd0f"
+      },
+      "context_sha256": "ba15b7d55bb250e306a01d1e529a8ce7ab31db462ba3b67f83be8bb0870bdd0f",
+      "controller_commit": "4c96219ccce100e80d920518daa00f80acfd19da",
+      "fit_and_select_seconds": 1.853755036368966,
+      "git_parent_sha": "716672d01d478a5deea1ecf0db6044f46954b0f4",
+      "heuristic_id": "smac-ask-tell-v1",
+      "hypothesis": "Evaluate the SMAC3 proposal under the fixed full correctness contract; speedup is unmeasured.",
+      "metadata": {
+        "acquisition_maximizer": "registered-finite-set",
+        "adapter_version": "smac-ask-tell-v1",
+        "failure_cost": 1000000.0,
+        "history": "one median of eligible full times per configuration; full scientific failures penalized",
+        "max_config_calls": 1,
+        "n_trees": 32,
+        "n_workers": 1,
+        "packages": {
+          "ConfigSpace": "1.2.2",
+          "numpy": "2.5.5",
+          "scikit-learn": "1.9.1",
+          "scipy": "1.18.1",
+          "smac": "2.4.1"
+        },
+        "random_probability": 0.0,
+        "source_sha256": "5284b879ba42976f353910adce432d68b51d95cd506a4bd7415e4b240e36fd7c",
+        "space_sha256": "9993dff59a63f5dea891fcea1033af409e05880d439ad1ebd02cd8f36837e0ae",
+        "space_version": "seed8-component-execution-v1",
+        "startup_configs": 4
+      },
+      "model": "SMAC3 random forest + expected improvement",
+      "model_calls": 0,
+      "model_trained": true,
+      "operator_version": "seed8-component-execution-v1",
+      "parameters_before": {
+        "checkpoint": true,
+        "map_batch_size": null,
+        "prevent_cse": false
+      },
+      "ranked_options": [
+        {
+          "parameters": {
+            "checkpoint": false,
+            "map_batch_size": 8,
+            "prevent_cse": false
+          },
+          "rank": 1,
+          "score": 1.6015065146098777e-05
+        },
+        {
+          "parameters": {
+            "checkpoint": false,
+            "map_batch_size": 4,
+            "prevent_cse": false
+          },
+          "rank": 2,
+          "score": 1.6015065146098777e-05
+        },
+        {
+          "parameters": {
+            "checkpoint": false,
+            "map_batch_size": 1,
+            "prevent_cse": false
+          },
+          "rank": 3,
+          "score": 1.5259625849668508e-05
+        },
+        {
+          "parameters": {
+            "checkpoint": true,
+            "map_batch_size": 4,
+            "prevent_cse": true
+          },
+          "rank": 4,
+          "score": 1.3820484840633922e-05
+        },
+        {
+          "parameters": {
+            "checkpoint": true,
+            "map_batch_size": 8,
+            "prevent_cse": true
+          },
+          "rank": 5,
+          "score": 1.3820484840633922e-05
+        },
+        {
+          "parameters": {
+            "checkpoint": true,
+            "map_batch_size": 2,
+            "prevent_cse": true
+          },
+          "rank": 6,
+          "score": 1.1635915954889883e-05
+        },
+        {
+          "parameters": {
+            "checkpoint": false,
+            "map_batch_size": 2,
+            "prevent_cse": false
+          },
+          "rank": 7,
+          "score": 1.0610356267746765e-05
+        },
+        {
+          "parameters": {
+            "checkpoint": true,
+            "map_batch_size": 8,
+            "prevent_cse": false
+          },
+          "rank": 8,
+          "score": 1.5232805452595765e-38
+        }
+      ],
+      "rejected_asks": [],
+      "selection_origin": "Acquisition Function Maximizer: Registered Finite Set",
+      "startup_remaining": 0,
+      "target_symbols": [
+        "simulate._evaluate_component",
+        "simulate.update"
+      ],
+      "training_configurations": 7,
+      "trial_seed": 0
+    },
+    "recipe": "discrete",
+    "round_id": "round-001"
+  },
+  "proposal_id": "82a14a89f0c54743910d7a18c9180435",
+  "provenance": {
+    "acquisition_rank": 1,
+    "acquisition_score": 1.6015065146098777e-05,
+    "context": {
+      "bytes": 8824,
+      "path": "contexts/ba15b7d55bb250e306a01d1e529a8ce7ab31db462ba3b67f83be8bb0870bdd0f.json",
+      "sha256": "ba15b7d55bb250e306a01d1e529a8ce7ab31db462ba3b67f83be8bb0870bdd0f"
+    },
+    "context_sha256": "ba15b7d55bb250e306a01d1e529a8ce7ab31db462ba3b67f83be8bb0870bdd0f",
+    "controller_commit": "4c96219ccce100e80d920518daa00f80acfd19da",
+    "fit_and_select_seconds": 1.853755036368966,
+    "git_parent_sha": "716672d01d478a5deea1ecf0db6044f46954b0f4",
+    "heuristic_id": "smac-ask-tell-v1",
+    "hypothesis": "Evaluate the SMAC3 proposal under the fixed full correctness contract; speedup is unmeasured.",
+    "metadata": {
+      "acquisition_maximizer": "registered-finite-set",
+      "adapter_version": "smac-ask-tell-v1",
+      "failure_cost": 1000000.0,
+      "history": "one median of eligible full times per configuration; full scientific failures penalized",
+      "max_config_calls": 1,
+      "n_trees": 32,
+      "n_workers": 1,
+      "packages": {
+        "ConfigSpace": "1.2.2",
+        "numpy": "2.5.5",
+        "scikit-learn": "1.9.1",
+        "scipy": "1.18.1",
+        "smac": "2.4.1"
+      },
+      "random_probability": 0.0,
+      "source_sha256": "5284b879ba42976f353910adce432d68b51d95cd506a4bd7415e4b240e36fd7c",
+      "space_sha256": "9993dff59a63f5dea891fcea1033af409e05880d439ad1ebd02cd8f36837e0ae",
+      "space_version": "seed8-component-execution-v1",
+      "startup_configs": 4
+    },
+    "model": "SMAC3 random forest + expected improvement",
+    "model_calls": 0,
+    "model_trained": true,
+    "operator_version": "seed8-component-execution-v1",
+    "parameters_before": {
+      "checkpoint": true,
+      "map_batch_size": null,
+      "prevent_cse": false
+    },
+    "ranked_options": [
+      {
+        "parameters": {
+          "checkpoint": false,
+          "map_batch_size": 8,
+          "prevent_cse": false
+        },
+        "rank": 1,
+        "score": 1.6015065146098777e-05
+      },
+      {
+        "parameters": {
+          "checkpoint": false,
+          "map_batch_size": 4,
+          "prevent_cse": false
+        },
+        "rank": 2,
+        "score": 1.6015065146098777e-05
+      },
+      {
+        "parameters": {
+          "checkpoint": false,
+          "map_batch_size": 1,
+          "prevent_cse": false
+        },
+        "rank": 3,
+        "score": 1.5259625849668508e-05
+      },
+      {
+        "parameters": {
+          "checkpoint": true,
+          "map_batch_size": 4,
+          "prevent_cse": true
+        },
+        "rank": 4,
+        "score": 1.3820484840633922e-05
+      },
+      {
+        "parameters": {
+          "checkpoint": true,
+          "map_batch_size": 8,
+          "prevent_cse": true
+        },
+        "rank": 5,
+        "score": 1.3820484840633922e-05
+      },
+      {
+        "parameters": {
+          "checkpoint": true,
+          "map_batch_size": 2,
+          "prevent_cse": true
+        },
+        "rank": 6,
+        "score": 1.1635915954889883e-05
+      },
+      {
+        "parameters": {
+          "checkpoint": false,
+          "map_batch_size": 2,
+          "prevent_cse": false
+        },
+        "rank": 7,
+        "score": 1.0610356267746765e-05
+      },
+      {
+        "parameters": {
+          "checkpoint": true,
+          "map_batch_size": 8,
+          "prevent_cse": false
+        },
+        "rank": 8,
+        "score": 1.5232805452595765e-38
+      }
+    ],
+    "rejected_asks": [],
+    "selection_origin": "Acquisition Function Maximizer: Registered Finite Set",
+    "startup_remaining": 0,
+    "target_symbols": [
+      "simulate._evaluate_component",
+      "simulate.update"
+    ],
+    "training_configurations": 7,
+    "trial_seed": 0
+  },
+  "recipe": "discrete",
+  "response_sha256": null,
+  "round_id": "round-001",
+  "target_symbols": null,
+  "uncertainty": "No repeat-confirmation or causality is inferred from this export. Inspect exact job evidence and matching cohorts.",
+  "valid": false
+}
+```
+
 ## Decision and failure trail
 
 | Sequence | Event | Actor | Detail |
@@ -3478,5 +3801,6 @@ Frozen specification: `8845f4d41a65ad79387ce3c77379b2938f526d89a6b392a20a17e4ffb
 | 33 | evidence_observed | coordinator | {"candidate_id": "c449d36a32d740d1b6265d2c3f106539", "category": "valid", "evidence_digest": "49ce48bf32bc68b91c1e495258bffaf611aea65706f08efcb84e79fe6660c1ac", "evidence_id": "00a050455c7446998974d85bb501ae60:5eac24ab30bb397a898e16903be1c1a0f95268f8dfbc358618408febd904e37d", "job_id": "00a050455c7446998974d85bb501ae60", "progress": {"axes": ["compilation", "runtime", "peak_rss_bytes"], "meaningful_pareto": false, "meaningful_total": false, "policy": {"absolute": 0.02, "relative": 0.01}, "reference_best_total": 28.09352152608335, "reference_parents": ["seed8"]}, "status": "valid", "strikes": 2} |
 | 34 | decision_recorded | coordinator | {"decision_id": "4bfbe24fcbf94b3e87e84ada98430ea0", "payload": {"plan": {"action": "mutate", "attempted_parameters": [{"checkpoint": true, "map_batch_size": null, "prevent_cse": false}, {"checkpoint": true, "map_batch_size": null, "prevent_cse": true}, {"checkpoint": true, "map_batch_size": 1, "prevent_cse": false}, {"checkpoint": true, "map_batch_size": 2, "prevent_cse": false}, {"checkpoint": true, "map_batch_size": 4, "prevent_cse": false}, {"checkpoint": false, "map_batch_size": null, "prevent_cse": false}, {"checkpoint": true, "map_batch_size": 1, "prevent_cse": true}], "base_candidate": "seed8", "dimensions": ["checkpoint", "prevent_cse", "map_batch_size"], "lane_id": "discrete", "o… [full detail in events.jsonl] |
 | 35 | decision_recorded | coordinator | {"decision_id": "82a14a89f0c54743910d7a18c9180435", "payload": {"acquisition_rank": 1, "acquisition_score": 1.6015065146098777e-05, "context": {"bytes": 8824, "path": "contexts/ba15b7d55bb250e306a01d1e529a8ce7ab31db462ba3b67f83be8bb0870bdd0f.json", "sha256": "ba15b7d55bb250e306a01d1e529a8ce7ab31db462ba3b67f83be8bb0870bdd0f"}, "fit_and_select_seconds": 1.853755036368966, "heuristic_id": "smac-ask-tell-v1", "hypothesis": "Evaluate the SMAC3 proposal under the fixed full correctness contract; speedup is unmeasured.", "metadata": {"acquisition_maximizer": "registered-finite-set", "adapter_version": "smac-ask-tell-v1", "failure_cost": 1000000.0, "history": "one median of eligible full times pe… [full detail in events.jsonl] |
+| 36 | candidate_proposed | coordinator | {"candidate_id": "82a14a89f0c54743910d7a18c9180435", "duplicate_of": null, "owner_version": 1, "proposal_digest": "357c8b0ed892ef49dad74a8b0cc31aaeb2614fef1b9b57081d119c9534195045", "proposal_id": "82a14a89f0c54743910d7a18c9180435"} |
 
 Guidance may propose a new round. It cannot silently replace frozen operators, ownership, evaluation requirements or budgets. Only the coordinator can admit that round through the campaign state API. Publishing this ledger does not merge or promote candidate code.
