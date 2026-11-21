@@ -189,9 +189,25 @@ def _component_values(
                 differentiable = tuple(
                     slot in diff_slots[function_index] for slot in range(group_inputs.shape[1])
                 )
-                group_values.append(
-                    _evaluate_component_group_slots(function_index, differentiable, group_inputs)
-                )
+                row_split = component_groups.get("row_split", {})
+                if function_index in row_split:
+                    # Mixed groups are ordered as [dependent rows, constant rows].
+                    # Separate evaluation preserves zero tangents for the latter.
+                    count = next(iter(row_split[function_index]))
+                    group_values.append(
+                        _evaluate_component_group_slots(
+                            function_index, differentiable, group_inputs[:count]
+                        )
+                    )
+                    group_values.append(
+                        _evaluate_component_group_slots(
+                            function_index, (False,) * len(differentiable), group_inputs[count:]
+                        )
+                    )
+                else:
+                    group_values.append(
+                        _evaluate_component_group_slots(function_index, differentiable, group_inputs)
+                    )
             else:
                 group_values.append(_evaluate_component_group(function_index, group_inputs))
         if group_values:
@@ -1035,6 +1051,40 @@ def run_build_step(
                 if any(int(i) in differentiable_indices for i in indices[:, slot])
             }
         group["diff_slots"] = diff_slots
+
+        if "function_rows" not in group or "output_rows" not in group:
+            continue
+        # Stable partition each mixed function group by dependency. Keep both
+        # selector representations consistent with the new concatenated order.
+        output_rows = np.asarray(group["output_rows"])
+        new_position = np.arange(output_rows.size, dtype=output_rows.dtype)
+        row_split = {}
+        offset = 0
+        for function_index in sorted(group["function_rows"]):
+            rows = np.asarray(group["function_rows"][function_index])
+            size = rows.shape[0]
+            indices = np.asarray(group["parameter_indices"][function_index])
+            if indices.ndim == 2 and indices.shape[0] == size and function_index in diff_slots:
+                live = np.array(
+                    [any(int(i) in differentiable_indices for i in row) for row in indices],
+                    dtype=bool,
+                )
+                count = int(live.sum())
+                if 0 < count < size:
+                    order = np.concatenate([np.flatnonzero(live), np.flatnonzero(~live)])
+                    new_position[offset + order] = offset + np.arange(size)
+                    group["parameter_indices"][function_index] = jnp.asarray(indices[order])
+                    group["function_rows"][function_index] = jnp.asarray(rows[order])
+                    row_split[function_index] = {count: ()}
+            offset += size
+        if row_split:
+            group["output_rows"] = jnp.asarray(new_position[output_rows])
+            if "flat_output_indices" in group:
+                flat = np.asarray(group["flat_output_indices"])
+                group["flat_output_indices"] = jnp.asarray(
+                    (new_position[flat // 4] * 4 + flat % 4).astype(flat.dtype)
+                )
+            group["row_split"] = row_split
 
     simulation_arrays["component_groups"] = component_groups
 
