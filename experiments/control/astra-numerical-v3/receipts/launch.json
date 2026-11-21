@@ -1,0 +1,9 @@
+{
+  "pid": 88086,
+  "started_at": 1795296282.878179,
+  "deadline_unix": 1795299882.878179,
+  "script": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/astra-numerical-control/experiments/control/astra-numerical-v3/seed.py",
+  "script_sha256": "3263cce9f187ef2bd2517c061fc30310a6065eea49bfe350e0a716d05e18da7e",
+  "runtime_sha": "43dacfb5f65005060b83bf27ba2e94990df22050",
+  "status": "seed_bootstrap_launched"
+}

@@ -1,0 +1,27 @@
+{
+  "campaign_id": "astra-numerical-v3",
+  "start_unix": 1795296282.878179,
+  "deadline_unix": 1795299882.878179,
+  "max_total_jobs": 40,
+  "seed_jobs_reserved": 1,
+  "seed_sha": "7d1ccc59cef3d7436870bb0e6c941dbde4c30770",
+  "seed_branch": "explore/codex-profile-guided-v1",
+  "host": "amd-hackathon",
+  "root": "/workspace/feyer-lab-lane1",
+  "policy": {
+    "worker_sha256": "d3c212da0ab1215187407d9cd21dc2cbb5f88dc0b5ee7885135bf7f002d14b58",
+    "evaluator_sha256": "d5950bbd872e5b00ad63f0bd7081e5096fb14ba9c96c80a6854a3b714719bd4e",
+    "comparison_evaluator_sha256": "1bc9b39fe0023afc3db93211b9e3d6cd37ed2b13ee281f142749c2237a16ea8f",
+    "reference_arrays_sha256": "c3f6cba045f8b41f488dc19c960f5056b5f2e75cfa64f9a687b52f2a9ba2751e",
+    "memory_budget_bytes": 16000000000,
+    "cpu": 34
+  },
+  "manifest_digest": "20fa7bb780f4e106cf3e9aeb25f4e32dd35a004f168af191dae84ce28a965f64",
+  "seed_request": {
+    "request_id": "d8b617492383460a85d192baacaef6a3",
+    "job_id": "289b4b960fa642a7996354692d43e873"
+  },
+  "controller_sha": "43dacfb5f65005060b83bf27ba2e94990df22050",
+  "menu_status": "awaiting_source_and_ownership_review",
+  "authorization": "Fresh40job60min round relayed by coordinating profiler; old window not extended."
+}
