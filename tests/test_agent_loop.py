@@ -341,6 +341,34 @@ class AgentLoopIntegrationTests(unittest.TestCase):
                 self.assertEqual(receipt['text'], guidance.read_text())
                 saved = repo / '.lab/sessions/trial/continuation-guidance' / (receipt['sha256'] + '.json')
                 self.assertEqual(json.loads(saved.read_text()), receipt)
+                # Recover an already returned response after the coordinator supplies
+                # different guidance. Its provenance belongs to the dispatched turn.
+                for has_context in (True, False):
+                    number = resumed['candidates'] + 1
+                    old_context = third['agent_context']
+                    pending = {'number': number, 'iteration': number,
+                               'before_sha': git(worktree, 'rev-parse', 'HEAD'),
+                               'input_receipt': third['input_receipt'],
+                               'response': {'summary': 'Recovered candidate', 'hypothesis': 'safe',
+                                            'ready_for_evaluation': True, 'stop': True, 'notes': ''}}
+                    if has_context:
+                        pending['agent_context'] = old_context
+                    resumed['pending_turn'] = pending
+                    (worktree / 'differometor/simulate.py').write_text(f'# recovered {number}\n')
+                    status_path = repo / '.lab/sessions/trial/status.json'
+                    status_path.write_text(json.dumps(resumed))
+                    guidance.write_text('Different instructions for future turns only.')
+                    args.max_candidates = number
+                    with patch('lab.agent_loop.Client', return_value=client), \
+                         patch('lab.agent_loop.codex_turn') as no_new_turn, \
+                         patch('lab.agent_loop.github_status'):
+                        run(args)
+                    no_new_turn.assert_not_called()
+                    recovered = json.loads((reports / f'candidate-{number:02d}.json').read_text())
+                    self.assertEqual(recovered['agent_context'], old_context if has_context else None)
+                    self.assertEqual(recovered['input_receipt'], third['input_receipt'])
+                    resumed = json.loads(status_path.read_text())
+                    self.assertEqual(resumed['fixed_deadline_unix'], args.deadline_unix)
 
 
 if __name__ == "__main__":
