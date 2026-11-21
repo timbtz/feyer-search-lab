@@ -112,6 +112,112 @@ class ObservatoryTests(unittest.TestCase):
         self.assertEqual(result['strict_check'],'not_run')
         self.assertEqual(result['metrics'],{})
 
+    def test_job_comparison_provenance_requires_recorded_context(self):
+        from tests.test_evolution_evidence import full_job
+        from lab.phase_report import signature
+        job = full_job()
+        result = job_summary(job, 'AMD queue (read-only SSH)')
+        self.assertEqual(result['timing_signature'], signature(job['report.json']))
+        self.assertTrue(result['evidence']['eligible_full'])
+        self.assertTrue(result['evidence']['cohort_digest'])
+        self.assertIsNone(result['instance'])
+        self.assertIsNone(result['comparison_context'])
+        self.assertIsNone(result['provenance'])
+        self.assertEqual(result['evaluation_provenance']['reported_candidate_sha'], job['sha'])
+        self.assertEqual(result['evaluation_provenance']['protected_baseline_sha'], job['result']['baseline_sha'])
+        self.assertNotIn('parent_run_key', result)
+        self.assertNotIn('delta', result)
+
+    def test_recorded_job_context_is_preserved_and_sanitized(self):
+        from tests.test_evolution_evidence import full_job
+        job = full_job()
+        secret = 'ghp_' + 'a' * 30
+        job.update(instance='amd-a', comparison_context=dict(mode='serial', epoch=4,
+            receipt='recorded receipt', access_token=secret),
+            provenance=dict(parent_candidates=['b' * 40], summary='Recorded change ' + secret),
+            started_at=100, finished_at=200)
+        result = job_summary(job)
+        self.assertEqual(result['instance'], 'amd-a')
+        self.assertEqual(result['comparison_context'], dict(mode='serial', epoch=4, receipt='recorded receipt'))
+        self.assertEqual(result['provenance']['parent_candidates'], ['b' * 40])
+        self.assertEqual(result['evaluation_provenance']['finished_at'], 200)
+        self.assertNotIn(secret, json.dumps(result))
+
+    def test_timing_report_does_not_imply_eligibility_or_valid_context(self):
+        from tests.test_evolution_evidence import full_job
+        job = full_job()
+        job['result'].pop('worker_sha256')
+        job.update(instance=['amd-a'], comparison_context='serial', provenance=['parent'])
+        result = job_summary(job)
+        self.assertTrue(result['timing_signature'])
+        self.assertFalse(result['evidence']['eligible_full'])
+        self.assertIsNone(result['evidence']['cohort_digest'])
+        self.assertTrue(result['evidence']['issues'])
+        for key in ('instance', 'comparison_context', 'provenance'):
+            self.assertIsNone(result[key])
+        job['status'] = 'running'
+        self.assertIsNone(job_summary(job)['evidence'])
+
+    def test_job_cohort_changes_with_worker_even_when_signature_matches(self):
+        from tests.test_evolution_evidence import full_job
+        job = full_job()
+        before = job_summary(job)
+        job['result']['worker_sha256'] = 'e' * 64
+        after = job_summary(job)
+        self.assertEqual(before['timing_signature'], after['timing_signature'])
+        self.assertNotEqual(before['evidence']['cohort_digest'], after['evidence']['cohort_digest'])
+
+    def test_feedback_join_uses_exact_job_sha_and_profile_without_mutating_source(self):
+        from tests.test_evolution_evidence import full_job
+        job = full_job()
+        path = self.root/'.lab/worktrees/agent/experiments/runs/agent/candidate-01.json'
+        path.parent.mkdir(parents=True)
+        secret = 'ghp_' + 'a' * 30
+        feedback = dict(candidate_sha=job['sha'], full=job,
+            agent_response=dict(summary='Changed solver ' + secret, hypothesis='Expected faster solve'),
+            provenance=dict(parent_candidates=['b' * 40]))
+        path.write_text(json.dumps(feedback))
+        original = job_summary(job)
+        jobs = {job['id']: original}
+        self.obs.recorded_feedback(jobs)
+        record = jobs[job['id']]['recorded_feedback']
+        self.assertEqual(record['parent_candidates'], ['b' * 40])
+        self.assertEqual(record['status'], 'recorded')
+        self.assertNotIn(secret, json.dumps(record))
+        self.assertNotIn('recorded_feedback', original)
+        for key, value in [('sha', 'c' * 40), ('profile', 'screen'), ('id', 'another-job')]:
+            changed = dict(original, **{key: value})
+            jobs = {changed['id']: changed}
+            self.obs.recorded_feedback(jobs)
+            self.assertNotIn('recorded_feedback', jobs[changed['id']])
+
+    def test_conflicting_feedback_does_not_choose_a_scientific_parent(self):
+        from tests.test_evolution_evidence import full_job
+        job = full_job()
+        root = self.root/'experiments/runs/agent'
+        root.mkdir(parents=True)
+        for number, parent in enumerate(['b' * 40, 'c' * 40]):
+            (root/f'candidate-{number}.json').write_text(json.dumps(dict(candidate_sha=job['sha'], full=job,
+                agent_response=dict(summary='Recorded change'), provenance=dict(parent_candidates=[parent]))))
+        jobs = {job['id']: job_summary(job)}
+        self.obs.recorded_feedback(jobs)
+        record = jobs[job['id']]['recorded_feedback']
+        self.assertEqual(record['status'], 'conflicting_records')
+        self.assertIsNone(record['parent_candidates'])
+        self.assertIsNone(record['summary'])
+        self.assertEqual(len(record['sources']), 2)
+
+    def test_feedback_symlinked_worktree_is_not_read(self):
+        external = self.root/'outside'
+        path = external/'experiments/runs/agent/candidate-01.json'
+        path.parent.mkdir(parents=True)
+        path.write_text('{}')
+        root = self.root/'.lab/worktrees'
+        root.mkdir(parents=True)
+        (root/'agent').symlink_to(external, target_is_directory=True)
+        with patch.object(self.obs, 'cached_json', side_effect=AssertionError('must not read')):
+            self.obs.recorded_feedback({})
+
     def test_corrupt_campaign_is_reported_without_hiding_others(self):
         bad=self.root/'.lab/campaigns/broken/campaign.sqlite3';bad.parent.mkdir()
         bad.write_bytes(b'broken')

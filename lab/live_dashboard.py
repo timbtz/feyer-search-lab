@@ -171,7 +171,8 @@ def process_status(pid, expected=None):
 
 
 def job_summary(job, source='local artifact'):
-    from .phase_report import metrics
+    from .phase_report import metrics, signature
+    from .evolution_evidence import normalize_job
     report = job.get('report.json') or {}
     execution = job.get('result') or {}
     comparison = job.get('comparison.json') or {}
@@ -188,6 +189,34 @@ def job_summary(job, source='local artifact'):
     out['warm_timing'] = report.get('timing_seconds', {}).get('phase_runtime_medians', {})
     out['resource_evidence'] = execution.get('memory_monitoring', {})
     out['comparison'] = comparison
+    # Timing identity is separate from scientific eligibility. A signature alone
+    # neither identifies a physical instance nor proves an uncontended run.
+    try:
+        out['timing_signature'] = signature(report) if out['metrics'] else None
+    except (KeyError, ValueError, TypeError, AttributeError):
+        out['timing_signature'] = None
+    try:
+        evidence = normalize_job(job)
+        out['evidence'] = {key: evidence.get(key) for key in (
+            'schema_version', 'job_id', 'candidate_sha', 'profile', 'execution_status',
+            'category', 'eligible_full', 'cohort_digest', 'checks', 'issues', 'artifact_digest')}
+    except (KeyError, ValueError, TypeError, AttributeError):
+        out['evidence'] = None
+    out['instance'] = job.get('instance') if isinstance(job.get('instance'), str) else None
+    for key in ('comparison_context', 'provenance'):
+        out[key] = job.get(key) if isinstance(job.get(key), dict) else None
+    reported_source = report.get('source')
+    reported_source = reported_source if isinstance(reported_source, dict) else {}
+    out['evaluation_provenance'] = dict(
+        reported_candidate_sha=reported_source.get('commit'),
+        protected_baseline_sha=execution.get('baseline_sha'),
+        evaluator_sha256=execution.get('evaluator_sha256'),
+        reported_evaluator_sha256=report.get('starter_sha256'),
+        worker_sha256=execution.get('worker_sha256'),
+        comparison_evaluator_sha256=execution.get('comparison_evaluator_sha256'),
+        reference_arrays_sha256=execution.get('reference_arrays_sha256'),
+        measured_at=report.get('measured_at_utc'),
+        started_at=job.get('started_at'), finished_at=job.get('finished_at'))
     out['log_tail'] = public('\n'.join(str(job.get(k, ''))[-4000:] for k in ('stdout.log', 'stderr.log', 'run.log') if job.get(k)))
     return public(out)
 
@@ -381,6 +410,50 @@ class Observatory:
                 rows.append(dict(id=path.parent.name if path.name=='status.json' else path.stem, status='unreadable', source=str(path.relative_to(self.repo))))
         return public(rows)
 
+    def recorded_feedback(self, jobs):
+        """Join agent statements by exact evaluated identity, never code ancestry."""
+        paths = list((self.repo/'experiments/runs').glob('*/candidate-*.json'))
+        paths += list((self.lab/'worktrees').glob('*/experiments/runs/*/candidate-*.json'))
+        paths += list((self.lab/'campaigns').glob('*/worktree/experiments/runs/*/candidate-*.json'))
+        matches = {}
+        for path in sorted(paths):
+            # A worktree directory symlink must not turn this into an arbitrary
+            # filesystem reader; cached_json also caps each artifact's size.
+            if any(parent.is_symlink() for parent in (path, *path.parents) if parent != self.repo):
+                continue
+            try:
+                feedback = self.cached_json(path)
+                if not isinstance(feedback, dict):
+                    continue
+                response, provenance = feedback.get('agent_response'), feedback.get('provenance')
+                response = response if isinstance(response, dict) else {}
+                provenance = provenance if isinstance(provenance, dict) else {}
+                parents = provenance.get('parent_candidates')
+                if not isinstance(parents, list) or not all(isinstance(p, str) and re.fullmatch(r'[0-9a-f]{40}', p) for p in parents):
+                    parents = None
+                record = dict(summary=response.get('summary') if isinstance(response.get('summary'), str) else None,
+                    hypothesis=response.get('hypothesis') if isinstance(response.get('hypothesis'), str) else None,
+                    parent_candidates=parents)
+                for profile in ('screen', 'full'):
+                    job = feedback.get(profile)
+                    if not isinstance(job, dict) or not isinstance(job.get('id'), str):
+                        continue
+                    target = jobs.get(job['id'])
+                    if (not target or job.get('sha') != target.get('sha')
+                            or feedback.get('candidate_sha') != target.get('sha')
+                            or job.get('profile') != profile or target.get('profile') != profile):
+                        continue
+                    matches.setdefault(job['id'], []).append((record, str(path.relative_to(self.repo))))
+            except (OSError, ValueError, TypeError):
+                continue
+        for job_id, entries in matches.items():
+            record = entries[0][0]
+            conflict = any(other != record for other, _ in entries)
+            if conflict:
+                record = dict(summary=None, hypothesis=None, parent_candidates=None)
+            jobs[job_id] = dict(jobs[job_id], recorded_feedback=public(dict(record,
+                status='conflicting_records' if conflict else 'recorded', sources=[source for _, source in entries])))
+
     def state(self):
         now = time.time()
         team, team_source = self.team_snapshot(now)
@@ -402,6 +475,7 @@ class Observatory:
         with self.lock:
             queue = dict(self.remote)
             jobs.update(self.remote_details)
+        self.recorded_feedback(jobs)
         queue['stale'] = queue['observed_at'] is None or now-queue['observed_at'] > 45
         historical = {}
         try:
