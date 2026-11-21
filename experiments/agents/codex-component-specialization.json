@@ -1,0 +1,36 @@
+{
+  "agent_id": "codex-component-specialization",
+  "provider": "codex",
+  "branch": "explore/component-specialization",
+  "direction": "static-component-specialization",
+  "parent_candidates": [
+    "1e552d675c3795265be8af1ac23ffb61f90f30b1"
+  ],
+  "combined_candidates": [],
+  "approach_tags": [
+    "component-dispatch",
+    "setup-structure",
+    "compilation"
+  ],
+  "touched_components": [
+    "simulate.update",
+    "build.prepare_arrays"
+  ],
+  "brief_path": "experiments/briefs/codex-component-specialization.md",
+  "brief_sha256": "e76d56f473a3a262e539c565c286b6b0df1e493ed6348824602ab02ab08c4248",
+  "context_path": "experiments/context/search-initial.json",
+  "context_sha256": "2f93efda0b67bc6b9b0a4a77e7e321fc92a565fc7cb888d8bbe3aa856cc4d335",
+  "budget_minutes": 60,
+  "candidate_limit": null,
+  "status": "launching_local_fallback",
+  "model_policy": "Inherit the existing Codex model and reasoning configuration; no model change requested.",
+  "evaluation": "Audited shared serial queue, unchanged benchmark, exact candidate commits and request IDs.",
+  "first_deliverable": "Source evidence and focused implementation proposal before simulator edits.",
+  "merge_policy": "No merge to main. Combination candidates need separate evaluation and architectural review.",
+  "runtime_commit": "fdff88a88a2a35aae03e1436ebd709ff8006e44d",
+  "runtime_root": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/server-agents",
+  "worktree": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/codex-component-specialization",
+  "starting_revision": "1e552d675c3795265be8af1ac23ffb61f90f30b1",
+  "execution_host": "local Mac; evaluation on AMD",
+  "server_migration_status": "Blocked by provider connectivity; user approved local fallback"
+}
