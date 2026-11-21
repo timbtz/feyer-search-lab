@@ -1,0 +1,9 @@
+{
+  "summary": "Wrote experiments/notes/hetzner-guidance-001.md proposing future component scan-unroll values {1,2,4}.",
+  "hypothesis": "Small scalar scan unroll factors may reduce loop overhead while increasing compilation cost or memory; no speedup is measured.",
+  "heuristic_id": "scalar-component-scan-unroll-v1",
+  "parameters_before_json": "{}",
+  "parameters_after_json": "{}",
+  "notes": "The note includes source citations, seed evidence, implementation scope, phase tradeoffs and correctness checks. Simulator digest is unchanged. No benchmarks ran. Guidance turn complete; stop=true.",
+  "ready_for_evaluation": false
+}
