@@ -62,7 +62,8 @@ def initialize(args):
         raise ValueError('Seed observations must share the same complete evaluation cohort')
     selector = getattr(args, 'selector', 'qwen')
     deterministic = selector != 'qwen'
-    if selector not in ('qwen', 'enumeration', 'local-search'):
+    from .search_policy import STRATEGIES, resolve
+    if selector not in STRATEGIES:
         raise ValueError('Unknown search selector')
     model = None if deterministic else settings(args.env_file)[1]
     source = source_from_git(args.repo)
@@ -75,6 +76,28 @@ def initialize(args):
         prior = prior_observations(args.prior_full, jobs[0], source, policy, normalize_job)
         if any(e['cohort_digest'] != evidence[0]['cohort_digest'] for _, _, _, e in prior):
             raise ValueError('Prior evidence does not match the frozen full cohort')
+    observed = {content_identity(source)} | {digest for _, digest, _, _ in prior}
+    selection_policy = resolve(selector, len(assignments()) - len(observed), args.max_evaluations)
+    selector = selection_policy['effective']
+    optimizer = None
+    if selector == 'smac':
+        from .smac_transport import invoke, verify_metadata
+        host = getattr(args, 'smac_host', None)
+        endpoint = None
+        if host:
+            endpoint = {'host': host, 'python': args.smac_python, 'root': args.smac_root}
+        elif getattr(args, 'smac_python', None) or getattr(args, 'smac_root', None):
+            raise ValueError('Remote SMAC paths require --smac-host')
+        seed = getattr(args, 'search_seed', 0)
+        if type(seed) is not int or not 0 <= seed < 2**31:
+            raise ValueError('Search seed must be an integer between 0 and 2**31-1')
+        optimizer = {'metadata': verify_metadata(invoke({'action': 'metadata'}, endpoint)),
+                     'endpoint': endpoint, 'seed': seed}
+    deadline = time.time() + args.minutes * 60
+    if getattr(args, 'deadline_unix', None) is not None:
+        deadline = min(deadline, args.deadline_unix)
+    if not time.time() < deadline < float('inf'):
+        raise ValueError('Campaign requires a finite future deadline')
     if git(args.repo, 'status', '--porcelain'):
         raise ValueError('Initialize from a clean controller checkout')
     branch = 'explore/' + args.name
@@ -85,18 +108,19 @@ def initialize(args):
     atomic_json(state / 'runtime.json', {'repo': str(worktree), 'branch': branch,
         'campaign_id': args.name, 'policy': policy, 'env_file': str(args.env_file.resolve()),
         'host': args.host, 'root': args.root, 'publish': args.publish,
-        'selector': selector})
+        'selector': selector, 'optimizer': optimizer})
     campaign = Campaign(state / 'campaign.sqlite3')
     spec = {'campaign_id': args.name, 'space_version': SPACE_VERSION,
             'controller_commit': git(Path(__file__).resolve().parents[1], 'rev-parse', 'HEAD'),
             'budget': {'max_proposals': 1000, 'max_evaluations': args.max_evaluations,
                        'max_model_calls': 0 if deterministic else args.max_model_calls,
-                       'deadline_unix': time.time() + args.minutes * 60},
+                       'deadline_unix': deadline},
             'objective': {'primary': 'total', 'direction': 'minimize',
                           'pareto_axes': ['compilation', 'runtime', 'peak_rss_bytes'],
                           'full_workload': {'frequencies': 101, 'variables': 193,
                                             'precision': 'float64/complex128'}},
             'selector': selector,
+            'selection_policy': selection_policy, 'optimizer': optimizer,
             'model_manifest': {'qwen': {'provider': 'amd-token-factory', 'model': model},
                 'strong': {'codex': 'inherit designated Codex configuration',
                            'claude': 'claude-opus-5-5', 'automatic_launch': False}},
@@ -104,7 +128,7 @@ def initialize(args):
             'initial_seed_author': 'validated Codex seed8, three fresh full measurements',
             'guidance_policy': 'New operators require a strong-agent proposal and coordinator-frozen new round; no automatic budget extension'}
     if deterministic:
-        spec['model_manifest'] = {'selection': {'implementation': 'lab.discrete_search',
+        spec['model_manifest'] = {'selection': {'implementation': 'lab.smac_search' if selector == 'smac' else 'lab.discrete_search',
                                                'selector': selector, 'model_calls': 0}}
     token = campaign.initialize(spec, 'coordinator')
     secrets = {'coordinator': token}
@@ -261,6 +285,8 @@ def _run_owned(args):
     selector = runtime.get('selector', 'qwen')
     if selector != campaign.snapshot()['campaign']['spec'].get('selector', 'qwen'):
         raise ValueError('Selector differs from frozen campaign specification')
+    if runtime.get('optimizer') != campaign.snapshot()['campaign']['spec'].get('optimizer'):
+        raise ValueError('Optimizer runtime differs from frozen campaign specification')
     while True:
         finish_pending_recipe(campaign, state, secrets, runtime)
         current = campaign.snapshot()
@@ -336,14 +362,30 @@ def _run_owned(args):
                 return {'status': 'space_exhausted', 'selector': selector}
             continue
         if selector != 'qwen':
-            from .discrete_search import select
+            from .discrete_search import select, incumbent
             thresholds = active_round['progress']
-            parent, parameters, decision = select(selector, parents, options,
-                relative=thresholds['relative'], absolute=thresholds['absolute'])
+            optimizer_request = None
+            if selector == 'smac':
+                from .smac_search import training_observations
+                from .smac_transport import invoke
+                optimizer = runtime['optimizer']
+                optimizer_request = {'metadata': optimizer['metadata'], 'seed': optimizer['seed'],
+                    'options': options, 'observations': training_observations(snapshot)}
+                selected = invoke(optimizer_request, optimizer['endpoint'])
+                parameters, decision = selected['parameters'], selected['decision']
+                if canonical(parameters) not in {canonical(p) for p in options}:
+                    raise ValueError('SMAC returned an already-seen or unregistered configuration')
+                if decision.get('metadata') != optimizer['metadata']:
+                    raise ValueError('SMAC response differs from frozen runtime metadata')
+                parent = incumbent(parents, relative=thresholds['relative'], absolute=thresholds['absolute'])
+            else:
+                parent, parameters, decision = select(selector, parents, options,
+                    relative=thresholds['relative'], absolute=thresholds['absolute'])
             from .evolution_report import freeze_context
             directory = repo / 'experiments' / 'campaigns' / runtime['campaign_id']
             context = {'selector': selector, 'parent': parent['candidate_id'],
                        'parameters': parameters, 'options': options, 'decision': decision,
+                       'optimizer_request': optimizer_request,
                        'observations': [{'candidate_id': c['candidate_id'],
                             'parameters': c['parameters'], 'valid': c['valid'],
                             'metrics': c.get('metrics')} for c in snapshot['candidates']]}
@@ -351,7 +393,7 @@ def _run_owned(args):
             proposal_id = uuid.uuid4().hex
             campaign.record_decision('coordinator', secrets['coordinator'], proposal_id,
                                      dict(decision, context=context_ref))
-            publish(campaign, state, checkpoint='deterministic-selection')
+            publish(campaign, state, checkpoint=selector + '-selection')
             expected_head = git(repo, 'rev-parse', 'HEAD')
             proposal = {'proposal_id': proposal_id, 'candidate_id': proposal_id,
                 'round_id': plan['round_id'], 'lane_id': plan['lane_id'], 'kind': 'mutate',
@@ -463,7 +505,13 @@ def main():
     init.add_argument('--minutes', type=float, default=15)
     init.add_argument('--max-evaluations', type=int, default=12)
     init.add_argument('--max-model-calls', type=int, default=8)
-    init.add_argument('--selector', choices=('qwen', 'enumeration', 'local-search'), default='qwen')
+    from .search_policy import STRATEGIES
+    init.add_argument('--selector', choices=STRATEGIES, default='auto')
+    init.add_argument('--search-seed', type=int, default=0)
+    init.add_argument('--smac-host', help='Optional SSH alias for the isolated SMAC environment')
+    init.add_argument('--smac-python', help='Absolute remote controller Python path')
+    init.add_argument('--smac-root', help='Absolute remote directory containing this version of lab/')
+    init.add_argument('--deadline-unix', type=float, help='Optional earlier absolute deadline, e.g. a campaign handoff')
     init.add_argument('--prior-full', type=Path, action='append', default=[],
                       help='Import a full result for an exact registered implementation, preserving its SHA')
     init.add_argument('--host', default='amd-hackathon')
