@@ -1,0 +1,73 @@
+{
+  "approval": {
+    "schema_version": "feyer-payload-approval-v1",
+    "recorded_at": 1795297383.492144,
+    "approval_source_thread": "01a1ff87-807a-7cc2-bea3-ba562bb6e9aa",
+    "question": "May I send Claude the prepared 19.5 KB peer-source diff and combination brief so it can inspect the other implementation?",
+    "answer": "yes",
+    "provider": "Claude",
+    "session_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+    "source_commit": "64c7710c3a229fe8546f91561462f79d9c8ab25b",
+    "brief_path": "experiments/briefs/claude-guided-v2-peer-source.md",
+    "brief_sha256": "33c5acd4ac997afc293617394e745ddfaaee0057ce5dd573daab706fde71d3d3",
+    "diff_sha256": "4a6f50c0e6369613b0a94e80f317d813757470e4fc3448886c1e9e05a09a0912",
+    "scope": "Exact packet to current guided Claude conversation only. No blanket future source packets or other providers."
+  },
+  "launch": {
+    "name": "claude-guided-v2",
+    "pid": 99490,
+    "old_pid": 89914,
+    "session_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+    "old_runtime_commit": "41e46aa5773c2cb7c3678474f8033f766effbb69",
+    "runtime_commit": "41e46aa5773c2cb7c3678474f8033f766effbb69",
+    "resumed_at": 1795297350.566011,
+    "fixed_deadline_unix": 1795299765.2068522,
+    "preserved_candidate_sha": "633689f9bf054a90ca21b7b6087120cd86fa0d0e",
+    "preserved_jobs": {
+      "screen": "afdab87c297048ffb88f4f38a6fa9eda",
+      "full": "ef7e77be6044490e8d7dc99e41d0ecf6"
+    },
+    "preserved_request_ids": {
+      "screen": "8c176e6443ac482baead434903e22da4",
+      "full": "e6df50c91f8443b39d2474842bfcf6f7"
+    },
+    "pending_input_context_preserved": true,
+    "raw_feedback_unchanged": true,
+    "reason": "Provide immutable peer source diff to next guided Claude turn; current remote evaluation, session and deadline preserved. Source packet control commit 64c7710. No code edit injected."
+  },
+  "delivery": {
+    "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-guided-v2/turn-05-prompt-b9a832ddd7bafea55eaaea13591134af3a3c79ee9e94ae2388a8a264bc3c7232.json",
+    "sha256": "b9a832ddd7bafea55eaaea13591134af3a3c79ee9e94ae2388a8a264bc3c7232",
+    "turn": 5,
+    "thread_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+    "feedback_mode": "guided",
+    "shared_evidence": {
+      "schema": "feyer-search-frontier-v1",
+      "source_path": "/Users/t.betz/Documents/Feyer challenge/.lab/frontier/current.json",
+      "snapshot_ref": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-guided-v2/shared-evidence/9d100ab0165f2521b9091d5c9070fd85a6045914f03c58d43ebed414334c2435.json",
+      "sha256": "9d100ab0165f2521b9091d5c9070fd85a6045914f03c58d43ebed414334c2435",
+      "bytes": 96577,
+      "generated_at": 1795297447.88254,
+      "read_at": 1795297449.2489789,
+      "age_seconds": 1.366438865661621,
+      "freshness_policy": {
+        "max_age_seconds": 300,
+        "future_skew_seconds": 30
+      },
+      "content_digest": "e00021067974179789c3558aab969ba55c3a7e6b61efcc2dee6a439ac3aacae6",
+      "source_provenance": {
+        "team_digest": "922c284037a5d8f7be5e5b299abffb478d7441b59b987196ed74184b846da99d",
+        "policy_digest": "54fffa2b291a30d2d20eb7b881da57f3f127ed0d3559330d7d5685838532e01c",
+        "policy_source_ref": "https://github.com/timbtz/feyer-search-lab/blob/d3e5e4de995914819631acdf9980c00fd95a47b3/experiments/deployments/amd-two-lanes-v1.json",
+        "evidence_digest": "b3e1c79869785fb100e51423852cbdd1e7031b236298b074f3bf5bdca1a65d23",
+        "collector": "trusted-local-artifacts-v1",
+        "instance": "amd-tim"
+      }
+    },
+    "consumed_feedback_digest": "43d333953fb339c8c2a194dd5d7f428e1f8802526aaa4f33faac80f39c5a4403",
+    "consumed_candidate_sha": "633689f9bf054a90ca21b7b6087120cd86fa0d0e",
+    "verified_at": 1795297469.915981,
+    "brief_sha256": "33c5acd4ac997afc293617394e745ddfaaee0057ce5dd573daab706fde71d3d3",
+    "full_exact_diff_present": true
+  }
+}
