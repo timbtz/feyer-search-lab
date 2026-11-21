@@ -336,3 +336,66 @@ The previously considered real-parameter representation was not implemented: arb
 Validation: all simulator modules parse; `git diff --check` passes. A standard-library-only check executed the actual builder helper extracted by AST with an array-construction stub, covering 363 component partitions of one through five rows, all valid positive/negative row and column selectors, repeated selections, out-of-range fallback, mismatched lengths, empty selectors and absent optional metadata. All selected values matched the original composed indexing. This verifies host index algebra, not JAX lowering or physics. No simulator/benchmark execution, new test infrastructure, dependency change, commit, push, SSH or agents.
 
 Next: supervisor screen, then official full and every saved-output/gradient comparison if eligible; compare total and phase deltas to exact parent c1233f6b8eaf4c36dc2d034dfa75ee1f9fef90bb. Reject numerical failure or total regression regardless of phase savings. Continue only within original deadline **2026-11-21 21:09:24.088367 UTC**, session `codex-profile-guided-v1`, thread `01a1ffba-57ec-7191-8ba9-c6163633a3b3`; no candidate-count cap.
+
+
+## Candidate 6 evaluation — retain provisionally
+
+Exact SHA **`2085ff2c9a1f30cb3effaa9281d22942219e575a`**, parent **`c1233f6b8eaf4c36dc2d034dfa75ee1f9fef90bb`**.
+
+Screen `d3862d654c4a4824a194132487bc267e`, request `1cb930f0b2634e62af13feeef05dc98b`: cheap checks passed, first run **21.874135839 s**, trace/lower/compile 10.762692304 s, wall 22.897559825 s, RSS 7,837,112 KiB. Screening remains provisional without full strict validation or warm repeats.
+
+Full **`90519617eff2459a976172ff96a1ffad`**, request `48644328165349bf8441a53083e3fc12`: official and all strict checks pass; resource/source/workload/precision pass. Same full cohort `10567ad0f8dcb7122b6b182e1be342313b89eef340d4070073fdf62d6342204c`, unchanged evaluator/worker/comparator/reference and environment identities. Local report and comparison inspected along with feedback.
+
+First run **21.825928526 s**, **-0.219324823 s** vs exact parent full `249bd1a64b6c4ab19476e420e5b1bc93`. Trace/lower/compile **10.696363786 s**, -0.065675953 s. Forward compile fell 0.096951997 s while gradient compile rose 0.014497943 s; forward execution fell 0.133074684 s. These do not isolate a native gather cost. Warm median **10.555653488 s**, -0.129661193 s; samples 10.555653488, 10.597825719, 10.096350433 s. Job wall **87.063090742 s**, -1.502715541 s. RSS **7,857,340 KiB**, +2,456 KiB; sampled peak 8,046,964,736 bytes. Both screen and full totals fell, but this is still one observation of each profile, not repeat-confirmed improvement. Retain candidate 6 as next exact parent; candidate 5 remains fallback.
+
+All first-run phases and deltas in seconds:
+
+| Phase | Candidate 6 | Delta vs candidate 5 |
+| --- | ---: | ---: |
+| imports | 0.289753875 | -0.002054770 |
+| initialize | 0.002894860 | -0.000021819 |
+| load | 0.001431616 | -0.000084937 |
+| build | 0.835722664 | +0.005180947 |
+| forward_lower | 0.740698352 | -0.015465226 |
+| forward_compile | 4.566873804 | -0.096951997 |
+| forward | 8.522041252 | -0.133074684 |
+| sensitivity_lower | 0.081810813 | -0.000918213 |
+| sensitivity_compile | 0.393210465 | +0.029261010 |
+| sensitivity | 0.000899453 | -0.000081807 |
+| gradient_lower | 0.300282933 | +0.003900530 |
+| gradient_compile | 4.613487419 | +0.014497943 |
+| gradient | 1.476470644 | -0.023506740 |
+| host_transfer | 0.000350377 | -0.000005061 |
+
+Every saved-array check inspected, last warm scope and unchanged strict tolerances:
+
+| Output | Max absolute error | Relative L2 error | Max normalized error | Failures |
+| --- | ---: | ---: | ---: | ---: |
+| carrier | 0 | 0 | 0 | 0 |
+| signal | 0 | 0 | 0 | 0 |
+| noise | 0 | 0 | 0 | 0 |
+| sensitivity | 0 | 0 | 0 | 0 |
+| powers | 0 | 0 | 0 | 0 |
+| gradient | 5.3114490583539e-10 | 7.93070107438469e-15 | 7.53524626872314e-07 | 0 |
+| parameters | 0 | 0 | 0 | 0 |
+| frequencies | 0 | 0 | 0 | 0 |
+
+All finite, zero mismatches and empty failure indices/details. Physical outputs, parameters and frequencies match exactly. Gradient shape 193, norm 70517.10686388832. Official log-sensitivity maximum error 5.374104176780747e-6 and finite-difference spot check pass. Full-gradient comparison, not the spot check alone, supports retention.
+
+## Candidate 7 — conjugate replacement values before dense assembly
+
+Exact parent **`2085ff2c9a1f30cb3effaa9281d22942219e575a`**; candidate SHA/run IDs pending supervisor.
+
+Measured targets: parent full job **`90519617eff2459a976172ff96a1ffad`** spends **8.522041252 s (39.05%)** in forward execution, **4.613487419 s (21.14%)** in gradient compilation and **4.566873804 s (20.92%)** in forward compilation. Combined lowering/compilation is **10.696363786 s (49.01%)**. The cost of the dense conjugation inside these phases is unknown.
+
+One transformation: commute destination-dependent conjugation through the component scatter. For a mask C, unique destination set I, base B and fully carrier-scaled replacement values v, the entrywise identity is C(scatter(B,I,v)) = scatter(C(B),I,C[I](v)). Untouched entries come from the conjugated base; overwritten entries come from the conjugated replacement vector. Apply conjugation after the existing unary minus and carrier multiplication, preserving that arithmetic order. Include the augmented RHS and the same lower-sideband and mechanical-to-upper regions.
+
+Implementation: `update` takes an optional output-conjugation mask and applies it after carrier scaling. `_assemble_signal_and_noise` uses this path only if both the complete carrier-output mapping and unique/in-bounds flat matrix destinations exist. It conjugates the unbatched base before `vmap(update)` and selects the corresponding mask entries for the replacement vector. The generic path keeps dense conjugation after all updates. No new uniqueness promise, numerical sparsity pruning, custom derivative or cached physical result. All physical matrices remain complete.
+
+Expected mechanism: reverse mode can gather the dense matrix cotangent before conjugating the small output vector, avoiding conjugation of the complete batched matrix cotangent. Forward base conjugation is unbatched and invariant across loop iterations, potentially eligible for compiler hoisting; actual hoisting and memory savings are unverified. The checkpoint may alter these effects. Tentative combined first-run opportunity **0–1 s**, unmeasured, primarily forward execution and forward/gradient compilation. Eliminating the entire measured forward phase would save at most 8.522041252 s; that is only a ceiling and this change touches a subset. Mask gathering, compiler layout/fusion and altered residual graphs may instead increase total time or memory. Strict gradients are required despite the exact entrywise identity.
+
+This differs from the earlier rejected concatenation-of-dense-bands trial in `initial-agent.md`: no band concatenation is introduced. The preserved history reports that trial's reverse/memory regression; this proposal moves the operation onto replacement values. It also leaves independent noise-contraction scheduling unchanged. No solve, component formula, real/complex parameter representation, checkpoint policy/scope, workload, precision, three official JIT stages or benchmark changes.
+
+Validation: all simulator modules parse, `git diff --check` passes, and AST comparison against exact HEAD confirms only `update` and `_assemble_signal_and_noise` change. Sixty deterministic standard-library complex assembly cases match bitwise between dense post-update conjugation and pre-scatter conjugation, including signed zeros, arbitrary complex base entries, empty replacements, reordered unique destinations, varying carrier-coupling subsets, augmented RHS and sideband/mechanical boundaries. This validates the algebra, not JAX autodiff, runtime or full physics. No local simulator/benchmark, new test infrastructure, environment changes, Git writes, SSH or agents.
+
+Next: supervisor screen then official full and every saved-output/gradient comparison if eligible, against exact parent 2085ff2c9a1f30cb3effaa9281d22942219e575a. Reject numerical failures or total regressions regardless of phase improvements. Continue within original deadline **2026-11-21 21:09:24.088367 UTC**, session `codex-profile-guided-v1`, thread `01a1ffba-57ec-7191-8ba9-c6163633a3b3`; no candidate cap.

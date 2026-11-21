@@ -107,6 +107,7 @@ def update(
     function_indices: jnp.ndarray,
     component_groups: dict | None = None,
     carrier_entries: jnp.ndarray | None = None,
+    conjugate_outputs: jnp.ndarray | None = None,
 ) -> jnp.ndarray:
     """
     Update selected entries of a system matrix by evaluating component functions.
@@ -147,6 +148,9 @@ def update(
     carrier_entries : jnp.ndarray | None
         Optional carrier factors, used only with builder-proven
         `carrier_output_positions` to scale component values before matrix assembly.
+    conjugate_outputs : jnp.ndarray | None
+        Optional mask applied after carrier scaling. The caller must apply the
+        same destination-based conjugation to the base matrix before this update.
 
     Returns
     -------
@@ -205,6 +209,8 @@ def update(
         positions = component_groups["carrier_output_positions"]
         scaled_outputs = -outputs[positions] * carrier_entries
         outputs = outputs.at[positions].set(scaled_outputs, unique_indices=True)
+    if conjugate_outputs is not None:
+        outputs = jnp.where(conjugate_outputs, jnp.conjugate(outputs), outputs)
     if component_groups is not None and "flat_matrix_indices" in component_groups:
         # Builder-proven unique, in-bounds offsets avoid tracing the generic
         # two-coordinate indexing path. Update order and component values stay
@@ -685,11 +691,24 @@ def _assemble_signal_and_noise(
     """
     signal_groups = None if component_groups is None else component_groups["signal"]
     fuse_carrier_scaling = signal_groups is not None and "carrier_output_positions" in signal_groups
+    # Apply the same destination mask to the base and its replacement values.
+    # With all carrier scaling fused into those values, no later dense update
+    # remains that would require conjugation after the component scatter.
+    rows = jnp.arange(signal_matrix.shape[0])[:, None]
+    columns = jnp.arange(signal_matrix.shape[1])[None, :]
+    conjugate_entries = (
+        (rows >= carrier_size) & (rows < 2 * carrier_size) & (columns >= carrier_size)
+    ) | ((rows >= 2 * carrier_size) & (columns < carrier_size))
+    fuse_conjugation = fuse_carrier_scaling and "flat_matrix_indices" in signal_groups
+    conjugate_outputs = None
+    if fuse_conjugation:
+        conjugate_outputs = conjugate_entries.reshape(-1)[signal_groups["flat_matrix_indices"]]
+        signal_matrix = jnp.where(conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix)
     scaling_entries = (
         jnp.broadcast_to(carrier_entries, (parameters.shape[0], carrier_entries.shape[1]))
         if fuse_carrier_scaling else None
     )
-    signal_matrix = vmap(update, in_axes=(0, None, None, None, None, None, None, 0 if fuse_carrier_scaling else None))(
+    signal_matrix = vmap(update, in_axes=(0, None, None, None, None, None, None, 0 if fuse_carrier_scaling else None, None))(
         parameters,
         signal_matrix,
         signal_function_input_indices,
@@ -698,6 +717,7 @@ def _assemble_signal_and_noise(
         signal_function_indices,
         signal_groups,
         scaling_entries,
+        conjugate_outputs,
     )
 
     # Scale signal connector entries by the carrier solution at the respective spaces.
@@ -718,17 +738,12 @@ def _assemble_signal_and_noise(
             unique_indices=unique_carrier_placing_indices,
         )
 
-    # Apply conjugation rules to enforce upper and lower sideband symmetry.
-    rows = jnp.arange(signal_matrix.shape[1])[:, None]
-    columns = jnp.arange(signal_matrix.shape[2])[None, :]
-    # The lower-sideband row blocks are adjacent; include the augmented RHS.
-    # Their union and the mechanical-to-upper block are disjoint.
-    conjugate_entries = (
-        (rows >= carrier_size) & (rows < 2 * carrier_size) & (columns >= carrier_size)
-    ) | ((rows >= 2 * carrier_size) & (columns < carrier_size))
-    signal_matrix = jnp.where(
-        conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix
-    )
+    # Generic path: conjugate after all component and carrier updates, including
+    # the augmented RHS and the disjoint mechanical-to-upper block.
+    if not fuse_conjugation:
+        signal_matrix = jnp.where(
+            conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix
+        )
 
     # Update noise source matrix (may depend on current parameters).
     # None: the caller builds one shared noise matrix (guarded row reuse).
