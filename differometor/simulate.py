@@ -500,6 +500,9 @@ FREQUENCY_LOOP_SCOPE: str = "assemble"
 # separate factorization (sharing it with A previously failed the strict gradient gate).
 # False reproduces the parent's two separate solve calls. Read at trace time.
 MERGE_SAME_MATRIX_SOLVES: bool = True
+# Conjugate the static lower-sideband / mechanical-to-upper blocks by slice updates instead
+# of a full-matrix where-mask. Exact (conjugation and copies only). Read at trace time.
+SLICE_CONJUGATION: bool = True
 
 
 def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):
@@ -588,16 +591,27 @@ def _assemble_signal_and_noise(
     )
 
     # Apply conjugation rules to enforce upper and lower sideband symmetry.
-    rows = jnp.arange(signal_matrix.shape[1])[:, None]
-    columns = jnp.arange(signal_matrix.shape[2])[None, :]
-    # The lower-sideband row blocks are adjacent; include the augmented RHS.
-    # Their union and the mechanical-to-upper block are disjoint.
-    conjugate_entries = (
-        (rows >= carrier_size) & (rows < 2 * carrier_size) & (columns >= carrier_size)
-    ) | ((rows >= 2 * carrier_size) & (columns < carrier_size))
-    signal_matrix = jnp.where(
-        conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix
-    )
+    if SLICE_CONJUGATION:
+        # Same two disjoint static blocks as the mask below, conjugated in place by
+        # slice updates (exact; touches only the conjugated blocks).
+        cs = carrier_size
+        signal_matrix = signal_matrix.at[:, cs : 2 * cs, cs:].set(
+            jnp.conjugate(signal_matrix[:, cs : 2 * cs, cs:])
+        )
+        signal_matrix = signal_matrix.at[:, 2 * cs :, :cs].set(
+            jnp.conjugate(signal_matrix[:, 2 * cs :, :cs])
+        )
+    else:
+        rows = jnp.arange(signal_matrix.shape[1])[:, None]
+        columns = jnp.arange(signal_matrix.shape[2])[None, :]
+        # The lower-sideband row blocks are adjacent; include the augmented RHS.
+        # Their union and the mechanical-to-upper block are disjoint.
+        conjugate_entries = (
+            (rows >= carrier_size) & (rows < 2 * carrier_size) & (columns >= carrier_size)
+        ) | ((rows >= 2 * carrier_size) & (columns < carrier_size))
+        signal_matrix = jnp.where(
+            conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix
+        )
 
     # Update noise source matrix (may depend on current parameters).
     noise_matrix = vmap(update, in_axes=(0, None, None, None, None, None, None))(
