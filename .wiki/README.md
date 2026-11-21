@@ -8,6 +8,7 @@ The team repository is [timbtz/feyer-search-lab](https://github.com/timbtz/feyer
 
 - [Team search across three instances](team-search.md) coordinates personal Claude/Codex sessions through GitHub claims, evidence and combination tasks; no Qwen or SMAC dependency.
 - [Expanded CPU capacity](capacity.md) records lane ownership, new budgets, contention receipts and quiet serial confirmation.
+- [Bound internal verification](verification.md) records exact evidence contracts and optional broader JAX gates without changing official verdicts.
 - [Research lineage and feedback](research-lineage.md) defines declared phase targets, exact evaluation links, external research records and separate operational feedback edges.
 - [Guided search frontier](search-frontier.md) supplies bounded, exact-result Pareto evidence to guided sessions while preserving independent-run input isolation.
 - [Prepare a new AMD evaluator](portable-amd.md) reproduces the fixed environment, local baseline and serial worker on a colleague's instance.
