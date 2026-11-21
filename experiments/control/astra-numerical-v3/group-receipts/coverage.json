@@ -1,0 +1,15 @@
+{
+  "manifest_digest": "e5bdfa32e6c07a1a588e3bb84059a47e02162e8edf95bbbc9c192bd4a0581045",
+  "legal": 6,
+  "tried": 6,
+  "unseen": [],
+  "full_valid": 6,
+  "controller_status": "budget_exhausted",
+  "transition_reason": "menu_exhausted",
+  "evaluation_cap_reached": true,
+  "deadline_reached": false,
+  "support_jobs_used_or_reserved": 11,
+  "global_jobs_used_or_reserved": 12,
+  "local_optimum_claimed": false,
+  "deadline_unix": 1795299882.878179
+}
