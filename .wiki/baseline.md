@@ -41,3 +41,13 @@ A local copy of reports, plots and logs is in `/Users/t.betz/tmp/amd-hackathon-r
 The upstream README reports roughly **14.4 GiB peak RAM** for its reference benchmark. That is temporary system memory during computation, not the input size, repository size or GPU VRAM use. Peak RAM for the AMD runs has not yet been measured. The new evaluator should record peak resident memory for future runs before increasing concurrency.
 
 The reference workload is one fixed optical setup evaluated at all 101 frequencies, including the gradient for all 193 physical design variables. Removing warm repetitions reduces total evaluation time but need not reduce peak memory. A different algorithm may use more or less memory.
+
+## Queue calibration
+
+The first end-to-end screening job used unchanged simulator code at commit `0c011fbbff6edb4ca095f12b5c762652da788f73`. Job `69624b40ab5e4add8480a9af84e90092` passed the screening checks: 36.177949 seconds measured first evaluation, 37.529310 seconds process wall time, and 15,134,648 KiB peak RSS (14.43 GiB). The independent finite-difference check was explicitly not run in this screening profile.
+
+The memory figure above is measured on this AMD instance. The earlier 14.4 GiB figure in the challenge README described its reference run.
+
+The full queue calibration job `f668a9b0ab2c44c791aff3f0b9ccdeb1` passed both the official checks and the stricter saved-array comparison. Its first evaluation was 36.331948 seconds, total benchmark process wall time 126.070111 seconds, and peak RSS 14.4464 GiB. The screening process completed in about 30% of that wall time. This comparison uses unchanged simulator code and the same CPU and environment.
+
+Single candidate timings are preliminary measurements. Small differences near the observed noise level require repeated fresh-process runs before claiming a speedup. A validated candidate has passed the checks; that label alone does not establish a repeatable performance gain.

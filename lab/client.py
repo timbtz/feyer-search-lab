@@ -19,6 +19,18 @@ def git(repo, *args):
     return subprocess.check_output(['git', '-C', str(repo), *args], text=True).strip()
 
 
+def publish_candidate(repo, sha, branch):
+    """Publish branch history without rewinding it when evaluating an older commit."""
+    try:
+        tip = git(repo, 'rev-parse', '--verify', f'refs/heads/{branch}^{{commit}}')
+    except subprocess.CalledProcessError:
+        tip = sha
+    if subprocess.run(['git', '-C', str(repo), 'merge-base', '--is-ancestor', sha, tip]).returncode:
+        raise ValueError('Candidate is not an ancestor of the assigned branch')
+    subprocess.run(['git', '-C', str(repo), '-c', 'credential.helper=!gh auth git-credential',
+                    'push', 'origin', f'{tip}:refs/heads/{branch}'], check=True)
+
+
 class Client:
     def __init__(self, host='amd-hackathon', root='/workspace/feyer-lab'):
         if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', host):
@@ -43,8 +55,7 @@ class Client:
         if branch.startswith('-') or len(sha) != 40:
             raise ValueError('Invalid branch or SHA')
         if publish:
-            subprocess.run(['git', '-C', str(repo), '-c', 'credential.helper=!gh auth git-credential',
-                            'push', 'origin', f'{sha}:refs/heads/{branch}'], check=True)
+            publish_candidate(repo, sha, branch)
         transfer = uuid.uuid4().hex
         ref = f'refs/lab/export/{transfer}'
         git(repo, 'update-ref', ref, sha)

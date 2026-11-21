@@ -39,7 +39,7 @@ The challenge benchmark uses the CPU. The image's separate PyTorch/ROCm installa
 
 ## Client and supervisor commands
 
-These are the integration target commands. Check the installed CLI help and complete the baseline submission test before operating the queue. Run from the team repository so the `lab` module is available.
+The client is deployed and the unchanged screening baseline has passed through the queue. Run these commands from the team repository so the `lab` module is available.
 
 ```bash
 python3 -m lab.client submit \
@@ -104,3 +104,13 @@ Resume an agent using its saved session identifier, original worktree and branch
 Push agent commits and written findings regularly. Copy valuable result artifacts off the instance; persistent storage is not an independent backup. Keep API keys and credentials out of Git.
 
 Destroying the instance stops compute billing. Closing SSH, VS Code or the browser does not. Before destroying it, stop workers cleanly, save agent session identifiers, push work and copy the important results.
+
+## Agent worktrees
+
+The manual Claude worktree is `/Users/t.betz/Documents/Feyer challenge agents/claude-first-pass`, on branch `explore/claude-first-pass`. Claude Code is installed locally. Run it from that directory and give it `experiments/initial-agent.md` as its starting brief; specify that it is a manual agent and should commit and submit through the client. Do not run a second agent in the same worktree.
+
+The supervised Codex worktree will be `/Users/t.betz/Documents/Feyer challenge agents/codex-seed`, on `explore/seed-agent`. Its supervisor handles commits and evaluation. The two workflows share the serial AMD queue.
+
+## Worker deployment
+
+`python3 -m lab.deploy` uploads the committed evaluator files and starts the worker in the remote `feyer-worker` tmux session. Releases are immutable directories under `/workspace/feyer-lab/releases`; the active worker resolves its trusted evaluator directory at startup. Deployment refuses to switch an already-running worker. Inspect `state/worker.log` and stop an idle worker before updating it. Do not terminate it during an evaluation.

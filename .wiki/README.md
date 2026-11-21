@@ -16,7 +16,7 @@ The team repository is [timkireply/feyer-search-lab](https://github.com/timkirep
 
 ## Status
 
-The AMD instance, SSH access, VS Code connection, isolated Python environment and three official baseline runs have been verified. The experiment queue, screening tool and first agent session are being integrated. Their operational status must be established by an end-to-end test before treating queued results as available.
+The AMD instance, SSH access, VS Code connection, isolated Python environment and three official baseline runs have been verified. The serial experiment queue is deployed. Unchanged code passed end-to-end screening and full validation, including strict baseline array comparison. Screening took 37.5 seconds wall time; full validation took 126.1 seconds. The initial supervised agent session is being prepared; its live status is recorded under `.lab/sessions/seed-agent/status.json`.
 
 ## Working model
 
