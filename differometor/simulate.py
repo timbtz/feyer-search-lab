@@ -544,12 +544,17 @@ NOISE_ROW_REUSE: bool = True
 # "broadcast" (variant A; broadcast to (B, NN, NN), unchanged batched einsum;
 # candidate f3139c7 passed official + strict with bitwise forward outputs) or
 # "shared" (variant B; unbatched einsum "ij,dbj->dbi", may round differently).
-NOISE_REUSE_MODE: str = "shared"
+NOISE_REUSE_MODE: str = "broadcast"
 # Signal-matrix LU reuse: "off" (three jnp.linalg.solve calls), "direct" (one LU of
 # A shared by the signal and covariance solves; separate LU of A^H for noise
 # weights) or "all" (A's LU also for A^H; candidate 3 bb9a183, 18.65 s but FAILED
 # strict gradient at indices 33/161/180, max normalized error 14.7).
-NOISE_FACTOR_REUSE: str = "direct"
+NOISE_FACTOR_REUSE: str = "off"
+# Coordinator combination (parents f3139c7 + 4c12600): with NOISE_FACTOR_REUSE="off",
+# solve the signal and covariance systems (both A, untransposed) as one multi-RHS
+# jnp.linalg.solve; A^H noise weights keep their separate factorization.
+# Ignored when NOISE_FACTOR_REUSE != "off". False = two separate solve calls.
+MERGE_SAME_MATRIX_SOLVES: bool = True
 
 
 def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):
@@ -721,7 +726,8 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
                 transposed_conjugated_signal_matrix, carrier_selections
             )
     else:
-        signal = vmap(solve)(signal_matrix[:, :, :-1], signal_matrix[:, :, -1])
+        if not MERGE_SAME_MATRIX_SOLVES:
+            signal = vmap(solve)(signal_matrix[:, :, :-1], signal_matrix[:, :, -1])
         # Back-propagate detector weights by solving the transposed conjugated signal system.
         transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(signal_matrix[:, :, :-1]), (0, 2, 1))
         noise_weights = vmap(vmap(solve), in_axes=(None, 0))(transposed_conjugated_signal_matrix, carrier_selections)
@@ -752,6 +758,15 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
         noise_sources = vmap(matmul_single_batch, in_axes=(None, 0))(noise_matrix, noise_weights)
     if NOISE_FACTOR_REUSE != "off":
         covariances = vmap(direct_solve)(noise_sources)
+    elif MERGE_SAME_MATRIX_SOLVES:
+        # Adapted from 4c12600: signal RHS and the D noise sources share A (same
+        # transpose mode) -> one multi-RHS solve. Columns: [signal, noise 0..D-1].
+        right_hand_sides = jnp.concatenate(
+            [signal_matrix[:, :, -1:], jnp.moveaxis(noise_sources, 0, 2)], axis=2
+        )
+        solutions = solve(signal_matrix[:, :, :-1], right_hand_sides)
+        signal = solutions[:, :, 0]
+        covariances = jnp.moveaxis(solutions[:, :, 1:], 2, 0)
     else:
         covariances = vmap(vmap(solve), in_axes=(None, 0))(signal_matrix[:, :, :-1], noise_sources)
 

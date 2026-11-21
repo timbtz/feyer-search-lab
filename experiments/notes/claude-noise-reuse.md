@@ -174,8 +174,52 @@ The time gain is expected but not measured, and probably small (well under 1 s).
 - **Gradient risk:** variant B alone used 0.949 of the strict budget. Candidate 4 is almost exact, so the combination is expected near 0.95. A pass is not guaranteed.
 - If it fails, candidate 4 (`96474bd`) remains the fallback.
 
+### Results: candidate SHA `05508471e6b65e62ac44fb7f1dacbd31ca990fee` — VALIDATED (fragile)
+
+**Screen** (`88b7cd374ccb40c69cf7367dc211b273`): 21.758 s.
+
+**Full** (`cb43b777416649429d8b0cb868cee75b`): official PASS, strict PASS.
+
+| Phase | Seconds |
+| --- | --- |
+| Complete first run | **21.649** |
+| Forward compile | 7.581 |
+| Forward execute | 8.171 |
+| Gradient compile | 1.981 |
+| Gradient execute | 1.297 |
+
+- Warm runs: median 9.627 s.
+- Total job wall time: 83.7 s.
+- Peak RSS: 7.24 GB.
+
+**Strict comparison:**
+- Carrier, signal and powers: bitwise identical.
+- Noise: max normalized error 1.6e-8.
+- Gradient: max normalized error **0.949** (limit 1), the same coordinate drift as candidate 2.
+
+**Interpretation:** fastest validated revision in this lane, but its strict margin is thin. The savings from candidates 2 and 4 roughly added up in this single run (−0.72 s against candidate 4). Not a paired confirmation.
+
+## Candidate 6: coordinator combination (component parents f3139c71ae2a5c9de2b015aad7db1a730fac0e1e + 4c12600ce07d6d46518c230bae17248d9df75a39)
+
+**Change, with knob values:**
+- `NOISE_REUSE_MODE="broadcast"`: candidate 1's robust base.
+- `NOISE_FACTOR_REUSE="off"`: no explicit LU path.
+- New `MERGE_SAME_MATRIX_SOLVES=True`: the 4c12600 patch, adapted. The signal RHS and the D covariance RHS are solved as one multi-RHS `solve(A, [b | noise_sources])`. The A^H noise weights keep their separate factorization.
+- Frequency chunk is 1, scope is assembly-only. Guards and fallback are unchanged.
+
+**Conflicts in the combination:**
+- In 4c12600, `MERGE_SAME_MATRIX_SOLVES` and this lane's `NOISE_FACTOR_REUSE` both replace the A solves. The merge applies only when `NOISE_FACTOR_REUSE="off"` and is ignored otherwise.
+- The shared contraction (`"shared"`) is deliberately not used.
+
+**Hypothesis:** the two parents change separate stages. Noise construction happens before the solves, and the merge changes only the A solves. Both parents passed strict on their own. Expected: strict margin near the parents' (large), and a first run below candidate 1's 23.32 s. Gains are not assumed to add.
+
 ### Results
-- Candidate SHA: (supervisor fills in). Pending. The session deadline may arrive before this result is recorded.
+- Candidate SHA: pending. Deadline 1795288990: the result may arrive after the session ends. If so, it should be recorded by the coordinator.
+
+**Handoff update:**
+- Fastest validated: `0550847` (21.649 s, fragile margin 0.949).
+- Robust validated: `96474bd` (22.366 s, margin 6e-7).
+- Same-SHA repeat full runs are needed before claiming any speedup.
 
 ## Final handoff
 - **Best fully validated revision with a robust margin:** `96474bdd4d83bb02c163640f63fae1c4bd7a21d4` (candidate 4).
