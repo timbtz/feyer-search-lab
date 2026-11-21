@@ -20,7 +20,7 @@ These are exact-SHA repeats, not a paired comparison with the parent. The parent
 
 - Noise lane: `f3139c7` guarded broadcast reuse passed at 23.320 s; `e525ee5` shared contraction passed at 22.564 s with normalized gradient error about 0.949 of the tolerance; `bb9a183` shared A/A^H factorization ran 18.653 s but failed strict gradients and is rejected. `96474bdd` is the repeat-validated reference above. `05508471` direct-factorization reuse plus shared contraction passed once at 21.649 s, also with a narrow strict margin; it is not repeat-confirmed.
 - Structure lane: `4c12600` merged same-matrix right-hand sides passed at 22.495 s. Slice conjugation `39b23e3c` was slower at 22.794 s. Restoration `3e94580e` passed at 22.423 s but is a different SHA, not an exact-SHA repeat. Separate coefficient/RHS assembly `423bcc4a` passed once at 22.361 s, effectively tied with the confirmed reference within observed timing variation.
-- Combination `28566a64a9efbdddc104762ac1f8212eb1d8370c` combines exact parents `f3139c7` and `4c12600` (broadcast reuse plus multi-RHS solve); its result was pending when this report was prepared. Source and all individual feedback remain on `explore/claude-noise-reuse` and `explore/claude-structure-solve`.
+- Combination `28566a64a9efbdddc104762ac1f8212eb1d8370c` combines exact parents `f3139c7` and `4c12600` (broadcast reuse plus multi-RHS solve); full job `4c7f84023bf343f3a746bf2578f13c78` passed official and strict checks at **22.380568381 s**, effectively tied with the repeat-validated reference. No superiority is demonstrated. Source and all individual feedback remain on `explore/claude-noise-reuse` and `explore/claude-structure-solve`.
 - Alternate detector counts, carrier batches, padding and fallback shapes were audited from source by Claude but not benchmark-tested in this window. Do not infer generic coverage from the official workload alone.
 
 ## Numerical configuration search
@@ -36,6 +36,12 @@ Campaign `explore/topology-smac-v1` varies guarded noise reuse and assembly chun
 | True | 2 | valid | 24.194216 | False |
 | True | 4 | valid | 24.634591 | False |
 | False | 4 | valid | 25.487122 | True |
-| True | 8 | evaluating_full | pending | True |
+| True | 8 | valid | 24.921669 | True |
 
-The tuning run has not improved its 23.320 s seed in the completed trials. This demonstrates the connected measurement/selection loop, not an efficiency advantage for SMAC. No campaign budget or deadline was extended.
+The tuning run did not improve its **23.320 s** seed. It completed five new screen/full pairs (10 jobs), including two actual learned SMAC acquisitions, and ended with `budget_exhausted`. This demonstrates the connected measurement/selection loop, not an efficiency advantage for SMAC. No campaign budget or deadline was extended.
+
+## Completion and next decision
+
+Both Claude sessions completed, with ten candidate revisions across their two branches and a final notes-only audit. Their scientific output and failed trials are preserved. All evaluations from this window are terminal. Only previously admitted jobs drained after the submission cutoff; no later model turn or new evaluation was launched. The simulator candidates remain in experiment branches; infrastructure is merged, but no final challenge submission or simulator promotion was made.
+
+Use exact `96474bdd` and its three full measurements as the repeat-validated reference for the next profiled research task. Confirm the faster single-run `05508471` before considering it for promotion, and keep its narrow numerical margin visible. Any later topology tuning must freeze a new source-bound menu and a new authorized budget rather than silently resuming this expired campaign.

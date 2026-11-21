@@ -122,11 +122,23 @@
         "frequency_chunk": 8,
         "noise_reuse": true
       },
-      "status": "evaluating_full",
-      "total": null,
+      "status": "valid",
+      "total": 24.92166884429753,
       "model_trained": true
     }
   ],
   "system_commit": "2ae00b7b0efac2b85e7928118128db92c3f75a8b",
-  "ci_run": 44938187937
+  "ci_run": 44938187937,
+  "tuning_status": "budget_exhausted",
+  "tuning_new_evaluations": 10,
+  "tuning_final_branch_sha": "f1e1229",
+  "combination": {
+    "sha": "28566a64a9efbdddc104762ac1f8212eb1d8370c",
+    "full_job": "4c7f84023bf343f3a746bf2578f13c78",
+    "total": 22.380568381398916,
+    "official_passed": true,
+    "strict_passed": true
+  },
+  "claude_sessions_status": "both complete; no pending turn or active candidate",
+  "claude_candidate_revisions": 10
 }
