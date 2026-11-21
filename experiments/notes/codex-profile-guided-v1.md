@@ -635,3 +635,58 @@ Hypothesis: avoid conjugation over the full dense batch and its reverse graph, p
 Validation: all simulator files parse and whitespace checks pass. AST isolation confirms only simulate and the extracted conjugation helper change; the generic mask expression and where operands match the parent AST. 120 deterministic standard-library complex cases pass bitwise for forward assembly and the replacement-vector transpose identity, including signed zeros, empty selections, arbitrary complex bases, carrier subsets, reordered unique writes and augmented RHS. An initial AST validation script used incorrect statement offsets and failed its assertion; corrected offsets pass without an implementation change. These are algebra/source checks, not JAX numerical or performance validation. No local simulator or benchmark ran.
 
 All 101 frequencies, all 193 design variables, physical updates, precision, separate adjoint pivoting, full-vmap solves and official three JIT stages stay fixed. No static-index work borrowed from Claude. Supervisor should evaluate screen/full and all strict saved checks, compare both experimental parent and retained candidate 9, and reject any total regression or numerical failure. If rejected, restore candidate 9 for subsequent work; this trial remains in history. Fixed deadline **2026-11-21 21:09:24.088367 UTC**, session codex-profile-guided-v1, thread 01a1ffba-57ec-7191-8ba9-c6163633a3b3; no candidate cap or budget extension.
+
+
+## Candidate 11 measured feedback — rejected
+
+SHA **236c28db25883a69a9a076556d6e68509a5824a7**, experimental parent candidate 10 43b6ed2b405bb9befe3eadf9c6337fa844a4f4c1. Screen **c7a8059b0e7b485cac1dc111767e7284** passed provisional checks at **21.360503288 s**, compilation/lowering **8.848589269 s**, wall **22.448119568 s**, RSS **8,717,920 KiB**.
+
+Full **91d0fac5b80b4ff4ab67737c40f4397e**, request b69af427540748f3af9686cca0d7532b, passed official/strict/resource/source/workload/precision checks in the unchanged cohort. Local report and all saved checks inspected. First **21.282346785 s**, **+0.236708649 s** vs candidate 10 and **+1.224629160 s** vs retained candidate 9. Combined lowering/compilation **8.776898624 s**, only -0.001183245 s vs candidate 10. Forward fell 0.108821344 s while reverse execution increased 0.347813250 s; the phase saving did not yield a total improvement. Reject and restore candidate 9.
+
+Warm median **12.035294069 s**, samples 12.182571853, 12.035294069, 12.018317765 s; +0.250496224 s vs candidate 10, +1.273079626 s vs candidate 9. Full wall **93.116750903 s**, RSS **8,725,552 KiB**, sampled peak 8,936,013,824 bytes. These metrics are separate from complete first-run time. Native operator costs remain unknown.
+
+| Phase | Candidate 11 seconds | Delta vs candidate 10 | Delta vs retained candidate 9 |
+| --- | ---: | ---: | ---: |
+| imports | 0.292399969 | +0.000287876 | +0.000950057 |
+| initialize | 0.002928907 | -0.000020994 | -0.000036327 |
+| load | 0.001409594 | -0.000008794 | -0.000105808 |
+| build | 0.830055987 | -0.001332188 | +0.006556911 |
+| forward_lower | 0.647144618 | +0.006030193 | -0.041216882 |
+| forward_compile | 3.428753758 | +0.023416057 | +0.114233954 |
+| forward | 9.620387308 | -0.108821344 | +1.019909278 |
+| sensitivity_lower | 0.072729677 | -0.001740092 | -0.005375704 |
+| sensitivity_compile | 0.331859374 | -0.025904562 | -0.049651921 |
+| sensitivity | 0.000864379 | -0.000031231 | -0.000033921 |
+| gradient_lower | 0.291922294 | -0.001535116 | -0.005338114 |
+| gradient_compile | 4.004488904 | -0.001449725 | -0.054168057 |
+| gradient | 1.756827842 | +0.347813250 | +0.238796894 |
+| host_transfer | 0.000574173 | +0.000005318 | +0.000108799 |
+
+Strict last-warm comparison, unchanged rtol=1e-7 and scale_atol=1e-12:
+
+| Output | Absolute error | Relative L2 error | Normalized error | Failures |
+| --- | ---: | ---: | ---: | ---: |
+| carrier | 0 | 0 | 0 | 0 |
+| signal | 0 | 0 | 0 | 0 |
+| noise | 0 | 0 | 0 | 0 |
+| sensitivity | 0 | 0 | 0 | 0 |
+| powers | 0 | 0 | 0 | 0 |
+| gradient | 5.0931703299284e-10 | 7.57652928017493e-15 | 6.03955088249533e-07 | 0 |
+| parameters | 0 | 0 | 0 | 0 |
+| frequencies | 0 | 0 | 0 | 0 |
+
+All finite, no failing indices/details/truncation. Physical arrays and exact-required parameters/frequencies equal reference. All 193 gradient coordinates pass; norm 70517.10686388829. Official sensitivity error 5.374104176780747e-6 and finite-difference check pass; loss 9.793036291535532e-8. Trials 10 and 11 remain preserved in history and these notes as valid performance regressions. Sparse scan outputs did not demonstrate an advantage under either tested conjugation placement.
+
+## Candidate 12 — output selection outside component checkpoint
+
+Git predecessor is rejected candidate 11; **scientific parent and restored implementation are candidate 9, 7d1ccc59cef3d7436870bb0e6c941dbde4c30770**. Remove all candidate 10/11 simulator changes, retaining their notes/history. Candidate SHA/run IDs pending supervisor. Same session resumed with 271 seconds remaining, no deadline extension.
+
+Latest rejected candidate full 91d0fac5b80b4ff4ab67737c40f4397e is dominated by forward 9.620387308 s, gradient compile 4.004488904 s and forward compile 3.428753758 s. Restored exact parent's full **7e6ce3c3bf5148af93351918fda06e22** is dominated by forward **8.600478031 s**, gradient compilation **4.058656961 s**, forward compilation **3.314519804 s**; total 20.057717625 s and combined lowering/compilation 8.818415347 s. The restored topology avoids the observed sparse-output regression.
+
+One new checkpoint-boundary change relative to retained candidate 9: checkpoint only component evaluation/group concatenation/row mapping in `_component_output_matrix`, returning the output matrix and output-row selector. The existing `_component_values` performs its unchanged final flat/generic gather outside that checkpoint. Carrier scaling, dense assembly, conjugation, loop topology, full-vmap solves and separate adjoint pivoting are exactly candidate 9. No index constants, cached answers or zero pruning; generic and duplicate-selection behavior is unchanged.
+
+Mechanism/hypothesis: exposing final output selection as a linear operation outside recomputation may simplify the checkpoint transpose and its indexing residuals. Primary predicted phase is gradient compilation; tentative complete-first-run opportunity **0–0.5 s**, unmeasured. Different residual choices or extra forward compiler work could outweigh this saving, and compiler dead-code elimination may make it a no-op. No native cost is attributed from source counts. Accept only a strictly valid faster total against exact candidate 9, regardless of individual phase gains.
+
+Validation: simulator syntax and whitespace checks pass. A complete-module AST comparison, after inlining the new helper and excluding docstrings, exactly matches candidate 9, including unchanged arithmetic order, decorator policy, loop/solve controls and generic paths. This isolates checkpoint placement; it does not establish compiled numerical or timing equivalence. No local simulator/benchmark, Git writes, SSH, agents or dependency/environment changes. Official benchmark/harness, all 101 frequencies, all 193 variables, precision and all three JIT stages remain unchanged.
+
+Handoff: supervisor evaluates this one candidate and compares full total plus every saved output/gradient check to candidate 9. If slower or invalid, candidate 9 remains the best observed eligible revision and safe fallback; trials 10–12 must remain recorded. Do not infer a shared repeat-confirmed best from single exploratory timings. More structural solver work requires a union-of-writes proof of a unit-triangular elimination partition and arbitrary-RHS/transpose/noise reconstruction before implementation. Native/compiler attribution diagnostics are not available here; no diagnostic run or queue bypass attempted. Existing deadline **2026-11-21 21:09:24.088367 UTC**, session codex-profile-guided-v1, thread 01a1ffba-57ec-7191-8ba9-c6163633a3b3. No candidate cap.

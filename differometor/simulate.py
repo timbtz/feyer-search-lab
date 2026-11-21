@@ -99,14 +99,14 @@ def _save_assembly_indices(primitive, *avals, **params):
 
 
 @partial(jax.checkpoint, prevent_cse=False, policy=_save_assembly_indices)
-def _component_values(
+def _component_output_matrix(
     parameters,
     function_input_indices,
     output_indices,
     function_indices,
     component_groups,
 ):
-    """Recompute component values; carrier coupling and dense assembly stay outside."""
+    """Recompute component evaluation; output selection and assembly stay outside."""
     output_rows = output_indices[0]
     # Keep the function selector scalar so only the selected component branch
     # executes. The outer vmap in simulate still batches frequency samples.
@@ -137,6 +137,21 @@ def _component_values(
                 output_rows = component_groups["output_rows"][output_rows]
         else:
             output_matrix = jnp.zeros((function_input_indices.shape[0], 4), dtype=jnp.complex128)
+    return output_matrix, output_rows
+
+
+def _component_values(
+    parameters,
+    function_input_indices,
+    output_indices,
+    function_indices,
+    component_groups,
+):
+    """Select component outputs outside the component-evaluation checkpoint."""
+    output_matrix, output_rows = _component_output_matrix(
+        parameters, function_input_indices, output_indices, function_indices,
+        component_groups,
+    )
     if component_groups is not None and "flat_output_indices" in component_groups:
         outputs = lax.gather(
             output_matrix.reshape(-1),
@@ -217,22 +232,12 @@ def update(
         parameters, function_input_indices, output_indices, function_indices,
         component_groups,
     )
-    outputs = _couple_carrier_values(outputs, carrier_entries, component_groups)
-    return _scatter_component_values(outputs, matrix, matrix_indices, component_groups)
-
-
-def _couple_carrier_values(outputs, carrier_entries, component_groups):
     # Keep the selected component values available to the carrier-product
     # transpose without including that coupling in checkpoint recomputation.
     if carrier_entries is not None:
         positions = component_groups["carrier_output_positions"]
         scaled_outputs = -outputs[positions] * carrier_entries
         outputs = outputs.at[positions].set(scaled_outputs, unique_indices=True)
-    return outputs
-
-
-def _scatter_component_values(outputs, matrix, matrix_indices, component_groups):
-    """Write replacement values with the same destination and duplicate semantics."""
     if component_groups is not None and "flat_matrix_indices" in component_groups:
         # Builder-proven unique, in-bounds offsets avoid tracing the generic
         # two-coordinate indexing path. Update order and component values stay
@@ -595,59 +600,22 @@ def simulate(
             # Assembly runs in the loop; solves and noise contraction stay full-vmap.
             row_carrier_entries = jnp.broadcast_to(carrier_entries, (count, carrier_entries.shape[1]))
 
-            signal_groups = None if component_groups is None else component_groups["signal"]
-            sparse_loop_output = (
-                reuse_noise
-                and signal_groups is not None
-                and "flat_matrix_indices" in signal_groups
-                and "carrier_output_positions" in signal_groups
-                and signal_output_indices[0].size < signal_matrix.size
+            def block_assemble(blocks):
+                block_parameters, block_entries = blocks
+                block_signal_matrix, block_noise_matrix = assemble(block_parameters, block_entries)
+                if reuse_noise:
+                    return (block_signal_matrix,)
+                return block_signal_matrix, block_noise_matrix
+
+            # Component values checkpoint internally; dense assembly and solves
+            # remain outside recomputation. The official JIT stages are unchanged.
+            assembled = _map_row_chunks(
+                block_assemble,
+                (parameters, row_carrier_entries),
+                chunk_size,
             )
-            if sparse_loop_output:
-                # Unique destinations and complete carrier mappings let the loop
-                # return just replacement values. Keep their evaluation/scaling
-                # order, then assemble and conjugate the full batch outside it.
-                def block_values(blocks):
-                    block_parameters, block_entries = blocks
-                    outputs = vmap(_component_values, in_axes=(0, None, None, None, None))(
-                        block_parameters, signal_function_input_indices,
-                        signal_output_indices, signal_function_indices, signal_groups,
-                    )
-                    outputs = vmap(_couple_carrier_values, in_axes=(0, 0, None))(
-                        outputs, block_entries, signal_groups,
-                    )
-                    return (outputs,)
-
-                values, = _map_row_chunks(
-                    block_values, (parameters, row_carrier_entries), chunk_size,
-                )
-                # Conjugation is entrywise: apply it to the base once and to
-                # replacement values after carrier scaling, before broadcasting
-                # and scattering. Avoid a conjugation over the dense batch.
-                conjugate_entries = _signal_conjugation_mask(signal_matrix.shape, carrier.shape[1])
-                base_signal = jnp.where(conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix)
-                conjugate_values = conjugate_entries.reshape(-1)[signal_groups["flat_matrix_indices"]]
-                values = jnp.where(conjugate_values, jnp.conjugate(values), values)
-                assembled_signal = vmap(_scatter_component_values, in_axes=(0, None, None, None))(
-                    values, base_signal, signal_matrix_indices, signal_groups,
-                )
-                assembled_noise = broadcast_noise(None)
-            else:
-                # Preserve generic/duplicate-index and per-frequency noise paths.
-                def block_assemble(blocks):
-                    block_parameters, block_entries = blocks
-                    block_signal_matrix, block_noise_matrix = assemble(block_parameters, block_entries)
-                    if reuse_noise:
-                        return (block_signal_matrix,)
-                    return block_signal_matrix, block_noise_matrix
-
-                assembled = _map_row_chunks(
-                    block_assemble,
-                    (parameters, row_carrier_entries),
-                    chunk_size,
-                )
-                assembled_signal = assembled[0]
-                assembled_noise = broadcast_noise(assembled[1] if len(assembled) > 1 else None)
+            assembled_signal = assembled[0]
+            assembled_noise = broadcast_noise(assembled[1] if len(assembled) > 1 else None)
             signal, noise = _solve_signal_and_noise(assembled_signal, assembled_noise, base_carrier_selections)
         else:
             raise ValueError(f"Unknown FREQUENCY_LOOP_SCOPE {FREQUENCY_LOOP_SCOPE!r}")
@@ -721,21 +689,6 @@ def _map_frequency_chunks(function, row_arrays: tuple, chunk_size: int):
     return signal, noise
 
 
-def _signal_conjugation_mask(matrix_shape, carrier_size):
-    """Sideband and mechanical conjugation regions, including augmented RHS."""
-    rows = jnp.arange(matrix_shape[0])[:, None]
-    columns = jnp.arange(matrix_shape[1])[None, :]
-    return (
-        (rows >= carrier_size) & (rows < 2 * carrier_size) & (columns >= carrier_size)
-    ) | ((rows >= 2 * carrier_size) & (columns < carrier_size))
-
-
-def _conjugate_signal_matrix(signal_matrix, carrier_size):
-    conjugate_entries = _signal_conjugation_mask(signal_matrix.shape[1:], carrier_size)
-    return jnp.where(conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix)
-
-
-
 def _assemble_signal_and_noise(
     parameters,
     carrier_entries,
@@ -793,7 +746,17 @@ def _assemble_signal_and_noise(
             unique_indices=unique_carrier_placing_indices,
         )
 
-    signal_matrix = _conjugate_signal_matrix(signal_matrix, carrier_size)
+    # Apply conjugation rules to enforce upper and lower sideband symmetry.
+    rows = jnp.arange(signal_matrix.shape[1])[:, None]
+    columns = jnp.arange(signal_matrix.shape[2])[None, :]
+    # The lower-sideband row blocks are adjacent; include the augmented RHS.
+    # Their union and the mechanical-to-upper block are disjoint.
+    conjugate_entries = (
+        (rows >= carrier_size) & (rows < 2 * carrier_size) & (columns >= carrier_size)
+    ) | ((rows >= 2 * carrier_size) & (columns < carrier_size))
+    signal_matrix = jnp.where(
+        conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix
+    )
 
     # Update noise source matrix (may depend on current parameters).
     # None: the caller builds one shared noise matrix (guarded row reuse).
