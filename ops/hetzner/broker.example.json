@@ -1,0 +1,15 @@
+{
+  "repo": "/home/developer/feyer-agents/control",
+  "state_root": "/home/developer/feyer-agents/state",
+  "github_repo": "timbtz/feyer-search-lab",
+  "assignment_ref": "refs/heads/control/hetzner-assignments",
+  "assignment_directory": "assignments/hetzner-codex-1",
+  "actor": "hetzner-codex-1",
+  "branch_prefix": "explore/hetzner/",
+  "codex": "/home/developer/.local/bin/codex",
+  "designated_model": "gpt-6-astra",
+  "designated_reasoning": "xhigh",
+  "max_turn_seconds": 3600,
+  "min_available_bytes": 2147483648,
+  "poll_seconds": 30
+}
