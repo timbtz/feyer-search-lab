@@ -43964,6 +43964,56 @@
         ],
         "target_evidence": []
       }
+    },
+    {
+      "seq": 17,
+      "at": 1795294470.955936,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "feedback-88f036f8ad43a25f20a7c1c4ed67b3200c6360c214b9379e3750e878364f21aa",
+        "executor": {
+          "kind": "supervisor",
+          "id": "claude-noise-reuse"
+        },
+        "kind": "explore",
+        "status": "completed",
+        "candidate_sha": "e525ee5ee4efabeeee9b3188b906fa560c0990a2",
+        "parents": [
+          "d09dc1d08fb046d08b3b699685d8ff780d611e87"
+        ],
+        "target_phases": [],
+        "hypothesis": "The broadcast operand in candidate 1's batched einsum is probably stored as a (101,751,751) complex128 forward residual (about 0.9 GB) and run as 101 GEMVs. Contracting the single noise matrix with one unbatched einsum should remove that buffer and turn the 101 GEMVs into one GEMM. Expected effect is lower peak RSS and slightly less forward/reverse execute time, not measured. Forward noise and all gradient coordinates may differ by reassociation rounding, so the strict check could fail.",
+        "change_summary": "Candidate 2 (variant B) builds on validated candidate 1 (f3139c7). Candidate 1 full run 5089ae06 passed official and strict: forward outputs bitwise identical to the parent, max normalized gradient error 1.6e-8, first run 23.320 s against the parent's 23.840 s (not a paired repeat, so the gain is unconfirmed), peak RSS 9.93 GB. Candidate 2 is not executed: this session cannot run code. New knob NOISE_REUSE_MODE in differometor/simulate.py: \"shared\" (default, variant B) or \"broadcast\" (exactly candidate 1). With \"shared\", the single (NN,NN) noise matrix built once outside the loop goes directly into _solve_signal_and_noise. There, a 2-D noise matrix selects jnp.einsum(\"ij,dbj->dbi\", N, noise_weights) instead of broadcasting to (101,751,751) for the batched bij,bj einsum. The 'solve' scope always uses broadcast because its loop slices noise rows. Solves are unchanged. Notes updated with candidate 1 results and the draft knob handoff.",
+        "stopping_reason": null,
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-02.json",
+        "source_digest": "88f036f8ad43a25f20a7c1c4ed67b3200c6360c214b9379e3750e878364f21aa",
+        "source_digest_kind": "canonical_json_sha256",
+        "feedback_ref": {
+          "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-02.json",
+          "artifact_digest": "88f036f8ad43a25f20a7c1c4ed67b3200c6360c214b9379e3750e878364f21aa",
+          "digest_kind": "canonical_json_sha256"
+        },
+        "session_id": "c3962834-70b7-4d37-bcd1-ac7a66ece4cd",
+        "iteration": null,
+        "checkpoint": null,
+        "next_input": null,
+        "input_receipt": null,
+        "evaluations": [
+          {
+            "job_id": "518c46e9b88f471f92b79f82c35ed008",
+            "candidate_sha": "e525ee5ee4efabeeee9b3188b906fa560c0990a2",
+            "profile": "screen"
+          },
+          {
+            "job_id": "ab7f50a0967e446db98e716cf8ea088a",
+            "candidate_sha": "e525ee5ee4efabeeee9b3188b906fa560c0990a2",
+            "profile": "full"
+          }
+        ],
+        "target_evidence": []
+      }
     }
   ],
   "comparison_regime": {
@@ -44013,6 +44063,50 @@
         {
           "job_id": "5089ae06eb04473a87bc1207cb411d8c",
           "candidate_sha": "f3139c71ae2a5c9de2b015aad7db1a730fac0e1e",
+          "profile": "full"
+        }
+      ],
+      "target_evidence": []
+    },
+    "feedback-88f036f8ad43a25f20a7c1c4ed67b3200c6360c214b9379e3750e878364f21aa": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "feedback-88f036f8ad43a25f20a7c1c4ed67b3200c6360c214b9379e3750e878364f21aa",
+      "executor": {
+        "kind": "supervisor",
+        "id": "claude-noise-reuse"
+      },
+      "kind": "explore",
+      "status": "completed",
+      "candidate_sha": "e525ee5ee4efabeeee9b3188b906fa560c0990a2",
+      "parents": [
+        "d09dc1d08fb046d08b3b699685d8ff780d611e87"
+      ],
+      "target_phases": [],
+      "hypothesis": "The broadcast operand in candidate 1's batched einsum is probably stored as a (101,751,751) complex128 forward residual (about 0.9 GB) and run as 101 GEMVs. Contracting the single noise matrix with one unbatched einsum should remove that buffer and turn the 101 GEMVs into one GEMM. Expected effect is lower peak RSS and slightly less forward/reverse execute time, not measured. Forward noise and all gradient coordinates may differ by reassociation rounding, so the strict check could fail.",
+      "change_summary": "Candidate 2 (variant B) builds on validated candidate 1 (f3139c7). Candidate 1 full run 5089ae06 passed official and strict: forward outputs bitwise identical to the parent, max normalized gradient error 1.6e-8, first run 23.320 s against the parent's 23.840 s (not a paired repeat, so the gain is unconfirmed), peak RSS 9.93 GB. Candidate 2 is not executed: this session cannot run code. New knob NOISE_REUSE_MODE in differometor/simulate.py: \"shared\" (default, variant B) or \"broadcast\" (exactly candidate 1). With \"shared\", the single (NN,NN) noise matrix built once outside the loop goes directly into _solve_signal_and_noise. There, a 2-D noise matrix selects jnp.einsum(\"ij,dbj->dbi\", N, noise_weights) instead of broadcasting to (101,751,751) for the batched bij,bj einsum. The 'solve' scope always uses broadcast because its loop slices noise rows. Solves are unchanged. Notes updated with candidate 1 results and the draft knob handoff.",
+      "stopping_reason": null,
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-02.json",
+      "source_digest": "88f036f8ad43a25f20a7c1c4ed67b3200c6360c214b9379e3750e878364f21aa",
+      "source_digest_kind": "canonical_json_sha256",
+      "feedback_ref": {
+        "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-02.json",
+        "artifact_digest": "88f036f8ad43a25f20a7c1c4ed67b3200c6360c214b9379e3750e878364f21aa",
+        "digest_kind": "canonical_json_sha256"
+      },
+      "session_id": "c3962834-70b7-4d37-bcd1-ac7a66ece4cd",
+      "iteration": null,
+      "checkpoint": null,
+      "next_input": null,
+      "input_receipt": null,
+      "evaluations": [
+        {
+          "job_id": "518c46e9b88f471f92b79f82c35ed008",
+          "candidate_sha": "e525ee5ee4efabeeee9b3188b906fa560c0990a2",
+          "profile": "screen"
+        },
+        {
+          "job_id": "ab7f50a0967e446db98e716cf8ea088a",
+          "candidate_sha": "e525ee5ee4efabeeee9b3188b906fa560c0990a2",
           "profile": "full"
         }
       ],
