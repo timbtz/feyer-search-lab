@@ -463,6 +463,18 @@ def simulate(
                 (parameters, row_carrier_entries, row_carrier_selections),
                 chunk_size,
             )
+        elif FREQUENCY_LOOP_SCOPE == "assemble":
+            # Assembly runs in the loop; solves and noise contraction stay full-vmap.
+            row_carrier_entries = jnp.broadcast_to(carrier_entries, (count, carrier_entries.shape[1]))
+
+            def block_assemble(blocks):
+                block_parameters, block_entries = blocks
+                return assemble(block_parameters, block_entries)
+
+            assembled_signal, assembled_noise = _map_row_chunks(
+                block_assemble, (parameters, row_carrier_entries), chunk_size
+            )
+            signal, noise = _solve_signal_and_noise(assembled_signal, assembled_noise, base_carrier_selections)
         else:
             raise ValueError(f"Unknown FREQUENCY_LOOP_SCOPE {FREQUENCY_LOOP_SCOPE!r}")
 
@@ -476,11 +488,29 @@ def simulate(
 # padded results are discarded. Read at trace time; not a traced argument.
 # Measured (AMD CPU2, one full run each): k=1 with scope "signal_noise" gave the
 # fastest first run (22.08 s vs 24.66 s) but every loop variant failed the strict
-# gradient regression (one coordinate, rel 1.9e-7 > 1e-7). The default is therefore
-# None, which keeps the strictly validated full-vmap layout.
-FREQUENCY_CHUNK_SIZE: int | None = None
-# Loop scope when chunking: "signal_noise" (assembly + solves) or "solve" (solves only).
-FREQUENCY_LOOP_SCOPE: str = "signal_noise"
+# gradient regression (one coordinate, rel 1.9e-7 > 1e-7) whenever the solves ran in
+# the loop. None (full vmap) is strictly validated. This revision tests k=1 with
+# scope "assemble" (solves kept full-vmap); revert to None if it fails strict.
+FREQUENCY_CHUNK_SIZE: int | None = 1
+# Loop scope when chunking: "signal_noise" (assembly + solves), "solve" (solves only)
+# or "assemble" (assembly only; solves stay full-vmap).
+FREQUENCY_LOOP_SCOPE: str = "assemble"
+
+
+def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):
+    """Apply `function` to row blocks; every output has a leading block-row axis."""
+    count = row_arrays[0].shape[0]
+    chunk_count = -(-count // chunk_size)
+    padded_count = chunk_count * chunk_size
+
+    def to_chunks(array):
+        if padded_count != count:
+            padding = jnp.broadcast_to(array[-1:], (padded_count - count, *array.shape[1:]))
+            array = jnp.concatenate([array, padding], axis=0)
+        return array.reshape(chunk_count, chunk_size, *array.shape[1:])
+
+    outputs = lax.map(function, tuple(to_chunks(array) for array in row_arrays))
+    return tuple(output.reshape(padded_count, *output.shape[2:])[:count] for output in outputs)
 
 
 def _map_frequency_chunks(function, row_arrays: tuple, chunk_size: int):

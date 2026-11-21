@@ -187,7 +187,31 @@ between A and A^H is introduced.
 - Hypothesis: the operator's default value reproduces the parent exactly (outputs bitwise, gradient
   ≈ parent's 4.55e-13 max abs vs baseline) and parent-level timing (~24.7 s), confirming the
   refactor itself is strict-safe and that all drift is attributable to the scan.
-- SHA / runs: pending.
+- SHA `7e00e16b6ad9aca51d1fcd6e9b746d5b02350f08`.
+- Screen `b0cccc6423f347a1aaf0d7560cc3eae8` (request `3a5f49926b534faeb60b1bcb0d1b6cf1`): first-run
+  24.820096 s; RSS 12547484 KiB.
+- Full `7dbd595522794a09bcc684080caf9b39` (request `26c26acadb734f598cac2ad2eca8dfd3`): **official
+  PASS, strict PASS (validated)**. First-run 24.815113 s (parent 24.657326, +0.158 s, single run,
+  within run-to-run variation not established); imports 0.288, build 0.840, forward lower 0.690 /
+  compile 7.037, forward exec 11.522, gradient lower 0.135 / compile 1.935, gradient exec 1.817;
+  compile/lower total 10.342; warm median 14.082 s (parent 13.802); RSS 12547532 KiB (parent
+  12547788); wall 104.92 s.
+- Comparison: all physical outputs exact; gradient max abs 4.547473508864641e-13, rel L2
+  6.65e-18, max normalized 1.64e-8, zero failures — same as parent. **Hypothesis confirmed**: the
+  refactor and default operator value are strict-safe; the drift in candidates 1–4 is caused by
+  running the solve path inside `lax.map`. No speedup claimed for candidate 5.
+
+### Candidate 6 — k=1, scope "assemble" (assembly in loop, solves full-vmap)
+- Change vs candidate 5: new scope "assemble" + generic `_map_row_chunks`; constants set to
+  k=1, scope "assemble". Assembly (signal `update`, carrier scaling, conjugation, noise `update`)
+  runs per frequency; the stacked (101, …) matrices feed the unchanged full-vmap solve section.
+- Hypothesis: candidate 4 showed the strict drift lives in the scanned solve path and that the
+  ~1.1 s reverse-execution saving (and much of the RSS saving) comes from per-frequency assembly.
+  Keeping solves batched should pass strict while recovering part of candidate 1's gain
+  (expected gradient exec ≈0.7–1.0 s, forward exec between 9 and 11.5 s; unmeasured). Risk: the
+  stacked assembly outputs re-materialize ~1.8 GB, and assembly reverse in a scan may still round
+  differently (component-function gradients), which would show as a different failing pattern.
+- SHA / runs: pending. If strict fails, revert the constants to None (candidate 5 state).
 
 ## Revised operator specification (proposal for coordinator review)
 
