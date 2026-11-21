@@ -38,3 +38,31 @@ conj(input) (probed: antilinear part nonzero), the other 17 are holomorphic in t
   7.61617e-5 vs 7.61660e-5 / 7.61582e-5; max |log S - log ref| 5.374e-6.
   Observation: forward compile fell ~3 s; gradient compile rose ~0.8 s (custom_linear_solve transposes and
   matvec linearization instead of the parent's single bwd callback). Unattributed until profiled.
+- SHA `4e944016ac4e90680b0b9539e62b9fb915c1a767`. Screen `1df7571460da4618a984990d95f88415`
+  (request in .lab/c1-screen-request-id): first run **5.358 s** (parent 7.738 s full), wall 5.87 s,
+  peak RSS 0.57 GB. Full `100b6be71db24c7b9766ef74f6143bfb` submitted (result below when recorded).
+- Cross-setup (exact tree, CPU 102): vs sparse parent arrays (exact-4af20b7) all 8 OK: grad relL2
+  <= 2.0e-10, carrier bitwise, max |dlog S| 2.4e-8 (uifo_rand3, where refined SuperLU itself is ~2.5e-8
+  from the extended-precision truth per the first worker), dev 6.5e-10, others <= 6.5e-11. vs pristine:
+  same profile as the parent (rand1 2.0e-4 / rand3 5.8e-5 flagged; dense pristine is the inaccurate side).
+- jaxcompat (voyager): 9/11 ok — value_and_grad_jit, descent, vmap, jvp, jacfwd, eager, public_run,
+  checkpoint, second setup; both HVPs raise the explicit "Pure callbacks do not support JVP" error
+  (parent ac49ee4: 7/11, jvp and jacfwd also unsupported because of its custom_vjp).
+
+## Candidate 2: whole-pass host evaluation with an explicit VJP (HOST_PASS = True)
+- Coordinator correction: NumPy internals are allowed; reverse-mode gradients on any setup with random
+  parameters are mandatory; forward mode is preferred, not mandatory. Keep a faster custom_vjp variant as a
+  separate candidate if full semantics cost a substantial part of the compile win.
+- `differometor/host_pass.py`: after insertion, linking and qhd phases (JAX), one `custom_vjp` whose fwd/bwd
+  are NumPy callbacks: component values and Wirtinger Jacobians from the re-bound source (`host.py`),
+  ordered last-write assembly, carrier scaling, sideband conjugation, SuperLU + refinement with one
+  factorization per row for the N/H forward and T/N adjoint solves, noise and its adjoint, and the exact
+  adjoint of parameter expansion. `HOST_PASS = False` returns to candidate 1.
+- Limitation (explicit, never silent): custom_vjp -> jvp, jacfwd and second order raise JAX's errors.
+- In-process check vs candidate 1 (JAX autodiff path), jit(value_and_grad): dev loss 8.4e-12, signal 4.3e-10,
+  noise 3.3e-10, grad relL2 2.1e-11 (worst normalized 1.0e-9); uifo_20_5000 (2 ports) grad relL2 7.0e-13.
+  jit+run of value_and_grad 4.58 s -> 0.88 s. (A first comparison was invalid: `import
+  differometor.simulate` binds the re-exported function, not the module, so the flag had not switched.)
+- Dev smoke (benchmark.py, CPU 102): PASS, first run 3.141 s: imports 0.295, build 0.825, forward lower
+  0.038 / compile 0.265, forward 0.540, sensitivity lower 0.026 / compile 0.207, gradient lower 0.018 /
+  compile 0.211, gradient 0.711; warm median 0.425 s; FD autodiff 7.61617e-5 vs 7.61662e-5 / 7.61548e-5.

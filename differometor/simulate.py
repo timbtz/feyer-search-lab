@@ -31,6 +31,7 @@ from differometor.components import FUNCTIONS, UNIT_VACUUM, H_PLANCK, F0
 from differometor import components as _components
 from differometor.sparse import SparseStructure, SparseSystem, sparse_solve
 from differometor import host as _host
+from differometor import host_pass as _host_pass
 
 
 jax.config.update("jax_enable_x64", True)
@@ -315,6 +316,7 @@ def simulate(
     *,
     component_groups: dict | None = None,
     sparse_structure: SparseStructure | None = None,
+    host_plan=None,
 ) -> tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
     """
     Run one full simulation pass: carrier, signal, and quantum noise.
@@ -421,6 +423,20 @@ def simulate(
 
     # Quadrature-homodyne-detector phase factors (unit magnitude complex phase).
     qhd_phase_values = jnp.exp(1j * jnp.radians(parameters[0, qhd_parameter_indices]))
+
+    if sparse_structure is not None and SPARSE_SOLVES and HOST_PASS and host_plan is not None:
+        return _simulate_host_pass(
+            host_plan,
+            parameters,
+            qhd_phase_values,
+            carrier_changing_values,
+            signal_changing_values,
+            carrier_matrix,
+            signal_matrix,
+            noise_matrix,
+            noise_selection_vectors,
+            qhd_placing_indices,
+        )
 
     if sparse_structure is not None and SPARSE_SOLVES:
         return _simulate_sparse(
@@ -901,6 +917,51 @@ def _simulate_sparse(
     return carrier.T, signal.T, noise.squeeze()
 
 
+# Evaluate the whole carrier/signal/noise pass on the host with an explicit
+# reverse-mode derivative (`differometor.host_pass`). Fastest first run, but a
+# custom_vjp: jvp, jacfwd and second order raise JAX's explicit errors. False
+# keeps the forward-mode capable path (HOST_COMPONENTS + custom_linear_solve).
+HOST_PASS: bool = True
+
+
+def _simulate_host_pass(
+    plan,
+    parameters,
+    qhd_phase_values,
+    carrier_changing_values,
+    signal_changing_values,
+    carrier_matrix,
+    signal_matrix,
+    noise_matrix,
+    noise_selection_vectors,
+    qhd_placing_indices,
+):
+    """`_simulate_sparse` evaluated on the host behind one custom VJP."""
+    structure = plan.structure
+    noise_selection_vectors = lax.scatter_mul(
+        noise_selection_vectors,
+        qhd_placing_indices.reshape(-1, 3),
+        qhd_phase_values,
+        lax.ScatterDimensionNumbers(
+            update_window_dims=(),
+            inserted_window_dims=(0, 1, 2),
+            scatter_dims_to_operand_dims=(0, 1, 2),
+        ),
+        unique_indices=True,
+    )
+    carrier, signal, noise = _host_pass.host_pass(
+        plan,
+        parameters.astype(jnp.complex128),
+        carrier_changing_values,
+        signal_changing_values,
+        structure.carrier.base_values(carrier_matrix).astype(jnp.complex128),
+        structure.signal.base_values(signal_matrix).astype(jnp.complex128),
+        structure.noise.base_values(noise_matrix).astype(jnp.complex128),
+        noise_selection_vectors.astype(jnp.complex128),
+    )
+    return carrier.T, signal.T, noise.squeeze()
+
+
 def _build_sparse_structure(simulation_arrays):
     """Derive static sparsity metadata from concrete built arrays (host side)."""
     def host(name):
@@ -1283,6 +1344,9 @@ def run_build_step(
         sparse_structure = _build_sparse_structure(simulation_arrays)
         if sparse_structure is not None:
             simulation_arrays["sparse_structure"] = sparse_structure
+            host_plan = _host_pass.build_host_plan(simulation_arrays, sparse_structure, component_groups)
+            if host_plan is not None:
+                simulation_arrays["host_plan"] = host_plan
 
     if timeit:
         for array in simulation_arrays.values():
