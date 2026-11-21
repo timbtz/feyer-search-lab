@@ -103,20 +103,21 @@ graph TD
   c78["c33dafe112ea"]
   c79["c4c7260e9db2"]
   c80["c99bd28b0ba6"]
-  c81["cefa4ada921b"]
-  c82["d09dc1d08fb0"]
-  c83["d28804741cce"]
-  c84["d7f257ab82f0"]
-  c85["d947905c9b73"]
-  c86["e0a1dc69f495"]
-  c87["e2fd659e6f42"]
-  c88["e525ee5ee4ef"]
-  c89["e63f627129ed"]
-  c90["e82b74c1d274"]
-  c91["eca3eda479a2"]
-  c92["f3139c71ae2a"]
-  c93["f5f2b5bda7b6"]
-  c94["fbcfaa3a889e"]
+  c81["cb502e8a5a15"]
+  c82["cefa4ada921b"]
+  c83["d09dc1d08fb0"]
+  c84["d28804741cce"]
+  c85["d7f257ab82f0"]
+  c86["d947905c9b73"]
+  c87["e0a1dc69f495"]
+  c88["e2fd659e6f42"]
+  c89["e525ee5ee4ef"]
+  c90["e63f627129ed"]
+  c91["e82b74c1d274"]
+  c92["eca3eda479a2"]
+  c93["f3139c71ae2a"]
+  c94["f5f2b5bda7b6"]
+  c95["fbcfaa3a889e"]
   c2 -->|refine| c35
   c4 -->|explore| c62
   c5 -->|explore| c23
@@ -131,20 +132,20 @@ graph TD
   c9 -->|explore| c47
   c9 -->|explore| c65
   c9 -->|explore| c74
-  c9 -->|explore| c90
+  c9 -->|explore| c91
   c10 -->|explore| c63
   c11 -->|explore| c50
-  c12 -->|explore| c91
-  c13 -->|combine| c86
+  c12 -->|explore| c92
+  c13 -->|combine| c87
   c17 -->|explore| c24
   c18 -->|explore| c34
   c20 -->|explore| c76
   c23 -->|explore| c2
   c23 -->|explore| c44
   c27 -->|explore| c28
-  c28 -->|combine| c86
+  c28 -->|combine| c87
   c29 -->|explore| c12
-  c30 -->|explore| c83
+  c30 -->|explore| c84
   c32 -->|explore| c55
   c34 -->|explore| c54
   c36 -->|combine| c13
@@ -159,22 +160,22 @@ graph TD
   c47 -->|explore| c67
   c47 -->|explore| c68
   c47 -->|explore| c71
-  c47 -->|explore| c82
+  c47 -->|explore| c83
   c48 -->|explore| c30
   c49 -->|explore| c58
   c50 -->|explore| c29
-  c50 -->|explore| c85
-  c51 -->|explore| c81
+  c50 -->|explore| c86
+  c51 -->|explore| c82
   c54 -->|explore| c64
   c55 -->|explore| c21
   c56 -->|explore| c32
   c57 -->|refine| c59
   c58 -->|explore| c18
-  c59 -->|refine| c93
-  c60 -->|diagnose| c87
+  c59 -->|refine| c94
+  c60 -->|diagnose| c88
   c61 -->|explore| c4
   c61 -->|explore| c73
-  c62 -->|explore| c84
+  c62 -->|explore| c85
   c63 -->|explore| c11
   c64 -->|explore| c17
   c66 -->|explore| c43
@@ -185,25 +186,26 @@ graph TD
   c76 -->|explore| c80
   c77 -->|explore| c10
   c80 -->|explore| c39
-  c82 -->|explore| c0
-  c82 -->|explore| c22
-  c82 -->|explore| c27
-  c82 -->|explore| c36
-  c82 -->|explore| c61
-  c82 -->|explore| c75
-  c82 -->|explore| c88
-  c82 -->|explore| c92
-  c83 -->|explore| c66
-  c84 -->|explore| c89
-  c85 -->|explore| c20
-  c89 -->|explore| c77
-  c92 -->|combine| c13
-  c93 -->|refine| c45
+  c83 -->|explore| c0
+  c83 -->|explore| c22
+  c83 -->|explore| c27
+  c83 -->|explore| c36
+  c83 -->|explore| c61
+  c83 -->|explore| c75
+  c83 -->|explore| c89
+  c83 -->|explore| c93
+  c84 -->|explore| c66
+  c85 -->|explore| c90
+  c86 -->|explore| c20
+  c88 -->|diagnose| c81
+  c90 -->|explore| c77
+  c93 -->|combine| c13
+  c94 -->|refine| c45
 ```
 
 Every edge records intended inputs, not proof of speedup.
 
-Recorded jobs: 14. Decisions/events: 120.
+Recorded jobs: 14. Decisions/events: 129.
 
 ## External research records
 
@@ -313,5 +315,14 @@ Recorded jobs: 14. Decisions/events: 120.
 | claude-sparse-adjoint | explore | 0dea4ec707f9 | forward, gradient | failed |
 | claude-sparse-adjoint | refine | 4af20b7baa9e | forward, gradient | evaluated |
 | teammate-review | diagnose | e2fd659e6f42 | setup, compilation, forward, sensitivity, gradient, transfer | evaluated |
+| independent-verification | diagnose | e2fd659e6f42 | unknown | evaluated |
+| independent-verification | diagnose | 3b805077bb5c | unknown | evaluated |
+| independent-verification | diagnose | aac9904cb4dd | unknown | evaluated |
+| independent-verification | diagnose | 0dea4ec707f9 | unknown | evaluated |
+| independent-verification | diagnose | 4af20b7baa9e | unknown | evaluated |
+| independent-verification | diagnose | cb502e8a5a15 | unknown | evaluated |
+| host_compatibility | diagnose | unknown | gradient | current |
+| verification_constraints | diagnose | unknown | unknown | current |
+| numerical_audit | diagnose | unknown | forward, gradient | current |
 
 These records are evidence, not competing task claims or winner declarations.
