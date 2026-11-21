@@ -697,12 +697,18 @@ def _sparse_values(system: SparseSystem, base_matrix, outputs):
     )
 
 
-def _batched_outputs(parameters, function_input_indices, output_indices, function_indices, groups, indices=None):
+def _batched_outputs(parameters, function_input_indices, output_indices, function_indices, groups, indices=None,
+                     selection=None):
     if SHARED_COMPONENT_COLUMNS and indices is not None and groups is not None and "output_rows" in groups:
-        evaluate = vmap(_shared_component_outputs, in_axes=(0, None, None, None))
+        if not STATIC_OUTPUT_SELECTION:
+            selection = None
+        evaluate = vmap(
+            lambda row, output: _shared_component_outputs(row, output, groups, indices, selection),
+            in_axes=(0, None),
+        )
         if COMPONENT_REMAT:
-            evaluate = jax.checkpoint(evaluate, prevent_cse=False, static_argnums=(2, 3))
-        return evaluate(parameters, output_indices, groups, indices)
+            evaluate = jax.checkpoint(evaluate, prevent_cse=False)
+        return evaluate(parameters, output_indices)
     return vmap(_component_outputs, in_axes=(0, None, None, None, None))(
         parameters, function_input_indices, output_indices, function_indices, groups
     )
@@ -721,9 +727,11 @@ COMPONENT_REMAT: bool = False
 # Evaluate each `*_lower` variant together with its base function on concatenated
 # rows (slot 0 negated for the lower rows), halving those groups' kernels.
 JOINT_LOWER_GROUPS: bool = True
+# Select update values from grouped outputs with static build-time indices.
+STATIC_OUTPUT_SELECTION: bool = True
 
 
-def _shared_component_outputs(parameters, output_indices, groups, indices):
+def _shared_component_outputs(parameters, output_indices, groups, indices, selection=None):
     """`_component_outputs` for one parameter row with shared, statically gathered columns."""
     columns = {}
 
@@ -788,6 +796,9 @@ def _shared_component_outputs(parameters, output_indices, groups, indices):
         results[function_index] = _evaluate_component_columns(function_index, mask_of(function_index, len(slots)), slots)
     group_values = [results[function_index] for function_index in present]
     output_matrix = jnp.concatenate(group_values, axis=0)
+    if selection is not None:
+        # Static (build-time) grouped row and output column of every update value.
+        return output_matrix[selection[0], selection[1]]
     output_rows = groups["output_rows"][output_indices[0]]
     return output_matrix[output_rows, output_indices[1]]
 
@@ -802,6 +813,86 @@ def _evaluate_component_columns(function_index, differentiable, slots):
             return base(_ParameterSlots((-values[0],) + tuple(values[1:])))
         return vmap(evaluate)(*columns)
     return vmap(lambda *values: function(_ParameterSlots(values)))(*columns)
+
+
+# Evaluate each component function once for the carrier, signal and noise systems
+# together (rows of all systems flattened and concatenated). Per-element arithmetic
+# is unchanged; only the number of separately compiled kernels drops.
+# Measured (dev, CPU 100, same-window A/B): forward vjp compile unchanged (4.31 s
+# vs 4.31/4.33 s), gradient compile +0.14 s; forward-only compile -0.46 s. Off.
+CROSS_SYSTEM_COMPONENTS: bool = False
+
+
+def _joint_component_outputs(systems):
+    """Update values for several systems from one evaluation per component function.
+
+    `systems` lists (name, rows (B, P), groups, static group indices, static output
+    selection). Returns {name: (B, M) update values}.
+    """
+    cache = {}
+
+    def column(name, rows, index_column):
+        key = (name, index_column.tobytes())
+        if key not in cache:
+            cache[key] = rows[:, index_column]
+        return cache[key]
+
+    plans = {}
+    separate = []
+    for name, rows, groups, indices, _ in systems:
+        for function_index in sorted(groups["function_rows"]):
+            group_indices = indices[function_index]
+            if group_indices.ndim != 2 or group_indices.shape[1] == 0:
+                separate.append((name, function_index))
+                continue
+            base = _LOWER_TO_BASE.get(FUNCTIONS[function_index]) if (LOWER_SLOT_PRUNING and JOINT_LOWER_GROUPS) else None
+            evaluated = FUNCTIONS.index(base) if base is not None else function_index
+            plans.setdefault(evaluated, []).append((name, function_index, base is not None))
+    by_name = {system[0]: system for system in systems}
+    results = {}
+    for name, function_index in separate:
+        _, rows, _, indices, _ = by_name[name]
+        group_indices = indices[function_index]
+        results[(name, function_index)] = vmap(
+            lambda row: _evaluate_component_group(function_index, row[group_indices])
+        )(rows)
+    for evaluated, segments in plans.items():
+        widths = {by_name[name][3][function_index].shape[1] for name, function_index, _ in segments}
+        if len(widths) != 1:
+            raise ValueError("Component groups of one function must share their input width")
+        width = widths.pop()
+        keep = [False] * width
+        for name, function_index, _ in segments:
+            diff_slots = by_name[name][2].get("diff_slots")
+            for slot in range(width):
+                if not (COMPONENT_SLOT_PRUNING and diff_slots is not None and function_index in diff_slots):
+                    keep[slot] = True
+                elif slot in diff_slots[function_index]:
+                    keep[slot] = True
+        columns = []
+        for slot in range(width):
+            parts = []
+            for name, function_index, negate in segments:
+                _, rows, _, indices, _ = by_name[name]
+                value = column(name, rows, np.ascontiguousarray(indices[function_index][:, slot])).reshape(-1)
+                parts.append(-value if (negate and slot == 0) else value)
+            value = parts[0] if len(parts) == 1 else jnp.concatenate(parts, axis=0)
+            columns.append(value if keep[slot] else lax.stop_gradient(value))
+        function = FUNCTIONS[evaluated]
+        values = vmap(lambda *items: function(_ParameterSlots(items)))(*columns)
+        offset = 0
+        for name, function_index, _ in segments:
+            _, rows, _, indices, _ = by_name[name]
+            count = rows.shape[0] * indices[function_index].shape[0]
+            results[(name, function_index)] = values[offset : offset + count].reshape(
+                rows.shape[0], indices[function_index].shape[0], *values.shape[1:]
+            )
+            offset += count
+    outputs = {}
+    for name, rows, groups, indices, selection in systems:
+        matrix = jnp.concatenate([results[(name, index)] for index in sorted(groups["function_rows"])], axis=1)
+        outputs[name] = matrix[:, selection[0], selection[1]]
+    return outputs
 
 
 def _simulate_sparse(
@@ -837,17 +928,42 @@ def _simulate_sparse(
     outside the static pattern are identically zero in the dense formulation.
     """
     groups = component_groups if component_groups is not None else {}
+    reuse_noise = NOISE_ROW_REUSE and "noise_row_reuse" in groups
+
+    joint = None
+    if (
+        CROSS_SYSTEM_COMPONENTS
+        and SHARED_COMPONENT_COLUMNS
+        and STATIC_OUTPUT_SELECTION
+        and structure.group_indices is not None
+        and structure.output_selection is not None
+        and all(
+            isinstance(groups.get(name), dict)
+            and "function_rows" in groups[name]
+            and name in structure.group_indices
+            and name in structure.output_selection
+            for name in ("carrier", "signal", "noise")
+        )
+    ):
+        carrier_rows = expand_parameters(parameters, carrier_changing_parameter_indices, carrier_changing_values)
+        signal_rows = expand_parameters(carrier_rows, signal_changing_parameter_indices, signal_changing_values)
+        noise_rows = signal_rows[:1] if reuse_noise else signal_rows
+        joint = _joint_component_outputs([
+            (name, rows, groups[name], structure.group_indices[name], structure.output_selection[name])
+            for name, rows in (("carrier", carrier_rows), ("signal", signal_rows), ("noise", noise_rows))
+        ])
 
     # Carrier solve.
     parameters = expand_parameters(parameters, carrier_changing_parameter_indices, carrier_changing_values)
     carrier_system = structure.carrier
-    carrier_outputs = _batched_outputs(
+    carrier_outputs = joint["carrier"] if joint is not None else _batched_outputs(
         parameters,
         carrier_function_input_indices,
         carrier_output_indices,
         carrier_function_indices,
         groups.get("carrier"),
         None if structure.group_indices is None else structure.group_indices.get("carrier"),
+        None if structure.output_selection is None else structure.output_selection.get("carrier"),
     )
     carrier_values = _sparse_values(carrier_system, carrier_matrix, carrier_outputs)
     carrier_coefficients, carrier_rhs = carrier_system.split(carrier_values)
@@ -857,13 +973,14 @@ def _simulate_sparse(
     # Signal assembly.
     parameters = expand_parameters(parameters, signal_changing_parameter_indices, signal_changing_values)
     signal_system = structure.signal
-    signal_outputs = _batched_outputs(
+    signal_outputs = joint["signal"] if joint is not None else _batched_outputs(
         parameters,
         signal_function_input_indices,
         signal_output_indices,
         signal_function_indices,
         groups.get("signal"),
         None if structure.group_indices is None else structure.group_indices.get("signal"),
+        None if structure.output_selection is None else structure.output_selection.get("signal"),
     )
     signal_values = _sparse_values(signal_system, signal_matrix, signal_outputs)
     placing = structure.signal_placing_positions
@@ -904,15 +1021,15 @@ def _simulate_sparse(
 
     # Noise source matrix values; built once when no noise input changes per row.
     noise_system = structure.noise
-    reuse_noise = NOISE_ROW_REUSE and "noise_row_reuse" in groups
     noise_rows = parameters[:1] if reuse_noise else parameters
-    noise_outputs = _batched_outputs(
+    noise_outputs = joint["noise"] if joint is not None else _batched_outputs(
         noise_rows,
         noise_function_input_indices,
         noise_output_indices,
         noise_function_indices,
         groups.get("noise"),
         None if structure.group_indices is None else structure.group_indices.get("noise"),
+        None if structure.output_selection is None else structure.output_selection.get("noise"),
     )
     noise_values = _sparse_values(noise_system, noise_matrix, noise_outputs)
 
@@ -964,6 +1081,7 @@ def _build_sparse_structure(simulation_arrays):
     placing = signal.positions(placing_rows, placing_cols)
     unique_placing = np.unique(placing).size == placing.size
     group_indices = {}
+    output_selection = {}
     component_groups = simulation_arrays.get("component_groups")
     if isinstance(component_groups, dict):
         for system in ("carrier", "signal", "noise"):
@@ -973,7 +1091,12 @@ def _build_sparse_structure(simulation_arrays):
                     int(function_index): np.asarray(group["parameter_indices"][function_index], dtype=np.int64)
                     for function_index in group["function_rows"]
                 }
-    return SparseStructure(carrier, signal, noise, carrier_size, placing, unique_placing, group_indices or None)
+                output_rows, output_columns = host(f"{system}_output_indices")
+                grouped_rows = np.asarray(group["output_rows"], dtype=np.int64)[np.asarray(output_rows, dtype=np.int64)]
+                output_selection[system] = (grouped_rows, np.asarray(output_columns, dtype=np.int64))
+    return SparseStructure(
+        carrier, signal, noise, carrier_size, placing, unique_placing, group_indices or None, output_selection or None
+    )
 
 
 def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):

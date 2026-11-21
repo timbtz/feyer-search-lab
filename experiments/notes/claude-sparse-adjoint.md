@@ -126,3 +126,30 @@
 - Dev A/B: forward vjp compile 4.41 -> 4.07 s; gradient compile 1.07 -> 1.04 s.
 - Numerics: forward outputs bitwise identical to candidate 3 on all 8 setups; gradient relL2
   <= 6.7e-17. Harness first run (excl. imports) 0.1-0.5 s lower per case (dev 7.45 -> 6.91 s).
+- SHA `b890b981d280ec70ef033cc96f427e61fd605ab4`. Screen `2c3235e649b04fe0863cb9ea8b185592`:
+  7.372 s. Full `3151c9a9173c4c27bf77fcccafebebfa`: **official PASS**, strict FAIL (same class);
+  first run **7.388 s**.
+
+## Rejected experiment — cross-system joint component evaluation (flag off)
+- One evaluation per component function across carrier/signal/noise rows. Same-window A/B:
+  forward vjp compile 4.31 s vs 4.31/4.33 s (unchanged), gradient compile +0.14 s. Off.
+- Static output selection (STATIC_OUTPUT_SELECTION, on): forward vjp compile -0.09 s,
+  gradient -0.02 s (marginal); bitwise identical on all 8 setups incl. gradients.
+
+## Candidate 6 — custom_linear_solve instead of custom_vjp (JAX transformation semantics)
+- Requirement (organizer, via coordinator): keep full JAX transformation semantics
+  (jvp/jacfwd/hessian/vmap/jit(value_and_grad)); custom_vjp cannot be forward-differentiated.
+- `sparse_solve` now uses `lax.custom_linear_solve`: matvec = JAX scatter-add over the value
+  vector (differentiable in the values), solve/transpose_solve = SuperLU callbacks with the
+  same iterative refinement (vmap_method broadcast_all). No custom_vjp remains.
+- Primitive tests vs dense jnp.linalg.solve (random complex 30x30, both transpose modes):
+  vjp/grad/vmap/vmap-grad <= 2.7e-15, jvp <= 7e-16, hessian <= 5.6e-17, jacfwd == grad.
+- jaxcompat.py (voyager) vs pristine: OVERALL COMPATIBLE — value_and_grad_jit 4.0e-10,
+  descent_3_steps 1.4e-8, vmap_value_and_grad 4.0e-10, jvp 2.1e-10, jacfwd_2 1.5e-9,
+  hvp fwd-over-rev / rev-over-rev 2.4e-12, eager 4.0e-10, public_run 9.3e-12,
+  checkpoint_grad 4.0e-10, second_setup_same_process 4.0e-10.
+- Dev (CPU 100): forward vjp compile 4.29 s, gradient compile 1.05 s (within host noise of the
+  custom_vjp version); first run 7.31 s; official benchmark PASS.
+- Numerics: forward outputs bitwise identical to candidate 4 (job 3151c9a9 arrays); gradient max
+  rel 2.8e-10, relL2 2.8e-12 (JAX-transposed summation order). Cross-setup vs pristine unchanged
+  from candidate 4; gradient vs candidate 4 worst 4.4e-11 (dev), <= 5.6e-13 elsewhere.

@@ -8,16 +8,10 @@ static pytree metadata. Only the numerical values of the structural nonzeros are
 traced.
 
 `sparse_solve` factors each system with SciPy's SuperLU through
-`jax.pure_callback` and defines its reverse-mode derivative with a custom VJP:
-
-    x = op(A)^-1 b,  op(A) in {A, A^T}
-    b_bar = op(A)^-T x_bar
-    A_bar[i, j] = -b_bar[i] x[j]   (op = identity)
-    A_bar[i, j] = -b_bar[j] x[i]   (op = transpose)
-
-JAX uses the plain (non-conjugated) transpose of complex-linear maps for its
-cotangents; `A^H` systems are expressed as transposed solves of `conj(A)` so JAX
-differentiates the conjugation itself.
+`jax.pure_callback` inside `jax.lax.custom_linear_solve`, whose matrix-vector
+product is ordinary differentiable JAX code. JAX therefore derives forward- and
+reverse-mode derivatives of any order and batching rules itself. `A^H` systems are
+expressed as transposed solves of `conj(A)` so JAX differentiates the conjugation.
 """
 
 from __future__ import annotations
@@ -28,6 +22,7 @@ from functools import partial
 import jax
 import jax.numpy as jnp
 import numpy as np
+from jax import lax
 
 _splu = None
 _csc_matrix = None
@@ -130,9 +125,13 @@ def _call(pattern, transpose, values, rhs):
     )
 
 
-@partial(jax.custom_vjp, nondiff_argnums=(0, 1))
 def sparse_solve(pattern: SparsePattern, transpose: bool, values, rhs):
     """Solve op(A) x = b for sparse A with several right-hand sides.
+
+    Implemented with `jax.lax.custom_linear_solve`: the matrix-vector product is a
+    differentiable JAX scatter-add over the structural nonzeros, and the solve and
+    transpose solve are SuperLU callbacks. JAX derives forward-mode (jvp, jacfwd),
+    reverse-mode and higher-order derivatives and vmap from this definition.
 
     Parameters
     ----------
@@ -150,26 +149,25 @@ def sparse_solve(pattern: SparsePattern, transpose: bool, values, rhs):
     jnp.ndarray
         Solutions with shape (L, K, N), complex128.
     """
-    return _call(pattern, transpose, values, rhs)
-
-
-def _sparse_solve_fwd(pattern, transpose, values, rhs):
-    solution = _call(pattern, transpose, values, rhs)
-    return solution, (values, solution)
-
-
-def _sparse_solve_bwd(pattern, transpose, residuals, solution_bar):
-    values, solution = residuals
-    rhs_bar = _call(pattern, not transpose, values, solution_bar)
+    values = values.astype(jnp.complex128)
+    rhs = rhs.astype(jnp.complex128)
     if transpose:
-        left, right = pattern.cols, pattern.rows
+        out_rows, in_cols = pattern.cols, pattern.rows
     else:
-        left, right = pattern.rows, pattern.cols
-    values_bar = -jnp.einsum("lkn,lkn->ln", rhs_bar[..., left], solution[..., right])
-    return values_bar.astype(values.dtype), rhs_bar
+        out_rows, in_cols = pattern.rows, pattern.cols
 
+    def matvec(x):
+        # (op(A) x)[l, k, i] = sum over entries e with out_rows[e] == i.
+        products = values[..., None, :] * x[..., in_cols]
+        return jnp.zeros_like(x).at[..., out_rows].add(products)
 
-sparse_solve.defvjp(_sparse_solve_fwd, _sparse_solve_bwd)
+    def solve(_, b):
+        return _call(pattern, transpose, values, b)
+
+    def transpose_solve(_, b):
+        return _call(pattern, not transpose, values, b)
+
+    return lax.custom_linear_solve(matvec, rhs, solve, transpose_solve)
 
 
 class SparseSystem:
@@ -261,9 +259,11 @@ class SparseStructure:
     """Static sparse metadata for one built setup (no array leaves)."""
 
     def __init__(self, carrier, signal, noise, carrier_size, signal_placing_positions, unique_placing,
-                 group_indices=None):
+                 group_indices=None, output_selection=None):
         # group_indices: {system: {function_index: (rows, slots) int array}} or None.
+        # output_selection: {system: (grouped_rows, output_columns)} or None.
         self.group_indices = group_indices
+        self.output_selection = output_selection
         self.carrier = carrier
         self.signal = signal
         self.noise = noise
@@ -289,6 +289,10 @@ class SparseStructure:
                 digest.update(np.int64(indices.ndim).tobytes())
                 digest.update(np.asarray(indices.shape, dtype=np.int64).tobytes())
                 digest.update(indices.tobytes())
+        for system in sorted(output_selection or {}):
+            digest.update(system.encode())
+            for part in output_selection[system]:
+                digest.update(np.asarray(part, dtype=np.int64).tobytes())
         self._key = digest.hexdigest()
 
     def __hash__(self):
