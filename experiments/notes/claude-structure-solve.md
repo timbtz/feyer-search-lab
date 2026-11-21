@@ -58,7 +58,37 @@
   bitwise equal to candidate 1. `False` restores the mask path.
 - Hypothesis: small saving in the per-frequency assembly loop (no full-matrix conj+select, no mask
   iota/compare) in forward and reverse; expected ≤0.2 s, possibly within noise. Unmeasured.
+- SHA `39b23e3c6e84b2a7498c7bce932a2f6ba41f227e`.
+- Screen `d45bc12dcf0a4bdcac51dac0f9bbed3f` (request `ee7e4b04aa4e49a58f533e30eb8128cf`): first run
+  23.133 s.
+- Full `4cc17640e44446f887b613d035af7125` (request `091b607bb7a24bfeb0ae46f5c689a312`): **official
+  PASS, strict PASS**. First run 22.793836 s (cand. 1: 22.495, +0.30 s). Imports 0.289, build 0.831,
+  forward lower 0.836 / compile 7.755, forward exec 8.618, gradient lower 0.184 / compile 1.972,
+  gradient exec 1.864 (cand. 1: 1.668). Warm median 10.668 s (forward 8.607, gradient 1.850 vs cand. 1
+  1.638 — consistent across all 3 repeats). RSS 8132756 KiB. Wall 90.35 s.
+- Comparison: gradient bitwise identical to candidate 1 (max abs 8.076e-10, same rel L2) as predicted.
+- **Hypothesis rejected (timing)**: slice updates are slower in reverse (~+0.2 s; likely the two
+  dynamic-update-slice transposes produce extra full-matrix copies vs one fused select). Decision:
+  `SLICE_CONJUGATION = False`.
+
+## Candidate 3 — candidate 1 code path restored (repeat measurement)
+- Change: `SLICE_CONJUGATION = False` only; executed code path equals candidate 1 (`4c12600`).
+- Purpose: second full first-run sample for candidate 1's computation; branch head on best validated
+  configuration. Expectation ≈22.5 s, gradient identical to cand. 1 (8.08e-10 max abs). Not a new idea.
 - SHA / runs: pending.
+
+## Final handoff
+- **Best fully validated: candidate 1 `4c12600ce07d6d46518c230bae17248d9df75a39`** — 22.495 s first
+  run vs parent 23.840 s (−1.35 s), official + strict pass, outputs bitwise exact, RSS −25%. One full
+  run; candidate 3 repeats the same computation.
+- Failed/rejected: slice conjugation (strict-safe, slower). Not attempted (strict risk / time): shared
+  LU for A^H, Schur/block elimination, BTF permutation, constant-equation elimination.
+- Remaining uncertainty: run-to-run variance (need ≥3 paired repeats vs parent); mechanism (duplicate
+  LU vs residual savings) not confirmed by HLO; untested with FREQUENCY_CHUNK_SIZE=None or solve-in-loop
+  scopes; D>1 detectors untested (code is general).
+- Suggested next experiment: paired repeats of 4c12600 vs d09dc1d; then HLO dump count of getrf/trsm
+  calls to confirm the mechanism; combine with the other worker's noise-construction change only
+  after both validate separately (no assumed additivity).
 
 ## Proposed operators
 ```json
@@ -85,8 +115,8 @@
     "safe_default": false,
     "conditions": "trace-time constant; exact transformation, any loop scope",
     "invalid_combinations": "none known",
-    "candidate_sha": "pending",
-    "status": "unvalidated"
+    "candidate_sha": "39b23e3c6e84b2a7498c7bce932a2f6ba41f227e",
+    "status": "validated but slower (22.794 s); do not admit — recommend fixed false"
   }
 ]
 ```

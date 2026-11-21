@@ -502,7 +502,8 @@ FREQUENCY_LOOP_SCOPE: str = "assemble"
 MERGE_SAME_MATRIX_SOLVES: bool = True
 # Conjugate the static lower-sideband / mechanical-to-upper blocks by slice updates instead
 # of a full-matrix where-mask. Exact (conjugation and copies only). Read at trace time.
-SLICE_CONJUGATION: bool = True
+# Measured (cand. 2, 39b23e3): strict pass but slower (22.794 s vs 22.495 s; reverse +0.2 s).
+SLICE_CONJUGATION: bool = False
 
 
 def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):
