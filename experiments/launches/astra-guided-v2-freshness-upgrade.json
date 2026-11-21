@@ -1,0 +1,22 @@
+{
+  "name": "astra-guided-v2",
+  "pid": 89921,
+  "old_pid": 86409,
+  "session_id": "01a1fffd-808b-7df1-9718-3c929f0deb90",
+  "old_runtime_commit": "ca93123b873dd30a12c67b592936260c7bf05892",
+  "runtime_commit": "41e46aa5773c2cb7c3678474f8033f766effbb69",
+  "resumed_at": 1795296399.1167428,
+  "fixed_deadline_unix": 1795299765.341115,
+  "preserved_candidate_sha": "d947905c9b73e310257235cf00cb065c31572ecd",
+  "preserved_jobs": {
+    "screen": "0fc68df47712495589237c4557203c8d",
+    "full": "ba4ea97d96204243bab88e9b156dbebe"
+  },
+  "preserved_request_ids": {
+    "screen": "e9971adbe4ce46749f8a2032a76fea6a",
+    "full": "5924d3c02a1b43ce805b7489d6b5c9bd"
+  },
+  "pending_input_context_preserved": true,
+  "raw_feedback_unchanged": true,
+  "reason": "Operational freshness guard only; current remote evaluation was not interrupted and model work was not duplicated."
+}

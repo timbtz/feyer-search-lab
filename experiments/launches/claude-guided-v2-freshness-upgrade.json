@@ -1,0 +1,22 @@
+{
+  "name": "claude-guided-v2",
+  "pid": 89914,
+  "old_pid": 86401,
+  "session_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+  "old_runtime_commit": "ca93123b873dd30a12c67b592936260c7bf05892",
+  "runtime_commit": "41e46aa5773c2cb7c3678474f8033f766effbb69",
+  "resumed_at": 1795296398.791459,
+  "fixed_deadline_unix": 1795299765.2068522,
+  "preserved_candidate_sha": "5b2169697d359f6a1c1f7fd6b5f66e08e9906969",
+  "preserved_jobs": {
+    "screen": "630661aa1ee649b5aed526a937cfc6e8",
+    "full": "01ae324501d64448a29f71dca05e82a8"
+  },
+  "preserved_request_ids": {
+    "screen": "a7bbf01ec37a4f95976285d0d807993d",
+    "full": "7320ed4945944d52a666c40970777943"
+  },
+  "pending_input_context_preserved": true,
+  "raw_feedback_unchanged": true,
+  "reason": "Freshness guard upgrade; local operator assertion initially assumed prior feedback existed on first candidate, corrected without modifying saved state or remote jobs."
+}

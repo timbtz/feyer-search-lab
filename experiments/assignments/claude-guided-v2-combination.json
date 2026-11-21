@@ -1,0 +1,21 @@
+{
+  "schema": "feyer-guided-combination-assignment-v1",
+  "assignment": "claude-guided-v2-combination",
+  "status": "proposed",
+  "candidate_sha": null,
+  "actor": "claude-guided-v2",
+  "session_id": "75b9ee40-7c99-412e-aafd-dc81380b84ab",
+  "scientific_parents": [
+    "aa2b1ab44180af8dd1cd3a9796adb911b1a3986a",
+    "7d1ccc59cef3d7436870bb0e6c941dbde4c30770"
+  ],
+  "target_phases": [
+    "setup",
+    "compilation"
+  ],
+  "brief_ref": "experiments/briefs/claude-guided-v2.md",
+  "source_evidence_ref": "experiments/context/claude-guided-v2-peer-source.diff",
+  "source_evidence_sha256": "4a6f50c0e6369613b0a94e80f317d813757470e4fc3448886c1e9e05a09a0912",
+  "source_scope": "Only simulate.py diff from aa2 to 7d1; own build ingredient remains separately inspected",
+  "not_combination_candidate": "5b2169697d359f6a1c1f7fd6b5f66e08e9906969"
+}
