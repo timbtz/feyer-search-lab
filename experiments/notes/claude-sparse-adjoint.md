@@ -57,3 +57,38 @@
   4.9e-11, uifo_rand2 9.7e-10, voyager 1.0e-11 (all OK); uifo_rand1 2.0e-4 and uifo_rand3
   5.8e-5 differ from pristine where pristine itself deviates from the refined truth (above).
   Gradient relL2 vs pristine <= 1.5e-5 everywhere (rand3); dev 8.7e-8.
+- SHA `4af20b7baa9e363f46177c92a7b979794032a167`.
+  - Screen `779751db31504f8eaa6ccffaa62c6768` (request in .lab/c2-screen-request-id): first run 8.695 s.
+  - Full `3723bee87d1b4b1a87656141f017dc8f`: **official PASS**, strict FAIL (as predicted).
+    First run **8.639 s** (parent 19.567 s; -55.8 %; single sample). Phases: imports 0.294,
+    initialize 0.003, load 0.002, build 0.305, forward lower 0.525 / compile 5.583, forward
+    0.274, sensitivity lower 0.030 / compile 0.191 / exec 0.001, gradient lower 0.102 /
+    compile 1.124, gradient 0.207, host transfer 0.000. Warm median 0.355 s (parent 10.16 s).
+    Peak RSS 0.81 GB (parent ~14 GB). Job wall 14.35 s.
+  - Official: max |log S - log ref| 5.374e-6 (baseline 5.374e-6); FD check mb11.tuning autodiff
+    7.61617e-5 vs central differences 7.61660e-5 / 7.61625e-5 (pass).
+  - Strict vs baseline arrays: carrier/noise/sensitivity/powers pass (noise max normalized 0.78,
+    sensitivity 0.67); signal fails 131 entries (max normalized 1.53, rel ~1.5e-7); gradient
+    fails indices 33 (6.81), 161 (7.68), 180 (3.65) — rel <= 7.7e-7.
+  - Truth arbitration on the dev fixture (extended-precision refinement, signal solve):
+    strict-style max normalized error vs truth: **pristine dense 2.34**, plain SuperLU 1.91,
+    **SuperLU + refinement 0.005**; |detected| rel error: dense 1.4e-7, sparse+ref 5.2e-10.
+    The strict signal failure therefore measures the dense reference's own rounding error.
+    The gradient indices 33/161/180 were not arbitrated against a truth (open).
+
+## Compile investigation (dev, CPU 100)
+- Forward-only compile 2.9 s; forward vjp 5.3-5.6 s; gradient 1.0-1.1 s. 373 fused kernels in
+  the forward vjp; ~half are dominated by complex sqrt (96) and complex asin (82) from the
+  surface/incidence-angle component math on complex-typed parameters.
+- Parent's COMPONENT_SLOT_PRUNING still pays in the sparse path (off: fwd vjp +0.9 s, grad
+  +0.7 s); LOWER_SLOT_PRUNING neutral. Kept both.
+- Rejected without a candidate: real-arithmetic component evaluation (complex asin is needed
+  for total internal reflection at angled beamsplitters with refractive-index sides — unsafe
+  for varied setups); alpha==0 specialisation (beamsplitter rows keep the asin kernels).
+
+## Next decision
+- Keep candidate 2 as the branch best (official PASS, 8.64 s).
+- Next: compile is 6.7 s of 8.6 s. Candidates: share component kernels between carrier and
+  signal systems (same functions), compile-cheaper formulations of complex sqrt/asin that are
+  provably identical on all branches, or moving component Jacobians out of the forward stage
+  only if total compile drops (parent's remat moved compile without net gain).
