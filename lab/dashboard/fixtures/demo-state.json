@@ -13,19 +13,1916 @@
   },
   "alerts": [],
   "infrastructure": [],
-  "jobs": [],
+  "jobs": [
+    {
+      "id": "demo-amd-alice-2-0",
+      "sha": "2222222222222222222222222222222222222222",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-a",
+      "agent": "demo-a",
+      "direction": "synthetic-a",
+      "created_at": 1795262600,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.745,
+        "compilation": 13.96,
+        "forward": 13.96,
+        "sensitivity": 0.0349,
+        "gradient": 5.1652,
+        "transfer": 0.0349,
+        "total": 34.9
+      },
+      "phases": {
+        "imports": 0.34900000000000003,
+        "initialize": 0.17450000000000002,
+        "load": 0.17450000000000002,
+        "build": 1.047,
+        "forward_lower": 1.3960000000000001,
+        "forward_compile": 6.98,
+        "sensitivity_lower": 0.2792,
+        "sensitivity_compile": 1.1168,
+        "gradient_lower": 0.6980000000000001,
+        "gradient_compile": 3.49,
+        "forward": 13.96,
+        "sensitivity": 0.0349,
+        "gradient": 5.1652,
+        "host_transfer": 0.0349
+      },
+      "evidence": {
+        "candidate_sha": "2222222222222222222222222222222222222222",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-alice-synthetic-cohort",
+        "job_id": "demo-amd-alice-2-0",
+        "metrics": {
+          "total": 34.9,
+          "compilation": 13.96,
+          "runtime": 17.5,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.745,
+          "forward": 13.96,
+          "sensitivity": 0.0349,
+          "gradient": 5.1652,
+          "transfer": 0.0349
+        },
+        "phases": {
+          "imports": 0.34900000000000003,
+          "initialize": 0.17450000000000002,
+          "load": 0.17450000000000002,
+          "build": 1.047,
+          "forward_lower": 1.3960000000000001,
+          "forward_compile": 6.98,
+          "sensitivity_lower": 0.2792,
+          "sensitivity_compile": 1.1168,
+          "gradient_lower": 0.6980000000000001,
+          "gradient_compile": 3.49,
+          "forward": 13.96,
+          "sensitivity": 0.0349,
+          "gradient": 5.1652,
+          "host_transfer": 0.0349
+        }
+      },
+      "instance": "amd-alice",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "Group component construction to reduce tracing and compilation work.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "1111111111111111111111111111111111111111"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-alice-2-1",
+      "sha": "2222222222222222222222222222222222222222",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-a",
+      "agent": "demo-a",
+      "direction": "synthetic-a",
+      "created_at": 1795262601,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.75,
+        "compilation": 14.0,
+        "forward": 14.0,
+        "sensitivity": 0.035,
+        "gradient": 5.18,
+        "transfer": 0.035,
+        "total": 35.0
+      },
+      "phases": {
+        "imports": 0.35000000000000003,
+        "initialize": 0.17500000000000002,
+        "load": 0.17500000000000002,
+        "build": 1.05,
+        "forward_lower": 1.4000000000000001,
+        "forward_compile": 7.0,
+        "sensitivity_lower": 0.28,
+        "sensitivity_compile": 1.12,
+        "gradient_lower": 0.7000000000000001,
+        "gradient_compile": 3.5,
+        "forward": 14.0,
+        "sensitivity": 0.035,
+        "gradient": 5.18,
+        "host_transfer": 0.035
+      },
+      "evidence": {
+        "candidate_sha": "2222222222222222222222222222222222222222",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-alice-synthetic-cohort",
+        "job_id": "demo-amd-alice-2-1",
+        "metrics": {
+          "total": 35.0,
+          "compilation": 14.0,
+          "runtime": 17.5,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.75,
+          "forward": 14.0,
+          "sensitivity": 0.035,
+          "gradient": 5.18,
+          "transfer": 0.035
+        },
+        "phases": {
+          "imports": 0.35000000000000003,
+          "initialize": 0.17500000000000002,
+          "load": 0.17500000000000002,
+          "build": 1.05,
+          "forward_lower": 1.4000000000000001,
+          "forward_compile": 7.0,
+          "sensitivity_lower": 0.28,
+          "sensitivity_compile": 1.12,
+          "gradient_lower": 0.7000000000000001,
+          "gradient_compile": 3.5,
+          "forward": 14.0,
+          "sensitivity": 0.035,
+          "gradient": 5.18,
+          "host_transfer": 0.035
+        }
+      },
+      "instance": "amd-alice",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "Group component construction to reduce tracing and compilation work.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "1111111111111111111111111111111111111111"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-alice-2-2",
+      "sha": "2222222222222222222222222222222222222222",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-a",
+      "agent": "demo-a",
+      "direction": "synthetic-a",
+      "created_at": 1795262602,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.7550000000000001,
+        "compilation": 14.040000000000001,
+        "forward": 14.040000000000001,
+        "sensitivity": 0.0351,
+        "gradient": 5.1948,
+        "transfer": 0.0351,
+        "total": 35.1
+      },
+      "phases": {
+        "imports": 0.35100000000000003,
+        "initialize": 0.17550000000000002,
+        "load": 0.17550000000000002,
+        "build": 1.053,
+        "forward_lower": 1.4040000000000001,
+        "forward_compile": 7.0200000000000005,
+        "sensitivity_lower": 0.28080000000000005,
+        "sensitivity_compile": 1.1232000000000002,
+        "gradient_lower": 0.7020000000000001,
+        "gradient_compile": 3.5100000000000002,
+        "forward": 14.040000000000001,
+        "sensitivity": 0.0351,
+        "gradient": 5.1948,
+        "host_transfer": 0.0351
+      },
+      "evidence": {
+        "candidate_sha": "2222222222222222222222222222222222222222",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-alice-synthetic-cohort",
+        "job_id": "demo-amd-alice-2-2",
+        "metrics": {
+          "total": 35.1,
+          "compilation": 14.040000000000001,
+          "runtime": 17.5,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.7550000000000001,
+          "forward": 14.040000000000001,
+          "sensitivity": 0.0351,
+          "gradient": 5.1948,
+          "transfer": 0.0351
+        },
+        "phases": {
+          "imports": 0.35100000000000003,
+          "initialize": 0.17550000000000002,
+          "load": 0.17550000000000002,
+          "build": 1.053,
+          "forward_lower": 1.4040000000000001,
+          "forward_compile": 7.0200000000000005,
+          "sensitivity_lower": 0.28080000000000005,
+          "sensitivity_compile": 1.1232000000000002,
+          "gradient_lower": 0.7020000000000001,
+          "gradient_compile": 3.5100000000000002,
+          "forward": 14.040000000000001,
+          "sensitivity": 0.0351,
+          "gradient": 5.1948,
+          "host_transfer": 0.0351
+        }
+      },
+      "instance": "amd-alice",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "Group component construction to reduce tracing and compilation work.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "1111111111111111111111111111111111111111"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-bob-3-0",
+      "sha": "3333333333333333333333333333333333333333",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-b",
+      "agent": "demo-b",
+      "direction": "synthetic-b",
+      "created_at": 1795262703,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.945,
+        "compilation": 15.56,
+        "forward": 15.56,
+        "sensitivity": 0.0389,
+        "gradient": 5.757199999999999,
+        "transfer": 0.0389,
+        "total": 38.9
+      },
+      "phases": {
+        "imports": 0.389,
+        "initialize": 0.1945,
+        "load": 0.1945,
+        "build": 1.167,
+        "forward_lower": 1.556,
+        "forward_compile": 7.78,
+        "sensitivity_lower": 0.31120000000000003,
+        "sensitivity_compile": 1.2448000000000001,
+        "gradient_lower": 0.778,
+        "gradient_compile": 3.89,
+        "forward": 15.56,
+        "sensitivity": 0.0389,
+        "gradient": 5.757199999999999,
+        "host_transfer": 0.0389
+      },
+      "evidence": {
+        "candidate_sha": "3333333333333333333333333333333333333333",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-bob-synthetic-cohort",
+        "job_id": "demo-amd-bob-3-0",
+        "metrics": {
+          "total": 38.9,
+          "compilation": 15.56,
+          "runtime": 19.5,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.945,
+          "forward": 15.56,
+          "sensitivity": 0.0389,
+          "gradient": 5.757199999999999,
+          "transfer": 0.0389
+        },
+        "phases": {
+          "imports": 0.389,
+          "initialize": 0.1945,
+          "load": 0.1945,
+          "build": 1.167,
+          "forward_lower": 1.556,
+          "forward_compile": 7.78,
+          "sensitivity_lower": 0.31120000000000003,
+          "sensitivity_compile": 1.2448000000000001,
+          "gradient_lower": 0.778,
+          "gradient_compile": 3.89,
+          "forward": 15.56,
+          "sensitivity": 0.0389,
+          "gradient": 5.757199999999999,
+          "host_transfer": 0.0389
+        }
+      },
+      "instance": "amd-bob",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "Restructure the linear solve while preserving numerical checks.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "1111111111111111111111111111111111111111"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-bob-3-1",
+      "sha": "3333333333333333333333333333333333333333",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-b",
+      "agent": "demo-b",
+      "direction": "synthetic-b",
+      "created_at": 1795262704,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.9500000000000002,
+        "compilation": 15.600000000000001,
+        "forward": 15.600000000000001,
+        "sensitivity": 0.039,
+        "gradient": 5.771999999999999,
+        "transfer": 0.039,
+        "total": 39.0
+      },
+      "phases": {
+        "imports": 0.39000000000000007,
+        "initialize": 0.19500000000000003,
+        "load": 0.19500000000000003,
+        "build": 1.1700000000000002,
+        "forward_lower": 1.5600000000000003,
+        "forward_compile": 7.800000000000001,
+        "sensitivity_lower": 0.31200000000000006,
+        "sensitivity_compile": 1.2480000000000002,
+        "gradient_lower": 0.7800000000000001,
+        "gradient_compile": 3.9000000000000004,
+        "forward": 15.600000000000001,
+        "sensitivity": 0.039,
+        "gradient": 5.771999999999999,
+        "host_transfer": 0.039
+      },
+      "evidence": {
+        "candidate_sha": "3333333333333333333333333333333333333333",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-bob-synthetic-cohort",
+        "job_id": "demo-amd-bob-3-1",
+        "metrics": {
+          "total": 39.0,
+          "compilation": 15.600000000000001,
+          "runtime": 19.5,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.9500000000000002,
+          "forward": 15.600000000000001,
+          "sensitivity": 0.039,
+          "gradient": 5.771999999999999,
+          "transfer": 0.039
+        },
+        "phases": {
+          "imports": 0.39000000000000007,
+          "initialize": 0.19500000000000003,
+          "load": 0.19500000000000003,
+          "build": 1.1700000000000002,
+          "forward_lower": 1.5600000000000003,
+          "forward_compile": 7.800000000000001,
+          "sensitivity_lower": 0.31200000000000006,
+          "sensitivity_compile": 1.2480000000000002,
+          "gradient_lower": 0.7800000000000001,
+          "gradient_compile": 3.9000000000000004,
+          "forward": 15.600000000000001,
+          "sensitivity": 0.039,
+          "gradient": 5.771999999999999,
+          "host_transfer": 0.039
+        }
+      },
+      "instance": "amd-bob",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "Restructure the linear solve while preserving numerical checks.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "1111111111111111111111111111111111111111"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-bob-3-2",
+      "sha": "3333333333333333333333333333333333333333",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-b",
+      "agent": "demo-b",
+      "direction": "synthetic-b",
+      "created_at": 1795262705,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.955,
+        "compilation": 15.64,
+        "forward": 15.64,
+        "sensitivity": 0.0391,
+        "gradient": 5.7867999999999995,
+        "transfer": 0.0391,
+        "total": 39.1
+      },
+      "phases": {
+        "imports": 0.391,
+        "initialize": 0.1955,
+        "load": 0.1955,
+        "build": 1.173,
+        "forward_lower": 1.564,
+        "forward_compile": 7.82,
+        "sensitivity_lower": 0.3128,
+        "sensitivity_compile": 1.2512,
+        "gradient_lower": 0.782,
+        "gradient_compile": 3.91,
+        "forward": 15.64,
+        "sensitivity": 0.0391,
+        "gradient": 5.7867999999999995,
+        "host_transfer": 0.0391
+      },
+      "evidence": {
+        "candidate_sha": "3333333333333333333333333333333333333333",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-bob-synthetic-cohort",
+        "job_id": "demo-amd-bob-3-2",
+        "metrics": {
+          "total": 39.1,
+          "compilation": 15.64,
+          "runtime": 19.5,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.955,
+          "forward": 15.64,
+          "sensitivity": 0.0391,
+          "gradient": 5.7867999999999995,
+          "transfer": 0.0391
+        },
+        "phases": {
+          "imports": 0.391,
+          "initialize": 0.1955,
+          "load": 0.1955,
+          "build": 1.173,
+          "forward_lower": 1.564,
+          "forward_compile": 7.82,
+          "sensitivity_lower": 0.3128,
+          "sensitivity_compile": 1.2512,
+          "gradient_lower": 0.782,
+          "gradient_compile": 3.91,
+          "forward": 15.64,
+          "sensitivity": 0.0391,
+          "gradient": 5.7867999999999995,
+          "host_transfer": 0.0391
+        }
+      },
+      "instance": "amd-bob",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "Restructure the linear solve while preserving numerical checks.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "1111111111111111111111111111111111111111"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-alice-3-0",
+      "sha": "3333333333333333333333333333333333333333",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-b",
+      "agent": "demo-b",
+      "direction": "synthetic-b",
+      "created_at": 1795262706,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.845,
+        "compilation": 14.76,
+        "forward": 14.76,
+        "sensitivity": 0.0369,
+        "gradient": 5.4612,
+        "transfer": 0.0369,
+        "total": 36.9
+      },
+      "phases": {
+        "imports": 0.369,
+        "initialize": 0.1845,
+        "load": 0.1845,
+        "build": 1.107,
+        "forward_lower": 1.476,
+        "forward_compile": 7.38,
+        "sensitivity_lower": 0.2952,
+        "sensitivity_compile": 1.1808,
+        "gradient_lower": 0.738,
+        "gradient_compile": 3.69,
+        "forward": 14.76,
+        "sensitivity": 0.0369,
+        "gradient": 5.4612,
+        "host_transfer": 0.0369
+      },
+      "evidence": {
+        "candidate_sha": "3333333333333333333333333333333333333333",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-alice-synthetic-cohort",
+        "job_id": "demo-amd-alice-3-0",
+        "metrics": {
+          "total": 36.9,
+          "compilation": 14.76,
+          "runtime": 18.5,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.845,
+          "forward": 14.76,
+          "sensitivity": 0.0369,
+          "gradient": 5.4612,
+          "transfer": 0.0369
+        },
+        "phases": {
+          "imports": 0.369,
+          "initialize": 0.1845,
+          "load": 0.1845,
+          "build": 1.107,
+          "forward_lower": 1.476,
+          "forward_compile": 7.38,
+          "sensitivity_lower": 0.2952,
+          "sensitivity_compile": 1.1808,
+          "gradient_lower": 0.738,
+          "gradient_compile": 3.69,
+          "forward": 14.76,
+          "sensitivity": 0.0369,
+          "gradient": 5.4612,
+          "host_transfer": 0.0369
+        }
+      },
+      "instance": "amd-alice",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "Restructure the linear solve while preserving numerical checks.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "1111111111111111111111111111111111111111"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-alice-3-1",
+      "sha": "3333333333333333333333333333333333333333",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-b",
+      "agent": "demo-b",
+      "direction": "synthetic-b",
+      "created_at": 1795262707,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.85,
+        "compilation": 14.8,
+        "forward": 14.8,
+        "sensitivity": 0.037,
+        "gradient": 5.476,
+        "transfer": 0.037,
+        "total": 37.0
+      },
+      "phases": {
+        "imports": 0.37000000000000005,
+        "initialize": 0.18500000000000003,
+        "load": 0.18500000000000003,
+        "build": 1.11,
+        "forward_lower": 1.4800000000000002,
+        "forward_compile": 7.4,
+        "sensitivity_lower": 0.29600000000000004,
+        "sensitivity_compile": 1.1840000000000002,
+        "gradient_lower": 0.7400000000000001,
+        "gradient_compile": 3.7,
+        "forward": 14.8,
+        "sensitivity": 0.037,
+        "gradient": 5.476,
+        "host_transfer": 0.037
+      },
+      "evidence": {
+        "candidate_sha": "3333333333333333333333333333333333333333",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-alice-synthetic-cohort",
+        "job_id": "demo-amd-alice-3-1",
+        "metrics": {
+          "total": 37.0,
+          "compilation": 14.8,
+          "runtime": 18.5,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.85,
+          "forward": 14.8,
+          "sensitivity": 0.037,
+          "gradient": 5.476,
+          "transfer": 0.037
+        },
+        "phases": {
+          "imports": 0.37000000000000005,
+          "initialize": 0.18500000000000003,
+          "load": 0.18500000000000003,
+          "build": 1.11,
+          "forward_lower": 1.4800000000000002,
+          "forward_compile": 7.4,
+          "sensitivity_lower": 0.29600000000000004,
+          "sensitivity_compile": 1.1840000000000002,
+          "gradient_lower": 0.7400000000000001,
+          "gradient_compile": 3.7,
+          "forward": 14.8,
+          "sensitivity": 0.037,
+          "gradient": 5.476,
+          "host_transfer": 0.037
+        }
+      },
+      "instance": "amd-alice",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "Restructure the linear solve while preserving numerical checks.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "1111111111111111111111111111111111111111"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-alice-3-2",
+      "sha": "3333333333333333333333333333333333333333",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-b",
+      "agent": "demo-b",
+      "direction": "synthetic-b",
+      "created_at": 1795262708,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.8550000000000002,
+        "compilation": 14.840000000000002,
+        "forward": 14.840000000000002,
+        "sensitivity": 0.0371,
+        "gradient": 5.4908,
+        "transfer": 0.0371,
+        "total": 37.1
+      },
+      "phases": {
+        "imports": 0.37100000000000005,
+        "initialize": 0.18550000000000003,
+        "load": 0.18550000000000003,
+        "build": 1.113,
+        "forward_lower": 1.4840000000000002,
+        "forward_compile": 7.420000000000001,
+        "sensitivity_lower": 0.29680000000000006,
+        "sensitivity_compile": 1.1872000000000003,
+        "gradient_lower": 0.7420000000000001,
+        "gradient_compile": 3.7100000000000004,
+        "forward": 14.840000000000002,
+        "sensitivity": 0.0371,
+        "gradient": 5.4908,
+        "host_transfer": 0.0371
+      },
+      "evidence": {
+        "candidate_sha": "3333333333333333333333333333333333333333",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-alice-synthetic-cohort",
+        "job_id": "demo-amd-alice-3-2",
+        "metrics": {
+          "total": 37.1,
+          "compilation": 14.840000000000002,
+          "runtime": 18.5,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.8550000000000002,
+          "forward": 14.840000000000002,
+          "sensitivity": 0.0371,
+          "gradient": 5.4908,
+          "transfer": 0.0371
+        },
+        "phases": {
+          "imports": 0.37100000000000005,
+          "initialize": 0.18550000000000003,
+          "load": 0.18550000000000003,
+          "build": 1.113,
+          "forward_lower": 1.4840000000000002,
+          "forward_compile": 7.420000000000001,
+          "sensitivity_lower": 0.29680000000000006,
+          "sensitivity_compile": 1.1872000000000003,
+          "gradient_lower": 0.7420000000000001,
+          "gradient_compile": 3.7100000000000004,
+          "forward": 14.840000000000002,
+          "sensitivity": 0.0371,
+          "gradient": 5.4908,
+          "host_transfer": 0.0371
+        }
+      },
+      "instance": "amd-alice",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "Restructure the linear solve while preserving numerical checks.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "1111111111111111111111111111111111111111"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-alice-4-0",
+      "sha": "4444444444444444444444444444444444444444",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-a",
+      "agent": "demo-a",
+      "direction": "synthetic-a",
+      "created_at": 1795262809,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.595,
+        "compilation": 12.76,
+        "forward": 11.1012,
+        "sensitivity": 0.0319,
+        "gradient": 6.38,
+        "transfer": 0.0319,
+        "total": 31.9
+      },
+      "phases": {
+        "imports": 0.319,
+        "initialize": 0.1595,
+        "load": 0.1595,
+        "build": 0.957,
+        "forward_lower": 1.276,
+        "forward_compile": 6.38,
+        "sensitivity_lower": 0.2552,
+        "sensitivity_compile": 1.0208,
+        "gradient_lower": 0.638,
+        "gradient_compile": 3.19,
+        "forward": 11.1012,
+        "sensitivity": 0.0319,
+        "gradient": 6.38,
+        "host_transfer": 0.0319
+      },
+      "evidence": {
+        "candidate_sha": "4444444444444444444444444444444444444444",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-alice-synthetic-cohort",
+        "job_id": "demo-amd-alice-4-0",
+        "metrics": {
+          "total": 31.9,
+          "compilation": 12.76,
+          "runtime": 16.0,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.595,
+          "forward": 11.1012,
+          "sensitivity": 0.0319,
+          "gradient": 6.38,
+          "transfer": 0.0319
+        },
+        "phases": {
+          "imports": 0.319,
+          "initialize": 0.1595,
+          "load": 0.1595,
+          "build": 0.957,
+          "forward_lower": 1.276,
+          "forward_compile": 6.38,
+          "sensitivity_lower": 0.2552,
+          "sensitivity_compile": 1.0208,
+          "gradient_lower": 0.638,
+          "gradient_compile": 3.19,
+          "forward": 11.1012,
+          "sensitivity": 0.0319,
+          "gradient": 6.38,
+          "host_transfer": 0.0319
+        }
+      },
+      "instance": "amd-alice",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "Refine the grouped topology: lower compilation cost with a gradient tradeoff.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "2222222222222222222222222222222222222222"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-alice-4-1",
+      "sha": "4444444444444444444444444444444444444444",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-a",
+      "agent": "demo-a",
+      "direction": "synthetic-a",
+      "created_at": 1795262810,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.6,
+        "compilation": 12.8,
+        "forward": 11.136000000000001,
+        "sensitivity": 0.032,
+        "gradient": 6.4,
+        "transfer": 0.032,
+        "total": 32.0
+      },
+      "phases": {
+        "imports": 0.32000000000000006,
+        "initialize": 0.16000000000000003,
+        "load": 0.16000000000000003,
+        "build": 0.96,
+        "forward_lower": 1.2800000000000002,
+        "forward_compile": 6.4,
+        "sensitivity_lower": 0.256,
+        "sensitivity_compile": 1.024,
+        "gradient_lower": 0.6400000000000001,
+        "gradient_compile": 3.2,
+        "forward": 11.136000000000001,
+        "sensitivity": 0.032,
+        "gradient": 6.4,
+        "host_transfer": 0.032
+      },
+      "evidence": {
+        "candidate_sha": "4444444444444444444444444444444444444444",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-alice-synthetic-cohort",
+        "job_id": "demo-amd-alice-4-1",
+        "metrics": {
+          "total": 32.0,
+          "compilation": 12.8,
+          "runtime": 16.0,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.6,
+          "forward": 11.136000000000001,
+          "sensitivity": 0.032,
+          "gradient": 6.4,
+          "transfer": 0.032
+        },
+        "phases": {
+          "imports": 0.32000000000000006,
+          "initialize": 0.16000000000000003,
+          "load": 0.16000000000000003,
+          "build": 0.96,
+          "forward_lower": 1.2800000000000002,
+          "forward_compile": 6.4,
+          "sensitivity_lower": 0.256,
+          "sensitivity_compile": 1.024,
+          "gradient_lower": 0.6400000000000001,
+          "gradient_compile": 3.2,
+          "forward": 11.136000000000001,
+          "sensitivity": 0.032,
+          "gradient": 6.4,
+          "host_transfer": 0.032
+        }
+      },
+      "instance": "amd-alice",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "Refine the grouped topology: lower compilation cost with a gradient tradeoff.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "2222222222222222222222222222222222222222"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-alice-4-2",
+      "sha": "4444444444444444444444444444444444444444",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-a",
+      "agent": "demo-a",
+      "direction": "synthetic-a",
+      "created_at": 1795262811,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.6050000000000002,
+        "compilation": 12.840000000000002,
+        "forward": 11.170800000000002,
+        "sensitivity": 0.032100000000000004,
+        "gradient": 6.420000000000001,
+        "transfer": 0.032100000000000004,
+        "total": 32.1
+      },
+      "phases": {
+        "imports": 0.32100000000000006,
+        "initialize": 0.16050000000000003,
+        "load": 0.16050000000000003,
+        "build": 0.9630000000000001,
+        "forward_lower": 1.2840000000000003,
+        "forward_compile": 6.420000000000001,
+        "sensitivity_lower": 0.25680000000000003,
+        "sensitivity_compile": 1.0272000000000001,
+        "gradient_lower": 0.6420000000000001,
+        "gradient_compile": 3.2100000000000004,
+        "forward": 11.170800000000002,
+        "sensitivity": 0.032100000000000004,
+        "gradient": 6.420000000000001,
+        "host_transfer": 0.032100000000000004
+      },
+      "evidence": {
+        "candidate_sha": "4444444444444444444444444444444444444444",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-alice-synthetic-cohort",
+        "job_id": "demo-amd-alice-4-2",
+        "metrics": {
+          "total": 32.1,
+          "compilation": 12.840000000000002,
+          "runtime": 16.0,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.6050000000000002,
+          "forward": 11.170800000000002,
+          "sensitivity": 0.032100000000000004,
+          "gradient": 6.420000000000001,
+          "transfer": 0.032100000000000004
+        },
+        "phases": {
+          "imports": 0.32100000000000006,
+          "initialize": 0.16050000000000003,
+          "load": 0.16050000000000003,
+          "build": 0.9630000000000001,
+          "forward_lower": 1.2840000000000003,
+          "forward_compile": 6.420000000000001,
+          "sensitivity_lower": 0.25680000000000003,
+          "sensitivity_compile": 1.0272000000000001,
+          "gradient_lower": 0.6420000000000001,
+          "gradient_compile": 3.2100000000000004,
+          "forward": 11.170800000000002,
+          "sensitivity": 0.032100000000000004,
+          "gradient": 6.420000000000001,
+          "host_transfer": 0.032100000000000004
+        }
+      },
+      "instance": "amd-alice",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "Refine the grouped topology: lower compilation cost with a gradient tradeoff.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "2222222222222222222222222222222222222222"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-bob-5-0",
+      "sha": "5555555555555555555555555555555555555555",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-b",
+      "agent": "demo-b",
+      "direction": "synthetic-b",
+      "created_at": 1795262912,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.995,
+        "compilation": 15.96,
+        "forward": 15.96,
+        "sensitivity": 0.0399,
+        "gradient": 5.9052,
+        "transfer": 0.0399,
+        "total": 39.9
+      },
+      "phases": {
+        "imports": 0.399,
+        "initialize": 0.1995,
+        "load": 0.1995,
+        "build": 1.197,
+        "forward_lower": 1.596,
+        "forward_compile": 7.98,
+        "sensitivity_lower": 0.31920000000000004,
+        "sensitivity_compile": 1.2768000000000002,
+        "gradient_lower": 0.798,
+        "gradient_compile": 3.99,
+        "forward": 15.96,
+        "sensitivity": 0.0399,
+        "gradient": 5.9052,
+        "host_transfer": 0.0399
+      },
+      "evidence": {
+        "candidate_sha": "5555555555555555555555555555555555555555",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-bob-synthetic-cohort",
+        "job_id": "demo-amd-bob-5-0",
+        "metrics": {
+          "total": 39.9,
+          "compilation": 15.96,
+          "runtime": 20.0,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.995,
+          "forward": 15.96,
+          "sensitivity": 0.0399,
+          "gradient": 5.9052,
+          "transfer": 0.0399
+        },
+        "phases": {
+          "imports": 0.399,
+          "initialize": 0.1995,
+          "load": 0.1995,
+          "build": 1.197,
+          "forward_lower": 1.596,
+          "forward_compile": 7.98,
+          "sensitivity_lower": 0.31920000000000004,
+          "sensitivity_compile": 1.2768000000000002,
+          "gradient_lower": 0.798,
+          "gradient_compile": 3.99,
+          "forward": 15.96,
+          "sensitivity": 0.0399,
+          "gradient": 5.9052,
+          "host_transfer": 0.0399
+        }
+      },
+      "instance": "amd-bob",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "A follow-up solve configuration increases first-run time; retain the parent.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "3333333333333333333333333333333333333333"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-bob-5-1",
+      "sha": "5555555555555555555555555555555555555555",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-b",
+      "agent": "demo-b",
+      "direction": "synthetic-b",
+      "created_at": 1795262913,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 2.0,
+        "compilation": 16.0,
+        "forward": 16.0,
+        "sensitivity": 0.04,
+        "gradient": 5.92,
+        "transfer": 0.04,
+        "total": 40.0
+      },
+      "phases": {
+        "imports": 0.4,
+        "initialize": 0.2,
+        "load": 0.2,
+        "build": 1.2,
+        "forward_lower": 1.6,
+        "forward_compile": 8.0,
+        "sensitivity_lower": 0.32,
+        "sensitivity_compile": 1.28,
+        "gradient_lower": 0.8,
+        "gradient_compile": 4.0,
+        "forward": 16.0,
+        "sensitivity": 0.04,
+        "gradient": 5.92,
+        "host_transfer": 0.04
+      },
+      "evidence": {
+        "candidate_sha": "5555555555555555555555555555555555555555",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-bob-synthetic-cohort",
+        "job_id": "demo-amd-bob-5-1",
+        "metrics": {
+          "total": 40.0,
+          "compilation": 16.0,
+          "runtime": 20.0,
+          "peak_rss_bytes": 8000000000,
+          "setup": 2.0,
+          "forward": 16.0,
+          "sensitivity": 0.04,
+          "gradient": 5.92,
+          "transfer": 0.04
+        },
+        "phases": {
+          "imports": 0.4,
+          "initialize": 0.2,
+          "load": 0.2,
+          "build": 1.2,
+          "forward_lower": 1.6,
+          "forward_compile": 8.0,
+          "sensitivity_lower": 0.32,
+          "sensitivity_compile": 1.28,
+          "gradient_lower": 0.8,
+          "gradient_compile": 4.0,
+          "forward": 16.0,
+          "sensitivity": 0.04,
+          "gradient": 5.92,
+          "host_transfer": 0.04
+        }
+      },
+      "instance": "amd-bob",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "A follow-up solve configuration increases first-run time; retain the parent.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "3333333333333333333333333333333333333333"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-bob-5-2",
+      "sha": "5555555555555555555555555555555555555555",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-b",
+      "agent": "demo-b",
+      "direction": "synthetic-b",
+      "created_at": 1795262914,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 2.0050000000000003,
+        "compilation": 16.040000000000003,
+        "forward": 16.040000000000003,
+        "sensitivity": 0.040100000000000004,
+        "gradient": 5.9348,
+        "transfer": 0.040100000000000004,
+        "total": 40.1
+      },
+      "phases": {
+        "imports": 0.4010000000000001,
+        "initialize": 0.20050000000000004,
+        "load": 0.20050000000000004,
+        "build": 1.203,
+        "forward_lower": 1.6040000000000003,
+        "forward_compile": 8.020000000000001,
+        "sensitivity_lower": 0.3208000000000001,
+        "sensitivity_compile": 1.2832000000000003,
+        "gradient_lower": 0.8020000000000002,
+        "gradient_compile": 4.010000000000001,
+        "forward": 16.040000000000003,
+        "sensitivity": 0.040100000000000004,
+        "gradient": 5.9348,
+        "host_transfer": 0.040100000000000004
+      },
+      "evidence": {
+        "candidate_sha": "5555555555555555555555555555555555555555",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-bob-synthetic-cohort",
+        "job_id": "demo-amd-bob-5-2",
+        "metrics": {
+          "total": 40.1,
+          "compilation": 16.040000000000003,
+          "runtime": 20.0,
+          "peak_rss_bytes": 8000000000,
+          "setup": 2.0050000000000003,
+          "forward": 16.040000000000003,
+          "sensitivity": 0.040100000000000004,
+          "gradient": 5.9348,
+          "transfer": 0.040100000000000004
+        },
+        "phases": {
+          "imports": 0.4010000000000001,
+          "initialize": 0.20050000000000004,
+          "load": 0.20050000000000004,
+          "build": 1.203,
+          "forward_lower": 1.6040000000000003,
+          "forward_compile": 8.020000000000001,
+          "sensitivity_lower": 0.3208000000000001,
+          "sensitivity_compile": 1.2832000000000003,
+          "gradient_lower": 0.8020000000000002,
+          "gradient_compile": 4.010000000000001,
+          "forward": 16.040000000000003,
+          "sensitivity": 0.040100000000000004,
+          "gradient": 5.9348,
+          "host_transfer": 0.040100000000000004
+        }
+      },
+      "instance": "amd-bob",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "A follow-up solve configuration increases first-run time; retain the parent.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "3333333333333333333333333333333333333333"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-alice-6-0",
+      "sha": "6666666666666666666666666666666666666666",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-combined",
+      "agent": "demo-combined",
+      "direction": "synthetic-combined",
+      "created_at": 1795263015,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.395,
+        "compilation": 11.16,
+        "forward": 11.16,
+        "sensitivity": 0.027899999999999998,
+        "gradient": 4.1292,
+        "transfer": 0.027899999999999998,
+        "total": 27.9
+      },
+      "phases": {
+        "imports": 0.279,
+        "initialize": 0.1395,
+        "load": 0.1395,
+        "build": 0.837,
+        "forward_lower": 1.116,
+        "forward_compile": 5.58,
+        "sensitivity_lower": 0.2232,
+        "sensitivity_compile": 0.8928,
+        "gradient_lower": 0.558,
+        "gradient_compile": 2.79,
+        "forward": 11.16,
+        "sensitivity": 0.027899999999999998,
+        "gradient": 4.1292,
+        "host_transfer": 0.027899999999999998
+      },
+      "evidence": {
+        "candidate_sha": "6666666666666666666666666666666666666666",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-alice-synthetic-cohort",
+        "job_id": "demo-amd-alice-6-0",
+        "metrics": {
+          "total": 27.9,
+          "compilation": 11.16,
+          "runtime": 14.0,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.395,
+          "forward": 11.16,
+          "sensitivity": 0.027899999999999998,
+          "gradient": 4.1292,
+          "transfer": 0.027899999999999998
+        },
+        "phases": {
+          "imports": 0.279,
+          "initialize": 0.1395,
+          "load": 0.1395,
+          "build": 0.837,
+          "forward_lower": 1.116,
+          "forward_compile": 5.58,
+          "sensitivity_lower": 0.2232,
+          "sensitivity_compile": 0.8928,
+          "gradient_lower": 0.558,
+          "gradient_compile": 2.79,
+          "forward": 11.16,
+          "sensitivity": 0.027899999999999998,
+          "gradient": 4.1292,
+          "host_transfer": 0.027899999999999998
+        }
+      },
+      "instance": "amd-alice",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "Combine the retained construction and solve approaches.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "4444444444444444444444444444444444444444",
+          "3333333333333333333333333333333333333333"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-alice-6-1",
+      "sha": "6666666666666666666666666666666666666666",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-combined",
+      "agent": "demo-combined",
+      "direction": "synthetic-combined",
+      "created_at": 1795263016,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.4000000000000001,
+        "compilation": 11.200000000000001,
+        "forward": 11.200000000000001,
+        "sensitivity": 0.028,
+        "gradient": 4.144,
+        "transfer": 0.028,
+        "total": 28.0
+      },
+      "phases": {
+        "imports": 0.28,
+        "initialize": 0.14,
+        "load": 0.14,
+        "build": 0.8400000000000001,
+        "forward_lower": 1.12,
+        "forward_compile": 5.6000000000000005,
+        "sensitivity_lower": 0.22400000000000003,
+        "sensitivity_compile": 0.8960000000000001,
+        "gradient_lower": 0.56,
+        "gradient_compile": 2.8000000000000003,
+        "forward": 11.200000000000001,
+        "sensitivity": 0.028,
+        "gradient": 4.144,
+        "host_transfer": 0.028
+      },
+      "evidence": {
+        "candidate_sha": "6666666666666666666666666666666666666666",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-alice-synthetic-cohort",
+        "job_id": "demo-amd-alice-6-1",
+        "metrics": {
+          "total": 28.0,
+          "compilation": 11.200000000000001,
+          "runtime": 14.0,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.4000000000000001,
+          "forward": 11.200000000000001,
+          "sensitivity": 0.028,
+          "gradient": 4.144,
+          "transfer": 0.028
+        },
+        "phases": {
+          "imports": 0.28,
+          "initialize": 0.14,
+          "load": 0.14,
+          "build": 0.8400000000000001,
+          "forward_lower": 1.12,
+          "forward_compile": 5.6000000000000005,
+          "sensitivity_lower": 0.22400000000000003,
+          "sensitivity_compile": 0.8960000000000001,
+          "gradient_lower": 0.56,
+          "gradient_compile": 2.8000000000000003,
+          "forward": 11.200000000000001,
+          "sensitivity": 0.028,
+          "gradient": 4.144,
+          "host_transfer": 0.028
+        }
+      },
+      "instance": "amd-alice",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "Combine the retained construction and solve approaches.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "4444444444444444444444444444444444444444",
+          "3333333333333333333333333333333333333333"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-alice-6-2",
+      "sha": "6666666666666666666666666666666666666666",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-combined",
+      "agent": "demo-combined",
+      "direction": "synthetic-combined",
+      "created_at": 1795263017,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.4050000000000002,
+        "compilation": 11.240000000000002,
+        "forward": 11.240000000000002,
+        "sensitivity": 0.028100000000000003,
+        "gradient": 4.1588,
+        "transfer": 0.028100000000000003,
+        "total": 28.1
+      },
+      "phases": {
+        "imports": 0.2810000000000001,
+        "initialize": 0.14050000000000004,
+        "load": 0.14050000000000004,
+        "build": 0.8430000000000001,
+        "forward_lower": 1.1240000000000003,
+        "forward_compile": 5.620000000000001,
+        "sensitivity_lower": 0.22480000000000006,
+        "sensitivity_compile": 0.8992000000000002,
+        "gradient_lower": 0.5620000000000002,
+        "gradient_compile": 2.8100000000000005,
+        "forward": 11.240000000000002,
+        "sensitivity": 0.028100000000000003,
+        "gradient": 4.1588,
+        "host_transfer": 0.028100000000000003
+      },
+      "evidence": {
+        "candidate_sha": "6666666666666666666666666666666666666666",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-alice-synthetic-cohort",
+        "job_id": "demo-amd-alice-6-2",
+        "metrics": {
+          "total": 28.1,
+          "compilation": 11.240000000000002,
+          "runtime": 14.0,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.4050000000000002,
+          "forward": 11.240000000000002,
+          "sensitivity": 0.028100000000000003,
+          "gradient": 4.1588,
+          "transfer": 0.028100000000000003
+        },
+        "phases": {
+          "imports": 0.2810000000000001,
+          "initialize": 0.14050000000000004,
+          "load": 0.14050000000000004,
+          "build": 0.8430000000000001,
+          "forward_lower": 1.1240000000000003,
+          "forward_compile": 5.620000000000001,
+          "sensitivity_lower": 0.22480000000000006,
+          "sensitivity_compile": 0.8992000000000002,
+          "gradient_lower": 0.5620000000000002,
+          "gradient_compile": 2.8100000000000005,
+          "forward": 11.240000000000002,
+          "sensitivity": 0.028100000000000003,
+          "gradient": 4.1588,
+          "host_transfer": 0.028100000000000003
+        }
+      },
+      "instance": "amd-alice",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "Combine the retained construction and solve approaches.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "4444444444444444444444444444444444444444",
+          "3333333333333333333333333333333333333333"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-alice-7-0",
+      "sha": "7777777777777777777777777777777777777777",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-combined",
+      "agent": "demo-combined",
+      "direction": "synthetic-combined",
+      "created_at": 1795263118,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.295,
+        "compilation": 10.36,
+        "forward": 10.36,
+        "sensitivity": 0.0259,
+        "gradient": 3.8331999999999997,
+        "transfer": 0.0259,
+        "total": 25.9
+      },
+      "phases": {
+        "imports": 0.259,
+        "initialize": 0.1295,
+        "load": 0.1295,
+        "build": 0.7769999999999999,
+        "forward_lower": 1.036,
+        "forward_compile": 5.18,
+        "sensitivity_lower": 0.2072,
+        "sensitivity_compile": 0.8288,
+        "gradient_lower": 0.518,
+        "gradient_compile": 2.59,
+        "forward": 10.36,
+        "sensitivity": 0.0259,
+        "gradient": 3.8331999999999997,
+        "host_transfer": 0.0259
+      },
+      "evidence": {
+        "candidate_sha": "7777777777777777777777777777777777777777",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-alice-synthetic-cohort",
+        "job_id": "demo-amd-alice-7-0",
+        "metrics": {
+          "total": 25.9,
+          "compilation": 10.36,
+          "runtime": 13.0,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.295,
+          "forward": 10.36,
+          "sensitivity": 0.0259,
+          "gradient": 3.8331999999999997,
+          "transfer": 0.0259
+        },
+        "phases": {
+          "imports": 0.259,
+          "initialize": 0.1295,
+          "load": 0.1295,
+          "build": 0.7769999999999999,
+          "forward_lower": 1.036,
+          "forward_compile": 5.18,
+          "sensitivity_lower": 0.2072,
+          "sensitivity_compile": 0.8288,
+          "gradient_lower": 0.518,
+          "gradient_compile": 2.59,
+          "forward": 10.36,
+          "sensitivity": 0.0259,
+          "gradient": 3.8331999999999997,
+          "host_transfer": 0.0259
+        }
+      },
+      "instance": "amd-alice",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "Refine the combined topology and record the exact revision.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "6666666666666666666666666666666666666666"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-alice-7-1",
+      "sha": "7777777777777777777777777777777777777777",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-combined",
+      "agent": "demo-combined",
+      "direction": "synthetic-combined",
+      "created_at": 1795263119,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.3,
+        "compilation": 10.4,
+        "forward": 10.4,
+        "sensitivity": 0.026000000000000002,
+        "gradient": 3.848,
+        "transfer": 0.026000000000000002,
+        "total": 26.0
+      },
+      "phases": {
+        "imports": 0.26,
+        "initialize": 0.13,
+        "load": 0.13,
+        "build": 0.78,
+        "forward_lower": 1.04,
+        "forward_compile": 5.2,
+        "sensitivity_lower": 0.20800000000000002,
+        "sensitivity_compile": 0.8320000000000001,
+        "gradient_lower": 0.52,
+        "gradient_compile": 2.6,
+        "forward": 10.4,
+        "sensitivity": 0.026000000000000002,
+        "gradient": 3.848,
+        "host_transfer": 0.026000000000000002
+      },
+      "evidence": {
+        "candidate_sha": "7777777777777777777777777777777777777777",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-alice-synthetic-cohort",
+        "job_id": "demo-amd-alice-7-1",
+        "metrics": {
+          "total": 26.0,
+          "compilation": 10.4,
+          "runtime": 13.0,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.3,
+          "forward": 10.4,
+          "sensitivity": 0.026000000000000002,
+          "gradient": 3.848,
+          "transfer": 0.026000000000000002
+        },
+        "phases": {
+          "imports": 0.26,
+          "initialize": 0.13,
+          "load": 0.13,
+          "build": 0.78,
+          "forward_lower": 1.04,
+          "forward_compile": 5.2,
+          "sensitivity_lower": 0.20800000000000002,
+          "sensitivity_compile": 0.8320000000000001,
+          "gradient_lower": 0.52,
+          "gradient_compile": 2.6,
+          "forward": 10.4,
+          "sensitivity": 0.026000000000000002,
+          "gradient": 3.848,
+          "host_transfer": 0.026000000000000002
+        }
+      },
+      "instance": "amd-alice",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "Refine the combined topology and record the exact revision.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "6666666666666666666666666666666666666666"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    },
+    {
+      "id": "demo-amd-alice-7-2",
+      "sha": "7777777777777777777777777777777777777777",
+      "profile": "full",
+      "status": "completed",
+      "branch": "explore/demo-combined",
+      "agent": "demo-combined",
+      "direction": "synthetic-combined",
+      "created_at": 1795263120,
+      "official_check": "passed",
+      "strict_check": "passed",
+      "metrics": {
+        "setup": 1.3050000000000002,
+        "compilation": 10.440000000000001,
+        "forward": 10.440000000000001,
+        "sensitivity": 0.0261,
+        "gradient": 3.8628,
+        "transfer": 0.0261,
+        "total": 26.1
+      },
+      "phases": {
+        "imports": 0.26100000000000007,
+        "initialize": 0.13050000000000003,
+        "load": 0.13050000000000003,
+        "build": 0.783,
+        "forward_lower": 1.0440000000000003,
+        "forward_compile": 5.220000000000001,
+        "sensitivity_lower": 0.20880000000000004,
+        "sensitivity_compile": 0.8352000000000002,
+        "gradient_lower": 0.5220000000000001,
+        "gradient_compile": 2.6100000000000003,
+        "forward": 10.440000000000001,
+        "sensitivity": 0.0261,
+        "gradient": 3.8628,
+        "host_transfer": 0.0261
+      },
+      "evidence": {
+        "candidate_sha": "7777777777777777777777777777777777777777",
+        "eligible_full": true,
+        "profile": "full",
+        "category": "valid_full",
+        "cohort_digest": "amd-alice-synthetic-cohort",
+        "job_id": "demo-amd-alice-7-2",
+        "metrics": {
+          "total": 26.1,
+          "compilation": 10.440000000000001,
+          "runtime": 13.0,
+          "peak_rss_bytes": 8000000000,
+          "setup": 1.3050000000000002,
+          "forward": 10.440000000000001,
+          "sensitivity": 0.0261,
+          "gradient": 3.8628,
+          "transfer": 0.0261
+        },
+        "phases": {
+          "imports": 0.26100000000000007,
+          "initialize": 0.13050000000000003,
+          "load": 0.13050000000000003,
+          "build": 0.783,
+          "forward_lower": 1.0440000000000003,
+          "forward_compile": 5.220000000000001,
+          "sensitivity_lower": 0.20880000000000004,
+          "sensitivity_compile": 0.8352000000000002,
+          "gradient_lower": 0.5220000000000001,
+          "gradient_compile": 2.6100000000000003,
+          "forward": 10.440000000000001,
+          "sensitivity": 0.0261,
+          "gradient": 3.8628,
+          "host_transfer": 0.0261
+        }
+      },
+      "instance": "amd-alice",
+      "comparison_context": {
+        "mode": "serial",
+        "epoch": 1,
+        "receipt": "synthetic-demo-only"
+      },
+      "recorded_feedback": {
+        "status": "recorded",
+        "summary": "Refine the combined topology and record the exact revision.",
+        "hypothesis": "Synthetic illustration only. A measured phase reduction may trade off against another phase.",
+        "parent_candidates": [
+          "6666666666666666666666666666666666666666"
+        ],
+        "sources": [
+          "synthetic-demo-only"
+        ]
+      }
+    }
+  ],
   "historical": {
     "candidates": []
   },
   "workers": [
     {
-      "id": "demo-research",
-      "provider": "example",
-      "model": "Demo large research model",
-      "direction": "Investigate alternate solver topology",
+      "id": "demo-a",
+      "branch": "explore/demo-a",
+      "name": "Construction research",
+      "direction": "setup-and-matrix-assembly-guidance",
+      "provider": "synthetic agent",
+      "model": "Synthetic research agent",
       "status": "complete",
-      "host": "Example research host",
-      "stale": false
+      "stale": false,
+      "started_at": 1795262400
+    },
+    {
+      "id": "demo-b",
+      "branch": "explore/demo-b",
+      "name": "Solver research",
+      "direction": "structural-linear-system-representation",
+      "provider": "synthetic agent",
+      "model": "Synthetic research agent",
+      "status": "complete",
+      "stale": false,
+      "started_at": 1795262400
+    },
+    {
+      "id": "demo-combined",
+      "branch": "explore/demo-combined",
+      "name": "Combined topology",
+      "direction": "combined-topology-refinements",
+      "provider": "synthetic agent",
+      "model": "Synthetic research agent",
+      "status": "complete",
+      "stale": false,
+      "started_at": 1795262400
     }
   ],
   "campaigns": [
@@ -296,14 +2193,18 @@
         "hypothesis": "Investigate a distinct implementation mechanism.",
         "depends_on": [],
         "candidate_branches": {
-          "2222222222222222222222222222222222222222": "explore/demo/research-a"
+          "2222222222222222222222222222222222222222": "explore/demo-a"
         },
         "deadline_unix": 4102444800,
         "max_candidates": 3,
         "minimum_full_runs": 3,
         "minimum_gain_fraction": 0.03,
         "minimum_gain_seconds": 0.02,
-        "priority": 20
+        "priority": 20,
+        "target_phases": [
+          "setup",
+          "compilation"
+        ]
       },
       "research-b": {
         "id": "research-b",
@@ -321,14 +2222,18 @@
         "hypothesis": "Investigate a distinct implementation mechanism.",
         "depends_on": [],
         "candidate_branches": {
-          "3333333333333333333333333333333333333333": "explore/demo/research-b"
+          "3333333333333333333333333333333333333333": "explore/demo-b"
         },
         "deadline_unix": 4102444800,
         "max_candidates": 3,
         "minimum_full_runs": 3,
         "minimum_gain_fraction": 0.03,
         "minimum_gain_seconds": 0.02,
-        "priority": 20
+        "priority": 20,
+        "target_phases": [
+          "forward",
+          "gradient"
+        ]
       },
       "refine-a": {
         "id": "refine-a",
@@ -353,7 +2258,11 @@
         "minimum_full_runs": 3,
         "minimum_gain_fraction": 0.03,
         "minimum_gain_seconds": 0.02,
-        "priority": 20
+        "priority": 20,
+        "target_phases": [
+          "setup",
+          "compilation"
+        ]
       },
       "refine-b": {
         "id": "refine-b",
@@ -379,7 +2288,11 @@
         "minimum_gain_fraction": 0.03,
         "minimum_gain_seconds": 0.02,
         "priority": 20,
-        "resolution": "Successor did not improve on the incumbent. Preserve the parent for a compatible combination."
+        "resolution": "Successor did not improve on the incumbent. Preserve the parent for a compatible combination.",
+        "target_phases": [
+          "forward",
+          "gradient"
+        ]
       },
       "combine-a-b": {
         "id": "combine-a-b",
@@ -405,7 +2318,8 @@
         "minimum_full_runs": 3,
         "minimum_gain_fraction": 0.03,
         "minimum_gain_seconds": 0.02,
-        "priority": 20
+        "priority": 20,
+        "target_phases": []
       },
       "refine-combination": {
         "id": "refine-combination",
@@ -430,7 +2344,8 @@
         "minimum_full_runs": 3,
         "minimum_gain_fraction": 0.03,
         "minimum_gain_seconds": 0.02,
-        "priority": 20
+        "priority": 20,
+        "target_phases": []
       },
       "confirm-integration": {
         "id": "confirm-integration",
@@ -451,7 +2366,8 @@
         "minimum_full_runs": 3,
         "minimum_gain_fraction": 0.03,
         "minimum_gain_seconds": 0.02,
-        "priority": 20
+        "priority": 20,
+        "target_phases": []
       },
       "open-factorization": {
         "id": "open-factorization",
@@ -472,7 +2388,8 @@
         "minimum_full_runs": 3,
         "minimum_gain_fraction": 0.03,
         "minimum_gain_seconds": 0.02,
-        "priority": 20
+        "priority": 20,
+        "target_phases": []
       },
       "diagnose-gradient": {
         "id": "diagnose-gradient",
@@ -494,7 +2411,8 @@
         "minimum_gain_fraction": 0.03,
         "minimum_gain_seconds": 0.02,
         "priority": 20,
-        "resolution": "Await independent numerical diagnostic."
+        "resolution": "Await independent numerical diagnostic.",
+        "target_phases": []
       }
     },
     "observations": {
@@ -510,10 +2428,36 @@
           "job_id": "demo-amd-alice-1-0",
           "metrics": {
             "total": 39.9,
-            "compilation": 16.0,
+            "compilation": 15.96,
             "runtime": 20.0,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.995,
+            "forward": 15.96,
+            "sensitivity": 0.0399,
+            "gradient": 5.9052,
+            "transfer": 0.0399
+          },
+          "phases": {
+            "imports": 0.399,
+            "initialize": 0.1995,
+            "load": 0.1995,
+            "build": 1.197,
+            "forward_lower": 1.596,
+            "forward_compile": 7.98,
+            "sensitivity_lower": 0.31920000000000004,
+            "sensitivity_compile": 1.2768000000000002,
+            "gradient_lower": 0.798,
+            "gradient_compile": 3.99,
+            "forward": 15.96,
+            "sensitivity": 0.0399,
+            "gradient": 5.9052,
+            "host_transfer": 0.0399
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-alice-1-1": {
@@ -530,8 +2474,34 @@
             "total": 40.0,
             "compilation": 16.0,
             "runtime": 20.0,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 2.0,
+            "forward": 16.0,
+            "sensitivity": 0.04,
+            "gradient": 5.92,
+            "transfer": 0.04
+          },
+          "phases": {
+            "imports": 0.4,
+            "initialize": 0.2,
+            "load": 0.2,
+            "build": 1.2,
+            "forward_lower": 1.6,
+            "forward_compile": 8.0,
+            "sensitivity_lower": 0.32,
+            "sensitivity_compile": 1.28,
+            "gradient_lower": 0.8,
+            "gradient_compile": 4.0,
+            "forward": 16.0,
+            "sensitivity": 0.04,
+            "gradient": 5.92,
+            "host_transfer": 0.04
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-alice-1-2": {
@@ -546,10 +2516,36 @@
           "job_id": "demo-amd-alice-1-2",
           "metrics": {
             "total": 40.1,
-            "compilation": 16.0,
+            "compilation": 16.040000000000003,
             "runtime": 20.0,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 2.0050000000000003,
+            "forward": 16.040000000000003,
+            "sensitivity": 0.040100000000000004,
+            "gradient": 5.9348,
+            "transfer": 0.040100000000000004
+          },
+          "phases": {
+            "imports": 0.4010000000000001,
+            "initialize": 0.20050000000000004,
+            "load": 0.20050000000000004,
+            "build": 1.203,
+            "forward_lower": 1.6040000000000003,
+            "forward_compile": 8.020000000000001,
+            "sensitivity_lower": 0.3208000000000001,
+            "sensitivity_compile": 1.2832000000000003,
+            "gradient_lower": 0.8020000000000002,
+            "gradient_compile": 4.010000000000001,
+            "forward": 16.040000000000003,
+            "sensitivity": 0.040100000000000004,
+            "gradient": 5.9348,
+            "host_transfer": 0.040100000000000004
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-alice-2-0": {
@@ -564,10 +2560,36 @@
           "job_id": "demo-amd-alice-2-0",
           "metrics": {
             "total": 34.9,
-            "compilation": 14.0,
+            "compilation": 13.96,
             "runtime": 17.5,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.745,
+            "forward": 13.96,
+            "sensitivity": 0.0349,
+            "gradient": 5.1652,
+            "transfer": 0.0349
+          },
+          "phases": {
+            "imports": 0.34900000000000003,
+            "initialize": 0.17450000000000002,
+            "load": 0.17450000000000002,
+            "build": 1.047,
+            "forward_lower": 1.3960000000000001,
+            "forward_compile": 6.98,
+            "sensitivity_lower": 0.2792,
+            "sensitivity_compile": 1.1168,
+            "gradient_lower": 0.6980000000000001,
+            "gradient_compile": 3.49,
+            "forward": 13.96,
+            "sensitivity": 0.0349,
+            "gradient": 5.1652,
+            "host_transfer": 0.0349
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-alice-2-1": {
@@ -584,8 +2606,34 @@
             "total": 35.0,
             "compilation": 14.0,
             "runtime": 17.5,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.75,
+            "forward": 14.0,
+            "sensitivity": 0.035,
+            "gradient": 5.18,
+            "transfer": 0.035
+          },
+          "phases": {
+            "imports": 0.35000000000000003,
+            "initialize": 0.17500000000000002,
+            "load": 0.17500000000000002,
+            "build": 1.05,
+            "forward_lower": 1.4000000000000001,
+            "forward_compile": 7.0,
+            "sensitivity_lower": 0.28,
+            "sensitivity_compile": 1.12,
+            "gradient_lower": 0.7000000000000001,
+            "gradient_compile": 3.5,
+            "forward": 14.0,
+            "sensitivity": 0.035,
+            "gradient": 5.18,
+            "host_transfer": 0.035
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-alice-2-2": {
@@ -600,10 +2648,36 @@
           "job_id": "demo-amd-alice-2-2",
           "metrics": {
             "total": 35.1,
-            "compilation": 14.0,
+            "compilation": 14.040000000000001,
             "runtime": 17.5,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.7550000000000001,
+            "forward": 14.040000000000001,
+            "sensitivity": 0.0351,
+            "gradient": 5.1948,
+            "transfer": 0.0351
+          },
+          "phases": {
+            "imports": 0.35100000000000003,
+            "initialize": 0.17550000000000002,
+            "load": 0.17550000000000002,
+            "build": 1.053,
+            "forward_lower": 1.4040000000000001,
+            "forward_compile": 7.0200000000000005,
+            "sensitivity_lower": 0.28080000000000005,
+            "sensitivity_compile": 1.1232000000000002,
+            "gradient_lower": 0.7020000000000001,
+            "gradient_compile": 3.5100000000000002,
+            "forward": 14.040000000000001,
+            "sensitivity": 0.0351,
+            "gradient": 5.1948,
+            "host_transfer": 0.0351
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-bob-3-0": {
@@ -618,10 +2692,36 @@
           "job_id": "demo-amd-bob-3-0",
           "metrics": {
             "total": 38.9,
-            "compilation": 15.600000000000001,
+            "compilation": 15.56,
             "runtime": 19.5,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.945,
+            "forward": 15.56,
+            "sensitivity": 0.0389,
+            "gradient": 5.757199999999999,
+            "transfer": 0.0389
+          },
+          "phases": {
+            "imports": 0.389,
+            "initialize": 0.1945,
+            "load": 0.1945,
+            "build": 1.167,
+            "forward_lower": 1.556,
+            "forward_compile": 7.78,
+            "sensitivity_lower": 0.31120000000000003,
+            "sensitivity_compile": 1.2448000000000001,
+            "gradient_lower": 0.778,
+            "gradient_compile": 3.89,
+            "forward": 15.56,
+            "sensitivity": 0.0389,
+            "gradient": 5.757199999999999,
+            "host_transfer": 0.0389
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-bob-3-1": {
@@ -638,8 +2738,34 @@
             "total": 39.0,
             "compilation": 15.600000000000001,
             "runtime": 19.5,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.9500000000000002,
+            "forward": 15.600000000000001,
+            "sensitivity": 0.039,
+            "gradient": 5.771999999999999,
+            "transfer": 0.039
+          },
+          "phases": {
+            "imports": 0.39000000000000007,
+            "initialize": 0.19500000000000003,
+            "load": 0.19500000000000003,
+            "build": 1.1700000000000002,
+            "forward_lower": 1.5600000000000003,
+            "forward_compile": 7.800000000000001,
+            "sensitivity_lower": 0.31200000000000006,
+            "sensitivity_compile": 1.2480000000000002,
+            "gradient_lower": 0.7800000000000001,
+            "gradient_compile": 3.9000000000000004,
+            "forward": 15.600000000000001,
+            "sensitivity": 0.039,
+            "gradient": 5.771999999999999,
+            "host_transfer": 0.039
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-bob-3-2": {
@@ -654,10 +2780,36 @@
           "job_id": "demo-amd-bob-3-2",
           "metrics": {
             "total": 39.1,
-            "compilation": 15.600000000000001,
+            "compilation": 15.64,
             "runtime": 19.5,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.955,
+            "forward": 15.64,
+            "sensitivity": 0.0391,
+            "gradient": 5.7867999999999995,
+            "transfer": 0.0391
+          },
+          "phases": {
+            "imports": 0.391,
+            "initialize": 0.1955,
+            "load": 0.1955,
+            "build": 1.173,
+            "forward_lower": 1.564,
+            "forward_compile": 7.82,
+            "sensitivity_lower": 0.3128,
+            "sensitivity_compile": 1.2512,
+            "gradient_lower": 0.782,
+            "gradient_compile": 3.91,
+            "forward": 15.64,
+            "sensitivity": 0.0391,
+            "gradient": 5.7867999999999995,
+            "host_transfer": 0.0391
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-alice-3-0": {
@@ -672,10 +2824,36 @@
           "job_id": "demo-amd-alice-3-0",
           "metrics": {
             "total": 36.9,
-            "compilation": 14.8,
+            "compilation": 14.76,
             "runtime": 18.5,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.845,
+            "forward": 14.76,
+            "sensitivity": 0.0369,
+            "gradient": 5.4612,
+            "transfer": 0.0369
+          },
+          "phases": {
+            "imports": 0.369,
+            "initialize": 0.1845,
+            "load": 0.1845,
+            "build": 1.107,
+            "forward_lower": 1.476,
+            "forward_compile": 7.38,
+            "sensitivity_lower": 0.2952,
+            "sensitivity_compile": 1.1808,
+            "gradient_lower": 0.738,
+            "gradient_compile": 3.69,
+            "forward": 14.76,
+            "sensitivity": 0.0369,
+            "gradient": 5.4612,
+            "host_transfer": 0.0369
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-alice-3-1": {
@@ -692,8 +2870,34 @@
             "total": 37.0,
             "compilation": 14.8,
             "runtime": 18.5,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.85,
+            "forward": 14.8,
+            "sensitivity": 0.037,
+            "gradient": 5.476,
+            "transfer": 0.037
+          },
+          "phases": {
+            "imports": 0.37000000000000005,
+            "initialize": 0.18500000000000003,
+            "load": 0.18500000000000003,
+            "build": 1.11,
+            "forward_lower": 1.4800000000000002,
+            "forward_compile": 7.4,
+            "sensitivity_lower": 0.29600000000000004,
+            "sensitivity_compile": 1.1840000000000002,
+            "gradient_lower": 0.7400000000000001,
+            "gradient_compile": 3.7,
+            "forward": 14.8,
+            "sensitivity": 0.037,
+            "gradient": 5.476,
+            "host_transfer": 0.037
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-alice-3-2": {
@@ -708,10 +2912,36 @@
           "job_id": "demo-amd-alice-3-2",
           "metrics": {
             "total": 37.1,
-            "compilation": 14.8,
+            "compilation": 14.840000000000002,
             "runtime": 18.5,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.8550000000000002,
+            "forward": 14.840000000000002,
+            "sensitivity": 0.0371,
+            "gradient": 5.4908,
+            "transfer": 0.0371
+          },
+          "phases": {
+            "imports": 0.37100000000000005,
+            "initialize": 0.18550000000000003,
+            "load": 0.18550000000000003,
+            "build": 1.113,
+            "forward_lower": 1.4840000000000002,
+            "forward_compile": 7.420000000000001,
+            "sensitivity_lower": 0.29680000000000006,
+            "sensitivity_compile": 1.1872000000000003,
+            "gradient_lower": 0.7420000000000001,
+            "gradient_compile": 3.7100000000000004,
+            "forward": 14.840000000000002,
+            "sensitivity": 0.0371,
+            "gradient": 5.4908,
+            "host_transfer": 0.0371
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-alice-4-0": {
@@ -726,10 +2956,36 @@
           "job_id": "demo-amd-alice-4-0",
           "metrics": {
             "total": 31.9,
-            "compilation": 12.8,
+            "compilation": 12.76,
             "runtime": 16.0,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.595,
+            "forward": 11.1012,
+            "sensitivity": 0.0319,
+            "gradient": 6.38,
+            "transfer": 0.0319
+          },
+          "phases": {
+            "imports": 0.319,
+            "initialize": 0.1595,
+            "load": 0.1595,
+            "build": 0.957,
+            "forward_lower": 1.276,
+            "forward_compile": 6.38,
+            "sensitivity_lower": 0.2552,
+            "sensitivity_compile": 1.0208,
+            "gradient_lower": 0.638,
+            "gradient_compile": 3.19,
+            "forward": 11.1012,
+            "sensitivity": 0.0319,
+            "gradient": 6.38,
+            "host_transfer": 0.0319
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-alice-4-1": {
@@ -746,8 +3002,34 @@
             "total": 32.0,
             "compilation": 12.8,
             "runtime": 16.0,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.6,
+            "forward": 11.136000000000001,
+            "sensitivity": 0.032,
+            "gradient": 6.4,
+            "transfer": 0.032
+          },
+          "phases": {
+            "imports": 0.32000000000000006,
+            "initialize": 0.16000000000000003,
+            "load": 0.16000000000000003,
+            "build": 0.96,
+            "forward_lower": 1.2800000000000002,
+            "forward_compile": 6.4,
+            "sensitivity_lower": 0.256,
+            "sensitivity_compile": 1.024,
+            "gradient_lower": 0.6400000000000001,
+            "gradient_compile": 3.2,
+            "forward": 11.136000000000001,
+            "sensitivity": 0.032,
+            "gradient": 6.4,
+            "host_transfer": 0.032
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-alice-4-2": {
@@ -762,10 +3044,36 @@
           "job_id": "demo-amd-alice-4-2",
           "metrics": {
             "total": 32.1,
-            "compilation": 12.8,
+            "compilation": 12.840000000000002,
             "runtime": 16.0,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.6050000000000002,
+            "forward": 11.170800000000002,
+            "sensitivity": 0.032100000000000004,
+            "gradient": 6.420000000000001,
+            "transfer": 0.032100000000000004
+          },
+          "phases": {
+            "imports": 0.32100000000000006,
+            "initialize": 0.16050000000000003,
+            "load": 0.16050000000000003,
+            "build": 0.9630000000000001,
+            "forward_lower": 1.2840000000000003,
+            "forward_compile": 6.420000000000001,
+            "sensitivity_lower": 0.25680000000000003,
+            "sensitivity_compile": 1.0272000000000001,
+            "gradient_lower": 0.6420000000000001,
+            "gradient_compile": 3.2100000000000004,
+            "forward": 11.170800000000002,
+            "sensitivity": 0.032100000000000004,
+            "gradient": 6.420000000000001,
+            "host_transfer": 0.032100000000000004
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-bob-5-0": {
@@ -780,10 +3088,36 @@
           "job_id": "demo-amd-bob-5-0",
           "metrics": {
             "total": 39.9,
-            "compilation": 16.0,
+            "compilation": 15.96,
             "runtime": 20.0,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.995,
+            "forward": 15.96,
+            "sensitivity": 0.0399,
+            "gradient": 5.9052,
+            "transfer": 0.0399
+          },
+          "phases": {
+            "imports": 0.399,
+            "initialize": 0.1995,
+            "load": 0.1995,
+            "build": 1.197,
+            "forward_lower": 1.596,
+            "forward_compile": 7.98,
+            "sensitivity_lower": 0.31920000000000004,
+            "sensitivity_compile": 1.2768000000000002,
+            "gradient_lower": 0.798,
+            "gradient_compile": 3.99,
+            "forward": 15.96,
+            "sensitivity": 0.0399,
+            "gradient": 5.9052,
+            "host_transfer": 0.0399
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-bob-5-1": {
@@ -800,8 +3134,34 @@
             "total": 40.0,
             "compilation": 16.0,
             "runtime": 20.0,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 2.0,
+            "forward": 16.0,
+            "sensitivity": 0.04,
+            "gradient": 5.92,
+            "transfer": 0.04
+          },
+          "phases": {
+            "imports": 0.4,
+            "initialize": 0.2,
+            "load": 0.2,
+            "build": 1.2,
+            "forward_lower": 1.6,
+            "forward_compile": 8.0,
+            "sensitivity_lower": 0.32,
+            "sensitivity_compile": 1.28,
+            "gradient_lower": 0.8,
+            "gradient_compile": 4.0,
+            "forward": 16.0,
+            "sensitivity": 0.04,
+            "gradient": 5.92,
+            "host_transfer": 0.04
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-bob-5-2": {
@@ -816,10 +3176,36 @@
           "job_id": "demo-amd-bob-5-2",
           "metrics": {
             "total": 40.1,
-            "compilation": 16.0,
+            "compilation": 16.040000000000003,
             "runtime": 20.0,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 2.0050000000000003,
+            "forward": 16.040000000000003,
+            "sensitivity": 0.040100000000000004,
+            "gradient": 5.9348,
+            "transfer": 0.040100000000000004
+          },
+          "phases": {
+            "imports": 0.4010000000000001,
+            "initialize": 0.20050000000000004,
+            "load": 0.20050000000000004,
+            "build": 1.203,
+            "forward_lower": 1.6040000000000003,
+            "forward_compile": 8.020000000000001,
+            "sensitivity_lower": 0.3208000000000001,
+            "sensitivity_compile": 1.2832000000000003,
+            "gradient_lower": 0.8020000000000002,
+            "gradient_compile": 4.010000000000001,
+            "forward": 16.040000000000003,
+            "sensitivity": 0.040100000000000004,
+            "gradient": 5.9348,
+            "host_transfer": 0.040100000000000004
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-alice-6-0": {
@@ -834,10 +3220,36 @@
           "job_id": "demo-amd-alice-6-0",
           "metrics": {
             "total": 27.9,
-            "compilation": 11.200000000000001,
+            "compilation": 11.16,
             "runtime": 14.0,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.395,
+            "forward": 11.16,
+            "sensitivity": 0.027899999999999998,
+            "gradient": 4.1292,
+            "transfer": 0.027899999999999998
+          },
+          "phases": {
+            "imports": 0.279,
+            "initialize": 0.1395,
+            "load": 0.1395,
+            "build": 0.837,
+            "forward_lower": 1.116,
+            "forward_compile": 5.58,
+            "sensitivity_lower": 0.2232,
+            "sensitivity_compile": 0.8928,
+            "gradient_lower": 0.558,
+            "gradient_compile": 2.79,
+            "forward": 11.16,
+            "sensitivity": 0.027899999999999998,
+            "gradient": 4.1292,
+            "host_transfer": 0.027899999999999998
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-alice-6-1": {
@@ -854,8 +3266,34 @@
             "total": 28.0,
             "compilation": 11.200000000000001,
             "runtime": 14.0,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.4000000000000001,
+            "forward": 11.200000000000001,
+            "sensitivity": 0.028,
+            "gradient": 4.144,
+            "transfer": 0.028
+          },
+          "phases": {
+            "imports": 0.28,
+            "initialize": 0.14,
+            "load": 0.14,
+            "build": 0.8400000000000001,
+            "forward_lower": 1.12,
+            "forward_compile": 5.6000000000000005,
+            "sensitivity_lower": 0.22400000000000003,
+            "sensitivity_compile": 0.8960000000000001,
+            "gradient_lower": 0.56,
+            "gradient_compile": 2.8000000000000003,
+            "forward": 11.200000000000001,
+            "sensitivity": 0.028,
+            "gradient": 4.144,
+            "host_transfer": 0.028
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-alice-6-2": {
@@ -870,10 +3308,36 @@
           "job_id": "demo-amd-alice-6-2",
           "metrics": {
             "total": 28.1,
-            "compilation": 11.200000000000001,
+            "compilation": 11.240000000000002,
             "runtime": 14.0,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.4050000000000002,
+            "forward": 11.240000000000002,
+            "sensitivity": 0.028100000000000003,
+            "gradient": 4.1588,
+            "transfer": 0.028100000000000003
+          },
+          "phases": {
+            "imports": 0.2810000000000001,
+            "initialize": 0.14050000000000004,
+            "load": 0.14050000000000004,
+            "build": 0.8430000000000001,
+            "forward_lower": 1.1240000000000003,
+            "forward_compile": 5.620000000000001,
+            "sensitivity_lower": 0.22480000000000006,
+            "sensitivity_compile": 0.8992000000000002,
+            "gradient_lower": 0.5620000000000002,
+            "gradient_compile": 2.8100000000000005,
+            "forward": 11.240000000000002,
+            "sensitivity": 0.028100000000000003,
+            "gradient": 4.1588,
+            "host_transfer": 0.028100000000000003
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-alice-7-0": {
@@ -888,10 +3352,36 @@
           "job_id": "demo-amd-alice-7-0",
           "metrics": {
             "total": 25.9,
-            "compilation": 10.4,
+            "compilation": 10.36,
             "runtime": 13.0,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.295,
+            "forward": 10.36,
+            "sensitivity": 0.0259,
+            "gradient": 3.8331999999999997,
+            "transfer": 0.0259
+          },
+          "phases": {
+            "imports": 0.259,
+            "initialize": 0.1295,
+            "load": 0.1295,
+            "build": 0.7769999999999999,
+            "forward_lower": 1.036,
+            "forward_compile": 5.18,
+            "sensitivity_lower": 0.2072,
+            "sensitivity_compile": 0.8288,
+            "gradient_lower": 0.518,
+            "gradient_compile": 2.59,
+            "forward": 10.36,
+            "sensitivity": 0.0259,
+            "gradient": 3.8331999999999997,
+            "host_transfer": 0.0259
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-alice-7-1": {
@@ -908,8 +3398,34 @@
             "total": 26.0,
             "compilation": 10.4,
             "runtime": 13.0,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.3,
+            "forward": 10.4,
+            "sensitivity": 0.026000000000000002,
+            "gradient": 3.848,
+            "transfer": 0.026000000000000002
+          },
+          "phases": {
+            "imports": 0.26,
+            "initialize": 0.13,
+            "load": 0.13,
+            "build": 0.78,
+            "forward_lower": 1.04,
+            "forward_compile": 5.2,
+            "sensitivity_lower": 0.20800000000000002,
+            "sensitivity_compile": 0.8320000000000001,
+            "gradient_lower": 0.52,
+            "gradient_compile": 2.6,
+            "forward": 10.4,
+            "sensitivity": 0.026000000000000002,
+            "gradient": 3.848,
+            "host_transfer": 0.026000000000000002
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       },
       "demo-amd-alice-7-2": {
@@ -924,14 +3440,174 @@
           "job_id": "demo-amd-alice-7-2",
           "metrics": {
             "total": 26.1,
-            "compilation": 10.4,
+            "compilation": 10.440000000000001,
             "runtime": 13.0,
-            "peak_rss_bytes": 8000000000
+            "peak_rss_bytes": 8000000000,
+            "setup": 1.3050000000000002,
+            "forward": 10.440000000000001,
+            "sensitivity": 0.0261,
+            "gradient": 3.8628,
+            "transfer": 0.0261
+          },
+          "phases": {
+            "imports": 0.26100000000000007,
+            "initialize": 0.13050000000000003,
+            "load": 0.13050000000000003,
+            "build": 0.783,
+            "forward_lower": 1.0440000000000003,
+            "forward_compile": 5.220000000000001,
+            "sensitivity_lower": 0.20880000000000004,
+            "sensitivity_compile": 0.8352000000000002,
+            "gradient_lower": 0.5220000000000001,
+            "gradient_compile": 2.6100000000000003,
+            "forward": 10.440000000000001,
+            "sensitivity": 0.0261,
+            "gradient": 3.8628,
+            "host_transfer": 0.0261
           }
+        },
+        "comparison_context": {
+          "mode": "serial",
+          "epoch": 1,
+          "receipt": "synthetic-demo-only"
         }
       }
     },
-    "events": []
+    "events": [],
+    "comparison_regime": {
+      "mode": "serial",
+      "epoch": 1,
+      "receipt": "synthetic-demo-only"
+    },
+    "research_records": {
+      "demo-2": {
+        "record_id": "demo-2",
+        "schema": "feyer-research-record-v1",
+        "candidate_sha": "2222222222222222222222222222222222222222",
+        "parents": [
+          "1111111111111111111111111111111111111111"
+        ],
+        "target_phases": [
+          "setup",
+          "compilation"
+        ],
+        "kind": "explore",
+        "hypothesis": "Synthetic illustration only.",
+        "change_summary": "Group component construction to reduce tracing and compilation work.",
+        "status": "done",
+        "stopping_reason": null,
+        "source_ref": "synthetic-demo-only",
+        "executor": {
+          "kind": "manual",
+          "id": "demo-a"
+        }
+      },
+      "demo-3": {
+        "record_id": "demo-3",
+        "schema": "feyer-research-record-v1",
+        "candidate_sha": "3333333333333333333333333333333333333333",
+        "parents": [
+          "1111111111111111111111111111111111111111"
+        ],
+        "target_phases": [
+          "forward",
+          "gradient"
+        ],
+        "kind": "explore",
+        "hypothesis": "Synthetic illustration only.",
+        "change_summary": "Restructure the linear solve while preserving numerical checks.",
+        "status": "done",
+        "stopping_reason": null,
+        "source_ref": "synthetic-demo-only",
+        "executor": {
+          "kind": "manual",
+          "id": "demo-b"
+        }
+      },
+      "demo-4": {
+        "record_id": "demo-4",
+        "schema": "feyer-research-record-v1",
+        "candidate_sha": "4444444444444444444444444444444444444444",
+        "parents": [
+          "2222222222222222222222222222222222222222"
+        ],
+        "target_phases": [
+          "setup",
+          "compilation"
+        ],
+        "kind": "refine",
+        "hypothesis": "Synthetic illustration only.",
+        "change_summary": "Refine the grouped topology: lower compilation cost with a gradient tradeoff.",
+        "status": "done",
+        "stopping_reason": null,
+        "source_ref": "synthetic-demo-only",
+        "executor": {
+          "kind": "manual",
+          "id": "demo-a"
+        }
+      },
+      "demo-5": {
+        "record_id": "demo-5",
+        "schema": "feyer-research-record-v1",
+        "candidate_sha": "5555555555555555555555555555555555555555",
+        "parents": [
+          "3333333333333333333333333333333333333333"
+        ],
+        "target_phases": [
+          "forward",
+          "gradient"
+        ],
+        "kind": "refine",
+        "hypothesis": "Synthetic illustration only.",
+        "change_summary": "A follow-up solve configuration increases first-run time; retain the parent.",
+        "status": "stalled",
+        "stopping_reason": "Successor did not improve on the incumbent. Preserve the parent for a compatible combination.",
+        "source_ref": "synthetic-demo-only",
+        "executor": {
+          "kind": "manual",
+          "id": "demo-b"
+        }
+      },
+      "demo-6": {
+        "record_id": "demo-6",
+        "schema": "feyer-research-record-v1",
+        "candidate_sha": "6666666666666666666666666666666666666666",
+        "parents": [
+          "4444444444444444444444444444444444444444",
+          "3333333333333333333333333333333333333333"
+        ],
+        "target_phases": [],
+        "kind": "combine",
+        "hypothesis": "Synthetic illustration only.",
+        "change_summary": "Combine the retained construction and solve approaches.",
+        "status": "done",
+        "stopping_reason": null,
+        "source_ref": "synthetic-demo-only",
+        "executor": {
+          "kind": "manual",
+          "id": "demo-combined"
+        }
+      },
+      "demo-7": {
+        "record_id": "demo-7",
+        "schema": "feyer-research-record-v1",
+        "candidate_sha": "7777777777777777777777777777777777777777",
+        "parents": [
+          "6666666666666666666666666666666666666666"
+        ],
+        "target_phases": [],
+        "kind": "refine",
+        "hypothesis": "Synthetic illustration only.",
+        "change_summary": "Refine the combined topology and record the exact revision.",
+        "status": "done",
+        "stopping_reason": null,
+        "source_ref": "synthetic-demo-only",
+        "executor": {
+          "kind": "manual",
+          "id": "demo-combined"
+        }
+      }
+    }
   },
   "team_search_source": {
     "available": true,

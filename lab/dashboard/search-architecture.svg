@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1800" height="2150" viewBox="0 0 1800 2150" role="img" aria-labelledby="title description">
   <title id="title">Feyer search architecture — explore, refine, combine and confirm</title>
-  <desc id="description">Conceptual workflow, not an actual run history. One validated baseline fans into independent heuristic research. Small refinements branch beneath each heuristic. Invalid and unproductive trials stop; validated approaches survive. Two surviving approaches combine, the combined topology is refined again, and the exact integrated revision receives final confirmation. A shared GitHub ledger coordinates three participants, each using their own agent account and independent serial AMD evaluator. Topology and hosting are subject to change.</desc>
+  <desc id="description">Conceptual workflow, not an actual run history. One validated baseline fans into independent heuristic research. Small refinements branch beneath each heuristic. Invalid and unproductive trials stop; validated approaches survive. Two surviving approaches combine, the combined topology is refined again, and the exact integrated revision receives final confirmation. A shared GitHub ledger coordinates three participants, each using their own agent account and independent AMD evaluation queues. Topology and hosting are subject to change.</desc>
   <metadata>Editable vector illustration. All node names and connections are conceptual examples. No measured performance, live instance status, or actual scientific lineage is asserted.</metadata>
   <defs>
     <style>
@@ -65,9 +65,9 @@
     <text x="440" y="527" class="label" text-anchor="middle">Heuristic A</text>
     <text x="900" y="527" class="label" text-anchor="middle">Heuristic B</text>
     <text x="1360" y="527" class="label" text-anchor="middle">Heuristic C</text>
-    <text x="440" y="554" class="note muted" text-anchor="middle">One structural hypothesis</text>
-    <text x="900" y="554" class="note muted" text-anchor="middle">A different mechanism</text>
-    <text x="1360" y="554" class="note muted" text-anchor="middle">Another possible topology</text>
+    <text x="440" y="554" class="note muted" text-anchor="middle">Setup / compilation hypothesis</text>
+    <text x="900" y="554" class="note muted" text-anchor="middle">Forward-solve hypothesis</text>
+    <text x="1360" y="554" class="note muted" text-anchor="middle">Sensitivity / gradient hypothesis</text>
     <path d="M440 493 V504 M440 570 V594 C440 612 340 608 340 642" class="wire"/>
     <path d="M440 570 V642" class="retained"/>
     <path d="M440 594 C440 612 540 608 540 642" class="wire"/>
@@ -166,6 +166,18 @@
     <text x="1555" y="1362" class="note muted">Lineage remains a DAG.</text>
   </g>
 
+  <g id="control-feedback-loop">
+    <rect x="1500" y="1415" width="265" height="230" fill="#fff"/>
+    <text x="1515" y="1450" class="mono orange">CONTROL FEEDBACK</text>
+    <rect x="1535" y="1475" width="180" height="38" rx="2" fill="#faf6f2" stroke="#ded6ce"/>
+    <text x="1625" y="1500" class="note" text-anchor="middle">Run + phase costs</text>
+    <rect x="1535" y="1550" width="180" height="38" rx="2" fill="#faf6f2" stroke="#ded6ce"/>
+    <text x="1625" y="1575" class="note" text-anchor="middle">Next agent input</text>
+    <path d="M1590 1513 V1548 M1715 1568 C1760 1568 1760 1493 1717 1493" fill="none" stroke="#d36b2e" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#small-arrow)"/>
+    <text x="1515" y="1615" class="small muted">Separate from scientific ancestry.</text>
+    <text x="1515" y="1638" class="small muted">Each turn creates a new candidate.</text>
+  </g>
+
   <g id="final-confirmation">
     <path d="M900 1352 V1366 M900 1438 V1492" class="retained"/>
     <circle cx="900" cy="1510" r="18" fill="#191919"/>
@@ -200,9 +212,9 @@
     <text x="390" y="2012" class="label" text-anchor="middle">AMD evaluator A</text>
     <text x="900" y="2012" class="label" text-anchor="middle">AMD evaluator B</text>
     <text x="1410" y="2012" class="label" text-anchor="middle">AMD evaluator C</text>
-    <text x="390" y="2041" class="note muted" text-anchor="middle">One serial queue · own baseline</text>
-    <text x="900" y="2041" class="note muted" text-anchor="middle">One serial queue · own baseline</text>
-    <text x="1410" y="2041" class="note muted" text-anchor="middle">One serial queue · own baseline</text>
+    <text x="390" y="2041" class="note muted" text-anchor="middle">Independent queues · own baseline</text>
+    <text x="900" y="2041" class="note muted" text-anchor="middle">Independent queues · own baseline</text>
+    <text x="1410" y="2041" class="note muted" text-anchor="middle">Independent queues · own baseline</text>
     <path d="M72 2073 H1728" class="guide"/>
     <text x="72" y="2111" class="note muted">Topology and hosting are subject to change. Three-host execution is the intended setup, not a live-status claim.</text>
     <text x="1728" y="2111" class="mono orange" text-anchor="end">FEYER</text>

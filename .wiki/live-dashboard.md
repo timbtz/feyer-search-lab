@@ -96,3 +96,7 @@ Raw model conversations are not automatically published. Only authorized briefs,
 The main map presents the algorithm in order: baseline, independent research directions, compact candidate histories, bounded numerical tuning, stopping, combination and exact confirmation. Select a direction or candidate marker to inspect its receipts; use **Exact evidence DAG** for recorded scientific parent edges. **Focus map** removes the page header. **Architecture** includes the editable search diagram.
 
 Dashed guide lines express intended progression, not measured ancestry. The first three directions are chosen by observed activity and recency, with all directions available. Candidate markers represent exact revisions in time order. Latest full observations are not winners or pooled cross-host scores. Unlinked receipts remain available separately. Completed worker status is not a scientific verdict.
+
+## Expandable run cards
+
+Search progression retains each exact evaluation. Use **Expand decisions & feedback** to open recorded changes, targets, five timing objectives, nested 14 phases, validation evidence and checkpoint/input receipts. Scientific/execution graph consumes `search_lineage`; control feedback is an optional separate overlay. Absent history is unknown. Parent timing deltas require compatible exact evidence; cross-host or cross-regime results are not ranked together.

@@ -4,7 +4,8 @@ const SearchDAG = (() => {
   const human = x => String(x ?? 'unknown').replace(/[_-]+/g, ' ');
   const key = (...parts) => JSON.stringify(parts);
   const measured = x => typeof x === 'number' && Number.isFinite(x) ? `${x.toFixed(2)} s` : 'Not measured';
-  function build(data, {campaign = null, history = false, evaluations = false, team = false} = {}) {
+  function build(data, {campaign = null, history = false, evaluations = false, team = false, lineage=false,control=false} = {}) {
+    if(lineage)return lineageGraph(data,{control});
     const nodes = [], edges = [], byId = new Map(), warnings = [];
     const node = (id, type, title, subtitle, record, extra = {}) => {
       if (!byId.has(id)) { const n = {id, type, title, subtitle, record, ...extra}; nodes.push(n); byId.set(id, n); }
@@ -104,7 +105,7 @@ const SearchDAG = (() => {
         if(worker){const wid=workerNode(worker);edge(root,wid,'Observed worker',true);edge(wid,id,'Recorded research branch');}
         else edge(root,id,'Historical record',true);
       });
-      records.forEach((r,i)=>{if(r.parent_run_key){const pi=records.findIndex(p=>p.run_key===r.parent_run_key);if(pi>=0)edge(hid(records[pi],pi),hid(r,i),'Recorded parent');}});
+      records.forEach((r,i)=>{if(r.parent_run_key){const pi=records.findIndex(p=>p.run_key===r.parent_run_key);if(pi>=0)edge(hid(records[pi],pi),hid(r,i),'Recorded Git ancestry',true);}});
     }
     // Validate every edge and exclude cyclic records instead of manufacturing ancestry.
     const accepted=[], children=new Map();
@@ -117,6 +118,20 @@ const SearchDAG = (() => {
     }
     return {nodes,edges:accepted,warnings};
   }
+  function lineageGraph(data,{control=false}={}){
+    const source=data.search_lineage;if(source?.schema!=='feyer-search-lineage-v1')return {nodes:[],edges:[],controlEdges:[],warnings:['Scientific lineage export is unavailable.']};
+    const controlKinds=new Set(['dispatched_input','feedback_artifact','next_input_artifact']);
+    const nodes=arr(source.nodes).filter(n=>control||!controlKinds.has(n.kind)).map(n=>{
+      const type={candidate:'candidate',evaluation:'evaluation',phase:'phase',research:'research',task:'task',campaign:'search',lane:'search',dispatched_input:'input',feedback_artifact:'feedback',next_input_artifact:'input'}[n.kind]||'missing';
+      const related=arr(source.nodes).find(r=>r.kind==='research'&&r.candidate_sha===n.candidate_sha&&r.change_summary);
+      const title=n.kind==='phase'?(RunMetrics.names[n.phase_key]||human(n.phase_key)):n.kind==='candidate'?(related?.change_summary||`Candidate · ${String(n.candidate_sha||'').slice(0,8)}`):n.kind==='research'?(n.change_summary||n.hypothesis||'Recorded research'):n.kind==='evaluation'?`${human(n.profile)} · ${String(n.job_id).slice(0,8)}`:n.kind==='dispatched_input'?'Captured agent input':n.kind==='feedback_artifact'?'Recorded feedback artifact':n.kind==='next_input_artifact'?'Recorded next-input artifact':n.executor_id||n.task_id||n.lane_id||n.id;
+      const evidence=n.evidence||{};const subtitle=n.kind==='evaluation'?`${n.instance||'Instance unknown'} · ${SearchProgression.timing(n.comparison_context)}`:n.kind==='candidate'?String(n.candidate_sha):n.kind==='phase'?'Explicitly declared research target':n.kind==='dispatched_input'?'Private artifact · digest recorded':arr(n.target_phases).map(k=>RunMetrics.names[k]||human(k)).join(' · ')||n.hypothesis||n.selector||'Source-backed record';
+      return {id:n.id,type,title,subtitle,record:n,lineage:true,description:n.hypothesis||n.change_summary||n.stopping_reason,status:n.kind==='evaluation'?(evidence.eligible_full?'Full correctness evidence':human(n.outcome)):human(n.status||'recorded'),valid:evidence.eligible_full===true,failed:evidence.category==='invalid_candidate'};
+    });
+    const ids=new Set(nodes.map(n=>n.id));const convert=e=>({...e,label:human(e.kind),grouping:['membership','targets_phase'].includes(e.kind)});
+    return {nodes,edges:arr(source.edges).filter(e=>ids.has(e.source)&&ids.has(e.target)).map(convert),controlEdges:control?arr(source.control_edges).filter(e=>ids.has(e.source)&&ids.has(e.target)).map(e=>({...convert(e),control:true})):[],warnings:arr(source.issues),lineage:true};
+  }
+
   function layout(graph, orientation='right') {
     const byId=new Map(graph.nodes.map(n=>[n.id,{...n,rank:0,x:0,y:0}]));
     const incoming=new Map(graph.nodes.map(n=>[n.id,[]])),outgoing=new Map(graph.nodes.map(n=>[n.id,[]]));
@@ -167,15 +182,15 @@ const SearchProgression = (() => {
   function build(data={}) {
     const branches=new Map(), observations=Object.values(data.team_search?.observations||{}),tasks=Object.values(data.team_search?.tasks||{});
     const branch=(id,title)=>{if(!branches.has(id))branches.set(id,{id,title:title||human(id.replace(/^explore\//,'')),records:[],workers:[],tasks:[],updated:0});return branches.get(id);};
-    for(const w of list(data.workers))if(w.branch){const b=branch(w.branch,titles[w.direction]||human(w.direction||w.branch));b.workers.push(w);b.updated=Math.max(b.updated,w.started_at||0);}
+    for(const w of list(data.workers))if(w.branch){const b=branch(w.branch,titles[w.direction]||human(w.direction||w.name||w.branch?.replace(/^explore\//,'')));b.workers.push(w);b.updated=Math.max(b.updated,w.started_at||0);}
     const jobs=new Map(), campaignSHAs=new Set(list(data.campaigns).flatMap(c=>list(c.candidates).map(a=>a.commit_sha)));
     for(const j of list(data.jobs))if(j.id&&j.branch&&j.sha)jobs.set(j.id,{...j,job_id:j.id});
-    for(const r of list(data.historical?.candidates))if(r.job_id&&r.branch&&r.sha&&!jobs.has(r.job_id))jobs.set(r.job_id,{...r,status:r.execution_status});
+    for(const r of list(data.historical?.candidates))if(r.job_id&&r.branch&&r.sha){const existing=jobs.get(r.job_id);if(!existing||existing.sha===r.sha)jobs.set(r.job_id,{...r,status:r.execution_status,...existing});}
     for(const j of jobs.values()){
       if(!branches.has(j.branch)&&(!/^explore\//.test(j.branch)||campaignSHAs.has(j.sha)))continue;
       const b=branch(j.branch,titles[j.direction]||human(j.direction||j.branch));
       const o=observations.find(o=>o.evidence?.job_id===j.job_id&&o.evidence?.candidate_sha===j.sha);
-      b.records.push({...j,evidence:o?.evidence,instance:o?.instance,comparison_context:o?.comparison_context||j.comparison_context});b.updated=Math.max(b.updated,j.created_at||0);
+      b.records.push({...j,evidence:o?.evidence||j.evidence,instance:o?.instance||j.instance,comparison_context:o?.comparison_context||j.comparison_context});b.updated=Math.max(b.updated,j.created_at||0);
     }
     // Team tasks can be present before any worker/job has been observed.
     for(const t of tasks.filter(t=>t.kind==='explore')){
@@ -184,7 +199,11 @@ const SearchProgression = (() => {
       const b=existing||branch(`task:${t.id}`,t.hypothesis||human(t.id));b.tasks.push(t);
       for(const o of observations.filter(o=>o.task===t.id))if(!b.records.some(r=>r.job_id===o.evidence?.job_id))b.records.push({sha:o.evidence.candidate_sha,job_id:o.evidence.job_id,profile:o.evidence.profile,evidence:o.evidence,instance:o.instance,comparison_context:o.comparison_context,metrics:o.evidence.metrics,created_at:o.created_at||0});
     }
+    const researchRecords=Object.values(data.team_search?.research_records||{});
     for(const b of branches.values()){
+      for(const r of b.records){r.research_records=researchRecords.filter(x=>x.candidate_sha===r.sha);r.research_tasks=tasks.filter(t=>list(t.candidates).includes(r.sha));
+        for(const c of list(data.campaigns)){const evaluation=list(c.evaluations).find(e=>e.job_id===r.job_id&&e.profile===r.profile);const candidate=evaluation&&list(c.candidates).find(a=>a.candidate_id===evaluation.candidate_id&&a.commit_sha===r.sha);if(candidate){const parents=list(candidate.parents).map(id=>list(c.candidates).find(a=>a.candidate_id===id)?.commit_sha);r.numerical_context={campaign_id:c.id,parameters:candidate.parameters,provenance:candidate.provenance,parents:parents.every(Boolean)?parents:[],unresolved_parent:parents.some(p=>!p),selector:c.selector};break;}}
+      }
       b.records.sort((a,b)=>(a.created_at||0)-(b.created_at||0));
       b.active=b.workers.some(w=>!w.stale&&['coding','running','evaluating','starting'].includes(w.status));
       b.stalled=b.tasks.some(t=>t.status==='stalled');
@@ -192,9 +211,11 @@ const SearchProgression = (() => {
       b.candidates=[...unique.values()];
       b.latest=[...b.records].reverse().find(r=>r.profile==='full')||b.records.at(-1)||null;
     }
+    const measurements=new Map();for(const b of branches.values())for(const r of b.records)measurements.set(JSON.stringify([r.instance,r.job_id,r.sha]),r);
+    for(const o of observations){const e=o.evidence;if(!e?.job_id||!e.candidate_sha)continue;const id=JSON.stringify([o.instance,e.job_id,e.candidate_sha]);if(!measurements.has(id))measurements.set(id,{sha:e.candidate_sha,job_id:e.job_id,profile:e.profile,metrics:e.metrics,phases:e.phases,evidence:e,instance:o.instance,comparison_context:o.comparison_context,research_records:researchRecords.filter(x=>x.candidate_sha===e.candidate_sha),research_tasks:tasks.filter(t=>list(t.candidates).includes(e.candidate_sha))});}
     const research=[...branches.values()].sort((a,b)=>Number(b.active)-Number(a.active)||b.updated-a.updated||a.id.localeCompare(b.id));
     const tuning=list(data.campaigns).map(c=>({id:c.id,selector:c.selector,status:c.status,dimensions:[...new Set(list(c.rounds).flatMap(r=>Object.keys(r.spec?.dimensions||{})))],candidates:list(c.candidates),record:c}));
-    return {research,tuning,tasks,combinations:tasks.filter(t=>t.kind==='combine'),confirmations:tasks.filter(t=>t.kind==='confirm'),ready:SearchDAG.readyTasks(data.team_search),unassigned:observations.filter(o=>jobs.get(o.evidence?.job_id)?.sha!==o.evidence?.candidate_sha&&!o.task)};
+    return {research,tuning,tasks,measurements:[...measurements.values()],combinations:tasks.filter(t=>t.kind==='combine'),confirmations:tasks.filter(t=>t.kind==='confirm'),ready:SearchDAG.readyTasks(data.team_search),unassigned:observations.filter(o=>jobs.get(o.evidence?.job_id)?.sha!==o.evidence?.candidate_sha&&!o.task)};
   }
   function verdict(r){
     if(r.evidence?.category==='invalid_candidate'||r.official_check==='failed'||r.strict_check==='failed')return {label:'Check failed',tone:'failed'};
@@ -207,10 +228,87 @@ const SearchProgression = (() => {
     const labels={concurrent:'Exploratory timing · concurrent',unverified_timing:'Exploratory timing · unverified',serial:'Serial timing · confirmation required'};
     return labels[context?.mode]||'Timing context not recorded';
   }
-  return {build,verdict,timing};
+  function numerical(c){
+    const candidates=list(c.candidates),latest=candidates.at(-1)?.provenance||{},spec=c.campaign?.spec||{},legal=spec.manifest?.legal;
+    const observed=new Set(list(c.evaluations).filter(e=>e.evidence_id).map(e=>e.candidate_id));for(const a of candidates)if(a.full_run_count>0||a.screen_run_count>0)observed.add(a.candidate_id);
+    const decisions=list(c.decisions).map(d=>d.payload?.plan||d.payload),events=list(c.events).filter(e=>e.type==='decision_recorded').map(e=>e.payload?.payload?.plan||e.payload?.payload),stop=[...decisions,...events].filter(x=>x?.reason).at(-1);
+    return {selector:c.selector||spec.selector||'Not recorded',selection_origin:latest.selection_origin||latest.origin||null,model_trained:typeof latest.model_trained==='boolean'?latest.model_trained:null,tried:observed.size,legal:Array.isArray(legal)?legal.length:null,stop_reason:stop?.reason||null,status:c.status,manifest_digest:spec.manifest_digest||null};
+  }
+
+  return {build,verdict,timing,numerical};
 })();
 
 if (typeof module !== 'undefined') module.exports.Progression = SearchProgression;
+
+/* Five objectives with measured phase drilldowns. Deltas require recorded comparators. */
+const RunMetrics=(()=>{
+  const finite=x=>typeof x==='number'&&Number.isFinite(x)&&x>=0;
+  const sum=xs=>xs.every(finite)?xs.reduce((a,b)=>a+b,0):null;
+  const median=xs=>{const v=xs.filter(finite).sort((a,b)=>a-b);return v.length?(v[Math.floor((v.length-1)/2)]+v[Math.floor(v.length/2)])/2:null;};
+  const phaseGroups={setup:['imports','initialize','load','build'],compilation:['forward_lower','forward_compile','sensitivity_lower','sensitivity_compile','gradient_lower','gradient_compile'],forward:['forward'],differentiation:['sensitivity','gradient'],transfer:['host_transfer'],forward_compilation:['forward_lower','forward_compile'],sensitivity_compilation:['sensitivity_lower','sensitivity_compile'],gradient_compilation:['gradient_lower','gradient_compile']};
+  const names={total:'Total first run',setup:'Setup',compilation:'Compilation',forward:'Forward execution',differentiation:'Differentiation',transfer:'Host transfer',imports:'Imports',initialize:'CPU initialization',load:'Input loading',build:'Setup / matrix construction',forward_compilation:'Forward compilation',sensitivity_compilation:'Sensitivity compilation',gradient_compilation:'Gradient compilation',forward_lower:'Forward lowering',forward_compile:'Forward compile',sensitivity_lower:'Sensitivity lowering',sensitivity_compile:'Sensitivity compile',gradient_lower:'Gradient lowering',gradient_compile:'Gradient compile',sensitivity:'Sensitivity / objective',gradient:'Reverse-mode gradient',host_transfer:'Host transfer'};
+  const children={total:['setup','compilation','forward','differentiation','transfer'],setup:phaseGroups.setup,compilation:['forward_compilation','sensitivity_compilation','gradient_compilation'],forward_compilation:phaseGroups.forward_compilation,sensitivity_compilation:phaseGroups.sensitivity_compilation,gradient_compilation:phaseGroups.gradient_compilation,differentiation:phaseGroups.differentiation};
+  function values(r){
+    const phases=Array.isArray(r.phases)?Object.fromEntries(r.phases.map(p=>[p.key,p.seconds])):r.phases||{};
+    const v={...phases};for(const [key,ps]of Object.entries(phaseGroups))v[key]=finite(r.metrics?.[key])?r.metrics[key]:sum(ps.map(p=>phases[p]));
+    v.sensitivity=finite(r.metrics?.sensitivity)?r.metrics.sensitivity:phases.sensitivity;v.gradient=finite(r.metrics?.gradient)?r.metrics.gradient:phases.gradient;
+    v.differentiation=sum([v.sensitivity,v.gradient]);v.total=finite(r.metrics?.total)?r.metrics.total:finite(r.first_run_seconds)?r.first_run_seconds:null;return v;
+  }
+  function parents(r){
+    const declarations=[];
+    if(r.recorded_feedback?.status==='recorded'&&Array.isArray(r.recorded_feedback.parent_candidates))declarations.push(r.recorded_feedback.parent_candidates);
+    for(const item of r.research_records||[])if(Array.isArray(item.parents))declarations.push(item.parents);
+    for(const t of r.research_tasks||[])if(Array.isArray(t.parents))declarations.push(t.parents);
+    if(Array.isArray(r.numerical_context?.parents))declarations.push(r.numerical_context.parents);
+    const sets=[...new Set(declarations.filter(p=>p.length).map(p=>JSON.stringify([...new Set(p)].sort())))];
+    return sets.length===1?{shas:JSON.parse(sets[0]),conflict:false}:{shas:[],conflict:sets.length>1};
+  }
+  function compatible(a,b){
+    const ea=a.evidence,eb=b.evidence,ca=a.comparison_context,cb=b.comparison_context;
+    return SearchProgression.verdict(a).tone==='pass'&&SearchProgression.verdict(b).tone==='pass'&&
+      !!a.instance&&a.instance===b.instance&&!!ea?.cohort_digest&&ea.cohort_digest===eb?.cohort_digest&&
+      ['serial','concurrent','unverified_timing'].includes(ca?.mode)&&ca.mode===cb?.mode&&
+      Number.isInteger(ca.epoch)&&ca.epoch===cb.epoch;
+  }
+  function reference(r,records,baseline){
+    if(SearchProgression.verdict(r).tone!=='pass')return {available:false,reason:'Timing not ranked before full eligibility'};
+    const input=parents(r);
+    if(input.conflict)return {available:false,reason:'Conflicting declared parents · no comparison'};
+    if(input.shas.length){
+      if(input.shas.includes(r.sha))return {available:false,reason:'Parent identity needs review'};
+      const groups=input.shas.map(sha=>records.filter(p=>p.sha===sha&&p.profile==='full'&&compatible(r,p)));
+      if(groups.some(g=>!g.length))return {available:false,reason:'Parent evidence needs matching instance, cohort and timing epoch',parents:input.shas};
+      const summaries=groups.map(g=>{const all=g.map(values),keys=[...new Set(all.flatMap(v=>Object.keys(v)))],metrics={},ranges={};for(const key of keys){const xs=all.map(v=>v[key]);metrics[key]=xs.every(finite)?median(xs):null;ranges[key]=xs.every(finite)?Math.max(...xs)-Math.min(...xs):null;}return {sha:g[0].sha,metrics,ranges,runs:g.length,job_ids:g.map(r=>r.job_id)};});
+      if(summaries.some(s=>!finite(s.metrics.total)))return {available:false,reason:'Parent total time is unavailable'};
+      const best=summaries.sort((a,b)=>a.metrics.total-b.metrics.total)[0];
+      return {available:true,...best,label:`${input.shas.length>1?'Better parent':'Declared parent'} · ${best.sha.slice(0,8)} · ${best.runs} full run${best.runs===1?'':'s'}`,exploratory:r.comparison_context.mode!=='serial',parents:input.shas};
+    }
+    // Older producer-approved comparisons stay explicitly labelled as legacy.
+    // Their Git ancestry is never substituted for a scientific parent.
+    if(r.comparable===true&&r.validated===true&&r.delta&&baseline?.metrics&&!r.comparison_context?.mode){
+      const metrics={},ranges={};for(const [k,v]of Object.entries(baseline.phases||{})){metrics[k]=v.median;ranges[k]=v.range;}
+      for(const [k,v]of Object.entries(baseline.metrics)){metrics[k]=v.median;ranges[k]=v.range;}
+      metrics.differentiation=sum([metrics.sensitivity,metrics.gradient]);ranges.differentiation=sum([ranges.sensitivity,ranges.gradient]);
+      for(const k of ['forward_compilation','sensitivity_compilation','gradient_compilation']){metrics[k]=sum(phaseGroups[k].map(p=>metrics[p]));ranges[k]=sum(phaseGroups[k].map(p=>ranges[p]));}
+      return {available:true,metrics,ranges,runs:baseline.runs,label:`Recorded baseline medians · ${baseline.runs} runs`,exploratory:true,legacy:true,parents:[]};
+    }
+    return {available:false,reason:'No recorded timing comparator',parents:[]};
+  }
+  function delta(value,key,ref){
+    const base=ref.metrics?.[key];if(!ref.available||!finite(value)||!finite(base))return {tone:'neutral',seconds:null,percent:null};
+    const change=value-base,threshold=Math.max(.02,.03*base,ref.ranges?.[key]||0);
+    return {seconds:change,percent:base>0?100*change/base:null,tone:change < -threshold?'gain':change>threshold?'loss':'neutral',threshold};
+  }
+  function annotation(r){
+    const records=r.research_records||[],tasks=r.research_tasks||[],feedback=r.recorded_feedback;
+    const target_phases=[...new Set([...records,...tasks].flatMap(x=>Array.isArray(x.target_phases)?x.target_phases:[]))];
+    const summary=records.map(x=>x.change_summary).find(Boolean)||(feedback?.status==='recorded'?feedback.summary:null)||r.idea||null;
+    const hypothesis=records.map(x=>x.hypothesis).find(Boolean)||(feedback?.status==='recorded'?feedback.hypothesis:null)||r.hypothesis||null;
+    return {summary,hypothesis,target_phases,stops:[...records,...tasks].filter(x=>['stalled','menu_exhausted','budget_exhausted','deadline_reached','failed'].includes(x.status)).map(x=>({status:x.status,reason:x.stopping_reason||x.resolution||null})),conflict:feedback?.status==='conflicting_records'};
+  }
+  return {values,parents,compatible,reference,delta,annotation,names,children,objectives:['total','setup','compilation','forward','differentiation']};
+})();
+if(typeof module!=='undefined')module.exports.Metrics=RunMetrics;
 
 /* Read-only presentation of existing campaign evidence. PDS v4 supplies UI primitives. */
 'use strict';
@@ -368,12 +466,12 @@ if (typeof module !== 'undefined') module.exports.Progression = SearchProgressio
   function selectGraphNode(id){G.selected=id;paintGraphSelection();renderGraphDetail();}
   function paintGraphSelection(){
     if(!G.graph)return;
-    const related=G.selected?SearchDAG.trace(G.graph,G.selected):null, query=$('graph-find').value.trim().toLowerCase();
+    const related=G.selected?SearchDAG.trace({...G.graph,edges:[...G.graph.edges,...(G.graph.controlEdges||[])]},G.selected):null, query=$('graph-find').value.trim().toLowerCase();
     let matches=0;
     for(const button of $('graph-nodes').children){const n=G.graph.nodes.find(n=>n.id===button.dataset.node);const match=!query||[n.title,n.subtitle,n.campaign,JSON.stringify(n.record)].join(' ').toLowerCase().includes(query);if(match)matches++;
       button.classList.toggle('dimmed',!match||related&&!related.has(n.id));button.classList.toggle('search-match',!!query&&match);button.setAttribute('aria-pressed',String(n.id===G.selected));}
     for(const p of $('graph-edges').querySelectorAll('path[data-source]')){const active=related&&related.has(p.dataset.source)&&related.has(p.dataset.target);p.classList.toggle('edge-active',!!active);p.classList.toggle('edge-dimmed',!!related&&!active);}
-    $('graph-count').textContent=`${G.graph.nodes.length-1} nodes · ${G.graph.edges.length} connections${query?` · ${matches} matches`:''}`;
+    $('graph-count').textContent=`${G.graph.nodes.length-(G.graph.lineage?0:1)} nodes · ${G.graph.edges.length} recorded links${G.graph.controlEdges?.length?` · ${G.graph.controlEdges.length} control links`:''}${query?` · ${matches} matches`:''}`;
   }
   function renderGraphDetail(){
     const n=G.graph?.nodes.find(n=>n.id===G.selected),panel=$('graph-inspector');panel.hidden=!n;if(!n)return;
@@ -381,13 +479,14 @@ if (typeof module !== 'undefined') module.exports.Progression = SearchProgressio
     if(n.campaign)target.append(make('p','meta-line',`Campaign: ${n.campaign}`));
     teamDetails(target,n);
     if(n.type==='evaluation'){const o=n.record;target.append(make('p','table-note',SearchProgression.timing(o.comparison_context)));}
-    if(n.type==='candidate'){
+    if(n.type==='candidate'&&!n.lineage){
       const a=n.record;phaseFacts(target,[['Complete first run',seconds(a.metrics?.total)],['Compilation',seconds(a.metrics?.compilation)],['Runtime',seconds(a.metrics?.runtime)],['Full measurements',String(a.full_run_count??(a.profile==='full'?1:0))],['Total-time range',seconds(a.metric_ranges?.total)],['Meaningful total gain',a.progress?a.progress.meaningful_total?'Yes':'No':'Not assessed']]);
       const params=Object.entries(a.parameters||{});if(params.length)facts(target,params.map(([k,v])=>[human(k),v===null?'Default':String(v)]));
       const source=commitLink(a.commit_sha||a.sha);if(source)target.append(source);
       const button=make('button','graph-action','Open full result');button.addEventListener('click',()=>{S.campaign=n.campaign;S.selected=n.candidate;options();render();showView('results');});target.append(button);
     }
-    const connections=G.graph.edges.filter(e=>e.source===n.id||e.target===n.id);
+    if(n.lineage){const r=n.record;if(r.candidate_sha)add(target,commitLink(r.candidate_sha));if(r.kind==='dispatched_input')target.append(make('p','table-note','The complete dispatched input is a private local artifact. This export records its digest and does not provide a hosted download.'));const exact=P.model?.measurements.find(x=>x.sha===r.candidate_sha&&(!r.job_id||x.job_id===r.job_id));if(exact){const b=make('button','graph-action','Inspect measured run');b.addEventListener('click',()=>{progressMode('progression');inspectProgress('record',exact);});target.append(b);}}
+    const connections=[...G.graph.edges,...(G.graph.controlEdges||[])].filter(e=>e.source===n.id||e.target===n.id);
     const section=make('div','graph-connections');section.append(make('h3','','Connected evidence'));
     for(const e of connections){const incoming=e.target===n.id,other=G.graph.nodes.find(x=>x.id===(incoming?e.source:e.target));const b=make('button','connection-link');add(b,make('span','',other.title),make('small','',`${incoming?'Input':'Output'} · ${e.label}${e.grouping?' · grouping':''}`));b.addEventListener('click',()=>{selectGraphNode(other.id);centerNode(other.id);});section.append(b);}target.append(section);
     disclosure(target,'Source record',n.record,'graph-record');
@@ -425,7 +524,59 @@ if (typeof module !== 'undefined') module.exports.Progression = SearchProgressio
     }
   }
 
-  const P={all:false,selected:null,model:null,signature:'',mode:'progression'};
+  const P={all:false,selected:null,model:null,signature:'',mode:'progression',paths:[],showScreens:true};
+  const metricTime=v=>!numeric(v)?'—':v>0&&v<.01?`${(v*1000).toFixed(2)} ms`:`${v.toFixed(v<1?3:2)} s`;
+  const metricDelta=d=>d.seconds===null?'No comparison':`${d.seconds<0?'−':d.seconds>0?'+':''}${metricTime(Math.abs(d.seconds))}${d.percent===null?'':` (${d.percent<0?'−':'+'}${Math.abs(d.percent).toFixed(1)}%)`}`;
+  function metricTree(key,values,reference,depth=0){
+    const nested=RunMetrics.children[key],row=make(nested?'details':'div',`metric-branch depth-${depth}`),summary=make(nested?'summary':'div','metric-row'),d=RunMetrics.delta(values[key],key,reference);
+    add(summary,make('span','metric-name',RunMetrics.names[key]||human(key)),make('span','metric-value',metricTime(values[key])),make('span',`metric-delta ${d.tone}`,metricDelta(d)));
+    summary.title=d.seconds===null?reference.reason||'Comparator unavailable':`${d.tone==='gain'?'Observed decrease':d.tone==='loss'?'Observed increase':'Within comparison noise guard'}; guard ${metricTime(d.threshold)}. A single run is not a confirmed gain.`;
+    row.append(summary);if(nested){const children=make('div','metric-children');for(const child of nested)children.append(metricTree(child,values,reference,depth+1));row.append(children);}return row;
+  }
+  function runFeedback(r,reference){
+    const wrapper=make('details','run-feedback');wrapper.append(make('summary','','Recorded feedback & checkpoints'));const body=make('div','run-feedback-body'),profile=list(S.data?.profiler_reports).find(p=>p.job_id===r.job_id&&p.candidate_sha===r.sha),values=RunMetrics.values(r),annotation=RunMetrics.annotation(r);
+    body.append(make('p','feedback-note','Recorded evaluation feedback. Delivery to a subsequent model is only shown when a receipt explicitly records it.'));
+    facts(body,[['Official',r.evidence?.checks?.official||r.official_check||'Unknown'],['Strict',r.evidence?.checks?.strict||r.strict_check||'Unknown'],['Eligibility',SearchProgression.verdict(r).label],['First run',metricTime(values.total)],['Job wall',metricTime(profile?.job_wall_seconds)],['Instance',r.instance||'Not recorded'],['Cohort',short(r.evidence?.cohort_digest)||'Not recorded'],['Timing',SearchProgression.timing(r.comparison_context)],['Epoch',String(r.comparison_context?.epoch??'Not recorded')],['Reference',reference.label||reference.reason]]);
+    const phases=Object.entries(r.phases||{}).filter(([,v])=>numeric(v)).sort((a,b)=>b[1]-a[1]);
+    if(phases.length){body.append(make('h4','','Measured phase costs'));for(const [key,value]of phases){const row=make('div','feedback-phase');add(row,make('span','',RunMetrics.names[key]||human(key)),make('strong','',metricTime(value)),make('span','',values.total>0?`${(100*value/values.total).toFixed(1)}%`:''));body.append(row);}}
+    const warm=Object.entries(r.warm_timing||{}).filter(([,v])=>numeric(v));if(warm.length){body.append(make('h4','','Warm timings · separate from first run'));for(const [key,value]of warm){const row=make('div','feedback-phase');add(row,make('span','',human(key)),make('strong','',metricTime(value)));body.append(row);}}
+    const issues=[...list(r.evidence?.issues),...(r.error?[r.error]:[])];if(issues.length)body.append(make('p','feedback-errors',issues.join(' · ')));
+    for(const stop of annotation.stops)body.append(make('p','feedback-note',`${human(stop.status)}${stop.reason?`: ${stop.reason}`:''}. This does not establish a local optimum.`));
+    const inputs=RunMetrics.parents(r),all=P.model?.measurements||[];const outputs=[...new Set(all.filter(x=>RunMetrics.parents(x).shas.includes(r.sha)).map(x=>x.sha))];
+    for(const [label,shas]of [['Declared scientific inputs',inputs.shas],['Recorded derived candidates',outputs]]){
+      const section=make('div','run-relations');section.append(make('h4','',label));if(!shas.length)section.append(make('p','meta-line',inputs.conflict&&label.startsWith('Declared')?'Conflicting declarations':'No link recorded'));
+      for(const sha of shas){const rec=all.find(x=>x.sha===sha);if(rec){const b=make('button','run-reference',short(sha));b.addEventListener('click',()=>inspectProgress('record',rec));section.append(b);}else section.append(commitLink(sha)||make('span','',short(sha)));}body.append(section);
+    }
+    const captured=list(r.research_records).filter(x=>x.checkpoint||x.next_input||x.feedback_ref||x.input_receipt);
+    if(captured.length)for(const record of captured)disclosure(body,'Recorded checkpoint / next input',{current_input_receipt:record.input_receipt||null,checkpoint:record.checkpoint||null,feedback_ref:record.feedback_ref||null,next_input:record.next_input||null},`checkpoint-${record.record_id||r.job_id}`);
+    body.append(make('p','feedback-note',captured.some(x=>x.input_receipt)?'Complete current-turn input: a private local artifact is captured by digest; its content is not included here.':'Complete current-turn input: not captured in the connected records.'));
+    if(!captured.some(x=>x.next_input))body.append(make('p','feedback-note','Exact next-model input: not captured in the connected records.'));
+    if(profile){const b=make('button','graph-action','Open full timing profile');b.addEventListener('click',()=>{$('profiler-filter').value=r.job_id;renderProfiler();showView('profiler');});body.append(b);}
+    disclosure(body,'Exact source receipt',r,`receipt-${r.job_id}`);wrapper.append(body);return wrapper;
+  }
+  function runCard(r,index){
+    const card=make('article','run-card'),v=SearchProgression.verdict(r),annotation=RunMetrics.annotation(r),all=P.model.measurements;
+    const reference=RunMetrics.reference(r,all,S.data?.historical?.baseline),values=RunMetrics.values(r);card.dataset.job=r.job_id;card.dataset.sha=r.sha;
+    const heading=make('div','run-card-heading');add(heading,make('span','micro-label',`${human(r.profile)} · ${short(r.job_id)}`),make('span',`run-verdict ${v.tone}`,v.label));card.append(heading);
+    const summary=annotation.summary||annotation.hypothesis||'Change summary not recorded';card.append(make('p','run-change-summary',summary));
+    if(annotation.target_phases.length){const targets=make('p','run-targets');targets.append(make('span','micro-label','Declared targets'));for(const phase of annotation.target_phases)targets.append(make('span','run-target',RunMetrics.names[phase]||human(phase)));card.append(targets);}
+    if(r.numerical_context)card.append(make('p','run-config',Object.entries(r.numerical_context.parameters||{}).map(([k,v])=>`${human(k)} ${v??'default'}`).join(' · ')));
+    const change=make('details','run-change');change.append(make('summary','','Change, target & source'));const changeBody=make('div','run-change-body');
+    if(r.numerical_context){add(changeBody,make('span','micro-label',`Numerical configuration · ${r.numerical_context.campaign_id}`),make('p','',Object.entries(r.numerical_context.parameters||{}).map(([k,v])=>`${human(k)}: ${v??'default'}`).join(' · ')));disclosure(changeBody,'Selection and source provenance',r.numerical_context,'selection-'+r.job_id);}
+    if(annotation.summary)add(changeBody,make('span','micro-label','Recorded implementation summary'),make('p','',annotation.summary));
+    if(annotation.hypothesis)add(changeBody,make('span','micro-label','Hypothesis · not a measured conclusion'),make('p','',annotation.hypothesis));
+    add(changeBody,make('span','micro-label','Declared phase targets'),make('p','',annotation.target_phases.length?annotation.target_phases.map(k=>RunMetrics.names[k]||human(k)).join(' · '):'Not recorded — no target inferred from a faster phase.'));
+    if(annotation.conflict)changeBody.append(make('p','feedback-errors','Conflicting feedback artifacts; no summary or scientific parents were selected.'));
+    add(changeBody,commitLink(r.sha));change.append(changeBody);card.append(change);
+    const metrics=make('div','run-metrics');for(const key of RunMetrics.objectives)metrics.append(metricTree(key,values,reference));card.append(metrics);
+    card.append(make('p','run-comparator',reference.available?`${reference.label}. ${reference.exploratory?'Exploratory observed deltas':'Observed deltas'}; not a confirmed improvement.`:reference.reason));
+    card.append(make('p','run-context',SearchProgression.timing(r.comparison_context)));
+    card.append(runFeedback(r,reference));
+    const expand=make('button','run-expand','Expand decisions & feedback');expand.setAttribute('aria-expanded','false');
+    expand.addEventListener('click',()=>{const open=expand.getAttribute('aria-expanded')!=='true';card.querySelectorAll('details').forEach(d=>{d.open=open;});expand.setAttribute('aria-expanded',String(open));expand.textContent=open?'Collapse run details':'Expand decisions & feedback';});heading.after(expand);
+    card.querySelectorAll('details').forEach((d,i)=>{d.dataset.key=`run-${r.job_id}-${i}`;});return card;
+  }
+
   function progressMode(mode){P.mode=mode;$('progression').hidden=mode!=='progression';$('evidence-map').hidden=mode!=='evidence';for(const b of document.querySelectorAll('[data-map-mode]'))b.setAttribute('aria-pressed',String(b.dataset.mapMode===mode));if(mode==='evidence')requestAnimationFrame(openGraph);}
   function inspectProgress(type,record){
     P.selected={type,record};const panel=$('progress-detail');panel.hidden=false;const target=clear('progress-detail-content');
@@ -439,15 +590,17 @@ if (typeof module !== 'undefined') module.exports.Progression = SearchProgressio
       add(target,branchLink(record.id));
     }else if(type==='record'){
       const v=SearchProgression.verdict(record);add(target,make('p','eyebrow',`${human(record.profile)} evaluation`),make('h2','',`${seconds(record.metrics?.total)} first run`),pill(v.label,v.tone==='failed'?'failed':v.tone==='pass'?'valid':''),make('p','progress-detail-intro',record.hypothesis||record.idea||'Exact recorded evaluation'));
+      const a=RunMetrics.annotation(record);if(a.target_phases.length)target.append(make('p','meta-line',`Declared targets: ${a.target_phases.map(k=>RunMetrics.names[k]||human(k)).join(', ')}`));
       facts(target,[['Timing status',SearchProgression.timing(record.comparison_context)],['Timing epoch',String(record.comparison_context?.epoch??'Not recorded')],['Commit',record.sha],['Job',record.job_id],['Instance',record.instance||'See source receipt'],['Cohort',record.evidence?.cohort_digest||'Not available in this record'],['Evidence','One measurement; not a confirmed gain']]);
-      add(target,commitLink(record.sha));
+      const reference=RunMetrics.reference(record,P.model.measurements,S.data?.historical?.baseline),values=RunMetrics.values(record);const metrics=make('div','run-metrics');for(const key of RunMetrics.objectives)metrics.append(metricTree(key,values,reference));add(target,metrics,make('p','run-comparator',reference.label||reference.reason),runFeedback(record,reference),commitLink(record.sha));
       const profile=list(S.data?.profiler_reports).find(r=>r.job_id===record.job_id);if(profile){const b=make('button','graph-action','Inspect timing profile');b.addEventListener('click',()=>{$('profiler-filter').value=record.job_id;renderProfiler();showView('profiler');});target.append(b);}
       disclosure(target,'Source receipt',record,'progress-receipt');
     }else if(type==='unassigned'){
       add(target,make('p','eyebrow','Unlinked evidence'),make('h2','','Receipts without branch metadata'),make('p','progress-detail-intro','These measurements are retained without assigning a research direction from a filename or Git ancestry.'));
-      for(const o of P.model.unassigned){const e=o.evidence,r={sha:e.candidate_sha,job_id:e.job_id,profile:e.profile,metrics:e.metrics,evidence:e,instance:o.instance,comparison_context:o.comparison_context};const row=make('button','evidence-row');add(row,make('span','',`${short(r.sha)} · ${o.instance}`),make('strong','',seconds(r.metrics?.total)),make('small','',SearchProgression.verdict(r).label));row.addEventListener('click',()=>inspectProgress('record',r));target.append(row);}
+      for(const o of P.model.unassigned){const e=o.evidence,r={sha:e.candidate_sha,job_id:e.job_id,profile:e.profile,metrics:e.metrics,phases:e.phases,evidence:e,instance:o.instance,comparison_context:o.comparison_context};const row=make('button','evidence-row');add(row,make('span','',`${short(r.sha)} · ${o.instance}`),make('strong','',seconds(r.metrics?.total)),make('small','',SearchProgression.verdict(r).label));row.addEventListener('click',()=>inspectProgress('record',r));target.append(row);}
     }else if(type==='tuning'){
       add(target,make('p','eyebrow','Small numerical search'),make('h2','',record.id),make('p','progress-detail-intro',`${human(record.selector)} searches the admitted implementation parameters. Each successor is evaluated against its pinned input.`));
+      const info=SearchProgression.numerical(record.record);facts(target,[['Latest selection',info.selection_origin||'Not recorded'],['Model trained',info.model_trained===null?'Not recorded':String(info.model_trained)],['Evaluated configs',String(info.tried)],['Legal menu size',String(info.legal??'Not recorded')],['Manifest',info.manifest_digest||'Not recorded'],['Stop reason',info.stop_reason||'Not recorded']]);target.append(make('p','table-note','Counts describe the recorded finite menu. A budget stop or exhausted menu does not prove a local optimum.'));
       for(const a of record.candidates){const row=make('button','evidence-row');add(row,make('span','',Object.entries(a.parameters||{}).map(([k,v])=>`${human(k)}: ${v??'default'}`).join(' · ')||a.candidate_id),make('strong','',seconds(a.metrics?.total)),make('small','',a.valid?'Full evidence':'Unconfirmed'));row.addEventListener('click',()=>{$('graph-scope').value='campaign';S.campaign=record.id;options();render();progressMode('evidence');const id=JSON.stringify([record.id,'candidate',a.candidate_id]);selectGraphNode(id);centerNode(id);panel.hidden=true;});target.append(row);}
     }else{
       const descriptions={baseline:['Start from a measured baseline','Freeze the workload and exact starting revision. Each participant calibrates their own AMD instance. Timing comparisons stay within the same host and cohort.'],combine:['Combine, then measure again','Pick complementary validated approaches. Record both scientific parents. A combined candidate must beat the better parent; otherwise keep the parent and close this attempt.'],confirm:['Converge on one tested revision','Repeat the exact integrated commit under the same evaluation policy. A merge, a completed agent, or a single fast run does not establish the final submission.'],stop:['Stop spending on a flat branch','Keep the incumbent when a successor fails correctness or cannot justify further compute. The next iteration can combine that retained approach with another validated branch.']};
@@ -460,8 +613,9 @@ if (typeof module !== 'undefined') module.exports.Progression = SearchProgressio
   }
   function renderProgression(){
     const model=SearchProgression.build(S.data||{});P.model=model;
-    const signature=JSON.stringify([P.all,model]);if(signature===P.signature)return;P.signature=signature;
-    const branches=P.all?model.research:model.research.slice(0,3),field=clear('research-paths');
+    P.paths=P.paths.filter(id=>model.research.some(b=>b.id===id));for(const b of model.research)if(P.paths.length<3&&!P.paths.includes(b.id))P.paths.push(b.id);
+    const signature=JSON.stringify([P.all,P.paths,P.showScreens,model]);if(signature===P.signature)return;P.signature=signature;
+    const branches=P.all?model.research:P.paths.map(id=>model.research.find(b=>b.id===id)),field=clear('research-paths');
     $('progress-unlinked').hidden=!model.unassigned.length;$('progress-unlinked').textContent=`${model.unassigned.length} receipts without branch metadata`;
     $('research-count').textContent=`${model.research.length} research directions`;
     $('progress-more').hidden=model.research.length<=3;$('progress-more').textContent=P.all?'Show recent directions':`Show all ${model.research.length} directions`;
@@ -470,18 +624,21 @@ if (typeof module !== 'undefined') module.exports.Progression = SearchProgressio
       const path=make('article',`research-path${b.active?' path-active':''}${b.stalled?' path-stalled':''}`),header=make('button','path-header');
       const worker=b.workers.at(-1),state=b.active?(S.data?.snapshot?'Observed active':'Active research'):b.stalled?'Branch stalled':worker?`${human(worker.status)}${worker.stale?' · stale':''}`:'Recorded branch';
       add(header,make('span','path-state',state),make('h3','',b.title),make('span','path-model',worker&&worker.model!=='inherited / not recorded'?worker.model:worker?human(worker.provider):b.tasks.length?'Shared research task':'Recorded research branch'));header.addEventListener('click',()=>inspectProgress('branch',b));path.append(header);
-      const trials=make('div','trial-field');trials.append(make('p','micro-label',`${b.candidates.length} revisions · time order`));const track=make('div','trial-track');
-      for(const r of b.candidates){const v=SearchProgression.verdict(r),dot=make('button',`trial-dot trial-${v.tone}`);dot.setAttribute('aria-label',`${b.title}, ${short(r.sha)}, ${v.label}, ${seconds(r.metrics?.total)}`);dot.title=`${short(r.sha)} · ${v.label} · ${seconds(r.metrics?.total)}`;dot.addEventListener('click',()=>inspectProgress('record',r));track.append(dot);}trials.append(track);
-      if(!b.candidates.length)trials.append(make('p','path-empty','Awaiting candidate evidence'));
-      const latest=b.latest;if(latest){const v=SearchProgression.verdict(latest),receipt=make('button','latest-receipt');add(receipt,make('span','micro-label',latest.profile==='full'?'Latest full observation':'Latest provisional observation'),make('strong','',seconds(latest.metrics?.total)),make('span',`receipt-verdict ${v.tone}`,`${v.label} · ${short(latest.sha)}`),make('span','receipt-verdict',SearchProgression.timing(latest.comparison_context)));receipt.addEventListener('click',()=>inspectProgress('record',latest));trials.append(receipt);}
-      path.append(trials);const inspect=make('button','path-inspect','Explore this direction');inspect.addEventListener('click',()=>inspectProgress('branch',b));path.append(inspect);field.append(path);
+      if(!P.all){const choose=make('select','path-selector');choose.setAttribute('aria-label',`Choose research path ${branches.indexOf(b)+1}`);for(const option of model.research){const o=new Option(option.title,option.id);o.disabled=P.paths.includes(option.id)&&option.id!==b.id;choose.append(o);}choose.value=b.id;choose.addEventListener('change',()=>{P.paths[branches.indexOf(b)]=choose.value;renderProgression();});path.insertBefore(choose,header);}
+      const shown=b.records.filter(r=>P.showScreens||r.profile==='full');
+      path.append(make('p','run-sequence-label',`${shown.length} ${P.showScreens?'evaluations':'full evaluations'} · chronological sequence`));
+      const stack=make('div','run-stack');shown.forEach((r,i)=>stack.append(runCard(r,i)));path.append(stack);
+      if(!shown.length)path.append(make('p','path-empty',b.records.length?'Only provisional evaluations are recorded. Enable screen runs to inspect them.':'Awaiting the first measured run.'));
+      for(const t of b.tasks.filter(t=>['stalled','menu_exhausted','budget_exhausted','deadline_reached'].includes(t.status)))path.append(make('p','path-stop',`${human(t.status)} · ${t.stopping_reason||t.resolution||'Reason not recorded'}`));
+      const inspect=make('button','path-inspect','All evidence for this direction');inspect.addEventListener('click',()=>inspectProgress('branch',b));path.append(inspect);field.append(path);
     }
     if(!branches.length)field.append(make('p','empty','No research branches are connected yet. The intended search progression remains visible below.'));
-    const tunings=clear('tuning-paths');for(const t of model.tuning){const b=make('button','tuning-path');add(b,make('span','micro-label',human(t.selector)),make('strong','',t.dimensions.map(human).join(' / ')||'Admitted parameter space'),make('span','',`${t.candidates.length} configurations · ${human(t.status)}`));b.addEventListener('click',()=>inspectProgress('tuning',t));tunings.append(b);}
+    const tunings=clear('tuning-paths');for(const t of model.tuning){const info=SearchProgression.numerical(t.record),b=make('button','tuning-path');add(b,make('span','micro-label',`${human(info.selector)}${info.model_trained===true?' · learned proposal':info.model_trained===false?' · startup / untrained':''}`),make('strong','',t.dimensions.map(human).join(' / ')||'Admitted parameter space'),make('span','',`${info.tried} evaluated configurations / ${info.legal??'?'} declared legal · ${human(t.status)}`));b.addEventListener('click',()=>inspectProgress('tuning',t));tunings.append(b);}
     if(!model.tuning.length)tunings.append(make('p','meta-line','A bounded parameter search can refine each admitted topology. No campaign export is connected.'));
     $('combine-state').textContent=model.combinations.length?`${model.combinations.length} shared combination tasks`:'Next iteration · requires pinned parents';
     $('confirm-state').textContent=model.confirmations.length?`${model.confirmations.length} shared confirmation tasks`:'Objective · final promotion requires evidence';
-    $('progress-source').textContent=`Workflow lines explain the search policy; candidate markers are recorded evidence. ${S.data?.team_search_source?.stale?'Shared task snapshot is stale. ':''}${model.ready.length} ready shared tasks. No cross-host ranking.`;
+    $('progress-source').textContent=`Workflow lines explain the search policy; run cards contain recorded evidence. Vertical order is chronology, not inferred ancestry. ${S.data?.team_search_source?.stale?'Shared task snapshot is stale. ':''}${model.ready.length} ready shared tasks. No cross-host ranking.`;
+    for(const detail of $('research-paths').querySelectorAll('details'))detail.addEventListener('toggle',()=>requestAnimationFrame(drawProgressLines));
     requestAnimationFrame(drawProgressLines);
   }
   function drawProgressLines(){
@@ -494,6 +651,7 @@ if (typeof module !== 'undefined') module.exports.Progression = SearchProgressio
   }
   for(const b of document.querySelectorAll('[data-map-mode]'))b.addEventListener('click',()=>progressMode(b.dataset.mapMode));
   for(const b of document.querySelectorAll('[data-progress-stage]'))b.addEventListener('click',()=>inspectProgress(b.dataset.progressStage,{}));
+  $('progress-screens').addEventListener('change',e=>{P.showScreens=e.target.checked;renderProgression();});
   $('progress-more').addEventListener('click',()=>{P.all=!P.all;renderProgression();});
   $('progress-unlinked').addEventListener('click',()=>inspectProgress('unassigned',{}));
   $('progress-focus').addEventListener('click',()=>{const focused=document.body.classList.toggle('map-focused');$('progress-focus').textContent=focused?'Exit focus':'Focus map';requestAnimationFrame(drawProgressLines);});
@@ -503,8 +661,8 @@ if (typeof module !== 'undefined') module.exports.Progression = SearchProgressio
 
   function renderGraph(){
     $('graph-history').disabled=$('graph-scope').value!=='all';
-    if(!G.initialized&&S.data?.team_search?.schema==='feyer-team-search-v1')$('graph-scope').value='team';
-    const config={team:$('graph-scope').value==='team',campaign:$('graph-scope').value==='campaign'?S.campaign:null,history:$('graph-scope').value==='all'?$('graph-history').checked:S.campaign==='history',evaluations:$('graph-evaluations').checked};
+    if(!G.initialized){if(S.data?.search_lineage?.schema==='feyer-search-lineage-v1')$('graph-scope').value='lineage';else if(S.data?.team_search?.schema==='feyer-team-search-v1')$('graph-scope').value='team';}
+    const config={lineage:$('graph-scope').value==='lineage',control:$('graph-control').checked,team:$('graph-scope').value==='team',campaign:$('graph-scope').value==='campaign'?S.campaign:null,history:$('graph-scope').value==='all'?$('graph-history').checked:S.campaign==='history',evaluations:$('graph-evaluations').checked};
     const graph=SearchDAG.layout(SearchDAG.build(S.data||{},config),$('graph-direction').value);
     const signature=JSON.stringify(graph);
     if(signature===G.signature)return;
@@ -514,7 +672,7 @@ if (typeof module !== 'undefined') module.exports.Progression = SearchProgressio
     container.style.width=`${graph.width}px`;container.style.height=`${graph.height}px`;lines.setAttribute('width',graph.width);lines.setAttribute('height',graph.height);
     const defs=svg('defs'),marker=svg('marker',{id:'dag-arrow',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:6,markerHeight:6,orient:'auto-start-reverse'});marker.append(svg('path',{d:'M 0 0 L 10 5 L 0 10 z',fill:'#79879a'}));defs.append(marker);lines.append(defs);
     const byId=new Map(graph.nodes.map(n=>[n.id,n]));
-    for(const e of graph.edges){const a=byId.get(e.source),b=byId.get(e.target);const down=graph.orientation==='down',x1=down?a.x+a.width/2:a.x+a.width,y1=down?a.y+a.height:a.y+a.height/2,x2=down?b.x+b.width/2:b.x,y2=down?b.y:b.y+b.height/2,mid=down?(y1+y2)/2:(x1+x2)/2;const path=down?`M ${x1} ${y1} C ${x1} ${mid}, ${x2} ${mid}, ${x2} ${y2-4}`:`M ${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2-4} ${y2}`;const p=svg('path',{d:path,class:`dag-edge${e.grouping?' grouping':''}`,'marker-end':'url(#dag-arrow)'});p.dataset.source=e.source;p.dataset.target=e.target;const title=svg('title');title.textContent=`${a.title} → ${b.title}: ${e.label}`;p.append(title);lines.append(p);}
+    for(const e of [...graph.edges,...(graph.controlEdges||[])]){const a=byId.get(e.source),b=byId.get(e.target);const down=graph.orientation==='down',x1=down?a.x+a.width/2:a.x+a.width,y1=down?a.y+a.height:a.y+a.height/2,x2=down?b.x+b.width/2:b.x,y2=down?b.y:b.y+b.height/2,mid=down?(y1+y2)/2:(x1+x2)/2;const path=down?`M ${x1} ${y1} C ${x1} ${mid}, ${x2} ${mid}, ${x2} ${y2-4}`:`M ${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2-4} ${y2}`;const p=svg('path',{d:path,class:`dag-edge${e.grouping?' grouping':''}${e.control?' control-edge':''}`,'marker-end':'url(#dag-arrow)'});p.dataset.source=e.source;p.dataset.target=e.target;const title=svg('title');title.textContent=`${a.title} → ${b.title}: ${e.label}`;p.append(title);lines.append(p);}
     for(const n of graph.nodes){const b=make('button',`dag-node node-${n.type}${n.valid?' node-valid':''}${n.failed?' node-failed':''}`);b.type='button';b.dataset.node=n.id;b.style.left=`${n.x}px`;b.style.top=`${n.y}px`;b.style.width=`${n.width}px`;b.style.height=`${n.height}px`;b.setAttribute('aria-label',`${human(n.type)}: ${n.title}. ${n.subtitle}. ${n.status||''}`);b.title=`${n.title}\n${n.subtitle}\n${n.status||''}`;add(b,make('span','node-kind',human(n.type)),make('strong','node-title',n.title),make('span','node-subtitle',n.subtitle),make('span','node-status',n.status||'Recorded'));b.addEventListener('click',()=>selectGraphNode(n.id));container.append(b);}
     if(G.selected&&!byId.has(G.selected))G.selected=null;
     $('graph-empty').hidden=graph.nodes.length>1;
@@ -526,7 +684,7 @@ if (typeof module !== 'undefined') module.exports.Progression = SearchProgressio
       G.initialized=true;requestAnimationFrame(openGraph);
     }else if(oldIds!==graph.nodes.map(n=>n.id).join('|')&&G.selected)centerNode(G.selected);
   }
-  for(const id of ['graph-scope','graph-history','graph-evaluations','graph-direction'])$(id).addEventListener('change',()=>{G.selected=null;renderGraph();fitGraph();});
+  for(const id of ['graph-scope','graph-history','graph-evaluations','graph-direction','graph-control'])$(id).addEventListener('change',()=>{G.selected=null;renderGraph();fitGraph();});
   new ResizeObserver(()=>{if(G.graph)graphScale(G.scale,false);}).observe($('graph-viewport'));
   $('graph-fit').addEventListener('click',fitGraph);
   $('graph-reset').addEventListener('click',()=>graphScale(1));

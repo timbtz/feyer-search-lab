@@ -39,6 +39,15 @@ class ObservatoryTests(unittest.TestCase):
                 db.execute("INSERT INTO claims VALUES('evil',1,'coordinator','hash','owner',0)")
         self.assertEqual(before, self.campaign.events())
 
+    def test_snapshot_exports_scientific_and_control_lineage_separately(self):
+        snapshot = self.obs.state()
+        graph = snapshot['search_lineage']
+        self.assertEqual(graph['schema'], 'feyer-search-lineage-v1')
+        self.assertIsInstance(graph['nodes'], list)
+        self.assertIsInstance(graph['edges'], list)
+        self.assertIsInstance(graph['control_edges'], list)
+        self.assertEqual(snapshot['campaigns'][0]['usage']['model_calls'], 0)
+
     def test_missing_database_is_not_created(self):
         missing = self.root/'missing.sqlite3'
         with self.assertRaises(sqlite3.OperationalError):

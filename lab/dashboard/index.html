@@ -38,7 +38,7 @@
     <section id="graph" class="view" role="tabpanel" aria-labelledby="tab-graph">
       <div class="map-heading"><div><span class="micro-label">THE SEARCH SPACE</span><p id="progress-subtitle">Recorded research and its evidence</p></div><div class="map-controls"><button id="progress-focus" class="text-button">Focus map</button><div class="map-switch" aria-label="Map view"><button data-map-mode="progression" aria-pressed="true">Search progression</button><button data-map-mode="evidence" aria-pressed="false">Exact evidence DAG</button></div></div></div>
       <div id="progression">
-        <div class="progress-overline"><span id="research-count"></span><button id="progress-more" class="text-button" hidden>Show all directions</button></div>
+        <div class="progress-overline"><span id="research-count"></span><label class="run-screens"><input id="progress-screens" type="checkbox" checked> Include screen runs</label><button id="progress-more" class="text-button" hidden>Show all directions</button></div>
         <div id="progress-canvas" class="progress-canvas">
           <svg id="progress-lines" aria-hidden="true"></svg>
           <div class="stage-note stage-start"><span class="micro-label">START</span><p>A fixed problem.<br>A measured reference.</p></div>
@@ -50,7 +50,7 @@
           <button id="progress-combine" class="combine-node" data-progress-stage="combine"><span class="micro-label">SECOND ITERATION</span><strong>Combine. Refine again.</strong><span id="combine-state"></span></button>
           <button id="progress-confirm" class="confirm-node" data-progress-stage="confirm"><span class="micro-label">CONVERGE</span><strong>One verified solution.</strong><span id="confirm-state"></span></button>
         </div>
-        <div class="progress-key"><span><i class="key-wire"></i> Intended progression</span><span><i class="key-dot"></i> Recorded candidate</span><span><i class="key-fail"></i> Failed check</span><span>Click a direction or marker to inspect</span></div>
+        <div class="progress-key"><span><i class="key-wire"></i> Intended progression</span><span><i class="key-dot"></i> Exact run receipt</span><span class="delta-gain">Green: observed decrease</span><span class="delta-loss">Red: observed increase</span><span>Expand metrics and recorded feedback</span></div>
         <p id="progress-source" class="meta-line"></p><button id="progress-unlinked" class="text-button" hidden></button>
         <aside id="progress-detail" class="progress-detail" hidden aria-label="Research evidence"><button id="progress-close" class="text-button">Close details</button><div id="progress-detail-content"></div></aside>
       </div>
@@ -60,9 +60,10 @@
       <details class="team-queue"><summary>Next work and open search space</summary><div id="team-next"></div></details>
       <div class="graph-toolbar">
         <div class="graph-options">
-          <label>Scope<select id="graph-scope"><option value="team">Team workflow</option><option value="all">Campaign evidence</option><option value="campaign">Selected search round</option></select></label>
+          <label>Scope<select id="graph-scope"><option value="lineage">Scientific / execution graph</option><option value="team">Team workflow</option><option value="all">Campaign evidence</option><option value="campaign">Selected search round</option></select></label>
           <label>Layout<select id="graph-direction"><option value="down">Top down</option><option value="right">Left to right</option></select></label>
           <label class="graph-check"><input id="graph-history" type="checkbox" checked> Earlier experiments</label>
+          <label class="graph-check"><input id="graph-control" type="checkbox"> Control feedback overlay</label>
           <label class="graph-check"><input id="graph-evaluations" type="checkbox"> Evaluation runs</label>
         </div>
         <div class="graph-tools"><label class="graph-find"><span class="sr-only">Find a graph node</span><input id="graph-find" type="search" placeholder="Find model, idea, commit…"></label><button id="graph-fit" type="button">Fit graph</button><button id="graph-reset" type="button">100%</button><button id="graph-fullscreen" type="button">Expand</button></div>
@@ -75,7 +76,7 @@
         <div class="graph-zoom"><button id="graph-minus" aria-label="Zoom out">−</button><output id="graph-scale">100%</output><button id="graph-plus" aria-label="Zoom in">+</button></div>
         <aside id="graph-inspector" class="graph-inspector" hidden aria-label="Selected graph node"><button id="graph-close" class="text-button">Close details</button><div id="graph-detail"></div></aside>
       </div>
-      <div class="graph-legend"><span class="legend-research">Research / LLM</span><span class="legend-topology">Topology / search space</span><span class="legend-candidate">Candidate / optimization</span><span class="legend-evaluation">Measurement</span><span class="legend-line">Recorded dependency</span><span class="legend-line dashed">Grouping / lane membership</span><output id="graph-count" aria-live="polite"></output></div>
+      <div class="graph-legend"><span class="legend-research">Research / LLM</span><span class="legend-topology">Topology / search space</span><span class="legend-candidate">Candidate / optimization</span><span class="legend-evaluation">Measurement</span><span class="legend-line">Recorded dependency</span><span class="legend-line dashed">Grouping / lane membership</span><span class="legend-control">Control feedback · separate from ancestry</span><output id="graph-count" aria-live="polite"></output></div>
       <p class="graph-caption">Select a node to trace its ancestors and descendants. Scroll to explore; nodes are positioned automatically. Guidance stays a proposal until admitted and evaluated. Expand evaluation runs to see individual screen and full measurements.</p>
       </div>
     </section>

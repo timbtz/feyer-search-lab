@@ -499,7 +499,7 @@ class Observatory:
                  description='CPU 2, one logical CPU. Screen and full use 101 frequencies / 193 variables. 32,000,000,000-byte sampled RSS watchdog; not a kernel memory limit. Radeon VRAM is separate and not used by these CPU benchmarks.'),
             dict(id='qwen', name='Optional narrow proposer', host='AMD Token Factory', status='optional',
                  description='Used by the initial pilot; not required for deterministic or SMAC selection. Main research uses Codex / Claude.')]
-        return public(dict(generated_at=now, repo_url=REPO_URL, storage={'free_bytes':free.free,'total_bytes':free.total},
+        snapshot = public(dict(generated_at=now, repo_url=REPO_URL, storage={'free_bytes':free.free,'total_bytes':free.total},
             campaigns=campaigns, workers=workers, infrastructure=infrastructure, jobs=list(jobs.values()),
             queue=queue, historical=historical, alerts=alerts,
             team_search=team, team_search_source=team_source,
@@ -510,6 +510,9 @@ class Observatory:
                 'objective':'Minimize complete first-run time, including imports/setup, compilation, execution and transfer.',
                 'pareto':'Same-cohort valid full results only. Exact observed Pareto membership is separate from noise-qualified progress.',
                 'expansion':'Coordinator freezes a new round after reviewed guidance; frozen per-lane stall_limit applies (default 3). No automatic budget extensions.'}))
+        from .research_lineage import build_lineage
+        snapshot['search_lineage'] = public(build_lineage(snapshot))
+        return snapshot
 
 
 def handler_for(observatory):
