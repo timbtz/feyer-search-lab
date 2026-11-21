@@ -18,6 +18,7 @@ Conventions used throughout:
 """
 
 import jax
+from functools import partial
 from time import time
 import jax.numpy as jnp
 from jax import lax, vmap, jit
@@ -59,7 +60,7 @@ def solve(matrix: jnp.ndarray, right_hand_side: jnp.ndarray) -> jnp.ndarray:
     return jnp.linalg.solve(matrix, right_hand_side)
 
 
-@jit
+@partial(jit, inline=True)
 def _evaluate_component(function_and_inputs):
     """Keep recomputation within the selected component's reverse branch."""
     function_index, function_inputs = function_and_inputs
