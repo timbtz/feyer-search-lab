@@ -160,4 +160,64 @@ between A and A^H is introduced.
   loop. Timing: assembly's ~0.9 GB intermediates return, so some of candidate 1's forward/RSS gain
   is expected to be lost; the solve-side copies (astype, A^H transpose, LU workspaces) remain
   per-frequency.
+- SHA `3206ea9fd8e8930dd7e9f34dd0eb92a20a78c10a`.
+- Screen `c4f9af613fe74ce3a2390dc03b9bdb62` (request `40a24865c5fd47e3b7e883ccb624298e`): first-run
+  23.682139 s; compile/lower 10.394; forward exec 10.365; gradient exec 1.793; RSS 11690892 KiB.
+- Full `0ca3e7112bd8410fb40ec1e325f3d04a` (request `00cbd91dd98d4c86aa9b4379731b059d`): **official
+  PASS, strict FAIL**. First-run 23.546349 s; build 0.828; forward lower 0.700 / compile 6.989;
+  forward exec 10.308; gradient lower 0.147 / compile 2.044; gradient exec 1.803; compile/lower
+  total 10.312; warm median 12.215 s (forward 10.275, gradient 1.813); RSS 11681304 KiB; wall
+  95.53 s.
+- Comparison: physical outputs exact; gradient **bit-identical to candidates 2 and 3** (index 161
+  −29.61289475536929, rel L2 9.182443624982953e-10). **Hypothesis rejected**: assembly in the loop
+  is not the cause; the drift arises in the solve/noise-contraction path when it runs inside a
+  scan (any k, any scope tested).
+- Timing attribution (single runs, separate variants): moving assembly back out restored most of
+  the parent's cost — forward exec 10.31 (cand. 2: 9.05; parent 11.51), gradient exec 1.80 (cand. 2:
+  0.70; parent 1.81), RSS 11.7 GB (cand. 2: 7.3; parent 12.5). So ~1.1 s of reverse savings and most
+  of the memory saving came from assembly/component reverse running per frequency; the solve-only
+  loop gives ~1.2 s forward saving and ~0.9 GB RSS.
+
+### Candidate 5 — operator default `None` (full vmap) as branch head; both scopes retained
+- Change: `FREQUENCY_CHUNK_SIZE = None` (default) and new static `FREQUENCY_LOOP_SCOPE`
+  ∈ {"signal_noise" (candidates 1–3 layout), "solve" (candidate 4 layout)}. With `None`, the code
+  path is assembly + solves in one full vmap, i.e. the parent computation with only
+  frequency-independent detector-selection preparation hoisted and the carrier connector gather
+  done before the broadcast multiply (same operations and order as the parent).
+- Hypothesis: the operator's default value reproduces the parent exactly (outputs bitwise, gradient
+  ≈ parent's 4.55e-13 max abs vs baseline) and parent-level timing (~24.7 s), confirming the
+  refactor itself is strict-safe and that all drift is attributable to the scan.
 - SHA / runs: pending.
+
+## Revised operator specification (proposal for coordinator review)
+
+- `frequency_chunk_size` ∈ {None, 1, 2, 4, 8, 16}, default None. `frequency_loop_scope` ∈
+  {"signal_noise", "solve"}, active only when chunk size is not None. Symbols:
+  `differometor.simulate.FREQUENCY_CHUNK_SIZE`, `FREQUENCY_LOOP_SCOPE` (module constants read at
+  trace time; benchmark inputs and three JIT stages untouched).
+- Conditions: chunking only if carrier batch == 1 and B > k; remainder padded by repeating the last
+  row, padded results discarded.
+- Measured so far (one full run each, AMD CPU2): (1, signal_noise) 22.08 s; (2, signal_noise)
+  23.68 s; (1, solve) 23.55 s; parent/None 24.66 s. All non-None values: official PASS, strict FAIL
+  (gradient index 161, normalized error 1.82; outputs exact).
+- Admission recommendation: do not admit non-None values to a strict-gated space. They may be
+  admitted to an official-only exploratory space if the coordinator accepts strict-only gradient
+  failures as documented tradeoffs. Values 4/8/16 untested; k=2 suggests larger k costs compile time
+  and padding without numerical benefit.
+- Compatibility: orthogonal to component grouping and checkpoint/prevent_cse settings (unchanged
+  inside the body); not combined with shared-LU/Schur.
+
+## Handoff
+
+- Best validated (strict) revision remains parent `6dc993a06cf2de5ae2ae3afa83304a46b2ead4d0`
+  (24.657 s) unless candidate 5 reproduces it (then candidate 5 is an equivalent validated head with
+  the operator wired in at default).
+- Fastest official-only result: candidate 1 `aa4d230f4af70946be5c0f1f784eac2888c6bbe6`, 22.076 s
+  (−2.58 s, −42% RSS), strict failure at gradient index 161 (rel 1.9e-7). Not promoted.
+- Open question (needs HLO access, not available to this session): which reverse-mode op in the
+  scanned solve path rounds differently from the batched top-level version (suspects: transposed
+  einsum contraction `noise_matrix^T · ct`, transposed triangular solves in `custom_linear_solve`,
+  or XLA fusion/FMA differences). A queued diagnostic that dumps per-frequency gradient
+  contributions for both layouts would localize it.
+- Next actions: (a) evaluate candidate 5; (b) if the coordinator authorizes official-only admission,
+  repeat candidate 1 for timing confirmation; (c) HLO comparison of the reverse solve path.

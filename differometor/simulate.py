@@ -394,34 +394,35 @@ def simulate(
     # Carrier values that scale signal connector entries, shape (CV, M).
     carrier_entries = carrier[:, signal_carrier_indices.flatten()]
 
-    # Matrix assembly stays frequency-batched (full vmap) in every layout.
-    signal_matrix, noise_matrix = _assemble_signal_and_noise(
-        parameters,
-        carrier_entries,
-        carrier.shape[1],
-        signal_matrix,
-        noise_matrix,
-        signal_function_input_indices,
-        signal_function_indices,
-        signal_output_indices,
-        signal_matrix_indices,
-        signal_carrier_placing_indices,
-        noise_function_input_indices,
-        noise_function_indices,
-        noise_output_indices,
-        noise_system_matrix_indices,
-        component_groups,
-    )
+    def assemble(parameters, carrier_entries):
+        return _assemble_signal_and_noise(
+            parameters,
+            carrier_entries,
+            carrier.shape[1],
+            signal_matrix,
+            noise_matrix,
+            signal_function_input_indices,
+            signal_function_indices,
+            signal_output_indices,
+            signal_matrix_indices,
+            signal_carrier_placing_indices,
+            noise_function_input_indices,
+            noise_function_indices,
+            noise_output_indices,
+            noise_system_matrix_indices,
+            component_groups,
+        )
 
     chunk_size = FREQUENCY_CHUNK_SIZE
     count = parameters.shape[0]
     if chunk_size is None or carrier.shape[0] != 1 or count <= chunk_size:
         # Full frequency vmap (original layout), also used for carrier sweeps.
-        signal, noise = _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections)
+        assembled_signal, assembled_noise = assemble(parameters, carrier_entries)
+        signal, noise = _solve_signal_and_noise(assembled_signal, assembled_noise, base_carrier_selections)
     else:
-        # Only the dense solves and noise contraction run in bounded frequency blocks.
-        # Detector selections are broadcast outside the loop and fed per row so their
-        # cotangents are summed by one broadcast-transpose reduction.
+        # Bounded frequency blocks. Frequency-shared, parameter-dependent inputs are
+        # broadcast outside the loop and fed per row so their cotangents are summed by
+        # one broadcast-transpose reduction.
         row_carrier_selections = jnp.moveaxis(
             jnp.broadcast_to(
                 base_carrier_selections,
@@ -431,17 +432,39 @@ def simulate(
             0,
         )
 
-        def block_solve(blocks):
-            block_signal_matrix, block_noise_matrix, block_selections = blocks
-            return _solve_signal_and_noise(
-                block_signal_matrix, block_noise_matrix, jnp.moveaxis(block_selections, 0, 1)
-            )
+        if FREQUENCY_LOOP_SCOPE == "solve":
+            # Assembly stays full-vmap; only solves and noise contraction loop.
+            assembled_signal, assembled_noise = assemble(parameters, carrier_entries)
 
-        signal, noise = _map_frequency_chunks(
-            block_solve,
-            (signal_matrix, noise_matrix, row_carrier_selections),
-            chunk_size,
-        )
+            def block_solve(blocks):
+                block_signal_matrix, block_noise_matrix, block_selections = blocks
+                return _solve_signal_and_noise(
+                    block_signal_matrix, block_noise_matrix, jnp.moveaxis(block_selections, 0, 1)
+                )
+
+            signal, noise = _map_frequency_chunks(
+                block_solve,
+                (assembled_signal, assembled_noise, row_carrier_selections),
+                chunk_size,
+            )
+        elif FREQUENCY_LOOP_SCOPE == "signal_noise":
+            # Assembly, solves and noise contraction all run inside the loop.
+            row_carrier_entries = jnp.broadcast_to(carrier_entries, (count, carrier_entries.shape[1]))
+
+            def block_signal_and_noise(blocks):
+                block_parameters, block_entries, block_selections = blocks
+                block_signal_matrix, block_noise_matrix = assemble(block_parameters, block_entries)
+                return _solve_signal_and_noise(
+                    block_signal_matrix, block_noise_matrix, jnp.moveaxis(block_selections, 0, 1)
+                )
+
+            signal, noise = _map_frequency_chunks(
+                block_signal_and_noise,
+                (parameters, row_carrier_entries, row_carrier_selections),
+                chunk_size,
+            )
+        else:
+            raise ValueError(f"Unknown FREQUENCY_LOOP_SCOPE {FREQUENCY_LOOP_SCOPE!r}")
 
     return carrier.T, signal.T, noise.squeeze()
 
@@ -451,7 +474,13 @@ def simulate(
 # evaluates bounded blocks of that many frequencies sequentially with `lax.map`;
 # a final partial block is padded by repeating the last frequency row and the
 # padded results are discarded. Read at trace time; not a traced argument.
-FREQUENCY_CHUNK_SIZE: int | None = 1
+# Measured (AMD CPU2, one full run each): k=1 with scope "signal_noise" gave the
+# fastest first run (22.08 s vs 24.66 s) but every loop variant failed the strict
+# gradient regression (one coordinate, rel 1.9e-7 > 1e-7). The default is therefore
+# None, which keeps the strictly validated full-vmap layout.
+FREQUENCY_CHUNK_SIZE: int | None = None
+# Loop scope when chunking: "signal_noise" (assembly + solves) or "solve" (solves only).
+FREQUENCY_LOOP_SCOPE: str = "signal_noise"
 
 
 def _map_frequency_chunks(function, row_arrays: tuple, chunk_size: int):
