@@ -67,4 +67,11 @@ Recorded from the Feyer team's replies in Discord `#feyer` on 21 November 2026 (
 | 1–3, final setup | The final evaluation uses a setup "similar to the bigger one" (the 3×3 UIFO). Upstream added `benchmark_aligo.py` (commit `83f8d2f`) only as a transfer test on a smaller setup. | Keep the UIFO-like random cases as the primary generality evidence. Use the aLIGO benchmark as an extra transfer check. |
 | 15, submission | After submission, Feyer evaluates the submissions and sends timing plots before the presentations. Teams mainly pitch their approach. | Prepare a pitch: approach, correctness evidence, transfer evidence. |
 
-Still open: 4–5 (exact harness for the final setup and number of repeats), 7–10 (how the reference is produced and how a more accurate result is judged on badly conditioned setups), 14 (memory unit). The accuracy question remains the main correctness risk for every sparse or host candidate. See the [generalization](generalization.md) arbitration.
+Resolved by our own evidence (22 November):
+- **4:** upstream's updated `benchmark.py` (`83f8d2f`) adapts the same five-phase harness per setup through `setup_name`. The timed path is unchanged. aLIGO uses a 1e-6 sensitivity tolerance.
+- **2:** random UIFOs in amplitude- and frequency-modulation mode match the unchanged simulator to ≤ 5.2e-14.
+- **10:** the simulator contains no reduced-precision types, and SuperLU runs in double complex.
+- **14:** peak RSS is about 0.4 GB.
+- **7–9:** our deviation never exceeds the unchanged simulator's own variation under a different BLAS kernel path. Where the two differ by more than 1e-5, the original fails against itself as well ([evidence](generalization.md#final-candidate-and-reference-reproducibility-22-november-2026)).
+
+Still open, and outside our control: 5 (one run or a median) and how Feyer generates the final reference.  The accuracy question remains the main correctness risk for every sparse or host candidate. See the [generalization](generalization.md) arbitration.

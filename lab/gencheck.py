@@ -27,6 +27,9 @@ os.environ.setdefault("JAX_ENABLE_X64", "true")
 PROPERTIES = ["reflectivity", "tuning", "db", "angle", "power", "mass", "length"]
 ALL_CASES = ["dev", "dev_perturbed", "uifo_20_5000", "uifo_rand1", "uifo_rand2", "uifo_rand3", "voyager", "aligo",
              "dev_randparams", "uifo_randparams1", "uifo_randparams2", "uifo_randparams3"]
+# Opt-in cases (run with --cases): random UIFOs in the amplitude- and frequency-modulation modes,
+# which exercise laser modulation component functions the supplied example never uses.
+EXTRA_CASES = ["uifo_amod1", "uifo_fmod1"]
 # Uniform ranges from upstream examples/uifo_optimization.py, the simulator's own random-parameter protocol.
 # The organizers judge "a random setup with random parameters".
 PROPERTY_BOUNDS = {"db": (0, 10), "angle": (-360, 360), "power": (0, 200), "tuning": (-360, 360),
@@ -90,6 +93,13 @@ def run(args):
             pairs = constrain_inter_grid_cell_spaces(setup.parameters, PROPERTIES)
             freqs = np.linspace(800, 3000, 101)
             return setup, pairs, random_values(pairs, 1001), freqs, np.ones_like(freqs)
+        if name.startswith(("uifo_amod", "uifo_fmod")):
+            seed = int(name[len("uifo_amod"):])
+            mode = "amplitude_modulation" if name.startswith("uifo_amod") else "frequency_modulation"
+            setup, component_pairs = dsetups.uifo(3, random=True, random_seed=200 + seed, mode=mode)
+            pairs = constrain_inter_grid_cell_spaces(component_pairs, PROPERTIES)
+            freqs = np.linspace(800, 3000, 101)
+            return setup, pairs, random_values(pairs, 3000 + seed), freqs, np.ones_like(freqs)
         if name.startswith("uifo_randparams"):
             seed = int(name[len("uifo_randparams"):])
             setup, component_pairs = dsetups.uifo(3, random=True, random_seed=100 + seed)

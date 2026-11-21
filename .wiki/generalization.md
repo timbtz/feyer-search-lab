@@ -15,6 +15,7 @@ The queue evaluator still runs only the supplied development benchmark. `lab.gen
 | `voyager`, `aligo` | Different published detector topologies, 45 and 29 variables |
 | `dev_randparams` | Supplied topology; every optimized property drawn uniformly from upstream `property_bounds` |
 | `uifo_randparams1`–`3` | Random 3×3 UIFO topology (seeds 101–103) **and** uniform random parameters, the upstream random-design protocol |
+| `uifo_amod1`, `uifo_fmod1` (opt-in via `--cases`) | Random UIFO in amplitude- and frequency-modulation mode with random parameters. They exercise the laser modulation functions the supplied example never uses |
 
 Each case runs the benchmark's three stages: `jit(vjp(simulate))`, `jit(vjp(readout))` and `jit(backward)`. It records carrier, signal, noise, sensitivity, powers, loss, gradient and per-stage timings.
 
@@ -61,3 +62,22 @@ The sparse path needs review before it can be the final submission. Without refi
 | `uifo_rand3` | **3.8e-5** | 2.0e-8 | 2.5e-8 |
 
 On these two setups the unchanged simulator is the inaccurate side. On the dev fixture its signal solve is also the less accurate one (strict-style error 2.34 against 0.005 for refined SuperLU). The risk for judging remains. Feyer compares against its own reference for the final setup, which was probably produced with the dense code. A badly conditioned final setup could therefore reject a more accurate result. The supplied and perturbed examples, the closest analogues of a "slight variation", agree with the unchanged simulator to ≤ 6.7e-8.
+
+## Final candidate and reference reproducibility, 22 November 2026
+
+`53f38d3` (host pass + package XLA flags, `explore/claude-host-assembly`) against the unchanged simulator, AMD CPU 101:
+- **Held:** 12 of 14 cases. Every random-parameter case agrees to ≤ 4.2e-7 in log sensitivity, and both modulation modes agree to ≤ 5.2e-14.
+- **Speed:** first run without imports drops from about 34 s to 0.3–0.7 s per setup.
+- **Flagged:** only `uifo_rand1` and `uifo_rand3`, as before.
+
+**Is the reference itself reproducible?** We reran the unchanged simulator with `OPENBLAS_CORETYPE=HASWELL`. That is a different, legitimate OpenBLAS kernel path; the default on this AMD EPYC is SkylakeX. The bundled OpenBLAS has no Sapphire Rapids kernel, so Feyer's Intel Xeon 8468 very likely uses SkylakeX as well. Maximum |Δ log S|:
+
+| Setup | Unchanged vs unchanged (Haswell kernels) | `53f38d3` vs unchanged |
+| --- | ---: | ---: |
+| `dev` | 5.8e-8 | 6.8e-8 |
+| `dev_randparams` | 1.1e-7 | 5.1e-8 |
+| `uifo_randparams1` / `2` / `3` | 4.5e-8 / 5.4e-7 / 7.8e-8 | 3.0e-8 / 4.2e-7 / 3.6e-8 |
+| `uifo_rand1` | **3.1e-4** | 2.0e-4 |
+| `uifo_rand3` | **6.8e-5** | 5.8e-5 |
+
+The candidate's deviation never exceeds the unchanged simulator's own variation under a different BLAS kernel path. On `uifo_rand1` and `uifo_rand3`, the original Differometor fails the 1e-5 check against itself. A reference computed there is not reproducible across machines, for any submission.
