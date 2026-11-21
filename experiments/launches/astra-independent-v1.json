@@ -82,5 +82,6 @@
   "prompt_audit_exact_match": true,
   "scaffold_sha256": "25e1aefbeeabacef1c11272d268ddb05f82ce684bb27ea7e850e37454a11679a",
   "own_feedback_only": true,
-  "no_inherited_research_edges": true
+  "no_inherited_research_edges": true,
+  "tracking_issue": "https://github.com/timbtz/feyer-search-lab/issues/14"
 }
