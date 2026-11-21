@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": [
+    "followup ledger visible",
+    "both bounded tests rendered on exact candidate"
+  ],
+  "pageErrors": [],
+  "observed_at": 1795302185.975,
+  "failed_attempts": [
+    "First invocation had an extra trailing call.",
+    "Second locator matched a hidden run card and visible detail; final locator scopes to candidate detail."
+  ]
+}
