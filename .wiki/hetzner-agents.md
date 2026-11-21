@@ -36,6 +36,8 @@ The user owns `~/feyer-agents/broker.json`; it contains no credentials. The brok
 
 The dedicated `feyer-amd-evaluator` SSH alias pins the already verified AMD host key. Its private key was generated on Hetzner and stays there. On AMD the public key is source-restricted and forced through `lab/evaluator_ssh_relay.py`, permitting only trusted queue RPC and bounded bundle uploads. General shell commands, forwarding and PTYs are unavailable through that key. Existing laptop/team access is unchanged.
 
+AMD forwards incoming SSH through its own gateway. The source restriction therefore pins the observed gateway `10.5.10.92`, not Hetzner's public address; this distinction was verified with a held Hetzner SSH connection and AMD's established socket peers. Removing the source restriction was rejected by automatic approval review. The implemented alternative retains the exact gateway restriction plus the forced command. Queue list and durable request-ID lookup succeeded from Hetzner, while an `id` shell command was rejected. Reverify the gateway and host key after instance replacement rather than removing restrictions automatically.
+
 Queue access can be checked from the trusted control checkout with:
 
 ```bash
@@ -43,3 +45,9 @@ python3 -m lab.client --host feyer-amd-evaluator list
 ```
 
 Do not run the benchmark directly on Hetzner. The broker itself does not submit evaluations; the coordinator uses the same audited client and durable request IDs when scheduling AMD work.
+
+## Initial deployment evidence
+
+Runtime `a6bdede` was deployed as a detached checkout. The enabled user service started with PID 2757105 and enforced `MemoryMax=1610612736`, `MemorySwapMax=0`, and `CPUQuotaPerSecUSec=1s`. Nine new broker/relay tests and 29 inherited supervisor/local-client tests passed locally. The actual Codex connectivity canary returned `{"ok":true}`.
+
+The coordinator issued one notes-only task, `076fb719980748409ecf0c5ab4d1d53b`, on assignment commit `8449118`. Its actor is `hetzner-codex-1`, claim version 1, and its original deadline is 2026-11-21 17:32:51 UTC. The broker claimed it and started Codex session `01a1ff24-5e64-7972-bf6f-7bf6bd0edb09` with the designated `gpt-6-astra` / `xhigh` configuration. During execution, observed service memory was approximately 158 MiB with a 194 MiB peak. These are measurements of this task, not guaranteed maxima or permission to raise concurrency. Inspect the current receipt and service state for completion; this paragraph records launch evidence only.
