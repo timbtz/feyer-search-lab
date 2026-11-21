@@ -402,12 +402,13 @@ def simulate(
         """
         return jnp.einsum("bij,bj->bi", matrix_batch, vector_batch)
 
-    # Project noise sources into the system and propagate through the signal matrix.
+    # Project noise sources using the adjoint detector weights.
     noise_sources = vmap(matmul_single_batch, in_axes=(None, 0))(noise_matrix, noise_weights)
-    covariances = vmap(vmap(solve), in_axes=(None, 0))(signal_matrix[:, :, :-1], noise_sources)
 
-    # Convert propagated covariances into amplitude spectral density.
-    temporary_sum = jnp.sum(jnp.real(covariances * jnp.conjugate(carrier_selections)), axis=2)
+    # With A^H w = d, d^H A^-1 N w = w^H N w. Contracting with the
+    # existing adjoint weights avoids a second solve for each detector.
+    # This identity does not require the noise matrix N to be Hermitian.
+    temporary_sum = jnp.sum(jnp.real(noise_sources * jnp.conjugate(noise_weights)), axis=2)
     noise = jnp.sqrt(2 * temporary_sum * UNIT_VACUUM * H_PLANCK * F0 * 0.25)
 
     return carrier.T, signal.T, noise.squeeze()
