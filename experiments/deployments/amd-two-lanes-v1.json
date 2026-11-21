@@ -1,0 +1,130 @@
+{
+  "schema": "feyer-capacity-receipt-v1",
+  "deployment": {
+    "startup": {
+      "schema": "feyer-lane-startup-v1",
+      "started_at": 1795292722.1532912,
+      "pid": 208403,
+      "config": {
+        "schema": "feyer-lane-v1",
+        "root": "/workspace/feyer-lab-lane1",
+        "primary_root": "/workspace/feyer-lab",
+        "cpu": 34,
+        "primary_cpu": 2,
+        "memory_budget_bytes": 16000000000,
+        "primary_memory_budget_bytes": 32000000000,
+        "host_reserve_bytes": 8000000000,
+        "epoch_id": "amd-two-lanes-v1"
+      },
+      "limits": {
+        "at": 1795292722.1534774,
+        "memory_limit_bytes": 59055800320,
+        "memory_current_bytes": 9670078464,
+        "cpu": 34,
+        "thread_siblings": [
+          34,
+          98
+        ],
+        "aggregate_sampled_budget_bytes": 48000000000,
+        "host_reserve_bytes": 8000000000,
+        "can_admit": true,
+        "kernel_per_job_cap": false
+      },
+      "worker_sha256": "d3c212da0ab1215187407d9cd21dc2cbb5f88dc0b5ee7885135bf7f002d14b58",
+      "launcher_sha256": "bb277a362d8a0678614863948a42175886fef3f3902131e338143305757a33f1",
+      "evaluator_release": "/workspace/feyer-lab-lane1/releases/bea601a8799aea4173c6c98287bac98ef755ef2f",
+      "stop_policy": "Create state/STOP to finish current job and stop before next claim"
+    },
+    "epoch": {
+      "epoch_id": "amd-two-lanes-v1",
+      "status": "parallel_exploration",
+      "ranking_allowed": false,
+      "started_at": 1795292722.11396,
+      "host": "j-h6w4ycifvvza6wlxma2mxou2mm",
+      "primary_active_jobs_at_start": [
+        {
+          "id": "955f9c9b082c4cb8a74af964baa7290c",
+          "sha": "8427aae28bd8bb2b248e833fa416ce0563d53c9e",
+          "status": "running",
+          "started_at": 1795292702.2510054,
+          "agent": "coordinator",
+          "profile": "screen"
+        }
+      ],
+      "cgroup_memory_current": 9661857792,
+      "cgroup_memory_max": 59055800320,
+      "lanes": [
+        {
+          "root": "/workspace/feyer-lab",
+          "cpu": 2,
+          "siblings": [
+            2,
+            66
+          ],
+          "memory_budget_bytes": 32000000000,
+          "worker_pid": 44394,
+          "release": "/workspace/feyer-lab/releases/861601b9c5d31390caca420b078f09ff7ad83156",
+          "worker_sha256": "d3c212da0ab1215187407d9cd21dc2cbb5f88dc0b5ee7885135bf7f002d14b58"
+        },
+        {
+          "root": "/workspace/feyer-lab-lane1",
+          "cpu": 34,
+          "siblings": [
+            34,
+            98
+          ],
+          "memory_budget_bytes": 16000000000,
+          "release": "/workspace/feyer-lab-lane1/releases/bea601a8799aea4173c6c98287bac98ef755ef2f",
+          "worker_sha256": "d3c212da0ab1215187407d9cd21dc2cbb5f88dc0b5ee7885135bf7f002d14b58",
+          "worker_pid": 208403
+        }
+      ],
+      "host_reserve_bytes": 8000000000,
+      "guards_are_sampled_not_kernel_caps": true,
+      "final_confirmation_requires_drained_serial_epoch": true,
+      "lane_started_at": 1795292722.1532912
+    },
+    "epoch_path": "/workspace/feyer-capacity/epochs/two-lanes-v1/epoch.json",
+    "deployment_commit": "bea601a8799aea4173c6c98287bac98ef755ef2f"
+  },
+  "policy": {
+    "worker_sha256": "d3c212da0ab1215187407d9cd21dc2cbb5f88dc0b5ee7885135bf7f002d14b58",
+    "evaluator_sha256": "d5950bbd872e5b00ad63f0bd7081e5096fb14ba9c96c80a6854a3b714719bd4e",
+    "comparison_evaluator_sha256": "1bc9b39fe0023afc3db93211b9e3d6cd37ed2b13ee281f142749c2237a16ea8f",
+    "reference_arrays_sha256": "c3f6cba045f8b41f488dc19c960f5056b5f2e75cfa64f9a687b52f2a9ba2751e",
+    "memory_budget_bytes": 16000000000,
+    "cpu": 34
+  },
+  "calibrations": [
+    {
+      "id": "7da252d634e542b6a3c64c7e743b77e3",
+      "sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+      "request_id": "e8757ca39c9f4361a1712f00394c53a9",
+      "started_at": 1795292731.1583931,
+      "finished_at": 1795292822.6871593,
+      "status": "completed",
+      "official_passed": true,
+      "regression_passed": true,
+      "first_run_seconds": 22.945125482976437,
+      "peak_rss_kib": 8121880,
+      "cpu": 34,
+      "memory_budget_bytes": 16000000000
+    },
+    {
+      "id": "be32d82593f043489d653a13f6e2694a",
+      "sha": "e0a1dc69f4951c100fefbc9fc08a23c3c12058dc",
+      "request_id": "d3650f14600e4cc7801a4db01108375a",
+      "started_at": 1795293044.7844687,
+      "finished_at": 1795293134.3958976,
+      "status": "completed",
+      "official_passed": true,
+      "regression_passed": true,
+      "first_run_seconds": 22.790136247873306,
+      "peak_rss_kib": 8156700,
+      "cpu": 34,
+      "memory_budget_bytes": 16000000000
+    }
+  ],
+  "timing_status": "exploratory_concurrent",
+  "calibration_jobs_total": 2
+}
