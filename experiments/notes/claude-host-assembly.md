@@ -135,3 +135,41 @@ conj(input) (probed: antilinear part nonzero), the other 17 are holomorphic in t
   first run **1.446 s**: imports 0.301, build 0.073, forward lower 0.036 / compile 0.247 / exec 0.186,
   sensitivity lower 0.026 / compile 0.179, gradient lower 0.017 / compile 0.184 / exec 0.191; warm median
   0.372 s; peak RSS 0.54 GB. Branch best.
+
+## Candidate 5: package-level XLA compiler settings (final candidate)
+- Organizer answers relayed by the coordinator: custom_vjp + SciPy host code allowed, forward mode not required;
+  XLA/JAX settings set by the package are allowed if correctness holds and the gain transfers. Final evaluation:
+  one logical CPU, JIT counts, setup "similar to the bigger one"; upstream added benchmark_aligo.py (83f8d2f).
+- Screening of single settings on candidate 4 (benchmark.py, CPU 102, fresh processes, two runs each, set via the
+  process environment): baseline 1.386-1.407 s (compile f/s/g 0.24/0.175/0.18); jax_disable_most_optimizations
+  1.168-1.170 s; --xla_backend_optimization_level=0 1.163-1.178 s (same effect); --xla_cpu_use_fusion_emitters=false
+  1.25 s (gradient compile unchanged); --xla_llvm_disable_expensive_passes no change. Combination opt-level 0 +
+  fusion emitters off: 0.958-0.964 s (compile 0.074/0.038/0.052); with jax_disable_most_optimizations instead of
+  the opt-level flag: identical. Execution and warm times unchanged within noise.
+- Change (`differometor/__init__.py`): append `--xla_backend_optimization_level=0 --xla_cpu_use_fusion_emitters=false`
+  to XLA_FLAGS before importing submodules (never overriding flags the user set; DIFFEROMETOR_XLA_DEFAULTS=0 opts
+  out). Effective because benchmark.py (old and upstream 83f8d2f) imports differometor at module level before
+  `jax.devices("cpu")` creates the backend. Verified in-package (no shell flags): 0.958 / 1.000 s, compile
+  0.074/0.038/0.052, report `environment.xla_flags` shows the flags; opt-out run 1.389 s. Applies to every XLA
+  program in the process.
+- Numerics vs candidate 4: carrier, signal, noise bitwise identical; dev gradient relL2 4.2e-10 (worst normalized
+  4.2e-9 on a small entry; deterministic across runs), sensitivity max rel 2.7e-16. 12-case gencheck vs c4153e7:
+  forward outputs bitwise on all 12 setups, grad relL2 <= 4.2e-10, max |dlog S| 9.1e-9 (uifo_rand3); vs pristine
+  same profile as all sparse candidates (rand1/rand3 dense-side flags; random-parameter cases hold <= 4.2e-7).
+  jaxcompat 7/11 (unchanged profile).
+- SHA `53f38d342c3228c052785e8c9d63b6ce9c832dd1`. Queue (idle host, no dev load): screen
+  `c27c4dcbb4a142bd9e0dc26f68e9a59d`, full `fe365a2f512a446a8357e53e6cb45ec4`. BOTH REJECTED BY THE LAB WORKER'S
+  CONFIGURATION GUARD (`lab/worker.py:227`: "Report has unexpected OpenMP or XLA configuration"), which still
+  enforces the earlier no-XLA-flags policy. Not modified or bypassed (protected evaluator); needs a maintainer
+  policy update. The benchmark itself completed and printed PASS in the full run: first run **1.005 s** (screen
+  1.014 s): imports 0.302, build 0.071, forward lower 0.037 / compile 0.079 / exec 0.186, sensitivity lower 0.026 /
+  compile 0.040, gradient lower 0.017 / compile 0.054 / exec 0.188; warm median 0.360 s; FD mb11.tuning
+  autodiff 7.61617e-5 vs 7.61623e-5 / 7.61499e-5 (passed); max |log S - log ref| 5.374e-6. No official/strict
+  verdict was recorded by the queue because of the guard.
+- aLIGO transfer (upstream benchmark.py + benchmark_aligo.py from 83f8d2f in scratch trees on AMD CPU 102, never
+  committed; 101 frequencies, 29 gradients, tolerance 1e-6, FD on sq1.db): pristine 20.731 s (compile
+  13.363/0.196/4.610), max log error 1.23e-10, PASS; c4153e7 1.069 s (compile 0.238/0.175/0.182), 2.87e-11, PASS;
+  53f38d3 **0.642 s** (compile 0.074/0.039/0.054, flags shown in report), 2.87e-11, PASS. vs pristine: max |dlog S|
+  1.2e-10, grad relL2 2.7e-10; 53f38d3 vs c4153e7 forward bitwise, gradient 1.1e-15. Warm 0.048 -> 0.057 s
+  (opt-level 0 slows the small XLA parts slightly; first run unaffected).
+- Stop: coordinator instruction; no further candidates.
