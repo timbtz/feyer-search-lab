@@ -44644,6 +44644,55 @@
         "target_evidence": [],
         "assignment_id": "codex-profile-guided-v1-compiler-gap"
       }
+    },
+    {
+      "seq": 31,
+      "at": 1795294817.5978649,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "codex-profile-guided-v1-compiler-gap-f0ddade7a6bb",
+        "kind": "explore",
+        "executor": {
+          "kind": "supervisor",
+          "id": "codex-profile-guided-v1"
+        },
+        "session_id": "01a1ffba-57ec-7191-8ba9-c6163633a3b3",
+        "status": "current",
+        "candidate_sha": null,
+        "parents": [
+          "7d1ccc59cef3d7436870bb0e6c941dbde4c30770"
+        ],
+        "target_phases": [
+          "compilation",
+          "forward"
+        ],
+        "hypothesis": "sparse scan outputs followed by dense assembly",
+        "change_summary": "Broker-assigned compiler-gap research; no output candidate or measured gain asserted.",
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/2e6b73f1aa75242dee55d202cd39955e02546a60/experiments/launches/codex-profile-guided-v1-compiler-gap.json",
+        "source_digest": "f0ddade7a6bbea92a772235f16b0198c45582e92f52944873d484f4fedecbaf3",
+        "source_digest_kind": "canonical_json_sha256",
+        "stopping_reason": null,
+        "evaluations": [],
+        "input_receipt": {
+          "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/codex-profile-guided-v1/turn-10-prompt-ca7cf42c2173492a4a18935596a8843260b967c285338b8de308a8d8e7370f58.json",
+          "sha256": "ca7cf42c2173492a4a18935596a8843260b967c285338b8de308a8d8e7370f58",
+          "turn": 10,
+          "thread_id": "01a1ffba-57ec-7191-8ba9-c6163633a3b3",
+          "consumed_feedback_digest": "bd18aa9a9a52666336f0f0d510e7dd9803a6c46b87fac40af864c9dafc8cb32c",
+          "consumed_candidate_sha": "7d1ccc59cef3d7436870bb0e6c941dbde4c30770"
+        },
+        "observed_at": 1795294510.4445639,
+        "fixed_deadline_unix": 1795295364.088367,
+        "target_declaration": {
+          "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/8bf6e8fbe58a0b605857659a3bff032350f0180c/experiments/briefs/compiler-gap-followup.md",
+          "source_digest": "59076ef8431198386dfe6d2ad6ef0152d92eb902cca2818dbec86faf17a5c4d0"
+        },
+        "target_evidence": [],
+        "assignment_id": "codex-profile-guided-v1-compiler-gap",
+        "supersedes": "codex-profile-guided-v1-compiler-gap-cbaf17c27953"
+      }
     }
   ],
   "comparison_regime": {
@@ -45293,6 +45342,49 @@
       },
       "target_evidence": [],
       "assignment_id": "codex-profile-guided-v1-compiler-gap"
+    },
+    "codex-profile-guided-v1-compiler-gap-f0ddade7a6bb": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "codex-profile-guided-v1-compiler-gap-f0ddade7a6bb",
+      "kind": "explore",
+      "executor": {
+        "kind": "supervisor",
+        "id": "codex-profile-guided-v1"
+      },
+      "session_id": "01a1ffba-57ec-7191-8ba9-c6163633a3b3",
+      "status": "current",
+      "candidate_sha": null,
+      "parents": [
+        "7d1ccc59cef3d7436870bb0e6c941dbde4c30770"
+      ],
+      "target_phases": [
+        "compilation",
+        "forward"
+      ],
+      "hypothesis": "sparse scan outputs followed by dense assembly",
+      "change_summary": "Broker-assigned compiler-gap research; no output candidate or measured gain asserted.",
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/2e6b73f1aa75242dee55d202cd39955e02546a60/experiments/launches/codex-profile-guided-v1-compiler-gap.json",
+      "source_digest": "f0ddade7a6bbea92a772235f16b0198c45582e92f52944873d484f4fedecbaf3",
+      "source_digest_kind": "canonical_json_sha256",
+      "stopping_reason": null,
+      "evaluations": [],
+      "input_receipt": {
+        "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/codex-profile-guided-v1/turn-10-prompt-ca7cf42c2173492a4a18935596a8843260b967c285338b8de308a8d8e7370f58.json",
+        "sha256": "ca7cf42c2173492a4a18935596a8843260b967c285338b8de308a8d8e7370f58",
+        "turn": 10,
+        "thread_id": "01a1ffba-57ec-7191-8ba9-c6163633a3b3",
+        "consumed_feedback_digest": "bd18aa9a9a52666336f0f0d510e7dd9803a6c46b87fac40af864c9dafc8cb32c",
+        "consumed_candidate_sha": "7d1ccc59cef3d7436870bb0e6c941dbde4c30770"
+      },
+      "observed_at": 1795294510.4445639,
+      "fixed_deadline_unix": 1795295364.088367,
+      "target_declaration": {
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/8bf6e8fbe58a0b605857659a3bff032350f0180c/experiments/briefs/compiler-gap-followup.md",
+        "source_digest": "59076ef8431198386dfe6d2ad6ef0152d92eb902cca2818dbec86faf17a5c4d0"
+      },
+      "target_evidence": [],
+      "assignment_id": "codex-profile-guided-v1-compiler-gap",
+      "supersedes": "codex-profile-guided-v1-compiler-gap-cbaf17c27953"
     }
   }
 }
