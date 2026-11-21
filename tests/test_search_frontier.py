@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from lab.search_frontier import build_frontier, collect, comparison_context, write_snapshot
+from lab.search_frontier import build_frontier, collect, comparison_context, write_snapshot, refresh_loop
 from lab.research_lineage import digest
 from tests.test_evolution_evidence import full_job
 
@@ -160,6 +160,72 @@ class SearchFrontierTests(unittest.TestCase):
                     write_snapshot(r,out)
             self.assertEqual(list((Path(d)/'artifacts').iterdir()), [])
             self.assertFalse(out.exists())
+
+    def test_watch_retries_filesystem_error_without_refreshing_old_timestamp(self):
+        old = build_frontier([entry()], generated_at=100)
+        new = build_frontier([entry()], generated_at=105)
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d)/'current.json'
+            write_snapshot(old,out)
+            before = out.read_bytes()
+            clock, calls = [0], []
+            def refresh():
+                calls.append(clock[0])
+                if len(calls) == 1:
+                    with patch('lab.search_frontier.os.replace', side_effect=OSError('disk full')):
+                        try:
+                            write_snapshot(new,out)
+                        finally:
+                            self.assertEqual(out.read_bytes(), before)
+                            self.assertEqual(list(Path(d).glob('tmp*')), [])
+                else:
+                    self.assertEqual(out.read_bytes(), before)
+                    write_snapshot(new,out)
+            with patch('sys.stderr'):
+                refresh_loop(refresh, 5, 10, clock=lambda:clock[0], sleep=lambda n:clock.__setitem__(0,clock[0]+n))
+            self.assertEqual(calls,[0,5])
+            self.assertEqual(json.loads(out.read_text())['generated_at'],105)
+
+    def test_watch_stops_at_original_deadline_and_semantic_errors_propagate(self):
+        clock, calls = [0], []
+        def fail():
+            calls.append(clock[0])
+            raise OSError('disk full')
+        with patch('sys.stderr') as stderr:
+            stderr.write.side_effect = OSError('log filesystem full')
+            refresh_loop(fail, 5, 12, clock=lambda:clock[0], sleep=lambda n:clock.__setitem__(0,clock[0]+n))
+        self.assertEqual(calls,[0,5,10])
+        self.assertEqual(clock[0],12)
+        with self.assertRaisesRegex(ValueError,'invalid evidence'):
+            refresh_loop(lambda:(_ for _ in ()).throw(ValueError('invalid evidence')),5,10,clock=lambda:0)
+        with self.assertRaises(OSError):
+            refresh_loop(fail)
+
+    def test_failed_flush_removes_partial_temporary_file(self):
+        r=build_frontier([entry()], generated_at=100)
+        with tempfile.TemporaryDirectory() as d:
+            out=Path(d)/'current.json'
+            with patch('lab.search_frontier.os.fsync', side_effect=OSError('disk full')):
+                with self.assertRaises(OSError):
+                    write_snapshot(r,out)
+            self.assertEqual(list((Path(d)/'artifacts').iterdir()),[])
+            self.assertFalse(out.exists())
+
+    def test_failed_close_also_removes_temporary_file(self):
+        original = tempfile.NamedTemporaryFile
+        class ClosingFailure:
+            def __init__(self, **kwargs):
+                self.stream = original(**kwargs)
+            def __enter__(self):
+                return self.stream.__enter__()
+            def __exit__(self,*args):
+                self.stream.__exit__(*args)
+                raise OSError('close failed')
+        with tempfile.TemporaryDirectory() as d:
+            with patch('lab.search_frontier.tempfile.NamedTemporaryFile', ClosingFailure):
+                with self.assertRaisesRegex(OSError,'close failed'):
+                    write_snapshot(build_frontier([entry()],generated_at=100),Path(d)/'current.json')
+            self.assertEqual(list((Path(d)/'artifacts').iterdir()),[])
 
 
 if __name__ == '__main__':

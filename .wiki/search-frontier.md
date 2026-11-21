@@ -76,8 +76,15 @@ Every successful refresh atomically publishes an immutable
 snapshots can be committed with their code release for review. Later dispatches
 bind their own exact content-addressed artifacts in runtime receipts.
 Optional `--watch-seconds 20 --until-unix FIXED_DEADLINE` refreshes only until the
-specified deadline. It performs no network calls or evaluations. A refresh error
-exits without replacing the previous snapshot; the consumer must enforce its
-freshness limit and report an unavailable/stale feed rather than imply new data.
+specified deadline. It performs no network calls or evaluations. In watch mode,
+filesystem errors are logged and retried at the next interval until the original
+deadline. Failed writes leave the last complete snapshot and its timestamp intact;
+partial temporary files are cleaned up. If the log filesystem is also full, the
+bounded retry continues even when the error cannot be written. Propagated semantic
+evidence, digest or size errors still stop the producer; one-shot commands propagate
+errors. Per-artifact collection issues remain explicitly reported in the feed.
+The consumer must enforce its freshness limit and report an unavailable/stale feed
+rather than imply new data. Recovery always collects a new snapshot; it never
+changes the timestamp of an old snapshot to make it look fresh.
 The broker owns starting/stopping this bounded local refresher with the new guided
 session window. It does not extend old sessions or numerical campaigns.
