@@ -72,7 +72,16 @@ Alternatives considered and deferred:
 |---|-----|-----------|------|--------|----------|
 | 1 | `3db9b657f8496d40a9f195fd9864e5e048c7df5b` | Share one LU(A) across signal, A^H noise-weight and covariance solves | screen `af18c37444224d31a69ced471361ef2d`, full `cd271462a63446a997264fb26882b711` | Official pass; strict array check FAILED (3 gradient entries) | Keep as speed evidence; numerical review needed |
 | 2 | `0ed67104f64ad82059b3465d20e56489762b4312` | Block/Schur factorization of A using structurally zero sideband cross blocks | screen `be819ed2f7d94e859c762f85a57d8665`, full `99b1182cb5bc4d178563a06507da4010` | Official pass; strict FAILED (signal, noise, sensitivity, gradient) | **Rejected** |
-| 3 | (assigned by supervisor) | Revert to candidate 1's dense shared-LU solver (repeat measurement / branch head = best config) | pending | pending | pending |
+| 3 | `b68b6a18328bb898c01d80eedf2fd2bb544623aa` | Revert to candidate 1's dense shared-LU solver (repeat measurement / branch head = best config) | screen `b0549b0be0be42b7b314d15fbc3b1c4a`, full `9f2375e5f2d84465bf59b432d82c0749` | Official pass; strict comparison identical to candidate 1 (same 3 gradient entries) | **Branch head = best config** |
+
+### Candidate 3 measured results
+
+- First run 31.661 s (screen) and 31.821 s (full).
+- Warm median 10.743 s: forward 7.86 s, gradient 2.72 s.
+- Compile: forward 13.20 s, gradient 4.65 s.
+- Peak RSS 12.48 GB.
+- The comparison output is identical to candidate 1, as expected: carrier, signal and powers exact; noise relative L2 2.24e-8; gradient idx 33, 161 and 180 failing with identical values.
+- The four first-run samples for the candidate 1 solver are 31.43, 31.51, 31.66 and 31.82 s (mean ≈ 31.6 s), vs the 35.74 s baseline median, a reduction of ≈ 4.1 s (−11.5%). Warm runtime went from ~15.5 s to ~10.8 s.
 
 ### Candidate 2 measured results and rejection
 
@@ -114,6 +123,8 @@ Numerical risk: pivoting is now restricted to within blocks (B1, B2, S), so a ne
 
 ## Handoff (end of the linear-algebra session)
 
+**Final decision after candidate 3:** I am stopping without a new candidate. The remaining first-run cost is dominated by compilation: 13.2 s forward and 4.65 s gradient, out of ~31.7 s. The seed agent's dispatch/conjugation direction targets that cost, and I have no evidence-backed linear-algebra change left that would reduce it. Two ideas remain untested. (a) Avoid the dense 101×751×751 cotangent of A in the backward pass by differentiating only the written entries. This is a gradient-runtime idea (≤2.7 s available) and needs HLO evidence first. (b) Combine candidate 1 with seed candidate 5; this requires the maintainer's instruction.
+
 - **Best result:** candidate 1, the shared dense LU(A) with A^H solved via LU(A)^H. First run 31.43 s (screen) and 31.51 s (full), vs the 35.74 s baseline median. Official checks passed. Strict array check failed only on 3 gradient entries, max relative 1.5e-6. It is **not validated** under the lab's strict rule until the maintainer accepts that tolerance or changes the criterion.
 - Candidate 3 restores the candidate 1 solver so the branch head is the best configuration and gets a repeat measurement. The only code difference from candidate 1 is that `_lu_solve` also accepts matrix right-hand sides, and the vector path is unchanged.
 - Candidate 1 changes only the linear-algebra path, so it is likely orthogonal to the seed agent's candidate 5 (scalar dispatch and conjugation, 28.97 s). The combination must be measured, not assumed additive. `simulate.py` overlaps near the conjugation block, so the merge needs care.
@@ -122,3 +133,8 @@ Numerical risk: pivoting is now restricted to within blocks (B1, B2, S), so a ne
 - Not pursued: sparse solves. With compile dominant and candidate 2's experience, host-callback or sparse-LU cost is unlikely to pay off in first-run time.
 
 Earlier next-decision text (historical): if the screen passes, compare the noise/sensitivity/gradient arrays against the baseline and request full validation. If the forward-stage time does not drop, the HLO getrf count diagnostic decides whether the baseline was already sharing factors. If it helps, the block/Schur decomposition is the next candidate.
+
+
+## Coordinator handoff after audited-runtime upgrade
+
+The same Claude conversation resumed under runtime fdff88a on the original remaining budget and returned no new candidate. Attribution of the observed gradient discrepancy to pivoting is the agent's hypothesis, not an independent numerical diagnosis. No tolerance was loosened and no shared-LU or Schur candidate was promoted as validated. Keep official-pass and strict-regression outcomes separate. Future combination work must name exact parent revisions and pass a new full evaluation; confirmed seed8 is the current relevant compilation parent, not an assumption of additive speedups.

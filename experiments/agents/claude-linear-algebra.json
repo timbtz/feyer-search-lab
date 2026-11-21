@@ -26,5 +26,13 @@
     "run": "queue job ID",
     "session": "Claude conversation ID in local session state"
   },
-  "relationship_to_seed_agent": "Independent direction; may propose combining validated candidates later, without modifying the seed-agent worktree."
+  "relationship_to_seed_agent": "Independent direction; may propose combining validated candidates later, without modifying the seed-agent worktree.",
+  "status": "complete_numerical_review_required",
+  "session_id": "a20eb624-7dcc-4a02-90ac-54d7262f4248",
+  "latest_runtime_commit": "fdff88a88a2a35aae03e1436ebd709ff8006e44d",
+  "latest_runtime_root": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/server-agents",
+  "candidate_count": 3,
+  "execution_host": "local Mac; evaluation on AMD",
+  "server_migration_status": "Blocked by provider connectivity; user approved local fallback",
+  "promotion_status": "No candidate promoted: shared LU passed official checks but strict gradient regression remains unresolved"
 }
