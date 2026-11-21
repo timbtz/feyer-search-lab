@@ -1,8 +1,8 @@
 # Campaign astra-group-numerical-v3
 
-Export schema: `feyer-campaign-export-v1`. Snapshot: `2c2d762219209d43e85fb178b4c89679ff94123677af747e65483273ba5bbb3a`.
+Export schema: `feyer-campaign-export-v1`. Snapshot: `78d069331256812f36880a681289ebf18d535bd8ea5db5b679d7edac73f0e6ca`.
 
-[Frozen proposer context](contexts/656a0f7b3a78360be3508b2471d85206a207df444b35a0450e14e03edf348535.json) — SHA256 `656a0f7b3a78360be3508b2471d85206a207df444b35a0450e14e03edf348535`.
+[Frozen proposer context](contexts/3b11141b5dd97e55baf8c780f7fde801b1c14edd6e2195c66a80955fc6a5102f.json) — SHA256 `3b11141b5dd97e55baf8c780f7fde801b1c14edd6e2195c66a80955fc6a5102f`.
 
 This is an evidence ledger. Scientific parents describe chosen inputs to an experiment; they are not necessarily Git parents. Phase changes are observations, not proof that one edit caused the difference. A failed attempt remains part of the history.
 
@@ -2438,5 +2438,6 @@ Frozen specification: `91641037b53366cbe8399a98c9e9109c18a3bc364ffea17edc3a90b02
 | 35 | evaluation_reserved | coordinator | {"attempt": 1, "candidate_id": "9db0307d900f4430a9ef13ef04838add", "profile": "full", "request_id": "7f71d0d71dbf4438978878832b26ce94"} |
 | 36 | evaluation_bound | coordinator | {"job_id": "7dc0450e3adb4e6188ac751b997f6d66", "request_id": "7f71d0d71dbf4438978878832b26ce94"} |
 | 37 | evidence_observed | coordinator | {"candidate_id": "9db0307d900f4430a9ef13ef04838add", "category": "valid", "evidence_digest": "2ecb8b438b00f0181de3204d4f3a1f3b3e084e37a5154cb50b4457bf98d6fbdc", "evidence_id": "7dc0450e3adb4e6188ac751b997f6d66:d859eaeb11a4a23c0034535fee8ad7f479213d1e02464df61a9806176eff512d", "job_id": "7dc0450e3adb4e6188ac751b997f6d66", "progress": {"axes": ["setup", "compilation", "forward", "sensitivity", "gradient", "transfer"], "meaningful_pareto": false, "meaningful_total": false, "policy": {"absolute": 0.02, "relative": 0.01}, "reference_best_total": 21.560257190838456, "reference_parents": ["topology-seed"]}, "status": "valid", "strikes": 4} |
+| 38 | decision_recorded | coordinator | {"decision_id": "d91d09e4621f44c59372cced7272c106", "payload": {"acquisition_rank": 1, "acquisition_score": 0.0002552014358220295, "context": {"bytes": 2816, "path": "contexts/d1af640bc49b972bec7fff4a4036b6c8138691560059210dbf7f382c4373277a.json", "sha256": "d1af640bc49b972bec7fff4a4036b6c8138691560059210dbf7f382c4373277a"}, "model_trained": true, "origin": "Acquisition Function Maximizer: Exact Topology Menu", "ranked_options": [{"parameters": {"group_checkpoint": "cse_barrier", "group_inline": false}, "rank": 1, "score": 0.0002552014358220295}], "selection_origin": "Acquisition Function Maximizer: Exact Topology Menu", "training_configurations": 5}, "payload_digest": "f33decf615c197909b… [full detail in events.jsonl] |
 
 Guidance may propose a new round. It cannot silently replace frozen operators, ownership, evaluation requirements or budgets. Only the coordinator can admit that round through the campaign state API. Publishing this ledger does not merge or promote candidate code.
