@@ -11,12 +11,12 @@ compilation at all and takes milliseconds.
 
 How
 ---
-* **Derivatives still come from JAX.** Each component function in
-  `components.py` is traced once with `jax.jvp` into a jaxpr (tracing is cheap;
-  it is XLA compilation that is slow). `_evaluate_jaxpr` interprets that jaxpr
-  with NumPy, batched over all matrix entries and frequencies, giving every
-  entry's value and its forward-mode Jacobian with respect to the function
-  inputs. `components.py` stays the single source of truth for the physics.
+* **Physics is traced from JAX; tangent rules are implemented here.** Each
+  component function in `components.py` is traced once into a primal jaxpr
+  (without XLA compilation). `_jvp_jaxpr` evaluates that program and the
+  primitive tangent rules below with NumPy, batched over matrix entries and
+  frequencies. Custom derivative calls are rejected so their declared rules
+  are not silently replaced by differentiation of the primal body.
 * **Linear algebra on the host.** The small carrier system uses LAPACK through
   NumPy. The sparse signal system uses SuperLU, one factorization per frequency,
   shared by the signal solve and the quantum-noise solve.
@@ -70,8 +70,11 @@ _ELEMENTWISE = {
     "select_n": _select_n, "copy": lambda x: x, "copy_p": lambda x: x,
 }
 
-_CALL_PRIMITIVES = {"pjit", "jit", "closed_call", "core_call", "remat", "checkpoint",
-                    "custom_jvp_call", "custom_vjp_call", "custom_vjp_call_jaxpr"}
+# Only transparent calls may be differentiated by recursively interpreting their
+# primal body. Custom JVP/VJP calls carry separate derivative semantics; treating
+# them as transparent would discard those rules. The coverage check rejects them
+# and make_simulation_arrays selects the traced JAX path instead.
+_CALL_PRIMITIVES = {"pjit", "jit", "closed_call", "core_call", "remat", "checkpoint"}
 
 
 def _inner_jaxpr(params):
@@ -216,7 +219,10 @@ def _tangent(primitive: str, params: dict, xs: list, ts: list, outs: list, nb: i
         "sqrt": lambda: t / (2 * out), "rsqrt": lambda: -0.5 * out / x * t,
         "asin": lambda: t / np.sqrt(1 - x * x), "acos": lambda: -t / np.sqrt(1 - x * x),
         "atan": lambda: t / (1 + x * x), "square": lambda: 2 * x * t,
-        "abs": lambda: (np.real(np.conj(x) * t) / out) if np.iscomplexobj(x) else np.sign(x) * t,
+        # Match JAX 0.9's abs JVP: real +/-0 selects +t; complex zero
+        # selects zero through a guarded denominator. np.sign(0) differs.
+        "abs": lambda: (np.real(t * (np.conj(x) / np.where(out == 0, 1, out))))
+        if np.iscomplexobj(x) else np.where(x >= 0, t, -t),
     }
     if primitive not in rules:
         raise NotImplementedError(f"no tangent rule for primitive '{primitive}'")
