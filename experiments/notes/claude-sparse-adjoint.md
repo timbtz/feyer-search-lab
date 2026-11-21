@@ -200,3 +200,11 @@
   = candidate 6 + host build, neutral (7.56 s clean screen).
 - Remaining cost is XLA compile of component evaluation (forward ~4.3 s, gradient ~1.16 s), now
   owned by claude-host-assembly (NumPy components). Execution ~0.48 s, build/imports ~0.37 s.
+
+## Paired A/B: custom_vjp vs custom_linear_solve (back-to-back full runs, worker side idle)
+- b890b98 (custom_vjp) full `5629f5f1ce684eed9cec999d2d0ada79`: 7.380 s (official PASS).
+- 7b1431a (custom_linear_solve) full `83fb3d9de3074a05ae58ed405f576c7b`: 7.508 s (official PASS).
+- All samples: custom_vjp 7.372 (screen) / 7.388 / 7.380 s, mean 7.380; custom_linear_solve
+  7.495 (screen) / 7.461 / 7.508 s, mean 7.488 => JAX-semantics cost +0.11 s (~1.5 %), mostly
+  forward compile. Recommendation: custom_linear_solve as default (jaxcompat 11/11); keep
+  b890b98 as the fastest reverse-mode-only variant.
