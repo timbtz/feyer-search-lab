@@ -1,0 +1,117 @@
+{
+  "comparison_context": "Same CPU34 capacity-expansion regime; no cross-lane timing ranking or final quiet promotion.",
+  "results": [
+    {
+      "sha": "42d3a675e25187fd63387a4b13cf79469936668d",
+      "roles": [
+        "lane34-finalist"
+      ],
+      "full_jobs": [
+        "afe6da51441a4a499c74c84537225e2c",
+        "8ee20c3e0de14570abe8cb95a92020cd",
+        "7f09fe19ee5d4295a1ce81f3652638fb"
+      ],
+      "n": 3,
+      "times_seconds": [
+        22.213215267285705,
+        22.217908700928092,
+        22.270646549761295
+      ],
+      "median_seconds": 22.217908700928092,
+      "max_normalized_gradient_error": 0.9490783136099659
+    },
+    {
+      "sha": "161927b5028ae24b01f25919d44d239ed7df5c32",
+      "roles": [
+        "lane34-finalist"
+      ],
+      "full_jobs": [
+        "ed0893f1f7754c7a85ba150c71d0e603",
+        "32d25c4a9b3f42e5b3ee8a48ebdce8c9",
+        "b6b37c984a944ba4b6c6c1a2e7588b7a"
+      ],
+      "n": 3,
+      "times_seconds": [
+        22.42580235749483,
+        22.35793516971171,
+        22.33941642008722
+      ],
+      "median_seconds": 22.35793516971171,
+      "max_normalized_gradient_error": 0.9490783559759831
+    },
+    {
+      "sha": "003a9a7e040aa630afcdf0d5ccfd800c0c3ff326",
+      "roles": [
+        "lane34-finalist"
+      ],
+      "full_jobs": [
+        "e48cc4399692422ebbb6649fb8a813f5",
+        "7eb5a9b337484acd87d0268bd900ad7e",
+        "1accbf88000d46fcabe78fc00e62b266"
+      ],
+      "n": 3,
+      "times_seconds": [
+        22.66973240301013,
+        22.727084044367075,
+        22.68345551006496
+      ],
+      "median_seconds": 22.68345551006496,
+      "max_normalized_gradient_error": 0.9490783559759831
+    },
+    {
+      "sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+      "roles": [
+        "reference"
+      ],
+      "full_jobs": [
+        "7da252d634e542b6a3c64c7e743b77e3",
+        "455f97ede73945a3a0846744efef1519",
+        "d1700a572d0d4efead3f35dee32eb835"
+      ],
+      "n": 3,
+      "times_seconds": [
+        22.945125482976437,
+        22.988370049744844,
+        22.982773749157786
+      ],
+      "median_seconds": 22.982773749157786,
+      "max_normalized_gradient_error": 6.039550882495327e-07
+    },
+    {
+      "sha": "e0a1dc69f4951c100fefbc9fc08a23c3c12058dc",
+      "roles": [
+        "layout-reference"
+      ],
+      "full_jobs": [
+        "be32d82593f043489d653a13f6e2694a",
+        "5b7a1e35ecbe432c9abe1c228f6da420",
+        "a11523d4599a40fea6ebf235577d1903"
+      ],
+      "n": 3,
+      "times_seconds": [
+        22.790136247873306,
+        22.836232068017125,
+        22.77560603618622
+      ],
+      "median_seconds": 22.790136247873306,
+      "max_normalized_gradient_error": 1.0970898806248615e-06
+    },
+    {
+      "sha": "3a2073ad5add8770eab0d37b55ad67cea71b448b",
+      "roles": [
+        "cpu2-finalist-new-lane-measurement"
+      ],
+      "full_jobs": [
+        "2135302becc443d1a5b847ef5d24c22b",
+        "7eee1e1221ef4fef8037acbf5f0d0792"
+      ],
+      "n": 2,
+      "times_seconds": [
+        22.022720696404576,
+        22.10659753717482
+      ],
+      "median_seconds": 22.0646591167897,
+      "max_normalized_gradient_error": 0.9490783559759831
+    }
+  ]
+}
