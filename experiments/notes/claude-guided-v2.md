@@ -114,5 +114,39 @@ This is my own hypothesis. It is *not* a transfer of 7d1ccc5's code, which I cou
   
   Fallback: `COMPONENT_SLOT_PRUNING=False`.
 
+### Results: SHA `10a311f6dbe4e8b71fa98654d015493ab8b3ef27`: official PASS, strict PASS, **kept (new branch best)**
+
+**Screen** (`d6028ac4`): 19.853 s. Provisional.
+
+**Full** (`3a030c65`):
+
+| Phase | Candidate 2 | aa2b1ab (`35abe628`) | Change |
+| --- | --- | --- | --- |
+| Complete first run | **19.766** | 21.550 | **−1.78** |
+| Forward lower | 0.731 | 0.789 | −0.06 |
+| Forward compile | 6.620 | 7.622 | **−1.00** |
+| Forward execute | 8.395 | 8.432 | −0.04 |
+| Gradient lower | 0.132 | 0.181 | −0.05 |
+| Gradient compile | 1.318 | 1.959 | **−0.64** |
+| Gradient execute | 1.506 | 1.519 | −0.01 |
+
+- Warm median: 10.487 s. Job wall time: 84.9 s. Peak RSS: 7.97 GB.
+- Strict comparison: carrier, signal, noise, sensitivity and powers are all bitwise identical (error 0). Gradient max absolute error 4.5e-13, max normalized error 1.6e-8, the same margin as the parent.
+- The prediction held: both compiles and both lowers decreased, and execute times were unchanged. One full observation only; it has not yet had a quiet serial confirmation.
+- **Decision:** keep. Candidate 3 builds on it.
+
+## Candidate 3: slot pruning for the `*_lower` variants (`LOWER_SLOT_PRUNING=True`)
+
+### Hypothesis
+- **Target:** forward compile (6.62 s) and gradient compile (1.32 s) in job `3a030c65`.
+- **Mechanism:**
+  - `space_lower`, `space_modulation_lower` and `laser_frequency_modulation_lower` each compute `base(jnp.array([-p[0], p[1], ...]))`.
+  - The `jnp.array` re-stack turns the per-slot symbolic-zero tangents back into a dense tangent vector, so candidate 2's pruning did not apply to these groups.
+  - `_evaluate_component_group_slots` now calls the base function directly through `_ParameterSlots`, with slot 0 negated. Only the length slot stays differentiable, where the mask allows it.
+- **Exactness:** the same scalars reach the same base function (`-x` is computed in both versions). Forward outputs are expected bitwise identical, and the gradient identical or within reordering.
+- **Prediction:** a small decrease in forward and gradient compile, probably ≤0.3 s in total; execute unchanged.
+- **Reject if:** any forward difference, strict failure, or a slower total than 19.77 s beyond noise.
+- **Source delta vs 10a311f:** simulate.py only. It adds `_LOWER_TO_BASE`, a branch in `_evaluate_component_group_slots`, and the `LOWER_SLOT_PRUNING` flag. Fallback: set the flag to False.
+
 ### Results
 - Pending.

@@ -28,6 +28,7 @@ from jax import lax, vmap, jit
 from differometor.setups import Setup
 from differometor.build import build, pairs_to_arrays, prepare_arrays, LINKING_FUNCTIONS
 from differometor.components import FUNCTIONS, UNIT_VACUUM, H_PLANCK, F0
+from differometor import components as _components
 
 
 jax.config.update("jax_enable_x64", True)
@@ -108,7 +109,21 @@ def _evaluate_component_group_slots(function_index, differentiable, function_inp
         function_inputs[:, slot] if keep else lax.stop_gradient(function_inputs[:, slot])
         for slot, keep in enumerate(differentiable)
     )
+    base = _LOWER_TO_BASE.get(function) if LOWER_SLOT_PRUNING else None
+    if base is not None:
+        # `*_lower(p)` is `base(jnp.array([-p[0], *p[1:]]))`. Re-stacking would
+        # instantiate dense tangents; negate slot 0 in place instead (same values).
+        def evaluate(*values):
+            return base(_ParameterSlots((-values[0],) + tuple(values[1:])))
+        return vmap(evaluate)(*columns)
     return vmap(lambda *values: function(_ParameterSlots(values)))(*columns)
+
+
+_LOWER_TO_BASE = {
+    _components.space_lower: _components.space,
+    _components.space_modulation_lower: _components.space_modulation,
+    _components.laser_frequency_modulation_lower: _components.laser_frequency_modulation,
+}
 
 
 def update(
@@ -601,6 +616,9 @@ ASSEMBLY_REMAT: bool = False
 # (builder-provided static masks, component_groups[...]["diff_slots"]). Their true
 # derivative is zero; this skips forming those derivative terms in the vjp.
 COMPONENT_SLOT_PRUNING: bool = True
+# Candidate 3: extend slot pruning to the *_lower variants by calling the base
+# function with slot 0 negated instead of re-stacking a dense parameter vector.
+LOWER_SLOT_PRUNING: bool = True
 # Build the noise source matrix once and broadcast it across signal rows when the
 # builder proved (host-side, before dummy filling) that no noise input index is a
 # real changing index. False always uses the per-row noise assembly.
