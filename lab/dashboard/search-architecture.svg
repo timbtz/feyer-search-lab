@@ -1,0 +1,210 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="2150" viewBox="0 0 1800 2150" role="img" aria-labelledby="title description">
+  <title id="title">Feyer search architecture — explore, refine, combine and confirm</title>
+  <desc id="description">Conceptual workflow, not an actual run history. One validated baseline fans into independent heuristic research. Small refinements branch beneath each heuristic. Invalid and unproductive trials stop; validated approaches survive. Two surviving approaches combine, the combined topology is refined again, and the exact integrated revision receives final confirmation. A shared GitHub ledger coordinates three participants, each using their own agent account and independent serial AMD evaluator. Topology and hosting are subject to change.</desc>
+  <metadata>Editable vector illustration. All node names and connections are conceptual examples. No measured performance, live instance status, or actual scientific lineage is asserted.</metadata>
+  <defs>
+    <style>
+      text { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; fill: #191919; }
+      .mono { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; font-size: 15px; letter-spacing: 1.2px; }
+      .muted { fill: #686868; }
+      .orange { fill: #ff6b00; }
+      .headline { font-size: 68px; font-weight: 500; letter-spacing: -2.8px; }
+      .label { font-size: 26px; font-weight: 500; letter-spacing: -.5px; }
+      .body { font-size: 20px; }
+      .note { font-size: 17px; }
+      .small { font-size: 15px; }
+      .wire { fill: none; stroke: #242424; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+      .retained { fill: none; stroke: #ff6b00; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+      .quiet { stroke: #b6b6b2; }
+      .guide { fill: none; stroke: #deded9; stroke-width: 1; }
+      .node { fill: #fff; stroke: #242424; stroke-width: 1.6; }
+      .small-node { fill: #fff; stroke: #242424; stroke-width: 1.4; }
+      .kept-node { fill: #fff; stroke: #ff6b00; stroke-width: 2; }
+      .cap { stroke: #242424; stroke-width: 2; stroke-linecap: square; }
+    </style>
+    <marker id="small-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M1 1 L7 4 L1 7" fill="none" stroke="#242424" stroke-width="1.1"/>
+    </marker>
+  </defs>
+  <rect width="1800" height="2150" fill="#fff"/>
+
+  <g id="heading">
+    <rect x="72" y="54" width="11" height="11" fill="#ff6b00"/>
+    <text x="97" y="66" class="mono">FEYER / SEARCH ARCHITECTURE</text>
+    <text x="1728" y="66" class="mono orange" text-anchor="end">CONCEPTUAL WORKFLOW</text>
+    <text x="72" y="153" class="headline">Explore broadly.</text>
+    <text x="72" y="229" class="headline">Converge on one solution.</text>
+    <text x="1728" y="146" class="note muted" text-anchor="end">Illustrative structure, not a run history.</text>
+    <g transform="translate(1418 184)">
+      <path d="M0 0 H38" class="wire"/>
+      <text x="52" y="5" class="small muted">Candidate lineage</text>
+      <path d="M0 29 H38" class="retained"/>
+      <text x="52" y="34" class="small muted">Illustrative retained path</text>
+    </g>
+  </g>
+
+  <g id="baseline">
+    <circle cx="900" cy="312" r="20" class="node"/>
+    <circle cx="900" cy="312" r="5" fill="#ff6b00"/>
+    <text x="938" y="309" class="label">Validated baseline</text>
+    <text x="938" y="338" class="note muted">Exact revision · fixed physical workload</text>
+    <path d="M900 332 C900 385 440 379 440 467" class="wire"/>
+    <path d="M900 332 V467" class="wire"/>
+    <path d="M900 332 C900 385 1360 379 1360 467" class="wire"/>
+    <rect x="698" y="389" width="404" height="31" fill="#fff"/>
+    <text x="900" y="411" class="note muted" text-anchor="middle">Personal Claude / Codex research</text>
+  </g>
+
+  <g id="exploration">
+    <text x="72" y="475" class="mono orange">EXPLORE</text>
+    <text x="72" y="509" class="body">Open different</text>
+    <text x="72" y="537" class="body">research directions.</text>
+    <circle cx="440" cy="480" r="13" class="node"/>
+    <circle cx="900" cy="480" r="13" class="node"/>
+    <circle cx="1360" cy="480" r="13" class="node"/>
+    <text x="440" y="527" class="label" text-anchor="middle">Heuristic A</text>
+    <text x="900" y="527" class="label" text-anchor="middle">Heuristic B</text>
+    <text x="1360" y="527" class="label" text-anchor="middle">Heuristic C</text>
+    <text x="440" y="554" class="note muted" text-anchor="middle">One structural hypothesis</text>
+    <text x="900" y="554" class="note muted" text-anchor="middle">A different mechanism</text>
+    <text x="1360" y="554" class="note muted" text-anchor="middle">Another possible topology</text>
+    <path d="M440 493 V504 M440 570 V594 C440 612 340 608 340 642" class="wire"/>
+    <path d="M440 570 V642" class="retained"/>
+    <path d="M440 594 C440 612 540 608 540 642" class="wire"/>
+    <path d="M900 493 V504 M900 570 V594 C900 612 800 608 800 642" class="wire"/>
+    <path d="M900 594 V642 M900 594 C900 612 1000 608 1000 642" class="wire"/>
+    <path d="M1360 493 V504 M1360 570 V594 C1360 612 1260 608 1260 642" class="wire"/>
+    <path d="M1360 570 V642" class="retained"/>
+    <path d="M1360 594 C1360 612 1460 608 1460 642" class="wire"/>
+  </g>
+
+  <g id="local-refinement">
+    <text x="72" y="662" class="mono orange">REFINE</text>
+    <text x="72" y="696" class="body">Small, bounded</text>
+    <text x="72" y="724" class="body">numerical changes.</text>
+    <text x="72" y="766" class="note muted">Measure each successor</text>
+    <text x="72" y="790" class="note muted">against its incumbent.</text>
+    <path d="M304 617 H316 M304 617 V789 M304 789 H316" class="guide"/>
+    <path d="M1496 617 H1484 M1496 617 V789 M1496 789 H1484" class="guide"/>
+    <circle cx="340" cy="650" r="7" class="small-node"/>
+    <circle cx="440" cy="650" r="7" class="kept-node"/>
+    <circle cx="540" cy="650" r="7" class="small-node"/>
+    <circle cx="800" cy="650" r="7" class="small-node"/>
+    <circle cx="900" cy="650" r="7" class="small-node"/>
+    <circle cx="1000" cy="650" r="7" class="small-node"/>
+    <circle cx="1260" cy="650" r="7" class="small-node"/>
+    <circle cx="1360" cy="650" r="7" class="kept-node"/>
+    <circle cx="1460" cy="650" r="7" class="small-node"/>
+    <path d="M340 657 V705 M540 657 V705 M800 657 V705 M1000 657 V705 M1260 657 V705 M1460 657 V705" class="wire"/>
+    <path d="M330 705 H350 M530 705 H550 M790 705 H810 M990 705 H1010 M1250 705 H1270 M1450 705 H1470" class="cap"/>
+    <text x="340" y="734" class="small muted" text-anchor="middle">invalid</text>
+    <text x="540" y="734" class="small muted" text-anchor="middle">no gain</text>
+    <text x="800" y="734" class="small muted" text-anchor="middle">no gain</text>
+    <text x="1000" y="734" class="small muted" text-anchor="middle">invalid</text>
+    <text x="1260" y="734" class="small muted" text-anchor="middle">no gain</text>
+    <text x="1460" y="734" class="small muted" text-anchor="middle">no gain</text>
+    <path d="M440 657 V754 M1360 657 V754" class="retained"/>
+    <circle cx="440" cy="762" r="7" class="kept-node"/>
+    <circle cx="1360" cy="762" r="7" class="kept-node"/>
+    <path d="M440 770 V838 M1360 770 V838" class="retained"/>
+    <path d="M900 657 V778" class="wire"/>
+    <path d="M884 778 H916" class="cap"/>
+    <text x="900" y="815" class="label" text-anchor="middle">Stop this branch</text>
+    <text x="900" y="845" class="note muted" text-anchor="middle">No justified gain · preserve its evidence</text>
+    <circle cx="440" cy="850" r="12" class="kept-node"/>
+    <circle cx="1360" cy="850" r="12" class="kept-node"/>
+    <text x="440" y="894" class="label" text-anchor="middle">Validated A*</text>
+    <text x="1360" y="894" class="label" text-anchor="middle">Validated C*</text>
+    <text x="440" y="922" class="note muted" text-anchor="middle">Retain the best revision</text>
+    <text x="1360" y="922" class="note muted" text-anchor="middle">Retain the best revision</text>
+    <text x="1555" y="653" class="mono">EVERY CANDIDATE</text>
+    <text x="1555" y="688" class="body">Screen first.</text>
+    <text x="1555" y="718" class="body">Full validation</text>
+    <text x="1555" y="748" class="body">before promotion.</text>
+    <text x="1555" y="793" class="note muted">Official + strict checks</text>
+    <text x="1555" y="819" class="note muted">Repeated first-run time</text>
+    <text x="1555" y="845" class="note muted">Same host and cohort</text>
+  </g>
+
+  <g id="combination">
+    <path d="M440 862 V874 M440 939 C440 1000 804 972 886 1025" class="retained"/>
+    <path d="M1360 862 V874 M1360 939 C1360 1000 996 972 914 1025" class="retained"/>
+    <text x="72" y="1028" class="mono orange">COMBINE</text>
+    <text x="72" y="1062" class="body">Bring complementary</text>
+    <text x="72" y="1090" class="body">approaches together.</text>
+    <circle cx="900" cy="1036" r="18" class="kept-node"/>
+    <path d="M893 1036 H907 M900 1029 V1043" class="retained"/>
+    <text x="900" y="1090" class="label" text-anchor="middle">A* + C*</text>
+    <text x="900" y="1126" class="body" text-anchor="middle">A new candidate with two scientific parents</text>
+    <text x="900" y="1156" class="note muted" text-anchor="middle">Measure A*, C* and A*+C* in the same cohort.</text>
+    <path d="M1530 1007 V1128" class="guide"/>
+    <text x="1555" y="1030" class="mono orange">IF IT REGRESSES</text>
+    <text x="1555" y="1065" class="body">Keep the better</text>
+    <text x="1555" y="1095" class="body">parent.</text>
+    <text x="1555" y="1130" class="note muted">A clean merge is not a win.</text>
+  </g>
+
+  <g id="refine-combination">
+    <path d="M900 1054 V1067 M900 1180 V1193 C900 1209 800 1205 800 1234" class="wire"/>
+    <path d="M900 1180 V1234" class="retained"/>
+    <path d="M900 1193 C900 1209 1000 1205 1000 1234" class="wire"/>
+    <circle cx="800" cy="1242" r="7" class="small-node"/>
+    <circle cx="900" cy="1242" r="7" class="kept-node"/>
+    <circle cx="1000" cy="1242" r="7" class="small-node"/>
+    <path d="M800 1249 V1286 M1000 1249 V1286" class="wire"/>
+    <path d="M790 1286 H810 M990 1286 H1010" class="cap"/>
+    <path d="M900 1249 V1328" class="retained"/>
+    <circle cx="900" cy="1340" r="12" class="kept-node"/>
+    <text x="72" y="1252" class="mono orange">REFINE AGAIN</text>
+    <text x="72" y="1286" class="body">Tune the new</text>
+    <text x="72" y="1314" class="body">combined topology.</text>
+    <text x="900" y="1386" class="label" text-anchor="middle">Keep only a measured improvement</text>
+    <text x="900" y="1417" class="note muted" text-anchor="middle">Stop local refinement when further compute is not justified.</text>
+    <text x="1555" y="1252" class="mono">REPEAT AS NEEDED</text>
+    <text x="1555" y="1287" class="body">Combine survivors.</text>
+    <text x="1555" y="1317" class="body">Create new nodes.</text>
+    <text x="1555" y="1362" class="note muted">Lineage remains a DAG.</text>
+  </g>
+
+  <g id="final-confirmation">
+    <path d="M900 1352 V1366 M900 1438 V1492" class="retained"/>
+    <circle cx="900" cy="1510" r="18" fill="#191919"/>
+    <circle cx="900" cy="1510" r="5" fill="#ff6b00"/>
+    <text x="72" y="1518" class="mono orange">CONFIRM</text>
+    <text x="72" y="1552" class="body">One final solution.</text>
+    <text x="900" y="1569" font-size="34" font-weight="500" letter-spacing="-.8" text-anchor="middle">Confirm the exact integrated revision</text>
+    <text x="900" y="1604" class="body muted" text-anchor="middle">Repeated full validation on one chosen host → one submission SHA</text>
+  </g>
+
+  <g id="execution-footer">
+    <path d="M72 1668 H1728" class="guide"/>
+    <text x="72" y="1710" class="mono">SHARED CONTROL / INDEPENDENT EXECUTION</text>
+    <text x="1728" y="1710" class="small muted" text-anchor="end">GitHub access connects the team. VPS access is not required.</text>
+    <rect x="300" y="1742" width="1200" height="82" rx="2" fill="#fff" stroke="#242424" stroke-width="1.4"/>
+    <text x="334" y="1778" class="label">GitHub</text>
+    <text x="535" y="1776" class="body">Tasks · claims · exact source · lineage · measured evidence</text>
+    <text x="535" y="1804" class="note muted">One owner per task. Human decisions steer the next experiment.</text>
+    <path d="M390 1825 V1872" class="wire" marker-start="url(#small-arrow)" marker-end="url(#small-arrow)"/>
+    <path d="M900 1825 V1872" class="wire" marker-start="url(#small-arrow)" marker-end="url(#small-arrow)"/>
+    <path d="M1410 1825 V1872" class="wire" marker-start="url(#small-arrow)" marker-end="url(#small-arrow)"/>
+    <text x="418" y="1854" class="small muted">claim / publish</text>
+    <text x="928" y="1854" class="small muted">claim / publish</text>
+    <text x="1438" y="1854" class="small muted">claim / publish</text>
+    <text x="390" y="1912" class="mono" text-anchor="middle">PARTICIPANT A</text>
+    <text x="900" y="1912" class="mono" text-anchor="middle">PARTICIPANT B</text>
+    <text x="1410" y="1912" class="mono" text-anchor="middle">PARTICIPANT C</text>
+    <text x="390" y="1949" class="body" text-anchor="middle">Personal Claude / Codex account</text>
+    <text x="900" y="1949" class="body" text-anchor="middle">Personal Claude / Codex account</text>
+    <text x="1410" y="1949" class="body" text-anchor="middle">Personal Claude / Codex account</text>
+    <path d="M390 1964 V1980 M900 1964 V1980 M1410 1964 V1980" class="wire"/>
+    <text x="390" y="2012" class="label" text-anchor="middle">AMD evaluator A</text>
+    <text x="900" y="2012" class="label" text-anchor="middle">AMD evaluator B</text>
+    <text x="1410" y="2012" class="label" text-anchor="middle">AMD evaluator C</text>
+    <text x="390" y="2041" class="note muted" text-anchor="middle">One serial queue · own baseline</text>
+    <text x="900" y="2041" class="note muted" text-anchor="middle">One serial queue · own baseline</text>
+    <text x="1410" y="2041" class="note muted" text-anchor="middle">One serial queue · own baseline</text>
+    <path d="M72 2073 H1728" class="guide"/>
+    <text x="72" y="2111" class="note muted">Topology and hosting are subject to change. Three-host execution is the intended setup, not a live-status claim.</text>
+    <text x="1728" y="2111" class="mono orange" text-anchor="end">FEYER</text>
+  </g>
+</svg>

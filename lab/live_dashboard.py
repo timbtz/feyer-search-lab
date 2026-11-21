@@ -457,14 +457,14 @@ def handler_for(observatory):
                     self.send_error(503, 'Evidence snapshot temporarily unavailable')
                     return
                 mime = 'application/json; charset=utf-8'
-            elif path in ('/', '/index.html', '/app.js', '/style.css', '/pds-loader.js', '/pds-variables.css', '/pds-normalize.css', '/pds-font-face.css'):
+            elif path in ('/', '/index.html', '/app.js', '/style.css', '/pds-loader.js', '/pds-variables.css', '/pds-normalize.css', '/pds-font-face.css', '/search-architecture.svg'):
                 name = 'index.html' if path == '/' else path[1:]
                 try:
                     body = (assets/name).read_bytes()
                 except OSError:
                     self.send_error(404)
                     return
-                mime = {'html':'text/html', 'js':'text/javascript', 'css':'text/css'}[name.rsplit('.',1)[1]]+'; charset=utf-8'
+                mime = {'html':'text/html', 'js':'text/javascript', 'css':'text/css', 'svg':'image/svg+xml'}[name.rsplit('.',1)[1]]+'; charset=utf-8'
             else:
                 self.send_error(404)
                 return

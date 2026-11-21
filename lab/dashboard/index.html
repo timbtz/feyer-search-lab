@@ -21,14 +21,13 @@
   </header>
   <main id="main">
     <div class="intro">
-      <p class="eyebrow">Research / topology / optimization</p>
-      <p-heading tag="h1" size="large">The search, connected.</p-heading>
-      <p class="lead">Trace the ideas, model runs, and small optimizations behind every candidate.</p>
+      <div><p class="eyebrow">Feyer / distributed research</p><h1>Many ideas.<br>One better solution.</h1></div>
+      <p class="lead">Explore different approaches. Refine what works.<br>Combine the strongest ideas and test them again.</p>
     </div>
     <p-tabs-bar id="navigation" compact="true" active-tab-index="0" aria="{'aria-label':'Search lab views'}">
-      <button type="button" data-view="graph" id="tab-graph" aria-controls="graph">Search graph</button>
+      <button type="button" data-view="graph" id="tab-graph" aria-controls="graph">Search map</button>
       <button type="button" data-view="overview" id="tab-overview" aria-controls="overview">Overview</button>
-      <button type="button" data-view="workflow" id="tab-workflow" aria-controls="workflow">How it works</button>
+      <button type="button" data-view="workflow" id="tab-workflow" aria-controls="workflow">Architecture</button>
       <button type="button" data-view="profiler" id="tab-profiler" aria-controls="profiler">Timing profile</button>
       <button type="button" data-view="results" id="tab-results" aria-controls="results">Results</button>
     </p-tabs-bar>
@@ -36,6 +35,26 @@
     <div id="notice" class="notice" hidden role="status"></div>
 
     <section id="graph" class="view" role="tabpanel" aria-labelledby="tab-graph">
+      <div class="map-heading"><div><span class="micro-label">THE SEARCH SPACE</span><p id="progress-subtitle">Recorded research and its evidence</p></div><div class="map-controls"><button id="progress-focus" class="text-button">Focus map</button><div class="map-switch" aria-label="Map view"><button data-map-mode="progression" aria-pressed="true">Search progression</button><button data-map-mode="evidence" aria-pressed="false">Exact evidence DAG</button></div></div></div>
+      <div id="progression">
+        <div class="progress-overline"><span id="research-count"></span><button id="progress-more" class="text-button" hidden>Show all directions</button></div>
+        <div id="progress-canvas" class="progress-canvas">
+          <svg id="progress-lines" aria-hidden="true"></svg>
+          <div class="stage-note stage-start"><span class="micro-label">START</span><p>A fixed problem.<br>A measured reference.</p></div>
+          <button id="progress-baseline" class="baseline-node" data-progress-stage="baseline"><span class="micro-label">BASELINE</span><strong>One starting point</strong><span>Exact revision · fixed benchmark</span></button>
+          <div class="stage-note stage-research"><span class="micro-label">EXPLORE</span><p>Large research steps.<br>Independent agent branches.</p></div>
+          <div id="research-paths" class="research-paths"></div>
+          <div class="refinement-band"><div class="refinement-copy"><span class="micro-label">REFINE</span><h3>Small changes.<br>Measured gains.</h3><p>Numerical search within each admitted topology.</p></div><div id="tuning-paths" class="tuning-paths"></div><button class="stop-rule" data-progress-stage="stop"><span class="stop-symbol">⊥</span><strong>No meaningful gain?</strong><span>Stop this path. Keep its best candidate.</span></button></div>
+          <div class="stage-note stage-combine"><span class="micro-label">COMBINE</span><p>Bring compatible ideas together.<br>Beat the better parent.</p></div>
+          <button id="progress-combine" class="combine-node" data-progress-stage="combine"><span class="micro-label">SECOND ITERATION</span><strong>Combine. Refine again.</strong><span id="combine-state"></span></button>
+          <button id="progress-confirm" class="confirm-node" data-progress-stage="confirm"><span class="micro-label">CONVERGE</span><strong>One verified solution.</strong><span id="confirm-state"></span></button>
+        </div>
+        <div class="progress-key"><span><i class="key-wire"></i> Intended progression</span><span><i class="key-dot"></i> Recorded candidate</span><span><i class="key-fail"></i> Failed check</span><span>Click a direction or marker to inspect</span></div>
+        <p id="progress-source" class="meta-line"></p><button id="progress-unlinked" class="text-button" hidden></button>
+        <aside id="progress-detail" class="progress-detail" hidden aria-label="Research evidence"><button id="progress-close" class="text-button">Close details</button><div id="progress-detail-content"></div></aside>
+      </div>
+      <div id="evidence-map" hidden>
+
       <div id="team-summary" class="team-summary" role="status"></div>
       <details class="team-queue"><summary>Next work and open search space</summary><div id="team-next"></div></details>
       <div class="graph-toolbar">
@@ -57,6 +76,7 @@
       </div>
       <div class="graph-legend"><span class="legend-research">Research / LLM</span><span class="legend-topology">Topology / search space</span><span class="legend-candidate">Candidate / optimization</span><span class="legend-evaluation">Measurement</span><span class="legend-line">Recorded dependency</span><span class="legend-line dashed">Grouping / lane membership</span><output id="graph-count" aria-live="polite"></output></div>
       <p class="graph-caption">Select a node to trace its ancestors and descendants. Scroll to explore; nodes are positioned automatically. Guidance stays a proposal until admitted and evaluated. Expand evaluation runs to see individual screen and full measurements.</p>
+      </div>
     </section>
 
     <section id="overview" class="view" role="tabpanel" aria-labelledby="tab-overview" tabindex="0" hidden aria-label="Overview">
@@ -69,10 +89,11 @@
     </section>
 
     <section id="workflow" class="view" role="tabpanel" aria-labelledby="tab-workflow" tabindex="0" hidden aria-label="How it works">
-      <div class="section-intro"><h2>From an idea to a verified improvement.</h2><p>Five steps. Each result informs the next attempt. Select a step to see what it does.</p></div>
+      <div class="section-intro"><h2>The search is the architecture.</h2><p>Five steps. Each result informs the next attempt. Select a step to see what it does.</p></div>
+      <figure class="architecture-figure"><img src="/search-architecture.svg" alt="Search workflow: baseline, research branches, local refinement, stop unproductive branches, combine, and confirm an exact final revision"><figcaption>Conceptual workflow. Host placement and launcher details are subject to change.</figcaption></figure>
       <div class="walkthrough"><ol id="steps" class="steps"></ol><article id="step-detail" class="step-detail" aria-live="polite"></article></div>
       <p-accordion id="topology-accordion" ><h3 slot="summary">What can the search change?</h3><div class="accordion-body" id="topology"></div></p-accordion>
-      <p-accordion ><h3 slot="summary">Where does everything run?</h3><div class="accordion-body host-grid"><div><h3>Your Mac</h3><p>This dashboard, the coordinator, and local Claude or Codex sessions.</p></div><div><h3>Hetzner</h3><p>The native Codex broker and the SMAC selection helper.</p></div><div><h3>AMD instance</h3><p>One CPU evaluation at a time, in the fixed benchmark environment.</p></div><div><h3>GitHub</h3><p>Source commits, owned branches, hypotheses, and published results.</p></div></div></p-accordion>
+      <p-accordion ><h3 slot="summary">Where does everything run?</h3><div class="accordion-body host-grid"><div><h3>Each participant</h3><p>A local checkout, personal Claude or Codex account, and owned research branches.</p></div><div><h3>Optional Hetzner services</h3><p>A broker or selection helper can run remotely. Host placement is subject to change; colleagues do not need VPS access.</p></div><div><h3>Each AMD instance</h3><p>One serial evaluation queue, the fixed benchmark environment, and a separately calibrated baseline.</p></div><div><h3>GitHub</h3><p>Source commits, owned branches, hypotheses, and published results.</p></div></div></p-accordion>
     </section>
 
     <section id="results" class="view" role="tabpanel" aria-labelledby="tab-results" tabindex="0" hidden aria-label="Results">

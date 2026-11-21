@@ -160,6 +160,54 @@ const SearchDAG = (() => {
 })();
 if (typeof module !== 'undefined') module.exports = SearchDAG;
 
+/* A semantic view of recorded branches. Workflow guide lines are not ancestry. */
+const SearchProgression = (() => {
+  const list=x=>Array.isArray(x)?x:[], human=x=>String(x||'Research direction').replace(/[_-]+/g,' ');
+  const titles={'guarded-noise-construction-reuse':'Reuse noise computation','structural-linear-system-representation':'Restructure the solver','profiler-guided-implementation':'Target measured bottlenecks','static-component-specialization':'Specialize components','frequency-solve-batching':'Batch frequency solves','setup-and-matrix-assembly-guidance':'Simplify matrix assembly','first-pass':'Reduce tracing overhead'};
+  function build(data={}) {
+    const branches=new Map(), observations=Object.values(data.team_search?.observations||{}),tasks=Object.values(data.team_search?.tasks||{});
+    const branch=(id,title)=>{if(!branches.has(id))branches.set(id,{id,title:title||human(id.replace(/^explore\//,'')),records:[],workers:[],tasks:[],updated:0});return branches.get(id);};
+    for(const w of list(data.workers))if(w.branch){const b=branch(w.branch,titles[w.direction]||human(w.direction||w.branch));b.workers.push(w);b.updated=Math.max(b.updated,w.started_at||0);}
+    const jobs=new Map(), campaignSHAs=new Set(list(data.campaigns).flatMap(c=>list(c.candidates).map(a=>a.commit_sha)));
+    for(const j of list(data.jobs))if(j.id&&j.branch&&j.sha)jobs.set(j.id,{...j,job_id:j.id});
+    for(const r of list(data.historical?.candidates))if(r.job_id&&r.branch&&r.sha&&!jobs.has(r.job_id))jobs.set(r.job_id,{...r,status:r.execution_status});
+    for(const j of jobs.values()){
+      if(!branches.has(j.branch)&&(!/^explore\//.test(j.branch)||campaignSHAs.has(j.sha)))continue;
+      const b=branch(j.branch,titles[j.direction]||human(j.direction||j.branch));
+      const o=observations.find(o=>o.evidence?.job_id===j.job_id&&o.evidence?.candidate_sha===j.sha);
+      b.records.push({...j,evidence:o?.evidence,instance:o?.instance});b.updated=Math.max(b.updated,j.created_at||0);
+    }
+    // Team tasks can be present before any worker/job has been observed.
+    for(const t of tasks.filter(t=>t.kind==='explore')){
+      const outputBranches=Object.values(t.candidate_branches||{}).filter(x=>typeof x==='string');
+      const existing=[...branches.values()].find(b=>outputBranches.includes(b.id));
+      const b=existing||branch(`task:${t.id}`,t.hypothesis||human(t.id));b.tasks.push(t);
+      for(const o of observations.filter(o=>o.task===t.id))if(!b.records.some(r=>r.job_id===o.evidence?.job_id))b.records.push({sha:o.evidence.candidate_sha,job_id:o.evidence.job_id,profile:o.evidence.profile,evidence:o.evidence,instance:o.instance,metrics:o.evidence.metrics,created_at:o.created_at||0});
+    }
+    for(const b of branches.values()){
+      b.records.sort((a,b)=>(a.created_at||0)-(b.created_at||0));
+      b.active=b.workers.some(w=>!w.stale&&['coding','running','evaluating','starting'].includes(w.status));
+      b.stalled=b.tasks.some(t=>t.status==='stalled');
+      const unique=new Map();for(const r of b.records){const previous=unique.get(r.sha);if(!previous||r.profile==='full'||previous.profile!=='full')unique.set(r.sha,r);}
+      b.candidates=[...unique.values()];
+      b.latest=[...b.records].reverse().find(r=>r.profile==='full')||b.records.at(-1)||null;
+    }
+    const research=[...branches.values()].sort((a,b)=>Number(b.active)-Number(a.active)||b.updated-a.updated||a.id.localeCompare(b.id));
+    const tuning=list(data.campaigns).map(c=>({id:c.id,selector:c.selector,status:c.status,dimensions:[...new Set(list(c.rounds).flatMap(r=>Object.keys(r.spec?.dimensions||{})))],candidates:list(c.candidates),record:c}));
+    return {research,tuning,tasks,combinations:tasks.filter(t=>t.kind==='combine'),confirmations:tasks.filter(t=>t.kind==='confirm'),ready:SearchDAG.readyTasks(data.team_search),unassigned:observations.filter(o=>jobs.get(o.evidence?.job_id)?.sha!==o.evidence?.candidate_sha&&!o.task)};
+  }
+  function verdict(r){
+    if(r.evidence?.category==='invalid_candidate'||r.official_check==='failed'||r.strict_check==='failed')return {label:'Check failed',tone:'failed'};
+    if(r.resource_evidence?.budget_exceeded===true)return {label:'Resource limit',tone:'failed'};
+    if(r.profile==='full'&&(r.evidence?r.evidence.eligible_full===true:(r.official_check==='passed'&&r.strict_check==='passed')))return {label:'Full pass',tone:'pass'};
+    if(r.profile==='screen')return {label:'Screen only',tone:'screen'};
+    return {label:'Unconfirmed',tone:'pending'};
+  }
+  return {build,verdict};
+})();
+
+if (typeof module !== 'undefined') module.exports.Progression = SearchProgression;
+
 /* Read-only presentation of existing campaign evidence. PDS v4 supplies UI primitives. */
 'use strict';
 (() => {
@@ -371,6 +419,82 @@ if (typeof module !== 'undefined') module.exports = SearchDAG;
     }
   }
 
+  const P={all:false,selected:null,model:null,signature:'',mode:'progression'};
+  function progressMode(mode){P.mode=mode;$('progression').hidden=mode!=='progression';$('evidence-map').hidden=mode!=='evidence';for(const b of document.querySelectorAll('[data-map-mode]'))b.setAttribute('aria-pressed',String(b.dataset.mapMode===mode));if(mode==='evidence')requestAnimationFrame(openGraph);}
+  function inspectProgress(type,record){
+    P.selected={type,record};const panel=$('progress-detail');panel.hidden=false;const target=clear('progress-detail-content');
+    if(type==='branch'){
+      add(target,make('p','eyebrow','Research direction'),make('h2','',record.title),make('p','progress-detail-intro',record.id));
+      for(const w of record.workers)add(target,make('p','meta-line',`${w.model==='inherited / not recorded'?'Model not recorded':w.model} · ${human(w.status)}${w.stale?' · stale observation':''}`));
+      for(const r of [...record.records].reverse()){
+        const row=make('button','evidence-row');const v=SearchProgression.verdict(r);add(row,make('span','',`${short(r.sha)} · ${human(r.profile)}`),make('strong','',seconds(r.metrics?.total)),make('small',v.tone,v.label));row.addEventListener('click',()=>inspectProgress('record',r));target.append(row);
+      }
+      if(!record.records.length)target.append(make('p','empty','No benchmark receipts linked to this branch yet.'));
+      add(target,branchLink(record.id));
+    }else if(type==='record'){
+      const v=SearchProgression.verdict(record);add(target,make('p','eyebrow',`${human(record.profile)} evaluation`),make('h2','',`${seconds(record.metrics?.total)} first run`),pill(v.label,v.tone==='failed'?'failed':v.tone==='pass'?'valid':''),make('p','progress-detail-intro',record.hypothesis||record.idea||'Exact recorded evaluation'));
+      facts(target,[['Commit',record.sha],['Job',record.job_id],['Instance',record.instance||'See source receipt'],['Cohort',record.evidence?.cohort_digest||'Not available in this record'],['Evidence','One measurement; not a confirmed gain']]);
+      add(target,commitLink(record.sha));
+      const profile=list(S.data?.profiler_reports).find(r=>r.job_id===record.job_id);if(profile){const b=make('button','graph-action','Inspect timing profile');b.addEventListener('click',()=>{$('profiler-filter').value=record.job_id;renderProfiler();showView('profiler');});target.append(b);}
+      disclosure(target,'Source receipt',record,'progress-receipt');
+    }else if(type==='unassigned'){
+      add(target,make('p','eyebrow','Unlinked evidence'),make('h2','','Receipts without branch metadata'),make('p','progress-detail-intro','These measurements are retained without assigning a research direction from a filename or Git ancestry.'));
+      for(const o of P.model.unassigned){const e=o.evidence,r={sha:e.candidate_sha,job_id:e.job_id,profile:e.profile,metrics:e.metrics,evidence:e,instance:o.instance};const row=make('button','evidence-row');add(row,make('span','',`${short(r.sha)} · ${o.instance}`),make('strong','',seconds(r.metrics?.total)),make('small','',SearchProgression.verdict(r).label));row.addEventListener('click',()=>inspectProgress('record',r));target.append(row);}
+    }else if(type==='tuning'){
+      add(target,make('p','eyebrow','Small numerical search'),make('h2','',record.id),make('p','progress-detail-intro',`${human(record.selector)} searches the admitted implementation parameters. Each successor is evaluated against its pinned input.`));
+      for(const a of record.candidates){const row=make('button','evidence-row');add(row,make('span','',Object.entries(a.parameters||{}).map(([k,v])=>`${human(k)}: ${v??'default'}`).join(' · ')||a.candidate_id),make('strong','',seconds(a.metrics?.total)),make('small','',a.valid?'Full evidence':'Unconfirmed'));row.addEventListener('click',()=>{$('graph-scope').value='campaign';S.campaign=record.id;options();render();progressMode('evidence');const id=JSON.stringify([record.id,'candidate',a.candidate_id]);selectGraphNode(id);centerNode(id);panel.hidden=true;});target.append(row);}
+    }else{
+      const descriptions={baseline:['Start from a measured baseline','Freeze the workload and exact starting revision. Each participant calibrates their own AMD instance. Timing comparisons stay within the same host and cohort.'],combine:['Combine, then measure again','Pick complementary validated approaches. Record both scientific parents. A combined candidate must beat the better parent; otherwise keep the parent and close this attempt.'],confirm:['Converge on one tested revision','Repeat the exact integrated commit under the same evaluation policy. A merge, a completed agent, or a single fast run does not establish the final submission.'],stop:['Stop spending on a flat branch','Keep the incumbent when a successor fails correctness or cannot justify further compute. The next iteration can combine that retained approach with another validated branch.']};
+      const [title,desc]=descriptions[type];add(target,make('p','eyebrow','Search policy · intended workflow'),make('h2','',title),make('p','progress-detail-intro',desc));
+      const tasks=type==='combine'?P.model.combinations:type==='confirm'?P.model.confirmations:type==='stop'?P.model.tasks.filter(t=>t.status==='stalled'):[];
+      for(const t of tasks){add(target,make('h3','',t.hypothesis||t.id),make('p','meta-line',`${human(t.status)} · ${t.owner||'Unclaimed'}`));disclosure(target,'Task and pinned parents',t,`progress-${t.id}`);}
+      if(['combine','confirm'].includes(type)&&!tasks.length)target.append(make('p','empty',`No shared ${type} task is recorded in this snapshot. Earlier evaluations remain in the evidence view.`));
+    }
+    $('progress-close').focus({preventScroll:true});
+  }
+  function renderProgression(){
+    const model=SearchProgression.build(S.data||{});P.model=model;
+    const signature=JSON.stringify([P.all,model]);if(signature===P.signature)return;P.signature=signature;
+    const branches=P.all?model.research:model.research.slice(0,3),field=clear('research-paths');
+    $('progress-unlinked').hidden=!model.unassigned.length;$('progress-unlinked').textContent=`${model.unassigned.length} receipts without branch metadata`;
+    $('research-count').textContent=`${model.research.length} research directions`;
+    $('progress-more').hidden=model.research.length<=3;$('progress-more').textContent=P.all?'Show recent directions':`Show all ${model.research.length} directions`;
+    $('progress-subtitle').textContent=S.data?.demo?'Synthetic example · select a path to inspect its evidence':S.data?.snapshot?'Saved evidence · select a path to inspect its receipts':'Recorded research · select a path to inspect its receipts';
+    for(const b of branches){
+      const path=make('article',`research-path${b.active?' path-active':''}${b.stalled?' path-stalled':''}`),header=make('button','path-header');
+      const worker=b.workers.at(-1),state=b.active?(S.data?.snapshot?'Observed active':'Active research'):b.stalled?'Branch stalled':worker?`${human(worker.status)}${worker.stale?' · stale':''}`:'Recorded branch';
+      add(header,make('span','path-state',state),make('h3','',b.title),make('span','path-model',worker&&worker.model!=='inherited / not recorded'?worker.model:worker?human(worker.provider):b.tasks.length?'Shared research task':'Recorded research branch'));header.addEventListener('click',()=>inspectProgress('branch',b));path.append(header);
+      const trials=make('div','trial-field');trials.append(make('p','micro-label',`${b.candidates.length} revisions · time order`));const track=make('div','trial-track');
+      for(const r of b.candidates){const v=SearchProgression.verdict(r),dot=make('button',`trial-dot trial-${v.tone}`);dot.setAttribute('aria-label',`${b.title}, ${short(r.sha)}, ${v.label}, ${seconds(r.metrics?.total)}`);dot.title=`${short(r.sha)} · ${v.label} · ${seconds(r.metrics?.total)}`;dot.addEventListener('click',()=>inspectProgress('record',r));track.append(dot);}trials.append(track);
+      if(!b.candidates.length)trials.append(make('p','path-empty','Awaiting candidate evidence'));
+      const latest=b.latest;if(latest){const v=SearchProgression.verdict(latest),receipt=make('button','latest-receipt');add(receipt,make('span','micro-label',latest.profile==='full'?'Latest full observation':'Latest provisional observation'),make('strong','',seconds(latest.metrics?.total)),make('span',`receipt-verdict ${v.tone}`,`${v.label} · ${short(latest.sha)}`));receipt.addEventListener('click',()=>inspectProgress('record',latest));trials.append(receipt);}
+      path.append(trials);const inspect=make('button','path-inspect','Explore this direction');inspect.addEventListener('click',()=>inspectProgress('branch',b));path.append(inspect);field.append(path);
+    }
+    if(!branches.length)field.append(make('p','empty','No research branches are connected yet. The intended search progression remains visible below.'));
+    const tunings=clear('tuning-paths');for(const t of model.tuning){const b=make('button','tuning-path');add(b,make('span','micro-label',human(t.selector)),make('strong','',t.dimensions.map(human).join(' / ')||'Admitted parameter space'),make('span','',`${t.candidates.length} configurations · ${human(t.status)}`));b.addEventListener('click',()=>inspectProgress('tuning',t));tunings.append(b);}
+    if(!model.tuning.length)tunings.append(make('p','meta-line','A bounded parameter search can refine each admitted topology. No campaign export is connected.'));
+    $('combine-state').textContent=model.combinations.length?`${model.combinations.length} shared combination tasks`:'Next iteration · requires pinned parents';
+    $('confirm-state').textContent=model.confirmations.length?`${model.confirmations.length} shared confirmation tasks`:'Objective · final promotion requires evidence';
+    $('progress-source').textContent=`Workflow lines explain the search policy; candidate markers are recorded evidence. ${S.data?.team_search_source?.stale?'Shared task snapshot is stale. ':''}${model.ready.length} ready shared tasks. No cross-host ranking.`;
+    requestAnimationFrame(drawProgressLines);
+  }
+  function drawProgressLines(){
+    if($('progression').hidden)return;const canvas=$('progress-canvas'),lines=clear('progress-lines'),box=canvas.getBoundingClientRect();lines.setAttribute('viewBox',`0 0 ${box.width} ${box.height}`);
+    const point=(el,side)=>{const r=el.getBoundingClientRect();return{x:r.left+r.width/2-box.left,y:(side==='bottom'?r.bottom:r.top)-box.top};};
+    const connect=(a,b)=>{const mid=(a.y+b.y)/2;lines.append(svg('path',{d:`M${a.x},${a.y} C${a.x},${mid} ${b.x},${mid} ${b.x},${b.y}`,class:'workflow-wire'}));};
+    const base=point($('progress-baseline'),'bottom');for(const p of $('research-paths').children)if(p.classList.contains('research-path'))connect(base,point(p,'top'));
+    const output=point($('progress-combine'),'top');for(const p of $('research-paths').children)if(p.classList.contains('research-path'))connect(point(p,'bottom'),output);
+    connect(point($('progress-combine'),'bottom'),point($('progress-confirm'),'top'));
+  }
+  for(const b of document.querySelectorAll('[data-map-mode]'))b.addEventListener('click',()=>progressMode(b.dataset.mapMode));
+  for(const b of document.querySelectorAll('[data-progress-stage]'))b.addEventListener('click',()=>inspectProgress(b.dataset.progressStage,{}));
+  $('progress-more').addEventListener('click',()=>{P.all=!P.all;renderProgression();});
+  $('progress-unlinked').addEventListener('click',()=>inspectProgress('unassigned',{}));
+  $('progress-focus').addEventListener('click',()=>{const focused=document.body.classList.toggle('map-focused');$('progress-focus').textContent=focused?'Exit focus':'Focus map';requestAnimationFrame(drawProgressLines);});
+  $('progress-close').addEventListener('click',()=>{$('progress-detail').hidden=true;P.selected=null;});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')$('progress-detail').hidden=true;});
+  new ResizeObserver(drawProgressLines).observe($('progress-canvas'));
+
   function renderGraph(){
     $('graph-history').disabled=$('graph-scope').value!=='all';
     if(!G.initialized&&S.data?.team_search?.schema==='feyer-team-search-v1')$('graph-scope').value='team';
@@ -445,10 +569,10 @@ if (typeof module !== 'undefined') module.exports = SearchDAG;
     else if(pending&&c?.controller?.process_alive===false){notice.textContent='The local controller has stopped with work still pending. Remote results remain available; see technical details.';notice.hidden=false;}
     else if(S.data?.queue?.enabled&&S.data.queue.stale&&S.data.queue.error){notice.textContent='The AMD connection is unavailable. Showing the last recorded results.';notice.hidden=false;}
     $('round-caption').textContent=c?`${statusLabel(c)}${c.source_updated_at?` · last evidence ${time(c.source_updated_at)}`:''}`:'No search evidence available.';
-    renderProfiler();renderTeam();renderGraph();renderSummary();renderNow();drawTable($('latest'),rows().filter(r=>r.kind!=='seed').slice(-3).reverse(),true);renderWorkflow();renderResults();renderTechnical();
+    renderProfiler();renderTeam();renderProgression();renderGraph();renderSummary();renderNow();drawTable($('latest'),rows().filter(r=>r.kind!=='seed').slice(-3).reverse(),true);renderWorkflow();renderResults();renderTechnical();
     for(const d of document.querySelectorAll('details[data-key]'))d.open=opened.includes(d.dataset.key);
     if(focused&&document.activeElement===document.body&&$(focused))$(focused).focus({preventScroll:true});
-    $('freshness').textContent=`${S.data?.snapshot?'Saved snapshot · source time':S.data?.demo?'Synthetic demo · example time':'Read-only · refreshed'} ${time(S.data?.generated_at)}${S.data?.queue?.enabled?` · AMD ${S.data.queue.stale?'last observation':'connected'}`:''}`;
+    $('freshness').textContent=`${S.data?.snapshot?'Saved snapshot · source time':S.data?.demo?'Synthetic demo · example time':'Read-only · refreshed'} ${time(S.data?.generated_at)}${S.data?.queue?.enabled&&!S.data?.snapshot?` · AMD ${S.data.queue.stale?'last observation':'connected'}`:''}`;
   }
   function showView(view) {
     if(!['graph','overview','workflow','profiler','results'].includes(view))view='graph';S.view=view;
@@ -456,6 +580,7 @@ if (typeof module !== 'undefined') module.exports = SearchDAG;
     const index=['graph','overview','workflow','profiler','results'].indexOf(view);$('navigation').setAttribute('active-tab-index',String(index));if(customElements.get('p-tabs-bar'))$('navigation').activeTabIndex=index;
     for(const button of document.querySelectorAll('[data-view]'))button.setAttribute('aria-selected',String(button.dataset.view===view));
     document.body.classList.toggle('showing-graph',view==='graph');
+    if(view==='graph')requestAnimationFrame(drawProgressLines);
     if(view==='graph'&&G.graph&&!G.initialized){G.initialized=true;requestAnimationFrame(openGraph);}
 
   }

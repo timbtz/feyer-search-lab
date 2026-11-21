@@ -90,3 +90,9 @@ Remote results can exist before their local copies arrive. After a controller in
 Use candidate SHA links for code identity, branch links for browsing, job IDs for individual measurements, and content hashes for the supplied prompt/context. Guidance is displayed as an unevaluated proposal until a reviewed operator and validated candidate exist. A worker's scaffold commit is distinct from its scientific parent and its model-authored commit.
 
 Raw model conversations are not automatically published. Only authorized briefs, responses, receipts and bounded sanitized log excerpts belong in this view. The dashboard is bound to localhost and is not a public administration interface.
+
+## Search progression view
+
+The main map presents the algorithm in order: baseline, independent research directions, compact candidate histories, bounded numerical tuning, stopping, combination and exact confirmation. Select a direction or candidate marker to inspect its receipts; use **Exact evidence DAG** for recorded scientific parent edges. **Focus map** removes the page header. **Architecture** includes the editable search diagram.
+
+Dashed guide lines express intended progression, not measured ancestry. The first three directions are chosen by observed activity and recency, with all directions available. Candidate markers represent exact revisions in time order. Latest full observations are not winners or pooled cross-host scores. Unlinked receipts remain available separately. Completed worker status is not a scientific verdict.
