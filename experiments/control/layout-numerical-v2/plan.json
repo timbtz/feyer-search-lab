@@ -1,0 +1,21 @@
+{
+  "started_at": 1795292429.2574458,
+  "deadline_unix": 1795296029.2574458,
+  "max_total_evaluations": 40,
+  "seed_sha": "e0a1dc69f4951c100fefbc9fc08a23c3c12058dc",
+  "seed_branch": "explore/layout-round-seed",
+  "host": "amd-hackathon",
+  "root": "/workspace/feyer-lab",
+  "cpu": 2,
+  "hypothesis": "Combine guarded noise reuse and merged RHS solves with separate coefficient/RHS assembly layout; measure exact full-workload correctness and first-run time.",
+  "seed_requests": {
+    "screen": {
+      "request_id": "b5d4d3a1e2b842f7891ef7721bfdea10",
+      "job_id": "4c29fe65a1b54b5192b51ad5775db353"
+    },
+    "full": {
+      "request_id": "fcfe8bec910c4378b7d600c9d013f04d",
+      "job_id": "d07456c28e8647289ddf32fd9676bf0d"
+    }
+  }
+}

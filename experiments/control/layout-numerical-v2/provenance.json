@@ -1,0 +1,16 @@
+{
+  "bootstrap_sha256": "c674728e77e60939ccb9b142ba78777dfd642df83dc0a876feaab7d6f88df438",
+  "controller_commit": "2ae00b7b0efac2b85e7928118128db92c3f75a8b",
+  "scientific_parents": [
+    "28566a64a9efbdddc104762ac1f8212eb1d8370c",
+    "423bcc4ad6e99b85cd651980bee541612ed2ee20"
+  ],
+  "seed_sha": "e0a1dc69f4951c100fefbc9fc08a23c3c12058dc",
+  "start": 1795292429.2574458,
+  "deadline": 1795296029.2574458,
+  "global_job_ceiling": 40,
+  "seed_jobs": 2,
+  "campaign_job_ceiling": 38,
+  "manifest_sha256": "a869a2d451f5d9334e37ec9f818a3327b7dc3c07a4ed099c0f00d28554d7fc11",
+  "comparison_policy": "Exploratory during concurrent-capacity epoch; final promotion requires serial same-host cohort confirmation after lane drain."
+}

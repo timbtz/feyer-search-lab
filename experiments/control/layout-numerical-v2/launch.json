@@ -1,0 +1,13 @@
+{
+  "pid": 39262,
+  "started_at": 1795292429.2574458,
+  "deadline_unix": 1795296029.2574458,
+  "command": [
+    "/Users/t.betz/Documents/Feyer challenge/.lab/venv-topology-smac/bin/python",
+    "-u",
+    "/Users/t.betz/Documents/Feyer challenge/.lab/scripts/layout_numerical_v2_bootstrap.py"
+  ],
+  "cwd": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/topology-tuning",
+  "controller_commit": "2ae00b7b0efac2b85e7928118128db92c3f75a8b",
+  "log": "/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/layout-numerical-v2-bootstrap/controller.log"
+}
