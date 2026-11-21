@@ -271,3 +271,42 @@ Proposal: run the existing negative-alias-aware uniqueness proof independently o
 Hypothesis: this independent hint may reduce duplicate-handling residual/compilation work for the large frequency-batched signal scatter. Its actual compiled effect is unmeasured, and extra setup also counts. Candidate 6 remains the validated fallback; require fresh official and strict validation.
 
 Implementation ready. Syntax/whitespace checks passed. Exact AST isolation verifies only the independently guarded builder marker and the signal-scaling scatter's `unique_indices` keyword changed relative to candidate 6. The existing proof helper is unchanged; batch-coordinate non-overlap was additionally checked for 1, 2 and 101 samples. No local simulator/benchmark run. Candidate SHA, run IDs and measurements pending supervisor.
+
+## Candidate 7 evaluation and decision
+
+- SHA `585f25ce1f9113597c9e69eea50ccfdccb532ab5`, immediate parent `4e8292e6dead5c681fd4622016c6ab614ccbde07`.
+- Screen `38c7f31332b84f1d9cca3c0cafbd160c`, request `70d0a14d9f964d9caf6958697df30be8`: passed, first-run 24.881597809 s, compilation/lowering 10.425714251 s, process wall 25.945307883 s, peak RSS 12551556 KiB.
+- Full `2d83c6ba8dc342c381e3814716d6eeb0`, request `dcad521294cb4f64bd3a515b1d5d3347`: official and strict passed; first-run 24.902803898 s, compilation/lowering 10.431022622 s, warm median 13.822272493 s, process wall 105.298484385 s, peak RSS 12551088 KiB. Full CPU2 workload/environment unchanged.
+
+| Full first-run phase | Seconds |
+| --- | ---: |
+| imports | 0.297318654 |
+| initialize | 0.002855640 |
+| load | 0.001487916 |
+| build | 0.772625009 |
+| forward lower | 0.688575095 |
+| forward compile | 7.161918430 |
+| forward execute | 11.532702982 |
+| sensitivity lower | 0.086579068 |
+| sensitivity compile | 0.400828812 |
+| sensitivity execute | 0.000875631 |
+| gradient lower | 0.191577937 |
+| gradient compile | 1.901543280 |
+| gradient execute | 1.863590948 |
+| host transfer | 0.000324495 |
+
+Comparison inspected: all saved physical outputs, parameters and frequencies exactly match. Gradient max absolute error 1.5178830414797062e-18, relative L2 2.153189561034463e-23, normalized tolerance error 2.627152248723926e-11, zero failing coordinates at unchanged strict tolerances. Loss remains 9.793036291535532e-08; official finite-difference check passed; max reference log-sensitivity error 5.374104176780747e-06. Comparison scope: last warm evaluation.
+
+Decision: retain candidate 7 as lowest observed validated first-run result. Versus candidate 6, full first-run fell 0.800615 s, first forward execution fell 0.595725 s, warm median fell 0.404370 s and peak RSS fell 964092 KiB (about 0.92 GiB). This is promising timing/memory evidence from a separate screen and one full run, not repeated-full confirmation or proof of a particular HLO optimization.
+
+## Candidate 8 proposal
+
+Same thread `01a1fedf-f7aa-77b2-885d-75aceeb4c48c`; resumed with 1373 seconds remaining. Immediate numerical parent `585f25ce1f9113597c9e69eea50ccfdccb532ab5`; no external combination.
+
+Source evidence: candidate 7's signal-scaling scatter has verified non-overlapping coordinates, but the immediately preceding gather uses ordinary indexing at the same coordinates. Its reverse operation accumulates cotangents into the full signal matrix. The existing proof, including negative-index aliases and leading batch disjointness, applies to this gather too. It does not apply to the carrier-solution gather, which can legitimately repeat entries and must remain unchanged.
+
+Proposal: use `.at[:, rows, columns].get(unique_indices=verified)` for only the signal-matrix gather, reusing the same Boolean computed from static metadata for its following scatter. Keep normal gather/scatter behavior when uniqueness is not proven. No new setup, changed arithmetic, dropped entries or extra physical assumptions.
+
+Hypothesis: informing the gather's transpose of disjoint destinations may reduce reverse accumulation work or compilation. Actual lowered effects and performance are unmeasured. Candidate 7 remains fallback; new full official and strict validation required.
+
+Implementation complete. Syntax/whitespace checks passed; exact AST normalization verifies only the signal-matrix gather hint and reuse of the existing scatter flag changed. Builder is byte-identical to candidate 7. Existing uniqueness proof is reused; no new structural inference or local numerical/benchmark run. SHA, run IDs and results pending supervisor.

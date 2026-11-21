@@ -365,16 +365,19 @@ def simulate(
 
     # Scale signal connector entries by the carrier solution at the respective spaces.
     # The minus sign matches the sign convention used by the referenced modeling tools.
+    unique_carrier_placing_indices = (
+        component_groups is not None
+        and "unique_carrier_placing_indices" in component_groups["signal"]
+    )
     signal_entries = (
-        -signal_matrix[:, signal_carrier_placing_indices[0], signal_carrier_placing_indices[1]]
+        -signal_matrix.at[:, signal_carrier_placing_indices[0], signal_carrier_placing_indices[1]].get(
+            unique_indices=unique_carrier_placing_indices
+        )
         * carrier[:, signal_carrier_indices.flatten()]
     )
     signal_matrix = signal_matrix.at[:, signal_carrier_placing_indices[0], signal_carrier_placing_indices[1]].set(
         signal_entries,
-        unique_indices=(
-            component_groups is not None
-            and "unique_carrier_placing_indices" in component_groups["signal"]
-        ),
+        unique_indices=unique_carrier_placing_indices,
     )
 
     # Apply conjugation rules to enforce upper and lower sideband symmetry.
