@@ -7,6 +7,7 @@ The team repository is [timbtz/feyer-search-lab](https://github.com/timbtz/feyer
 ## Start here
 
 - [Generalization to other setups](generalization.md) checks candidates against the unchanged simulator on varied optical setups; final judging uses a different setup.
+- [JAX transformation compatibility](jax-compatibility.md) checks that candidates keep forward mode, second order, vmap and eager use; custom_vjp callbacks break them.
 - [Team search across three instances](team-search.md) coordinates personal Claude/Codex sessions through GitHub claims, evidence and combination tasks; no Qwen or SMAC dependency.
 - [Expanded CPU capacity](capacity.md) records lane ownership, new budgets, contention receipts and quiet serial confirmation.
 - [Research lineage and feedback](research-lineage.md) defines declared phase targets, exact evaluation links, external research records and separate operational feedback edges.
