@@ -113,7 +113,8 @@ def update(
         Optional builder-produced structural partition of the function rows.
         `function_rows` has static function-ID keys and original input-row arrays;
         `output_rows` maps original output rows to concatenated group rows.
-        Omit or rebuild the groups when changing function selectors.
+        An optional `unique_matrix_indices` key marks verified distinct destinations.
+        Omit or rebuild metadata when changing selectors or matrix destinations.
 
     Returns
     -------
@@ -150,7 +151,8 @@ def update(
         else:
             output_matrix = jnp.zeros((function_inputs.shape[0], 4), dtype=jnp.complex128)
     outputs = output_matrix[output_rows, output_indices[1]]
-    return matrix.at[matrix_indices[0], matrix_indices[1]].set(outputs)
+    unique_indices = component_groups is not None and "unique_matrix_indices" in component_groups
+    return matrix.at[matrix_indices[0], matrix_indices[1]].set(outputs, unique_indices=unique_indices)
 
 
 def expand_parameters(array: jnp.ndarray, indices: jnp.ndarray, values: jnp.ndarray) -> jnp.ndarray:
@@ -298,7 +300,7 @@ def simulate(
     component_groups : dict | None
         Optional structural dispatch metadata produced by `run_build_step`.
         Contains carrier, signal and noise partitions. Omit it to use dynamic
-        function selectors, or rebuild it if those selectors are changed.
+        function selectors, or rebuild it if selectors or matrix destinations change.
 
     Returns
     -------
@@ -516,7 +518,8 @@ def run_build_step(
     instructions, matrices, metadata = build(setup)
     component_groups = {}
     arrays_to_prepare, carrier_arrays, signal_arrays, noise_arrays = pairs_to_arrays(
-        *instructions, optimization_pairs, changing_pairs, component_groups=component_groups
+        *instructions, optimization_pairs, changing_pairs, component_groups=component_groups,
+        matrix_shapes={"carrier": matrices[1].shape, "signal": matrices[2].shape, "noise": matrices[3].shape},
     )
     prepared_arrays = prepare_arrays(*arrays_to_prepare, changing_values, parameters=matrices[0])
 

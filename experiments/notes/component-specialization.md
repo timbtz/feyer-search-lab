@@ -193,3 +193,42 @@ Proposal: store a sorted function-group dictionary plus this inverse permutation
 Hypothesis: replacing output reconstruction with an integer index gather reduces assembly/transpose compilation and work. Extra setup permutation construction and runtime index gathering may offset the gain. No entries, parameter-dependent zeros or gradient coordinates are omitted. No solve change or HLO claim. New full official and strict checks required; candidate 4 remains the fallback.
 
 Implemented `function_rows` and `output_rows` metadata, with direct grouped-output selection. Syntax and whitespace checks passed. AST scope checks found only `_group_component_indices`, its caller's documentation and `update` changed relative to candidate 4; `pairs_to_arrays` executable body is identical. Executed the actual host grouping helper using an array-construction stub on 104 cases: the inverse permutation covers every row and preserves selected values and final writes, including repeated output selections, overlapping destinations, zeros and all function IDs. No JAX/physics execution locally. Candidate SHA/run IDs and measurements remain pending supervisor.
+
+## Candidate 5 evaluation and decision
+
+- SHA `1ccbecf572eb90c4866a8d077b5d15d6bd28124d`, immediate parent `4ffe2a0bd4dec631e36d037a8f922880446312e7`.
+- Screen `da53834d9b734caebba838d75732fdce`, request `fbc26e7434ef4514ae698926b6dc8098`: passed, first-run 26.174530830 s, compilation/lowering 10.901315639 s, process wall 27.483429043 s, peak RSS 13521588 KiB.
+- Full `c1de187ffa7747b48684605ff08e96e5`, request `ccd064953f764f3e860dac805068d54d`: official and strict passed, first-run 25.988602759 s, compilation/lowering 10.737356391 s, warm median 14.474465085 s, process wall 108.610561408 s, peak RSS 13531880 KiB. Same full CPU2 workload/environment.
+
+| Full first-run phase | Seconds |
+| --- | ---: |
+| imports | 0.287937399 |
+| initialize | 0.002976298 |
+| load | 0.001411846 |
+| build | 0.804368744 |
+| forward lower | 0.696012985 |
+| forward compile | 7.473001687 |
+| forward execute | 12.301107166 |
+| sensitivity lower | 0.076449912 |
+| sensitivity compile | 0.406053616 |
+| sensitivity execute | 0.000896560 |
+| gradient lower | 0.191199237 |
+| gradient compile | 1.894638954 |
+| gradient execute | 1.852221217 |
+| host transfer | 0.000327138 |
+
+Comparison inspected: physical outputs, parameters and frequencies match exactly. Gradient max absolute error 1.5178830414797062e-18, relative L2 2.153189561034473e-23, max normalized tolerance error 2.627152248723926e-11, zero failing coordinates with unchanged strict tolerances. Reported loss remains 9.793036291535532e-08; official finite-difference check passed; max reference log-sensitivity error 5.374104176780747e-06. Saved comparison covers last warm evaluation.
+
+Decision: retain candidate 5 as lowest observed validated full first-run result. Compared with candidate 4, first-run fell 0.442498 s and compilation/lowering fell 0.503004 s, while build rose 0.029712 s and warm medians remain nearly equal. This supports further investigation of structural assembly metadata, but repeated full runs are needed before claiming repeatable superiority.
+
+## Candidate 6 proposal
+
+Same thread `01a1fedf-f7aa-77b2-885d-75aceeb4c48c`; 1957 seconds remaining on resumption. Immediate numerical parent `1ccbecf572eb90c4866a8d077b5d15d6bd28124d`. No external combination.
+
+Source evidence: `update` always uses a generic `.at[row, column].set(outputs)` even when all destination pairs are distinct. Unlike the earlier function-output reconstruction, this scatter operates on the full carrier/signal/noise matrix. The builder has host-side destination indices, and `run_build_step` has matrix shapes before tracing. This permits proving destination uniqueness without inspecting physical parameter values.
+
+Proposal: check each system's full destination list at setup, normalize negative indices against the actual matrix shape, and only mark uniqueness when all normalized destinations are in bounds and distinct. Carry the verified property as the presence of an empty-tuple metadata key (static dictionary structure, no traced Boolean conversion). Pass that property as the scatter's `unique_indices` hint. If metadata, shapes or the proof are absent, retain the default overlapping-index behavior. No sorting, dropping, summation or physical matrix-write reordering. This proof concerns destination indices only; parameter-dependent zeros remain included.
+
+Hypothesis: exposing proven non-overlap may simplify scatter differentiation and compilation, particularly the forward AD residual preparation. No claim is made that current HLO contains redundant duplicate-resolution work or that the public fixture is proven unique before the builder runs. Setup checks count in the objective. Generic callers modifying selectors or destination indices must rebuild or omit grouping metadata. Require fresh full official and strict validation; candidate 5 remains fallback.
+
+Implemented the host-only proof and static key marker, with actual matrix shapes supplied by `run_build_step`. Absent metadata/shapes, unproved dummy updates, overlapping/aliased indices, unequal coordinate-list lengths and out-of-bounds indices retain `unique_indices=False`. Syntax and diff checks passed. Tested the extracted proof helper against an independent Python nested-list indexing oracle on 3600 cases over matrix dimensions 1–6, plus explicit negative aliases, duplicate and invalid cases; all passed. AST scope comparison confirms the physical `simulate` body is unchanged (documentation only), and modifications are limited to structural setup and the scatter hint. No local numerical/JAX execution or benchmark. Candidate SHA/run IDs and performance remain pending supervisor.

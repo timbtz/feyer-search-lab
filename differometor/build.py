@@ -1442,6 +1442,26 @@ def build(setup: Setup):
     )
 
 
+def _matrix_indices_are_unique(matrix_indices, matrix_shape):
+    """Prove non-overlap of host indices, including negative-index aliases."""
+    rows, columns = matrix_indices
+    height, width = matrix_shape
+    if len(rows) != len(columns):
+        return False
+    seen = set()
+    for row, column in zip(rows, columns):
+        row, column = int(row), int(column)
+        row = row + height if row < 0 else row
+        column = column + width if column < 0 else column
+        if not (0 <= row < height and 0 <= column < width):
+            return False
+        destination = (row, column)
+        if destination in seen:
+            return False
+        seen.add(destination)
+    return True
+
+
 def _group_component_indices(function_indices):
     """Classify instructions and map original rows to grouped output rows."""
     groups = defaultdict(list)
@@ -1467,6 +1487,7 @@ def pairs_to_arrays(
     changing_pairs: list | None = None,
     *,
     component_groups: dict | None = None,
+    matrix_shapes: dict | None = None,
 ):
     """
     Convert instruction dictionaries into dense index arrays for vectorized JAX execution.
@@ -1500,7 +1521,12 @@ def pairs_to_arrays(
     component_groups:
         Optional output dictionary filled with structural function groups for each
         system. Each contains `function_rows` keyed by function ID and `output_rows`
-        mapping original rows to concatenated group rows. Rebuild if selectors change.
+        mapping original rows to concatenated group rows. An empty-tuple
+        `unique_matrix_indices` marker is added only for verified unique destinations.
+        Rebuild if selectors or matrix destination indices change.
+    matrix_shapes:
+        Optional system matrix shapes, used to verify destination uniqueness on the
+        host, including aliases between negative and positive indices.
 
     Returns
     -------
@@ -1669,6 +1695,11 @@ def pairs_to_arrays(
         function_input_indices = np.vstack(arrays["function_input_indices"])
         output_indices = np.stack((np.concatenate(arrays["output_row_indices"]), np.concatenate(arrays["output_column_indices"])))
         system_matrix_indices = np.stack((np.concatenate(arrays["system_matrix_row_indices"]), np.concatenate(arrays["system_matrix_column_indices"])))
+
+        if component_groups is not None and matrix_shapes is not None:
+            if _matrix_indices_are_unique(system_matrix_indices, matrix_shapes[system]):
+                # Key presence is static pytree structure, not a traced Boolean.
+                component_groups[system]["unique_matrix_indices"] = ()
 
         if signal:
             # Dummy carrier coupling values if none are required.
