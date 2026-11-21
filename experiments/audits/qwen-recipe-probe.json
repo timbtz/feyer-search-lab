@@ -1,0 +1,128 @@
+{
+  "created_at": "2026-11-21T16:35:38.115958+00:00",
+  "synthetic": true,
+  "executed_model_output": false,
+  "max_requests": 3,
+  "concurrency": 2,
+  "max_tokens_per_request": 768,
+  "timeout_seconds": 50,
+  "purpose": "Schema and instruction following only; no coding or speedup claim",
+  "results": [
+    {
+      "case": "bounded_mutation",
+      "prompt": "Return only JSON with parent_ids, operator, parameters. Choose parent A. Operator must be map_chunk. Choose chunk_size from [1,2,4,8], excluding previously tested [1,2]. These are synthetic recipe choices, not benchmark evidence.",
+      "status": 200,
+      "latency_seconds": 11.115270167,
+      "finish_reason": "stop",
+      "content_characters": 109,
+      "usage": {
+        "prompt_tokens": 92,
+        "total_tokens": 235,
+        "completion_tokens": 143,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0,
+          "image_tokens": 0
+        },
+        "reasoning_tokens": 98,
+        "completion_tokens_details": {
+          "reasoning_tokens": 98,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "cost": 1.323e-05,
+        "cost_details": {
+          "upstream_inference_cost": 1.323e-05,
+          "upstream_inference_prompt_cost": 3.22e-06,
+          "upstream_inference_completions_cost": 1.001e-05,
+          "total_cost": 1.323e-05,
+          "input_cost": 3.22e-06,
+          "output_cost": 1.001e-05,
+          "cached_input_cost": 0,
+          "cache_write_input_cost": 0,
+          "request_cost": 0,
+          "web_search_cost": 0,
+          "image_input_cost": null,
+          "image_output_cost": null,
+          "audio_input_cost": null,
+          "data_storage_cost": 3.3300000000000003e-06
+        }
+      },
+      "content": "\n\n```json\n{\n  \"parent_ids\": [\"A\"],\n  \"operator\": \"map_chunk\",\n  \"parameters\": {\n    \"chunk_size\": 4\n  }\n}\n```",
+      "valid_recipe": false,
+      "normalization": "single_json_fence",
+      "valid_after_fence_normalization": true
+    },
+    {
+      "case": "complementary_parents",
+      "prompt": "Return only JSON with parent_ids, operator, parameters. Synthetic validated candidates: A improved compilation; B improved forward runtime; C is a duplicate of A; D failed gradient validation. Suggest combining A with a different validated approach. operator=combine, parameters={}. Two parent_ids required. Do not claim their gains add.",
+      "status": 200,
+      "latency_seconds": 11.021179334000001,
+      "finish_reason": "stop",
+      "content_characters": 63,
+      "usage": {
+        "prompt_tokens": 105,
+        "total_tokens": 362,
+        "completion_tokens": 257,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0,
+          "image_tokens": 0
+        },
+        "reasoning_tokens": 239,
+        "completion_tokens_details": {
+          "reasoning_tokens": 239,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        },
+        "cost": 2.1665e-05,
+        "cost_details": {
+          "upstream_inference_cost": 2.1665e-05,
+          "upstream_inference_prompt_cost": 3.675e-06,
+          "upstream_inference_completions_cost": 1.799e-05,
+          "total_cost": 2.1665e-05,
+          "input_cost": 3.675e-06,
+          "output_cost": 1.799e-05,
+          "cached_input_cost": 0,
+          "cache_write_input_cost": 0,
+          "request_cost": 0,
+          "web_search_cost": 0,
+          "image_input_cost": null,
+          "image_output_cost": null,
+          "audio_input_cost": null,
+          "data_storage_cost": 6.01e-06
+        }
+      },
+      "content": "\n\n{\"parent_ids\":[\"A\",\"B\"],\"operator\":\"combine\",\"parameters\":{}}",
+      "valid_recipe": true,
+      "normalization": "none",
+      "valid_after_fence_normalization": true
+    },
+    {
+      "case": "numerical_review",
+      "prompt": "Return only JSON with parent_ids, operator, parameters. Candidate D passes official checks but fails our strict comparison at 3 gradient entries. Do not promote or relax tolerances. Choose operator=numerical_review and parameters={}; parent_ids=[\"D\"].",
+      "status": 502,
+      "latency_seconds": 8.443432375,
+      "finish_reason": null,
+      "content_characters": 0,
+      "usage": {},
+      "error": "Provider HTTP 502 gateway error (HTML response); no automatic retry",
+      "content": "",
+      "valid_recipe": false,
+      "normalization": "none",
+      "valid_after_fence_normalization": false
+    }
+  ],
+  "summary": {
+    "requests": 3,
+    "strict_json_valid": 1,
+    "valid_with_single_fence_normalization": 2,
+    "http_502": 1,
+    "code_executed": false,
+    "limitation": "Synthetic instruction-following test only; no implementation applicability or performance evidence"
+  }
+}

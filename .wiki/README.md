@@ -16,6 +16,7 @@ The team repository is [timbtz/feyer-search-lab](https://github.com/timbtz/feyer
 - [Phase exploration](phase-exploration.md) explains candidate comparisons, the interactive viewer and observed Pareto tradeoffs.
 - [A second interactive agent](second-agent.md) explains isolated worktrees and conversation forks.
 - [System audit](system-audit.md) records correctness/resource decisions, fixes and unresolved organizer questions.
+- [Evolution search design](evolution-search-design.md) maps EvoHarness policies to the candidate DAG, Qwen mutations, larger-agent roles and validated timing evidence.
 - [Initial agent brief](../experiments/initial-agent.md) defines the first bounded exploration session.
 
 ## Status
