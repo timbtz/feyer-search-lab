@@ -76,9 +76,26 @@ def _evaluate_component_group(function_index, function_inputs):
     return vmap(FUNCTIONS[function_index])(function_inputs)
 
 
-def _save_component_nonlinear(primitive, *avals, **params):
-    """Retain nonlinear component intermediates, recomputing assembly indexing."""
-    return primitive.name in ("exp", "sqrt", "sin", "cos", "sinh", "cosh", "asin")
+def _save_assembly_indices(primitive, *avals, **params):
+    """Retain only discrete indexing results; recompute complex arithmetic."""
+    # JAX 0.9.0 inserts reduce_precision on saved inexact residuals, which
+    # rejects complex128. These operations preserve discrete dtypes (apart
+    # from conversion, whose destination dtype is checked separately).
+    if primitive.name not in (
+        "gather", "lt", "le", "gt", "ge", "eq", "ne", "add", "sub",
+        "mul", "select_n", "broadcast_in_dim", "reshape", "concatenate",
+        "convert_element_type",
+    ):
+        return False
+
+    def discrete(dtype):
+        return dtype is not None and (
+            np.issubdtype(dtype, np.integer) or np.issubdtype(dtype, np.bool_)
+        )
+
+    return bool(avals) and all(discrete(getattr(aval, "dtype", None)) for aval in avals) and (
+        primitive.name != "convert_element_type" or discrete(params.get("new_dtype"))
+    )
 
 
 def update(
@@ -551,7 +568,7 @@ def simulate(
                 jax.checkpoint(
                     block_assemble,
                     prevent_cse=False,
-                    policy=_save_component_nonlinear,
+                    policy=_save_assembly_indices,
                 ),
                 (parameters, row_carrier_entries),
                 chunk_size,
