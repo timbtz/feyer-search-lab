@@ -44164,6 +44164,57 @@
         ],
         "target_evidence": []
       }
+    },
+    {
+      "seq": 21,
+      "at": 1795294488.5323782,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "feedback-a5cf50c9d526830f3c6747f486215068c731c28273acac1efa6717ab403f0773",
+        "executor": {
+          "kind": "supervisor",
+          "id": "claude-noise-reuse"
+        },
+        "kind": "combine",
+        "status": "completed",
+        "candidate_sha": "28566a64a9efbdddc104762ac1f8212eb1d8370c",
+        "parents": [
+          "f3139c71ae2a5c9de2b015aad7db1a730fac0e1e",
+          "4c12600ce07d6d46518c230bae17248d9df75a39"
+        ],
+        "target_phases": [],
+        "hypothesis": "Noise construction reuse (before the solves; bitwise forward) and merging the two A-untransposed solves into one multi-RHS solve (both strict-validated on their own) act on separate stages. The combination should pass strict with a large margin and run faster than f3139c7's 23.32 s. Additivity is not assumed; not measured.",
+        "change_summary": "Candidate 6 (final; not executed): the coordinator's combination of parents f3139c7 (broadcast noise reuse) and 4c12600 (merged same-matrix multi-RHS solve). differometor/simulate.py settings: NOISE_REUSE_MODE=\"broadcast\", NOISE_FACTOR_REUSE=\"off\", and new MERGE_SAME_MATRIX_SOLVES=True. With the merge on, the signal RHS and the D noise-source RHS are solved by one jnp.linalg.solve on A. The A^H noise-weight solve keeps its separate factorization; the failed full LU reuse and the shared contraction are not used. Frequency chunk 1 with assembly-only scope, guards and fallback are unchanged. Candidate 5 (0550847, full cb43b777) passed official and strict: first run 21.649 s, forward execute 8.171 s, gradient execute 1.297 s, peak RSS 7.24 GB, gradient normalized error 0.949 (thin margin).",
+        "stopping_reason": null,
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-06.json",
+        "source_digest": "a5cf50c9d526830f3c6747f486215068c731c28273acac1efa6717ab403f0773",
+        "source_digest_kind": "canonical_json_sha256",
+        "feedback_ref": {
+          "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-06.json",
+          "artifact_digest": "a5cf50c9d526830f3c6747f486215068c731c28273acac1efa6717ab403f0773",
+          "digest_kind": "canonical_json_sha256"
+        },
+        "session_id": "c3962834-70b7-4d37-bcd1-ac7a66ece4cd",
+        "iteration": null,
+        "checkpoint": null,
+        "next_input": null,
+        "input_receipt": null,
+        "evaluations": [
+          {
+            "job_id": "ee3412e9ba0947ef8bcc2786cf931c8c",
+            "candidate_sha": "28566a64a9efbdddc104762ac1f8212eb1d8370c",
+            "profile": "screen"
+          },
+          {
+            "job_id": "4c7f84023bf343f3a746bf2578f13c78",
+            "candidate_sha": "28566a64a9efbdddc104762ac1f8212eb1d8370c",
+            "profile": "full"
+          }
+        ],
+        "target_evidence": []
+      }
     }
   ],
   "comparison_regime": {
@@ -44389,6 +44440,51 @@
         {
           "job_id": "cb43b777416649429d8b0cb868cee75b",
           "candidate_sha": "05508471e6b65e62ac44fb7f1dacbd31ca990fee",
+          "profile": "full"
+        }
+      ],
+      "target_evidence": []
+    },
+    "feedback-a5cf50c9d526830f3c6747f486215068c731c28273acac1efa6717ab403f0773": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "feedback-a5cf50c9d526830f3c6747f486215068c731c28273acac1efa6717ab403f0773",
+      "executor": {
+        "kind": "supervisor",
+        "id": "claude-noise-reuse"
+      },
+      "kind": "combine",
+      "status": "completed",
+      "candidate_sha": "28566a64a9efbdddc104762ac1f8212eb1d8370c",
+      "parents": [
+        "f3139c71ae2a5c9de2b015aad7db1a730fac0e1e",
+        "4c12600ce07d6d46518c230bae17248d9df75a39"
+      ],
+      "target_phases": [],
+      "hypothesis": "Noise construction reuse (before the solves; bitwise forward) and merging the two A-untransposed solves into one multi-RHS solve (both strict-validated on their own) act on separate stages. The combination should pass strict with a large margin and run faster than f3139c7's 23.32 s. Additivity is not assumed; not measured.",
+      "change_summary": "Candidate 6 (final; not executed): the coordinator's combination of parents f3139c7 (broadcast noise reuse) and 4c12600 (merged same-matrix multi-RHS solve). differometor/simulate.py settings: NOISE_REUSE_MODE=\"broadcast\", NOISE_FACTOR_REUSE=\"off\", and new MERGE_SAME_MATRIX_SOLVES=True. With the merge on, the signal RHS and the D noise-source RHS are solved by one jnp.linalg.solve on A. The A^H noise-weight solve keeps its separate factorization; the failed full LU reuse and the shared contraction are not used. Frequency chunk 1 with assembly-only scope, guards and fallback are unchanged. Candidate 5 (0550847, full cb43b777) passed official and strict: first run 21.649 s, forward execute 8.171 s, gradient execute 1.297 s, peak RSS 7.24 GB, gradient normalized error 0.949 (thin margin).",
+      "stopping_reason": null,
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-06.json",
+      "source_digest": "a5cf50c9d526830f3c6747f486215068c731c28273acac1efa6717ab403f0773",
+      "source_digest_kind": "canonical_json_sha256",
+      "feedback_ref": {
+        "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-06.json",
+        "artifact_digest": "a5cf50c9d526830f3c6747f486215068c731c28273acac1efa6717ab403f0773",
+        "digest_kind": "canonical_json_sha256"
+      },
+      "session_id": "c3962834-70b7-4d37-bcd1-ac7a66ece4cd",
+      "iteration": null,
+      "checkpoint": null,
+      "next_input": null,
+      "input_receipt": null,
+      "evaluations": [
+        {
+          "job_id": "ee3412e9ba0947ef8bcc2786cf931c8c",
+          "candidate_sha": "28566a64a9efbdddc104762ac1f8212eb1d8370c",
+          "profile": "screen"
+        },
+        {
+          "job_id": "4c7f84023bf343f3a746bf2578f13c78",
+          "candidate_sha": "28566a64a9efbdddc104762ac1f8212eb1d8370c",
           "profile": "full"
         }
       ],
