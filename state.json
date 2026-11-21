@@ -44501,6 +44501,61 @@
         ],
         "target_evidence": []
       }
+    },
+    {
+      "seq": 28,
+      "at": 1795294801.863449,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "feedback-e0806ecb60f85c54f3528dfabc4845be8300c70d7302605e8428578b334cf6f3",
+        "executor": {
+          "kind": "supervisor",
+          "id": "claude-profile-guided-v1"
+        },
+        "kind": "explore",
+        "status": "completed",
+        "candidate_sha": "7d6f99624be6e65451051fea0a2e0d99e177780c",
+        "parents": [
+          "aa2b1ab44180af8dd1cd3a9796adb911b1a3986a"
+        ],
+        "target_phases": [],
+        "hypothesis": "Target phase: build, 0.303 s in full job 35abe628 (aa2b1ab); the ceiling is that whole phase.\n\nMechanism: about 200+ list.index scans over several hundred parameter names, in the optimization-pair and changing-pair loops, become O(1) dict lookups. The indices are identical, so the arrays and topology are unchanged.\n\nPrediction: a small build reduction (milliseconds, possibly within noise), no other phase change, and outputs and gradient bitwise identical to aa2b1ab.",
+        "change_summary": "Candidate 5 (aa2b1ab, NumPy-first host conversions) is kept as exploratory. Full job 35abe628 passed official and strict checks, with all outputs bitwise identical and gradient normalized error 1.6e-8. Build fell to 0.303 s (screen e1a0a71f: 0.310 s) from about 0.396 s on code-equivalent 446f2fa. First run was 21.550 s.\n\nCandidate 6 is the final candidate of this session. In pairs_to_arrays, it replaces the O(N) parameter_names.index scans with a first-occurrence name-to-index dict built once per call. Missing names still raise ValueError, so the existing fallback behaves the same. The change is in build.py only, and the notes are updated with the handoff.",
+        "stopping_reason": null,
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/cefa4ada921b1d8a197a0eb553803076296c4b1d/experiments/runs/claude-profile-guided-v1/candidate-06.json",
+        "source_digest": "e0806ecb60f85c54f3528dfabc4845be8300c70d7302605e8428578b334cf6f3",
+        "source_digest_kind": "canonical_json_sha256",
+        "feedback_ref": {
+          "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/cefa4ada921b1d8a197a0eb553803076296c4b1d/experiments/runs/claude-profile-guided-v1/candidate-06.json",
+          "artifact_digest": "e0806ecb60f85c54f3528dfabc4845be8300c70d7302605e8428578b334cf6f3",
+          "digest_kind": "canonical_json_sha256"
+        },
+        "session_id": "a825c74d-c575-4b2c-bf1b-d3c07bcc2e26",
+        "iteration": null,
+        "checkpoint": null,
+        "next_input": null,
+        "input_receipt": {
+          "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-profile-guided-v1/turn-07-prompt-fc40bac507f304bf087cce210e839ead8dd6e0833c016d55edfff820aa328af5.json",
+          "sha256": "fc40bac507f304bf087cce210e839ead8dd6e0833c016d55edfff820aa328af5",
+          "turn": 7,
+          "thread_id": "a825c74d-c575-4b2c-bf1b-d3c07bcc2e26"
+        },
+        "evaluations": [
+          {
+            "job_id": "2aee0b834c52462fa6c6bf989650a7a9",
+            "candidate_sha": "7d6f99624be6e65451051fea0a2e0d99e177780c",
+            "profile": "screen"
+          },
+          {
+            "job_id": "5d084466de694f91b68d8d2562e64c9b",
+            "candidate_sha": "7d6f99624be6e65451051fea0a2e0d99e177780c",
+            "profile": "full"
+          }
+        ],
+        "target_evidence": []
+      }
     }
   ],
   "comparison_regime": {
@@ -45021,6 +45076,55 @@
         {
           "job_id": "7e6ce3c3bf5148af93351918fda06e22",
           "candidate_sha": "7d1ccc59cef3d7436870bb0e6c941dbde4c30770",
+          "profile": "full"
+        }
+      ],
+      "target_evidence": []
+    },
+    "feedback-e0806ecb60f85c54f3528dfabc4845be8300c70d7302605e8428578b334cf6f3": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "feedback-e0806ecb60f85c54f3528dfabc4845be8300c70d7302605e8428578b334cf6f3",
+      "executor": {
+        "kind": "supervisor",
+        "id": "claude-profile-guided-v1"
+      },
+      "kind": "explore",
+      "status": "completed",
+      "candidate_sha": "7d6f99624be6e65451051fea0a2e0d99e177780c",
+      "parents": [
+        "aa2b1ab44180af8dd1cd3a9796adb911b1a3986a"
+      ],
+      "target_phases": [],
+      "hypothesis": "Target phase: build, 0.303 s in full job 35abe628 (aa2b1ab); the ceiling is that whole phase.\n\nMechanism: about 200+ list.index scans over several hundred parameter names, in the optimization-pair and changing-pair loops, become O(1) dict lookups. The indices are identical, so the arrays and topology are unchanged.\n\nPrediction: a small build reduction (milliseconds, possibly within noise), no other phase change, and outputs and gradient bitwise identical to aa2b1ab.",
+      "change_summary": "Candidate 5 (aa2b1ab, NumPy-first host conversions) is kept as exploratory. Full job 35abe628 passed official and strict checks, with all outputs bitwise identical and gradient normalized error 1.6e-8. Build fell to 0.303 s (screen e1a0a71f: 0.310 s) from about 0.396 s on code-equivalent 446f2fa. First run was 21.550 s.\n\nCandidate 6 is the final candidate of this session. In pairs_to_arrays, it replaces the O(N) parameter_names.index scans with a first-occurrence name-to-index dict built once per call. Missing names still raise ValueError, so the existing fallback behaves the same. The change is in build.py only, and the notes are updated with the handoff.",
+      "stopping_reason": null,
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/cefa4ada921b1d8a197a0eb553803076296c4b1d/experiments/runs/claude-profile-guided-v1/candidate-06.json",
+      "source_digest": "e0806ecb60f85c54f3528dfabc4845be8300c70d7302605e8428578b334cf6f3",
+      "source_digest_kind": "canonical_json_sha256",
+      "feedback_ref": {
+        "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/cefa4ada921b1d8a197a0eb553803076296c4b1d/experiments/runs/claude-profile-guided-v1/candidate-06.json",
+        "artifact_digest": "e0806ecb60f85c54f3528dfabc4845be8300c70d7302605e8428578b334cf6f3",
+        "digest_kind": "canonical_json_sha256"
+      },
+      "session_id": "a825c74d-c575-4b2c-bf1b-d3c07bcc2e26",
+      "iteration": null,
+      "checkpoint": null,
+      "next_input": null,
+      "input_receipt": {
+        "path": "/Users/t.betz/Documents/Feyer challenge/.lab/sessions/claude-profile-guided-v1/turn-07-prompt-fc40bac507f304bf087cce210e839ead8dd6e0833c016d55edfff820aa328af5.json",
+        "sha256": "fc40bac507f304bf087cce210e839ead8dd6e0833c016d55edfff820aa328af5",
+        "turn": 7,
+        "thread_id": "a825c74d-c575-4b2c-bf1b-d3c07bcc2e26"
+      },
+      "evaluations": [
+        {
+          "job_id": "2aee0b834c52462fa6c6bf989650a7a9",
+          "candidate_sha": "7d6f99624be6e65451051fea0a2e0d99e177780c",
+          "profile": "screen"
+        },
+        {
+          "job_id": "5d084466de694f91b68d8d2562e64c9b",
+          "candidate_sha": "7d6f99624be6e65451051fea0a2e0d99e177780c",
           "profile": "full"
         }
       ],
