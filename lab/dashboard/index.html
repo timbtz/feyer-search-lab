@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Feyer · Search Observatory</title>
+  <link rel="stylesheet" href="/style.css">
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Dashboard navigation">
+      <a class="brand" href="#infrastructure"><span class="brand-mark" aria-hidden="true">F</span><span>FEYER<span class="brand-subtitle">SEARCH OBSERVATORY</span></span></a>
+      <div class="side-caption">WORKSPACE</div>
+      <nav id="nav">
+        <button class="nav-button active" data-view="infrastructure"><span class="nav-icon" aria-hidden="true">⌘</span>Architecture</button>
+        <button class="nav-button" data-view="search"><span class="nav-icon" aria-hidden="true">⑂</span>Search DAG</button>
+        <button class="nav-button" data-view="runs"><span class="nav-icon" aria-hidden="true">▥</span>Runs &amp; objectives</button>
+        <button class="nav-button" data-view="activity"><span class="nav-icon" aria-hidden="true">≋</span>Activity &amp; logs</button>
+      </nav>
+      <div class="side-rule"></div>
+      <div class="side-caption">EXECUTION CONTRACT</div>
+      <div class="contract"><span>Workload</span><strong>101 frequencies<br>193 design variables</strong><span>Precision</span><strong>Float64 / complex128</strong><span>Primary objective</span><strong>Complete first-run time</strong><span>Acceptance</span><strong>Full official + strict checks</strong></div>
+      <div class="side-footer"><span class="read-only-label">READ-ONLY OBSERVER</span><p>Inspect evidence. Search policies and workers remain controlled by their assigned owners.</p><a href="https://github.com/timbtz/feyer-search-lab" target="_blank" rel="noopener noreferrer">Open GitHub repository ↗</a></div>
+    </aside>
+    <main>
+      <header class="topbar"><div class="breadcrumb">Feyer Lab <span>/</span> <strong id="page-breadcrumb">Architecture</strong></div><div class="connection"><span id="connection-dot" class="status-dot neutral"></span><span id="connection-label">Connecting</span><button id="refresh" class="icon-button" title="Refresh evidence" aria-label="Refresh evidence">↻</button></div></header>
+      <div class="page">
+        <div class="page-heading"><div><div class="eyebrow">OPTIMIZATION CONTROL PLANE</div><h1 id="page-title">From idea to evidence.</h1><p id="page-description">Follow the execution path. Inspect the state behind every step.</p></div><label class="campaign-picker">Campaign<select id="campaign-select" aria-label="Select campaign"><option>Loading campaigns…</option></select></label></div>
+        <div id="alerts" class="alerts" aria-live="polite"></div>
+        <div id="metrics" class="metrics"></div>
+        <section class="workspace" id="workspace" aria-label="Optimization explorer">
+          <div class="work-panel">
+            <div class="panel-toolbar"><div><h2 id="panel-title">Execution architecture</h2><p id="panel-subtitle">Acyclic execution path · feedback creates the next round</p></div><div class="toolbar-actions"><label id="filter-label" class="sr-only" for="candidate-filter">Filter candidates</label><select id="candidate-filter" class="compact-select" aria-labelledby="filter-label"><option value="all">All candidates</option><option value="valid">Full validated</option><option value="pending">Pending / provisional</option><option value="invalid">Rejected</option><option value="pareto">Exact Pareto set</option></select><button id="fit-graph" class="subtle-button">Fit graph</button><button id="zoom-out" class="icon-button" aria-label="Zoom out">−</button><button id="zoom-in" class="icon-button" aria-label="Zoom in">+</button></div></div>
+            <div id="graph-wrap" class="graph-wrap"><svg id="graph" xmlns="http://www.w3.org/2000/svg" aria-label="Interactive optimization graph" role="img"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#536273"/></marker></defs><g id="graph-scene"></g></svg><div class="graph-help">Drag to pan · scroll to zoom · select a node to inspect</div><div id="graph-empty" class="empty-state hidden">Waiting for campaign evidence.</div></div>
+            <div id="runs-wrap" class="runs-wrap hidden"></div>
+            <div id="activity-wrap" class="activity-wrap hidden"></div>
+            <div id="graph-legend" class="graph-legend"><span><i class="legend-dot teal"></i>Full validated</span><span><i class="legend-dot violet"></i>In progress / provisional</span><span><i class="legend-dot amber"></i>Needs attention</span><span><i class="legend-dot muted"></i>Configured / unknown</span></div>
+          </div>
+          <aside id="inspector" class="inspector" aria-label="Selected node details"><div class="inspector-heading"><span class="eyebrow">INSPECTOR</span><span class="small-label">Select any node</span></div><div id="inspector-content"></div></aside>
+        </section>
+        <section class="bottom-grid"><div class="info-panel"><div class="panel-heading"><h2>Workers &amp; hosts</h2><span class="small-label">Observed state</span></div><div id="worker-list"></div></div><div class="info-panel"><div class="panel-heading"><h2>Frozen search space</h2><span id="round-label" class="small-label">Round specification</span></div><div id="topology"></div></div></section>
+        <footer class="page-footer"><span id="source-note">Read-only local evidence and optional remote queue polling</span><span>Screening is provisional. Full acceptance and speed improvement are separate.</span></footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

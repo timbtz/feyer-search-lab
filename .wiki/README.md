@@ -7,6 +7,7 @@ The team repository is [timbtz/feyer-search-lab](https://github.com/timbtz/feyer
 ## Start here
 
 - [Architecture](architecture.md) explains branches, candidates, agent sessions and the worker queue.
+- [Live search dashboard](live-dashboard.md) runs the localhost architecture graph, candidate DAG, worker status and evaluation explorer.
 - [Runbook](runbook.md) covers access, evaluation and recovery.
 - [Experiment rules](experiment-rules.md) defines correctness and promotion requirements.
 - [Optimization hypotheses](hypotheses.md) records ideas to investigate without assuming they will work.
