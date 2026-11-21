@@ -84,6 +84,16 @@ from differometor.components import (
 # device-to-host conversions during `build`.
 # ---------------------------------------------------------------------
 
+def _host_array(values, dtype):
+    """Convert host lists via NumPy first (same values/dtype as jnp.array(values, dtype)).
+
+    `jnp.array` on long Python lists inspects every element for dtype inference;
+    a single NumPy conversion avoids that per-element work during `build`.
+    """
+    np_dtype = {int: np.int64, complex: np.complex128}.get(dtype, dtype)
+    return jnp.asarray(np.asarray(values, dtype=np_dtype))
+
+
 def _np_phase_shift(tuning, frequency, refractive_index):
     return 2 * np.radians(tuning) * refractive_index * (1 + frequency / F0)
 
@@ -1486,7 +1496,7 @@ def build(setup: Setup):
     return (
         (carrier_instructions, signal_instructions, noise_instructions, signal_components, parameter_names),
         (
-            jnp.array([parameters], dtype=complex),
+            _host_array([parameters], complex),
             jnp.array(carrier_matrix),
             jnp.array(signal_matrix),
             jnp.array(noise_matrix, dtype=complex),
@@ -1537,12 +1547,12 @@ def _group_component_indices(function_indices, function_input_indices=None):
     for grouped_row, original_row in enumerate(grouped_rows):
         output_rows[original_row] = grouped_row
     result = {
-        "function_rows": {index: jnp.array(groups[index], dtype=int) for index in sorted(groups)},
-        "output_rows": jnp.array(output_rows, dtype=int),
+        "function_rows": {index: _host_array(groups[index], int) for index in sorted(groups)},
+        "output_rows": _host_array(output_rows, int),
     }
     if function_input_indices is not None:
         result["parameter_indices"] = {
-            index: jnp.array([function_input_indices[row] for row in groups[index]], dtype=int)
+            index: _host_array([function_input_indices[row] for row in groups[index]], int)
             for index in sorted(groups)
         }
     return result
@@ -1789,7 +1799,7 @@ def pairs_to_arrays(
 
             return (
                 jnp.array(function_input_indices, dtype=int),
-                jnp.array(arrays["function_indices"], dtype=int),
+                _host_array(arrays["function_indices"], int),
                 jnp.array(output_indices, dtype=int),
                 jnp.array(system_matrix_indices, dtype=int),
                 jnp.array(carrier_solution_indices, dtype=int),
@@ -1798,15 +1808,15 @@ def pairs_to_arrays(
 
         return (
             jnp.array(function_input_indices, dtype=int),
-            jnp.array(arrays["function_indices"], dtype=int),
+            _host_array(arrays["function_indices"], int),
             jnp.array(output_indices, dtype=int),
             jnp.array(system_matrix_indices, dtype=int),
         )
 
     return (
         (
-            jnp.array(optimized_parameter_indices, dtype=int),
-            jnp.array(optimization_value_indices, dtype=int),
+            _host_array(optimized_parameter_indices, int),
+            _host_array(optimization_value_indices, int),
             jnp.array(carrier_changing_parameter_indices, dtype=int),
             jnp.array(signal_changing_parameter_indices, dtype=int),
         ),
