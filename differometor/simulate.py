@@ -127,11 +127,11 @@ def update(
     Python list of callables referenced as a global is treated as static during
     tracing, which keeps the function jittable as long as the list is stable.
     """
-    function_inputs = parameters[function_input_indices]
     output_rows = output_indices[0]
     # Keep the function selector scalar so only the selected component branch
     # executes. The outer vmap in simulate still batches frequency samples.
     if component_groups is None:
+        function_inputs = parameters[function_input_indices]
         output_matrix = lax.map(
             _evaluate_component,
             (function_indices, function_inputs),
@@ -144,12 +144,14 @@ def update(
         function_rows = component_groups["function_rows"]
         for function_index in sorted(function_rows):
             rows = function_rows[function_index]
-            group_values.append(_evaluate_component_group(function_index, function_inputs[rows]))
+            # Compose structural indices before gathering differentiable values.
+            group_inputs = parameters[function_input_indices[rows]]
+            group_values.append(_evaluate_component_group(function_index, group_inputs))
         if group_values:
             output_matrix = jnp.concatenate(group_values, axis=0)
             output_rows = component_groups["output_rows"][output_rows]
         else:
-            output_matrix = jnp.zeros((function_inputs.shape[0], 4), dtype=jnp.complex128)
+            output_matrix = jnp.zeros((function_input_indices.shape[0], 4), dtype=jnp.complex128)
     outputs = output_matrix[output_rows, output_indices[1]]
     unique_indices = component_groups is not None and "unique_matrix_indices" in component_groups
     return matrix.at[matrix_indices[0], matrix_indices[1]].set(outputs, unique_indices=unique_indices)

@@ -332,3 +332,25 @@ Focused change: add `inline=True` only to `_evaluate_component_group`'s existing
 Hypothesis: exposing homogeneous component computation to its caller may simplify optimization of parameter gathers, saved residuals and selected outputs, lowering the still-dominant forward compilation cost. It can instead duplicate work or worsen compiler optimization. Seed9 tested inlining around a dynamic switch and was slower; this explicitly tests the later static, homogeneous, non-checkpointed structure, so the prior outcome is context rather than proof. No HLO or predicted numeric speedup. New official and strict full checks required; candidate 7/8 remain validated alternatives.
 
 Implementation ready. Syntax/whitespace checks passed; exact AST comparison confirms the only executable change is that single JIT decorator keyword. No local simulator or benchmark run. Candidate SHA/run IDs and measurements pending supervisor.
+
+## Candidate 9 evaluation and decision
+
+- SHA `33cc72e1ee0764979d86a965552292159a8f313e`, immediate parent `a4923527a59fb15d2bdf4ac553bf4b3fdd76bfc4`.
+- Screen `c6061a436cef4301a26afa6ff55c7002`, request `a848b477fe884c088b042777005cf2cf`: passed; first-run 24.854818612 s, compilation/lowering 10.452970617 s, process wall 25.968431581 s, peak RSS 12548040 KiB.
+- Full `7d2ad35f2151448e9bd927af81741b70`, request `38f0d762c414439785ab0c7bb55aecb3`: official and strict passed; first-run 25.189547028 s, compilation/lowering 10.493717391 s, warm median 13.449909711 s, process wall 104.987963028 s, peak RSS 12552356 KiB.
+
+Full first-run phase seconds: imports 0.285923159; initialize 0.002912831; load 0.001481073; build 1.110181293; forward lower 0.686955608; forward compile 7.200912375; forward execute 11.488893779; sensitivity lower 0.201501675; sensitivity compile 0.347781913; sensitivity execute 0.000869479; gradient lower 0.135971799; gradient compile 1.920594020; gradient execute 1.805260187; host transfer 0.000307838.
+
+Supplied saved-array comparison inspected: carrier, signal, noise, sensitivity, powers, parameters and frequencies match exactly; gradient max absolute error 1.5178830414797062e-18, relative L2 2.153189561034463e-23, max normalized tolerance error 2.627152248723926e-11 and zero failures. Loss remains 9.793036291535532e-08; official finite-difference check passed and max reference log-sensitivity error remains 5.374104176780747e-06. Comparison scope is last warm evaluation; full workload unchanged.
+
+Decision: retain inlining for the next isolated experiment, but claim no established speed benefit. Full first-run rose 0.197417 s versus candidate 8, with build time up 0.337357 s; total compilation/lowering fell 0.114045 s and warm median fell 0.106226 s. Screen was slightly faster than candidate 8. These separate observations do not isolate causality. Candidate 7 remains lowest observed validated full first-run (24.902804 s).
+
+## Candidate 10 proposal
+
+Same thread `01a1fedf-f7aa-77b2-885d-75aceeb4c48c`, 808 seconds remaining on resumption. Immediate parent `33cc72e1ee0764979d86a965552292159a8f313e`; no external combination.
+
+Focused change: in the homogeneous path, replace `parameters[function_input_indices][rows]` with `parameters[function_input_indices[rows]]`. The generic fallback retains its original gather and dynamic dispatch. Group iteration, component evaluation, output remapping, scatter ordering, uniqueness hints and physics are unchanged. The empty-group output shape now reads the index-array shape, which equals the former gathered array's leading dimension.
+
+Hypothesis: composing structural indices before gathering differentiable values removes the intermediate full component-input value array from the grouped reverse pass. Constant index composition may also simplify compilation. It may instead increase separate parameter-gradient accumulations; effect on runtime, compiler work and floating-point reduction order remains unmeasured. This is structural indexing, not cached physical data. No additional host preparation or persistent cache is introduced.
+
+Validation: syntax and whitespace checks passed; AST comparison confirms all functions other than `update` are unchanged. A standard-library-only check of 1000 randomized input-index/group-row cases verifies exact value selection and integer-cotangent routing, including repeated parameter indices, negative aliases and empty selections. This is an algebra/structure check, not numerical JAX or performance validation. No local simulator or benchmark execution. Fresh official full and strict gradient/output checks required. SHA/run IDs and timings pending supervisor.
