@@ -1,8 +1,8 @@
 # Campaign discrete-local-v1
 
-Export schema: `feyer-campaign-export-v1`. Snapshot: `190a2bf33ae5f361f84954a110cdb3cc579293c398a5f922bddc6a4ca61c0885`.
+Export schema: `feyer-campaign-export-v1`. Snapshot: `fbf6d195a6d5fa0966c6062a344fcf7cb21f579ac9d949aa70856fd358e91832`.
 
-[Frozen proposer context](contexts/0819e1df3f421f5543eb3192d02bd96ba3af8023b6878ce337b37e1d7098b551.json) — SHA256 `0819e1df3f421f5543eb3192d02bd96ba3af8023b6878ce337b37e1d7098b551`.
+[Frozen proposer context](contexts/ac4dd2d42b808e3ec5e0fa4077abc1bacdb9b2ae9daa017f775aa18ab81bda07.json) — SHA256 `ac4dd2d42b808e3ec5e0fa4077abc1bacdb9b2ae9daa017f775aa18ab81bda07`.
 
 This is an evidence ledger. Scientific parents describe chosen inputs to an experiment; they are not necessarily Git parents. Phase changes are observations, not proof that one edit caused the difference. A failed attempt remains part of the history.
 
@@ -22,7 +22,7 @@ Edges come from declared scientific parents, not inferred chronology or Git ance
 graph LR
   n0["seed8 seed valid"]
   n1["import-42aaabf394d2d9bf5618b6802eb1e11315e85030 seed valid"]
-  n2["78273c30837743b594ef628e5c0056f2 mutate screened"]
+  n2["78273c30837743b594ef628e5c0056f2 mutate valid"]
   n0 -->|mutate| n2
 ```
 
@@ -32,7 +32,7 @@ graph LR
 | --- | --- | --- | --- | --- | --- | --- |
 | seed8 | round-001 / discrete | root | 1e552d675c3795265be8af1ac23ffb61f90f30b1 | valid | 28.0935 | 415bab6b82ef42baa0e0a5277df7aeb9:49937d87a08c533f73470c9dcc48dbc7870c12f467d9a8b5de192dffb5484afa, 882be0c143db470c9686cd2ba9e44c77:b547550f15337f868903dbcb118fa79d025993744270cf25cc8c7816a2e5616d, e6e5badb945c47ae927e511a3ff15fd7:820c7dfc19d0099d62f3b2315da0fb1dd7ee7ee9203b875447cfc2bd07d956a2 |
 | import-42aaabf394d2d9bf5618b6802eb1e11315e85030 | round-001 / discrete | root | 42aaabf394d2d9bf5618b6802eb1e11315e85030 | valid | 28.6478 | 7f9a3863201d4908b9e2607e8b925bdc:70e1da46befd5d0fd365188a88a91391f95e2df62042e7a6687de8abbaf8c611 |
-| 78273c30837743b594ef628e5c0056f2 | round-001 / discrete | seed8 | 2994693a064e90850c710bd3b3f3317ba525f81b | screened | unknown | 5b3af3628df54f778c117ffaad033a5e:34f77add4e58cd3f92f928160be72ce5d3350ed3868f51fb1e1c1a0fc5e1c9c9 |
+| 78273c30837743b594ef628e5c0056f2 | round-001 / discrete | seed8 | 2994693a064e90850c710bd3b3f3317ba525f81b | valid | 36.8441 | 5b3af3628df54f778c117ffaad033a5e:34f77add4e58cd3f92f928160be72ce5d3350ed3868f51fb1e1c1a0fc5e1c9c9, cde035e7126e4e00a4eccc5192f41d86:97a7e880e414101b6593ca85de16889e7fe6e0c28c1e57ad796fb9a0660824be |
 
 ## Round decisions and stalled work
 
@@ -102,7 +102,7 @@ Frozen specification: `c9eef3c088d8fc7635ca176417db487b5d2b4472ff28d94dfbae02855
 }
 ```
 
-- round-001/discrete: active; owner coordinator; strikes 0; reason not recorded
+- round-001/discrete: ready; owner coordinator; strikes 1; reason not recorded
 
 ## Candidate evidence and proposed changes
 
@@ -1080,7 +1080,7 @@ Frozen specification: `c9eef3c088d8fc7635ca176417db487b5d2b4472ff28d94dfbae02855
 
 ```json
 {
-  "cohort_digest": null,
+  "cohort_digest": "10567ad0f8dcb7122b6b182e1be342313b89eef340d4070073fdf62d6342204c",
   "commit_sha": "2994693a064e90850c710bd3b3f3317ba525f81b",
   "content_sha256": "74f7b8428777d855961a096ad89bf59d1e6703929e489339428dc1ae645f4342",
   "context_sha256": null,
@@ -1094,6 +1094,16 @@ Frozen specification: `c9eef3c088d8fc7635ca176417db487b5d2b4472ff28d94dfbae02855
       "profile": "screen",
       "request_id": "1b702666abb64c298300b48af3e5bf4a",
       "status": "screen"
+    },
+    {
+      "attempt": 1,
+      "candidate_id": "78273c30837743b594ef628e5c0056f2",
+      "evidence_id": "cde035e7126e4e00a4eccc5192f41d86:97a7e880e414101b6593ca85de16889e7fe6e0c28c1e57ad796fb9a0660824be",
+      "imported": false,
+      "job_id": "cde035e7126e4e00a4eccc5192f41d86",
+      "profile": "full",
+      "request_id": "4232037f6ce9412b8a1978d5f0126815",
+      "status": "valid"
     }
   ],
   "evidence": [
@@ -1272,10 +1282,201 @@ Frozen specification: `c9eef3c088d8fc7635ca176417db487b5d2b4472ff28d94dfbae02855
       "validated_output_scope": "first_evaluation",
       "warm_metrics": {},
       "worker_error": null
+    },
+    {
+      "artifact_digest": "97a7e880e414101b6593ca85de16889e7fe6e0c28c1e57ad796fb9a0660824be",
+      "artifact_digests": {
+        "comparison.json": "14cee258d15cfb2281f4ae761fc590bc56d1af633055a1fc324296c2a9b781fa",
+        "report.json": "6d86f368a274f747f7e84a7b7e881a504cfdf32eec0232a602e871c00c3aeee3",
+        "result": "383bbd5517a259b8ad264be11cb1f2f45556df2573a11ba6d7edeaa31a8488f9"
+      },
+      "candidate_sha": "2994693a064e90850c710bd3b3f3317ba525f81b",
+      "category": "valid",
+      "checks": {
+        "official": "passed",
+        "precision": "passed",
+        "resource": "passed",
+        "source": "passed",
+        "strict": "passed",
+        "workload": "passed"
+      },
+      "cohort": {
+        "adapter_schema": "feyer-evolution-evidence-v1",
+        "container_limits": {
+          "cpu.max": "1600000 100000",
+          "cpuset.cpus.effective": "0-127",
+          "memory.max": "59055800320",
+          "memory.swap.max": "0"
+        },
+        "memory_policy": {
+          "budget_bytes": 32000000000,
+          "enforcement": "sampled_process_group_rss",
+          "kernel_memory_limit_enforced": false
+        },
+        "profile": "full",
+        "protected_baseline_sha": "02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f",
+        "signature": {
+          "environment": {
+            "backend": "cpu",
+            "cpu_affinity_ids": [
+              2
+            ],
+            "cpu_model": "AMD EPYC 9334 32-Core Processor",
+            "jax_enable_x64": true,
+            "packages": {
+              "differometor": "0.0.6",
+              "jax": "0.9.0",
+              "jaxlib": "0.9.0",
+              "numpy": "2.5.5",
+              "optax": "0.2.6"
+            },
+            "persistent_compilation_cache": false,
+            "python": "3.12.15",
+            "requested_logical_cpus": 1,
+            "thread_limits": {
+              "MKL_NUM_THREADS": "1",
+              "NUMEXPR_NUM_THREADS": "1",
+              "OMP_NUM_THREADS": "1",
+              "OPENBLAS_NUM_THREADS": "1"
+            },
+            "xla_flags": null
+          },
+          "inputs": {
+            "frequency_count": 101,
+            "gradient_parameter_count": 193,
+            "reference_sha256": "726f2cfe6986cb991fa48d5a28127b9330c3dc7e69d5bd193c8748acef03adc3",
+            "setup_sha256": "ff4ba353a2a03cdce7f3e61bad729c2e00888d842c28ba9cf699f95afb87e138"
+          },
+          "timing": {
+            "benchmark": "start-munich-2026-public-differometor-uifo-v2",
+            "evaluator_sha256": "d5950bbd872e5b00ad63f0bd7081e5096fb14ba9c96c80a6854a3b714719bd4e",
+            "phase_keys": [
+              "build",
+              "forward",
+              "forward_compile",
+              "forward_lower",
+              "gradient",
+              "gradient_compile",
+              "gradient_lower",
+              "host_transfer",
+              "imports",
+              "initialize",
+              "load",
+              "sensitivity",
+              "sensitivity_compile",
+              "sensitivity_lower"
+            ],
+            "scope": {
+              "excluded": "validation and benchmark harness bookkeeping, repeated profiling, plot/report generation; interpreter launch before the first timer",
+              "forward_residuals": "saved for separately compiled reverse pass",
+              "gradient_coordinates": "physical parameter values; public grid-length tying",
+              "objective": "mean(log10(sensitivity / public_reference))",
+              "optimizer_steps": 0,
+              "total_scope": "imports, CPU initialization, input I/O, setup, all lowering/compilation, forward, sensitivity/powers/loss, reverse-mode gradient and host transfer"
+            }
+          }
+        },
+        "strict_policy": {
+          "evaluator_sha256": "1bc9b39fe0023afc3db93211b9e3d6cd37ed2b13ee281f142749c2237a16ea8f",
+          "reference_arrays_sha256": "c3f6cba045f8b41f488dc19c960f5056b5f2e75cfa64f9a687b52f2a9ba2751e",
+          "rtol": 1e-07,
+          "scale_atol": 1e-12
+        },
+        "worker_sha256": "d3c212da0ab1215187407d9cd21dc2cbb5f88dc0b5ee7885135bf7f002d14b58"
+      },
+      "cohort_digest": "10567ad0f8dcb7122b6b182e1be342313b89eef340d4070073fdf62d6342204c",
+      "cost": {
+        "comparison_wall_seconds": 0.2613643053919077,
+        "peak_rss_bytes": 14032572416,
+        "peak_rss_kib": 13703684,
+        "total_worker_wall_seconds": 124.03257509320974,
+        "wall_seconds": 123.77121078781784
+      },
+      "eligible_full": true,
+      "evidence_digest": "abcc12074cde799c4e766ec7f97436a8715449f291b6c1adffc03924b85215f7",
+      "evidence_id": "cde035e7126e4e00a4eccc5192f41d86:97a7e880e414101b6593ca85de16889e7fe6e0c28c1e57ad796fb9a0660824be",
+      "execution_status": "completed",
+      "issues": [],
+      "job_id": "cde035e7126e4e00a4eccc5192f41d86",
+      "metrics": {
+        "compilation": 20.671813905239105,
+        "forward": 12.41929541528225,
+        "gradient": 2.7039095647633076,
+        "peak_rss_bytes": 14032572416,
+        "runtime": 15.124528743326664,
+        "sensitivity": 0.0008589997887611389,
+        "setup": 1.047775287181139,
+        "total": 36.84411793574691,
+        "transfer": 0.00046476349234580994
+      },
+      "phases": {
+        "build": 0.748774915933609,
+        "forward": 12.41929541528225,
+        "forward_compile": 6.488020375370979,
+        "forward_lower": 1.0782733708620071,
+        "gradient": 2.7039095647633076,
+        "gradient_compile": 12.20796892233193,
+        "gradient_lower": 0.416846189647913,
+        "host_transfer": 0.00046476349234580994,
+        "imports": 0.29462870210409164,
+        "initialize": 0.002879556268453598,
+        "load": 0.0014921128749847412,
+        "sensitivity": 0.0008589997887611389,
+        "sensitivity_compile": 0.39016303792595863,
+        "sensitivity_lower": 0.09054200910031796
+      },
+      "profile": "full",
+      "resource_evidence": {
+        "budget_bytes": 32000000000,
+        "container_limits": {
+          "cpu.max": "1600000 100000",
+          "cpuset.cpus.effective": "0-127",
+          "memory.max": "59055800320",
+          "memory.swap.max": "0"
+        },
+        "limitation": "Sampled process-group RSS is not a kernel-enforced memory cap.",
+        "memory_monitoring": {
+          "budget_bytes": 32000000000,
+          "enforcement": "sampled_process_group_rss",
+          "exceeded": false,
+          "kernel_memory_limit_enforced": false,
+          "notes": "RSS sampling can miss brief peaks and counts shared pages in each process. It excludes GPU VRAM and does not reserve RAM or constrain other instance work.",
+          "sampled_process_group_peak_rss_bytes": 13961269248,
+          "samples": 480
+        }
+      },
+      "schema_version": "feyer-evolution-evidence-v1",
+      "scientific_strike": false,
+      "screen_passed": false,
+      "source_digests": {
+        "clean_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "comparison_evaluator_sha256": "1bc9b39fe0023afc3db93211b9e3d6cd37ed2b13ee281f142749c2237a16ea8f",
+        "evaluator_sha256": "d5950bbd872e5b00ad63f0bd7081e5096fb14ba9c96c80a6854a3b714719bd4e",
+        "reference_arrays_sha256": "c3f6cba045f8b41f488dc19c960f5056b5f2e75cfa64f9a687b52f2a9ba2751e",
+        "simulator_files_sha256": {
+          "differometor/__init__.py": "505d559d5a17409680a91f555882edf23f78cbb7c98ee28845018fa9bfeba7e7",
+          "differometor/build.py": "f1fdff78515500f5912907537dbedecf30c3915fa949b820bf2ad81b4c062771",
+          "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+          "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+          "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+          "differometor/simulate.py": "74f7b8428777d855961a096ad89bf59d1e6703929e489339428dc1ae645f4342",
+          "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+        },
+        "worker_sha256": "d3c212da0ab1215187407d9cd21dc2cbb5f88dc0b5ee7885135bf7f002d14b58"
+      },
+      "validated_output_scope": "last_warm_evaluation",
+      "warm_metrics": {
+        "forward": 12.589301971718669,
+        "gradient": 2.4600441101938486,
+        "host_transfer": 0.0002547968178987503,
+        "sensitivity": 0.2143464107066393
+      },
+      "worker_error": null
     }
   ],
   "evidence_ids": [
-    "5b3af3628df54f778c117ffaad033a5e:34f77add4e58cd3f92f928160be72ce5d3350ed3868f51fb1e1c1a0fc5e1c9c9"
+    "5b3af3628df54f778c117ffaad033a5e:34f77add4e58cd3f92f928160be72ce5d3350ed3868f51fb1e1c1a0fc5e1c9c9",
+    "cde035e7126e4e00a4eccc5192f41d86:97a7e880e414101b6593ca85de16889e7fe6e0c28c1e57ad796fb9a0660824be"
   ],
   "git_parents": null,
   "heuristic_id": null,
@@ -1283,7 +1484,17 @@ Frozen specification: `c9eef3c088d8fc7635ca176417db487b5d2b4472ff28d94dfbae02855
   "improved": false,
   "kind": "mutate",
   "lane_id": "discrete",
-  "metrics": null,
+  "metrics": {
+    "compilation": 20.671813905239105,
+    "forward": 12.41929541528225,
+    "gradient": 2.7039095647633076,
+    "peak_rss_bytes": 14032572416,
+    "runtime": 15.124528743326664,
+    "sensitivity": 0.0008589997887611389,
+    "setup": 1.047775287181139,
+    "total": 36.84411793574691,
+    "transfer": 0.00046476349234580994
+  },
   "model_manifest": null,
   "owner": "coordinator",
   "owner_version": 1,
@@ -1388,7 +1599,7 @@ Frozen specification: `c9eef3c088d8fc7635ca176417db487b5d2b4472ff28d94dfbae02855
   "round_id": "round-001",
   "target_symbols": null,
   "uncertainty": "No repeat-confirmation or causality is inferred from this export. Inspect exact job evidence and matching cohorts.",
-  "valid": false
+  "valid": true
 }
 ```
 
@@ -1411,5 +1622,8 @@ Frozen specification: `c9eef3c088d8fc7635ca176417db487b5d2b4472ff28d94dfbae02855
 | 13 | evaluation_reserved | coordinator | {"attempt": 1, "candidate_id": "78273c30837743b594ef628e5c0056f2", "profile": "screen", "request_id": "1b702666abb64c298300b48af3e5bf4a"} |
 | 14 | evaluation_bound | coordinator | {"job_id": "5b3af3628df54f778c117ffaad033a5e", "request_id": "1b702666abb64c298300b48af3e5bf4a"} |
 | 15 | evidence_observed | coordinator | {"candidate_id": "78273c30837743b594ef628e5c0056f2", "category": "screen", "evidence_digest": "d8d1c0e80e2e742ca8434150a3b370f6b33fa4185692617476d2fb0895e49f9e", "evidence_id": "5b3af3628df54f778c117ffaad033a5e:34f77add4e58cd3f92f928160be72ce5d3350ed3868f51fb1e1c1a0fc5e1c9c9", "job_id": "5b3af3628df54f778c117ffaad033a5e", "progress": null, "status": "screened", "strikes": 0} |
+| 16 | evaluation_reserved | coordinator | {"attempt": 1, "candidate_id": "78273c30837743b594ef628e5c0056f2", "profile": "full", "request_id": "4232037f6ce9412b8a1978d5f0126815"} |
+| 17 | evaluation_bound | coordinator | {"job_id": "cde035e7126e4e00a4eccc5192f41d86", "request_id": "4232037f6ce9412b8a1978d5f0126815"} |
+| 18 | evidence_observed | coordinator | {"candidate_id": "78273c30837743b594ef628e5c0056f2", "category": "valid", "evidence_digest": "4efb30e4052d596cf6aaf3be78f5694be6ae0e58348fa084b4ff8ed7077277c6", "evidence_id": "cde035e7126e4e00a4eccc5192f41d86:97a7e880e414101b6593ca85de16889e7fe6e0c28c1e57ad796fb9a0660824be", "job_id": "cde035e7126e4e00a4eccc5192f41d86", "progress": {"axes": ["compilation", "runtime", "peak_rss_bytes"], "meaningful_pareto": false, "meaningful_total": false, "policy": {"absolute": 0.02, "relative": 0.01}, "reference_best_total": 28.09352152608335, "reference_parents": ["seed8"]}, "status": "valid", "strikes": 1} |
 
 Guidance may propose a new round. It cannot silently replace frozen operators, ownership, evaluation requirements or budgets. Only the coordinator can admit that round through the campaign state API. Publishing this ledger does not merge or promote candidate code.
