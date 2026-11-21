@@ -71,6 +71,8 @@ team comparison-regime --mode concurrent --receipt RECEIPT_URL \
 New imports receive `comparison_context`. Concurrent records remain in the ledger
 but are excluded from `assess` comparison samples; incomplete confirmation returns
 `needs_serial_confirmation`. Scientific failures are still retained and checked.
+Full-and-strict passing concurrent candidates can still be admitted as research
+or confirmation parents; correctness admission does not certify a timing gain.
 Retries preserve the original context instead of relabeling a job. The regime is
 conservative across all hosts: import historical records before the transition,
 or keep them exploratory and collect fresh confirmation. The context is separate

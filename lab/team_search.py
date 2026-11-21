@@ -38,10 +38,10 @@ def initial_state(coordinator):
                 tasks={}, observations={}, events=[])
 
 
-def eligible(state, sha, instance=None, cohort=None):
+def eligible(state, sha, instance=None, cohort=None, serial_only=False):
     return [o for o in state['observations'].values()
             if o['evidence']['candidate_sha'] == sha and o['evidence']['eligible_full']
-            and o.get('comparison_context', {}).get('mode', 'serial') == 'serial'
+            and (not serial_only or o.get('comparison_context', {}).get('mode', 'serial') == 'serial')
             and (instance is None or o['instance'] == instance)
             and (cohort is None or o['evidence']['cohort_digest'] == cohort)]
 
@@ -69,7 +69,7 @@ def assess(state, task_id, sha, instance, cohort):
         raise ValueError('Candidate is not reserved in this task or one of its references')
     minimum = task['minimum_full_runs']
     targets = [sha] + task['parents']
-    samples = {s: eligible(state, s, instance, cohort) for s in targets}
+    samples = {s: eligible(state, s, instance, cohort, serial_only=True) for s in targets}
     result = dict(candidate_sha=sha, instance=instance, cohort=cohort,
                   counts={s: len(rows) for s, rows in samples.items()},
                   minimum_full_runs=minimum, classification='needs_confirmation')

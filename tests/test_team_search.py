@@ -138,6 +138,12 @@ class TeamSearchTests(unittest.TestCase):
         self.assertEqual(result['classification'], 'needs_serial_confirmation')
         self.assertEqual(len(result['exploratory_jobs_excluded']), 6)
         self.assertTrue(all(o['evidence']['eligible_full'] for o in self.state['observations'].values()))
+        for kind in ('confirm', 'refine', 'combine'):
+            parents = [PARENT, CHILD] if kind == 'combine' else [CHILD]
+            self.state, _ = apply(self.state, 'add', 'coordinator', {
+                **spec(kind), 'kind':kind, 'parents':parents, 'max_candidates':1})
+            self.assertEqual(assess(self.state, kind, CHILD, 'amd-a', cohort)['classification'],
+                             'needs_serial_confirmation')
         self.state, _ = apply(self.state, 'comparison-regime', 'coordinator', dict(
             mode='serial', reason='All lanes and jobs drained', receipt='drained.json'), now=200)
         repeated, _ = apply(self.state, 'record', 'coordinator', dict(observation=obs))
