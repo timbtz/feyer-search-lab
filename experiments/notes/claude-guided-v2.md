@@ -272,5 +272,43 @@ This is my own hypothesis. It is *not* a transfer of 7d1ccc5's code, which I cou
 - **Reject if:** a strict failure or a total slower than 17.85 s beyond noise.
 - **Source delta vs aac9904:** a one-line flag change in simulate.py.
 
-### Results
-- Pending.
+### Results: SHA `ae180410c4375fff1ca3f755fb057ffc0641db75`: official PASS, strict PASS, **rejected**
+
+**Screen** (`ed589da2`): 17.978 s.
+
+**Full** (`2dd450e4`):
+- First run 17.956 s vs 17.850 s (+0.11).
+- Gradient compile 2.405 vs 2.424 and gradient lower 0.206 vs 0.220: unchanged within noise.
+- Forward execute 8.558 vs 8.463 (+0.09). Warm median 10.62 s.
+- Strict comparison: forward outputs bitwise identical. Gradient max normalized error 6.0e-7, vs 1.6e-8 for aac9904; it passes, but with a much smaller margin.
+- **Interpretation:** the prediction that gradient compile would drop was not supported. The custom_linear_solve of direct_implicit does not measurably cost compile on this branch.
+- **Decision:** rejected. `NOISE_FACTOR_REUSE="direct_implicit"` is restored.
+
+## Candidate 7 / session close: revert to the aac9904 simulator source
+
+- **Source delta vs ae18041:** the flag is reverted, so `differometor/**` is source-identical to aac9904. Only the notes differ.
+- This is **not a new optimization candidate**. If evaluated, it is a repeat observation of the aac9904 simulator tree. Treat it as noisy concurrent-regime evidence; it does not replace the quiet serial confirmation required for promotion.
+
+## Handoff (session claude-guided-v2, thread 75b9ee40-7c99-412e-aafd-dc81380b84ab)
+
+**Branch best:** aac9904. First run 17.850 s (full `afea41cd`), official and strict PASS, forward outputs bitwise identical, gradient max normalized error 1.6e-8. Single observation; needs a quiet serial confirmation.
+
+**Kept chain from aa2b1ab (21.55 s):**
+
+| Candidate | SHA | Change | First run (s) | Delta (s) |
+| --- | --- | --- | --- | --- |
+| 2 | 10a311f | slot pruning | 19.77 | −1.78 |
+| 3 | 3b80507 | lower-variant pruning | 19.57 | −0.20 |
+| 4 | 633689f | row split | 19.54 | within noise |
+| 5 | aac9904 | narrow component-value checkpoint, from peer 7d1ccc5 | 17.85 | −1.69 |
+
+**Rejected:**
+- Candidate 1 (5b21696, wide assembly remat): compile only moved between programs.
+- Candidate 6 (ae18041, NOISE_FACTOR_REUSE "direct"): no gain, smaller strict margin.
+
+**Known trade-off:** warm runtime under aac9904 is about +0.45 s versus 633689f. This does not affect the first-run objective.
+
+**Untried next ideas:**
+- Port 7d1ccc5's builder-dependent `flat_matrix_indices`, `flat_output_indices` and carrier-fusion paths. This needs the peer's build.py diff.
+- Try a richer checkpoint policy, for example saving float64 gathered inputs.
+- Check whether ROW_SPLIT_PRUNING still helps under remat.
