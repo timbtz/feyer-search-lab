@@ -65,6 +65,9 @@ class RealSmacTests(unittest.TestCase):
         repeated = choose(self.request)
         self.assertEqual(first['parameters'], repeated['parameters'])
         self.assertIn('Acquisition Function', first['decision']['selection_origin'])
+        self.assertTrue(first['decision']['model_trained'])
+        self.assertEqual(first['decision']['acquisition_rank'], 1)
+        self.assertEqual(len(first['decision']['ranked_options']), len(self.request['options']))
         opposite = copy.deepcopy(self.request)
         for i, row in enumerate(opposite['observations']):
             row['cost'] = 70. - i * 10

@@ -28,8 +28,8 @@ def metadata():
     return {'adapter_version': VERSION, 'space_version': SPACE_VERSION, 'packages': packages,
             'source_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             'space_sha256': hashlib.sha256(Path(__file__).with_name('evolution_space.py').read_bytes()).hexdigest(),
-            'n_trees': 32, 'acquisition_challengers': 128, 'max_config_calls': 1,
-            'failure_cost': FAILURE_COST, 'n_workers': 1, 'startup_configs': 4,
+            'n_trees': 32, 'acquisition_maximizer': 'registered-finite-set', 'max_config_calls': 1,
+            'failure_cost': FAILURE_COST, 'n_workers': 1, 'startup_configs': 4, 'random_probability': 0.0,
             'history': 'one median of eligible full times per configuration; full scientific failures penalized'}
 
 
@@ -90,6 +90,22 @@ def choose(request):
     from smac.runhistory.enumerations import StatusType
     from smac.main.config_selector import ConfigSelector
     from smac.random_design.probability_design import ProbabilityRandomDesign
+    from smac.acquisition.maximizer.abstract_acquisition_maximizer import AbstractAcquisitionMaximizer
+
+    class RegisteredSetMaximizer(AbstractAcquisitionMaximizer):
+        """Score the actual unseen finite menu using SMAC's acquisition function."""
+        ranked = None
+
+        def _maximize(self, previous_configs, n_points):
+            configs = [Configuration(self._configspace, values=encode(p)) for p in options.values()]
+            for config in configs:
+                config.origin = 'Acquisition Function Maximizer: Registered Finite Set'
+            ranked = self._sort_by_acquisition_value(configs)[:n_points]
+            self.ranked = [{'parameters': decode(config), 'score': float(score), 'rank': i + 1}
+                           for i, (score, config) in enumerate(ranked)]
+            if any(not math.isfinite(row['score']) for row in self.ranked):
+                raise ValueError('SMAC acquisition returned a nonfinite score')
+            return ranked
 
     started = time.monotonic()
     actual = metadata()
@@ -122,14 +138,14 @@ def choose(request):
         startup = max(0, actual['startup_configs'] - len(rows))
         design = Facade.get_initial_design(scenario, n_configs=startup, max_ratio=1.0,
                   additional_configs=[Configuration(cs, values=encode(rows[0]['parameters']))])
+        maximizer = RegisteredSetMaximizer(cs, challengers=len(options), seed=seed)
         facade = Facade(scenario, target_function=None, overwrite=True, logging_level=False,
             model=Facade.get_model(scenario, n_trees=actual['n_trees']),
             initial_design=design,
-            acquisition_maximizer=Facade.get_acquisition_maximizer(scenario,
-                challengers=actual['acquisition_challengers'], local_search_iterations=4),
+            acquisition_maximizer=maximizer,
             intensifier=Facade.get_intensifier(scenario, max_config_calls=1),
             config_selector=ConfigSelector(scenario, retrain_after=1, max_new_config_tries=64),
-            random_design=ProbabilityRandomDesign(probability=0.2, seed=seed))
+            random_design=ProbabilityRandomDesign(probability=actual['random_probability'], seed=seed))
         # Median is one model observation. deterministic=True prevents SMAC
         # allocating repeated seeds; it does not assert noise-free measurements.
         for row in rows:
@@ -141,9 +157,14 @@ def choose(request):
             info = facade.ask()
             parameters = decode(info.config)
             if canonical(parameters) in options:
+                rank = next((r for r in (maximizer.ranked or []) if r['parameters'] == parameters), None)
                 return {'parameters': parameters, 'decision': {
                     'heuristic_id': VERSION, 'model': 'SMAC3 random forest + expected improvement',
                     'selection_origin': info.config.origin, 'trial_seed': info.seed,
+                    'model_trained': bool(maximizer.ranked),
+                    'acquisition_rank': rank['rank'] if rank else None,
+                    'acquisition_score': rank['score'] if rank else None,
+                    'ranked_options': maximizer.ranked,
                     'training_configurations': len(rows), 'startup_remaining': startup,
                     'rejected_asks': rejected, 'metadata': actual,
                     'fit_and_select_seconds': time.monotonic() - started,

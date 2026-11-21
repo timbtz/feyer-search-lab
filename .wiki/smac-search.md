@@ -38,7 +38,12 @@ penalty, not a measured duration. A previously invalid configuration cannot
 become eligible through a later fast measurement.
 
 The first four distinct observations provide startup coverage; after that SMAC
-fits its surrogate. The library may still propose exploratory random choices.
+fits its surrogate. For the registered finite space, a small maximizer extension
+scores every unseen option with SMAC's own acquisition function and sorting.
+This avoids duplicate proposals from its general-purpose neighborhood search;
+these scores are cheap model predictions, not additional physics evaluations.
+Startup choices can be random; expected improvement supplies exploration after
+startup, without extra interleaved random proposals.
 Each decision records the actual `selection_origin`, training count, random
 seed, settings, package versions, source hashes, full input context and elapsed
 selection time. An acquisition-guided choice is distinguished from startup or
@@ -62,7 +67,7 @@ implementation choice rather than an assumed smooth numerical axis.
 Install `ops/smac/requirements.lock` in a separate Python 3.12 virtual
 environment. Never install it in `/workspace/venv-feyer` or change benchmark
 dependencies. The requirements include dependencies pulled by SMAC; the adapter
-uses one worker, 32 trees and 128 acquisition challengers, with no Dask cluster
+uses one worker, 32 trees and the registered finite set of challengers, with no Dask cluster
 or GPU inference. Use single-thread numerical-library environment settings.
 
 The library can run in the controller process or via a bounded SSH helper:
@@ -82,7 +87,8 @@ python3 -m lab.evolution_run init \
 The remote directory must contain this exact committed adapter and renderer.
 Initialization checks package versions and code hashes; every decision rejects
 runtime drift. The SSH request sends parameters and timing evidence only, not
-credentials or physical fixtures. The helper has a 90-second transport timeout.
+credentials or physical fixtures. The Linux helper uses GNU timeout to terminate
+after 75 seconds (with a five-second kill grace), inside a 90-second SSH timeout.
 The ordinary queue/evaluator SSH connection is independent of this helper.
 
 For a policy handoff, stop/drain the old campaign, recover all exact results,

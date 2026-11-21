@@ -16,7 +16,8 @@ def invoke(request, endpoint=None):
     for name in ('python', 'root'):
         if not isinstance(endpoint[name], str) or not endpoint[name].startswith('/') or '..' in Path(endpoint[name]).parts:
             raise ValueError('SMAC endpoint paths must be absolute without parent traversal')
-    command = ['env', 'OMP_NUM_THREADS=1', 'OPENBLAS_NUM_THREADS=1', 'MKL_NUM_THREADS=1',
+    command = ['timeout', '--signal=TERM', '--kill-after=5s', '75s',
+               'env', 'OMP_NUM_THREADS=1', 'OPENBLAS_NUM_THREADS=1', 'MKL_NUM_THREADS=1',
                'PYTHONPATH=' + endpoint['root'], endpoint['python'], '-m', 'lab.smac_search']
     result = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15',
                              endpoint['host'], shlex.join(command)],
