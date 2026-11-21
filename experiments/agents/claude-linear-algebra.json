@@ -1,0 +1,30 @@
+{
+  "agent_id": "claude-linear-algebra",
+  "provider": "claude",
+  "model": "claude-opus-5-5",
+  "branch": "explore/linear-algebra-audit",
+  "worktree": "/Users/t.betz/Documents/Feyer challenge agents/linear-algebra-audit",
+  "repository": "https://github.com/timbtz/feyer-search-lab",
+  "starting_revision": "d4ad661bc8c8abf7f1b0508ff8da583e6bf8ac36",
+  "source_baseline": "02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f",
+  "direction": "matrix-structure-and-factorization",
+  "objective": "Reduce complete first-run optical evaluation time by exploiting proven matrix structure without changing physics.",
+  "brief_path": "experiments/claude-linear-algebra.md",
+  "brief_sha256": "839dfc01aa370ba5aeda7b35072fed8129864f8c37472dcd3f8e0667f94fd4e3",
+  "created_at_utc": "2026-11-21T15:39:06.979717+00:00",
+  "budget_minutes": 60,
+  "candidate_limit": null,
+  "first_deliverable": "Evidence and proposed experiment in experiments/notes/claude-linear-algebra.md before simulator edits.",
+  "evaluation": "Shared AMD serial queue, CPU 2; screen provisional, full benchmark and array comparison required.",
+  "ownership": "Agent edits simulator and own notes; supervisor owns commits, publishing and queue submission.",
+  "isolation": "Local restricted file tools; no shell, subagents or MCP; no per-agent container or RAM cap.",
+  "status_location": ".lab/sessions/claude-linear-algebra/status.json",
+  "records_location": "experiments/runs/claude-linear-algebra/candidate-NN.json",
+  "graph_identity": {
+    "direction": "branch",
+    "candidate": "exact evaluated commit SHA",
+    "run": "queue job ID",
+    "session": "Claude conversation ID in local session state"
+  },
+  "relationship_to_seed_agent": "Independent direction; may propose combining validated candidates later, without modifying the seed-agent worktree."
+}
