@@ -70,7 +70,72 @@ from differometor.components import (
     corrected_optomechanical_phase_left,
     corrected_optomechanical_phase_right,
     dummy_function,
+    C_LIGHT,
+    F0,
 )
+
+
+# ---------------------------------------------------------------------
+# Host-side (NumPy) initial values for base matrix entries.
+# Every off-diagonal mirror, beamsplitter and space entry written here is
+# overwritten at the identical (row, column) by the carrier and signal update
+# instructions before any solve, so these values only need the same structure;
+# computing them with NumPy avoids hundreds of eager JAX scalar dispatches and
+# device-to-host conversions during `build`.
+# ---------------------------------------------------------------------
+
+def _np_phase_shift(tuning, frequency, refractive_index):
+    return 2 * np.radians(tuning) * refractive_index * (1 + frequency / F0)
+
+
+def _np_incidence_left(alpha):
+    return np.cos(np.radians(alpha))
+
+
+def _np_incidence_right(alpha, refractive_index_left, refractive_index_right):
+    return np.cos(np.arcsin(refractive_index_left / refractive_index_right * np.sin(np.radians(alpha))))
+
+
+def _np_surface_entries(loss, reflectivity, tuning, frequency, n_left, n_right, alpha=0.0):
+    n_left = np.real(n_left)
+    n_right = np.real(n_right)
+    absolute_reflectivity = (1 - loss) * reflectivity
+    absolute_transmissivity = (1 - loss) * (1 - reflectivity)
+    left_term = _np_phase_shift(tuning, frequency, n_left) * _np_incidence_left(alpha)
+    right_term_r = _np_phase_shift(tuning, frequency, n_right) * _np_incidence_right(alpha, n_right, n_left)
+    right_term_t = _np_phase_shift(tuning, frequency, n_right) * _np_incidence_right(alpha, n_left, n_right)
+    r_left = -np.sqrt(absolute_reflectivity) * np.exp(1j * left_term)
+    r_right = -np.sqrt(absolute_reflectivity) * np.exp(-1j * right_term_r)
+    t = -np.sqrt(absolute_transmissivity) * np.exp(1j * (np.pi / 2 + 0.5 * (left_term - right_term_t)))
+    return r_left, t, r_right
+
+
+def _np_mirror_matrix(loss, reflectivity, tuning, frequency, n_left, n_right):
+    r_left, t, r_right = _np_surface_entries(loss, reflectivity, tuning, frequency, n_left, n_right)
+    return np.array(
+        [[1, 0, 0, 0], [r_left, 1, t, 0], [0, 0, 1, 0], [t, 0, r_right, 1]], dtype=complex
+    )
+
+
+def _np_beamsplitter_matrix(loss, reflectivity, tuning, frequency, n_left, n_right, alpha):
+    r_left, t, r_right = _np_surface_entries(loss, reflectivity, tuning, frequency, n_left, n_right, alpha)
+    return np.array(
+        [
+            [1, 0, 0, 0, 0, 0, 0, 0],
+            [0, 1, r_left, 0, t, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 0, 0],
+            [r_left, 0, 0, 1, 0, 0, t, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0],
+            [t, 0, 0, 0, 0, 1, r_right, 0],
+            [0, 0, 0, 0, 0, 0, 1, 0],
+            [0, 0, t, 0, r_right, 0, 0, 1],
+        ],
+        dtype=complex,
+    )
+
+
+def _np_space_entry(frequency, length, refractive_index):
+    return -np.exp(-1j * 2 * np.pi * frequency * length * refractive_index / C_LIGHT)
 
 # ---------------------------------------------------------------------
 # Global state for parameter linking
@@ -878,7 +943,7 @@ def build(setup: Setup):
                 refractive_index_left_position = surfaces_to_refractive_index_parameter_position[node].get("left", 1)
                 refractive_index_right_position = surfaces_to_refractive_index_parameter_position[node].get("right", 1)
 
-                matrix = mirror_matrix(
+                matrix = _np_mirror_matrix(
                     data["properties"]["loss"],
                     data["properties"]["reflectivity"],
                     data["properties"]["tuning"],
@@ -925,7 +990,7 @@ def build(setup: Setup):
                 refractive_index_left_position = surfaces_to_refractive_index_parameter_position[node].get("left", 1)
                 refractive_index_right_position = surfaces_to_refractive_index_parameter_position[node].get("right", 1)
 
-                matrix = beamsplitter_matrix(
+                matrix = _np_beamsplitter_matrix(
                     data["properties"]["loss"],
                     data["properties"]["reflectivity"],
                     data["properties"]["tuning"],
@@ -1285,7 +1350,7 @@ def build(setup: Setup):
             target_output_index = target_index
 
         # Initialize the carrier matrix with the space propagation entry.
-        space_entry = space(jnp.array([F, data["properties"]["length"], data["properties"]["refractive_index"]]))[0]
+        space_entry = _np_space_entry(F, data["properties"]["length"], data["properties"]["refractive_index"])
         carrier_matrix[source_input_index, target_output_index] = space_entry
         carrier_matrix[target_input_index, source_output_index] = space_entry
 

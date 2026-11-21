@@ -98,6 +98,53 @@
   - Ceiling: well under 0.5 s; this has not been measured.
 - **Risk:** gradient index 161 if the accumulation order changes rounding. Fallback is `NOISE_FACTOR_REUSE="direct"` (the parent).
 
+### Results: candidate SHA `745f5c3417b2c75246d634c9ddddb0c852978da9` — **KEPT (best eligible revision)**
+
+**Screen** (`748276a7a33c45f1a128e7a80b162be7`): 22.036 s. Provisional.
+
+**Full** (`f60d64b6a10a4ed8a292a0b30df2fb65`): **official PASS, strict PASS**.
+
+| Phase | Seconds | Parent |
+| --- | --- | --- |
+| Complete first run | **22.051** | 22.366 |
+| Forward compile | 7.664 | 7.634 |
+| Forward execute | 8.396 | 8.609 |
+| Gradient compile | 1.948 | 1.962 |
+| Gradient execute | 1.501 | 1.475 |
+| Build | 0.807 | 0.821 |
+
+- Warm median: 10.060 s, against the parent's 10.609 s (forward median 8.377 s against 8.936 s).
+- Total job wall time: 87.0 s.
+- Peak RSS: 8.12 GB, **unchanged**. The predicted 0.9 GB drop did not happen; XLA apparently did not keep the extra residual, or reuses it.
+
+**Strict comparison:**
+- All outputs are bitwise identical (error 0).
+- Gradient: max absolute error 4.5e-13, normalized 1.6e-8. That is better than the parent's 6.0e-7 and equal to noise-reuse candidate 1's level.
+
+**Interpretation:**
+- First run −0.32 s and warm −0.55 s against the parent. These are single runs, and run-to-run noise is about ±0.3 s, so this is not a confirmed gain.
+- It is kept because it is no worse, numerically cleaner and observed faster. A repeat full run is recommended.
+
+## Candidate 3: NumPy initial base-matrix entries in `build` (build phase)
+
+### Hypothesis
+- **Target:** the build phase, 0.807 s in job `f60d64b6` (3.7% of the first run). It is host-side Python plus eager JAX.
+- **Mechanism:** `build()` evaluates the following eagerly with JAX:
+  - `mirror_matrix` / `beamsplitter_matrix`: about 30 scalar jnp ops each, plus a `np.array` conversion of JAX scalars, for every mirror and beamsplitter;
+  - `space(jnp.array([...]))[0]`, for every space edge.
+  
+  That is hundreds of eager dispatches, first-use compilations of each primitive, and device-to-host syncs.
+- **Why outputs are unaffected:** the code shows that each of these off-diagonal base entries is overwritten at the identical (row, column) by the carrier instructions:
+  - mirror: rows `[1,1,3,3]`, columns `[0,2,0,2]`;
+  - beamsplitter: rows `[1,1,3,3,5,5,7,7]`, columns `[2,4,0,6,0,6,2,4]`;
+  - space: both directed entries.
+  
+  The signal instructions overwrite them in both sidebands. So their values never reach a solve.
+- **Change:** `differometor/build.py` gets NumPy versions of the same formulas: `_np_mirror_matrix`, `_np_beamsplitter_matrix` and `_np_space_entry`. The base values can differ from the JAX ones by an ulp, but they are overwritten.
+- **Expected:**
+  - Build phase lower by some fraction of 0.8 s; the eager-JAX share is unmeasured.
+  - All outputs and the gradient bitwise equal to candidate 2. Any nonzero output error would prove a base entry survives, and would be grounds to reject.
+- **Ceiling:** 0.81 s (the whole build phase). A realistic saving is likely ≤0.3 s, and it is not measured.
+
 ### Results
-- Candidate SHA: pending (supervisor).
-- Screen and full: pending.
+- Candidate SHA: pending.
