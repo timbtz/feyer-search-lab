@@ -44603,6 +44603,47 @@
         "target_evidence": [],
         "assignment_id": "claude-profile-guided-v1-compiler-gap"
       }
+    },
+    {
+      "seq": 30,
+      "at": 1795294812.7207522,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "codex-profile-guided-v1-compiler-gap-cbaf17c27953",
+        "kind": "explore",
+        "executor": {
+          "kind": "supervisor",
+          "id": "codex-profile-guided-v1"
+        },
+        "session_id": "01a1ffba-57ec-7191-8ba9-c6163633a3b3",
+        "status": "proposed",
+        "candidate_sha": null,
+        "parents": [
+          "7d1ccc59cef3d7436870bb0e6c941dbde4c30770"
+        ],
+        "target_phases": [
+          "compilation",
+          "forward"
+        ],
+        "hypothesis": "sparse scan outputs followed by dense assembly",
+        "change_summary": "Broker-assigned compiler-gap research; no output candidate or measured gain asserted.",
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/7df2194a4460e909558f180a00da1aaf5922171f/experiments/launches/codex-profile-guided-v1-compiler-gap.json",
+        "source_digest": "cbaf17c2795344f742698f63371c7c901dfe1997235eaee8ca2dfaa438f1ae5f",
+        "source_digest_kind": "canonical_json_sha256",
+        "stopping_reason": null,
+        "evaluations": [],
+        "input_receipt": null,
+        "observed_at": 1795294374.613261,
+        "fixed_deadline_unix": 1795295364.088367,
+        "target_declaration": {
+          "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/8bf6e8fbe58a0b605857659a3bff032350f0180c/experiments/briefs/compiler-gap-followup.md",
+          "source_digest": "59076ef8431198386dfe6d2ad6ef0152d92eb902cca2818dbec86faf17a5c4d0"
+        },
+        "target_evidence": [],
+        "assignment_id": "codex-profile-guided-v1-compiler-gap"
+      }
     }
   ],
   "comparison_regime": {
@@ -45217,6 +45258,41 @@
       },
       "target_evidence": [],
       "assignment_id": "claude-profile-guided-v1-compiler-gap"
+    },
+    "codex-profile-guided-v1-compiler-gap-cbaf17c27953": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "codex-profile-guided-v1-compiler-gap-cbaf17c27953",
+      "kind": "explore",
+      "executor": {
+        "kind": "supervisor",
+        "id": "codex-profile-guided-v1"
+      },
+      "session_id": "01a1ffba-57ec-7191-8ba9-c6163633a3b3",
+      "status": "proposed",
+      "candidate_sha": null,
+      "parents": [
+        "7d1ccc59cef3d7436870bb0e6c941dbde4c30770"
+      ],
+      "target_phases": [
+        "compilation",
+        "forward"
+      ],
+      "hypothesis": "sparse scan outputs followed by dense assembly",
+      "change_summary": "Broker-assigned compiler-gap research; no output candidate or measured gain asserted.",
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/7df2194a4460e909558f180a00da1aaf5922171f/experiments/launches/codex-profile-guided-v1-compiler-gap.json",
+      "source_digest": "cbaf17c2795344f742698f63371c7c901dfe1997235eaee8ca2dfaa438f1ae5f",
+      "source_digest_kind": "canonical_json_sha256",
+      "stopping_reason": null,
+      "evaluations": [],
+      "input_receipt": null,
+      "observed_at": 1795294374.613261,
+      "fixed_deadline_unix": 1795295364.088367,
+      "target_declaration": {
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/8bf6e8fbe58a0b605857659a3bff032350f0180c/experiments/briefs/compiler-gap-followup.md",
+        "source_digest": "59076ef8431198386dfe6d2ad6ef0152d92eb902cca2818dbec86faf17a5c4d0"
+      },
+      "target_evidence": [],
+      "assignment_id": "codex-profile-guided-v1-compiler-gap"
     }
   }
 }
