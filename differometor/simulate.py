@@ -317,9 +317,31 @@ def update(
     # Keep the selected component values available to the carrier-product
     # transpose without including that coupling in checkpoint recomputation.
     if carrier_entries is not None:
-        positions = component_groups["carrier_output_positions"]
-        scaled_outputs = -outputs[positions] * carrier_entries
-        outputs = outputs.at[positions].set(scaled_outputs, unique_indices=True)
+        # The builder maps distinct coupling destinations to enumerated output
+        # positions, proving both uniqueness and bounds for this gather/scatter.
+        positions = component_groups["carrier_output_positions"].reshape(-1, 1)
+        selected_outputs = lax.gather(
+            outputs,
+            positions,
+            lax.GatherDimensionNumbers(
+                offset_dims=(), collapsed_slice_dims=(0,), start_index_map=(0,),
+            ),
+            slice_sizes=(1,),
+            mode="promise_in_bounds",
+        )
+        scaled_outputs = -selected_outputs * carrier_entries
+        outputs = lax.scatter(
+            outputs,
+            positions,
+            scaled_outputs,
+            lax.ScatterDimensionNumbers(
+                update_window_dims=(),
+                inserted_window_dims=(0,),
+                scatter_dims_to_operand_dims=(0,),
+            ),
+            unique_indices=True,
+            mode="promise_in_bounds",
+        )
     if component_groups is not None and "flat_matrix_indices" in component_groups:
         # Builder-proven unique, in-bounds offsets avoid tracing the generic
         # two-coordinate indexing path. Update order and component values stay
