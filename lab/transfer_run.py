@@ -145,7 +145,11 @@ def run(args):
                 paths = [args.output / f'{name}-{setup}/arrays.npz' for name in ('reference', 'candidate')]
                 if all(p.is_file() for p in paths):
                     with np.load(paths[0], allow_pickle=False) as a, np.load(paths[1], allow_pickle=False) as b:
-                        comparison = audit_arrays(a, b, sensitivity_tolerance=WORKLOADS[setup]['tolerance'], include_loss=False)
+                        expected, actual = dict(a), dict(b)
+                        for name, values in [('reference', expected), ('candidate', actual)]:
+                            report = json.loads((args.output / f'{name}-{setup}/report.json').read_text())
+                            values['loss'] = np.asarray(report['validation']['loss'], dtype=np.float64)
+                        comparison = audit_arrays(expected, actual, sensitivity_tolerance=WORKLOADS[setup]['tolerance'])
                     comparison['setup'] = setup
                     receipt['comparisons'].append(comparison)
             receipt['passed'] = (len(receipt['checks']) == 4 and len(receipt['comparisons']) == 2

@@ -1,0 +1,37 @@
+{
+  "scope": "Synthetic regression demonstrations, not candidate performance evidence",
+  "cases": [
+    {
+      "synthetic_fault": "changed_power",
+      "historical_comparator_passed": true,
+      "new_audit_passed": false,
+      "new_issues": [
+        "powers: elementwise regression mismatch"
+      ]
+    },
+    {
+      "synthetic_fault": "nan_loss",
+      "historical_comparator_passed": true,
+      "new_audit_passed": false,
+      "new_issues": [
+        "loss: non-finite reference or candidate"
+      ]
+    },
+    {
+      "synthetic_fault": "float32_gradient",
+      "historical_comparator_passed": true,
+      "new_audit_passed": false,
+      "new_issues": [
+        "gradient: shape, double-precision dtype or nonempty requirement failed"
+      ]
+    },
+    {
+      "synthetic_fault": "missing_reference",
+      "historical_comparator_passed": true,
+      "new_audit_passed": false,
+      "new_issues": [
+        "reference: missing arrays ['carrier', 'frequencies', 'gradient', 'loss', 'noise', 'parameters', 'powers', 'sensitivity', 'signal']"
+      ]
+    }
+  ]
+}

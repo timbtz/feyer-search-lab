@@ -128,7 +128,8 @@ def validate_official_report(report, *, setup, cpu, candidate_sha, harness_hashe
     require(inputs.get('setup_sha256') == spec['setup'] and inputs.get('reference_sha256') == spec['reference'],
             'Wrong optical setup or public reference')
     env = report.get('environment', {})
-    require(env.get('cpu_affinity_ids') == [cpu] and env.get('cpu_affinity_count') == 1
+    require(env.get('cpu_affinity_ids') == [cpu] and type(env.get('cpu_affinity_count')) is int
+            and env.get('cpu_affinity_count') == 1 and type(env.get('requested_logical_cpus')) is int
             and env.get('requested_logical_cpus') == 1, 'Not exactly one logical CPU')
     require(env.get('thread_limits') == dict.fromkeys(THREADS, '1'), 'Numerical library thread limits differ')
     require(env.get('backend') == 'cpu' and env.get('jax_enable_x64') is True

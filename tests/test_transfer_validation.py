@@ -128,7 +128,8 @@ class OfficialReportTests(unittest.TestCase):
 
     def test_multiple_cpus_threads_cache_and_float32_fail(self):
         for key, value in [('cpu_affinity_ids', [2, 34]), ('cpu_affinity_count', 2),
-                           ('requested_logical_cpus', 2), ('persistent_compilation_cache', True),
+                           ('requested_logical_cpus', 2), ('cpu_affinity_count', True),
+                           ('requested_logical_cpus', True), ('persistent_compilation_cache', True),
                            ('jax_enable_x64', False), ('thread_limits', {})]:
             r = report(); r['environment'][key] = value
             self.assertFalse(validate(r)['passed'])
