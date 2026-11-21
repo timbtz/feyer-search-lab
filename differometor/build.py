@@ -1462,7 +1462,7 @@ def _matrix_indices_are_unique(matrix_indices, matrix_shape):
     return True
 
 
-def _group_component_indices(function_indices, function_input_indices=None):
+def _group_component_indices(function_indices, function_input_indices=None, output_row_indices=None):
     """Classify instructions and map original rows to grouped output rows."""
     groups = defaultdict(list)
     for row, function_index in enumerate(function_indices):
@@ -1480,6 +1480,10 @@ def _group_component_indices(function_indices, function_input_indices=None):
             index: jnp.array([function_input_indices[row] for row in groups[index]], dtype=int)
             for index in sorted(groups)
         }
+    if output_row_indices is not None:
+        selected_rows = [int(row) for row in output_row_indices]
+        if all(-len(output_rows) <= row < len(output_rows) for row in selected_rows):
+            result["selected_output_rows"] = jnp.array([output_rows[row] for row in selected_rows], dtype=int)
     return result
 
 
@@ -1530,6 +1534,7 @@ def pairs_to_arrays(
         mapping original rows to concatenated group rows. An empty-tuple
         `unique_matrix_indices` marker is added only for verified unique destinations.
         `parameter_indices` contains the input indices for each group.
+        `selected_output_rows`, when present, composes the output-row selection.
         Rebuild if selectors, input indices or matrix destination indices change.
     matrix_shapes:
         Optional system matrix shapes, used to verify destination uniqueness on the
@@ -1688,7 +1693,7 @@ def pairs_to_arrays(
         if len(arrays["function_input_indices"]) == 0:
             # Dummy update that leaves matrices unchanged.
             if component_groups is not None:
-                component_groups[system] = _group_component_indices([FUNCTIONS.index(dummy_function)], [[0, 0, 0]])
+                component_groups[system] = _group_component_indices([FUNCTIONS.index(dummy_function)], [[0, 0, 0]], [0])
             return (
                 jnp.array([[0, 0, 0]]),
                 jnp.array([FUNCTIONS.index(dummy_function)]),
@@ -1697,9 +1702,11 @@ def pairs_to_arrays(
             )
 
         function_input_indices = np.vstack(arrays["function_input_indices"])
-        if component_groups is not None:
-            component_groups[system] = _group_component_indices(arrays["function_indices"], function_input_indices)
         output_indices = np.stack((np.concatenate(arrays["output_row_indices"]), np.concatenate(arrays["output_column_indices"])))
+        if component_groups is not None:
+            component_groups[system] = _group_component_indices(
+                arrays["function_indices"], function_input_indices, output_indices[0]
+            )
         system_matrix_indices = np.stack((np.concatenate(arrays["system_matrix_row_indices"]), np.concatenate(arrays["system_matrix_column_indices"])))
 
         if component_groups is not None and matrix_shapes is not None:

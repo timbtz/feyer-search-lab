@@ -114,6 +114,7 @@ def update(
         `function_rows` has static function-ID keys and original input-row arrays;
         `output_rows` maps original output rows to concatenated group rows.
         `parameter_indices`, when present, supplies prepared input indices per group.
+        `selected_output_rows`, when present, supplies the composed output selection.
         An optional `unique_matrix_indices` key marks verified distinct destinations.
         Omit or rebuild metadata when changing selectors, input indices or matrix destinations.
 
@@ -154,7 +155,10 @@ def update(
             group_values.append(_evaluate_component_group(function_index, group_inputs))
         if group_values:
             output_matrix = jnp.concatenate(group_values, axis=0)
-            output_rows = component_groups["output_rows"][output_rows]
+            if "selected_output_rows" in component_groups:
+                output_rows = component_groups["selected_output_rows"]
+            else:
+                output_rows = component_groups["output_rows"][output_rows]
         else:
             output_matrix = jnp.zeros((function_input_indices.shape[0], 4), dtype=jnp.complex128)
     outputs = output_matrix[output_rows, output_indices[1]]
