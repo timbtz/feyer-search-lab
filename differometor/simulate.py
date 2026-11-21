@@ -29,6 +29,7 @@ from differometor.setups import Setup
 from differometor.build import build, pairs_to_arrays, prepare_arrays, LINKING_FUNCTIONS
 from differometor.components import FUNCTIONS, UNIT_VACUUM, H_PLANCK, F0
 from differometor import components as _components
+from differometor.sparse import SparseStructure, SparseSystem, sparse_solve
 
 
 jax.config.update("jax_enable_x64", True)
@@ -180,6 +181,15 @@ def update(
     Python list of callables referenced as a global is treated as static during
     tracing, which keeps the function jittable as long as the list is stable.
     """
+    outputs = _component_outputs(
+        parameters, function_input_indices, output_indices, function_indices, component_groups
+    )
+    unique_indices = component_groups is not None and "unique_matrix_indices" in component_groups
+    return matrix.at[matrix_indices[0], matrix_indices[1]].set(outputs, unique_indices=unique_indices)
+
+
+def _component_outputs(parameters, function_input_indices, output_indices, function_indices, component_groups):
+    """Evaluate component functions and select the M values that `update` writes."""
     output_rows = output_indices[0]
     # Keep the function selector scalar so only the selected component branch
     # executes. The outer vmap in simulate still batches frequency samples.
@@ -223,9 +233,7 @@ def update(
             output_rows = component_groups["output_rows"][output_rows]
         else:
             output_matrix = jnp.zeros((function_input_indices.shape[0], 4), dtype=jnp.complex128)
-    outputs = output_matrix[output_rows, output_indices[1]]
-    unique_indices = component_groups is not None and "unique_matrix_indices" in component_groups
-    return matrix.at[matrix_indices[0], matrix_indices[1]].set(outputs, unique_indices=unique_indices)
+    return output_matrix[output_rows, output_indices[1]]
 
 
 def expand_parameters(array: jnp.ndarray, indices: jnp.ndarray, values: jnp.ndarray) -> jnp.ndarray:
@@ -305,6 +313,7 @@ def simulate(
     noise_system_matrix_indices: tuple[jnp.ndarray, jnp.ndarray],
     *,
     component_groups: dict | None = None,
+    sparse_structure: SparseStructure | None = None,
 ) -> tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
     """
     Run one full simulation pass: carrier, signal, and quantum noise.
@@ -374,6 +383,11 @@ def simulate(
         Optional structural dispatch metadata produced by `run_build_step`.
         Contains carrier, signal and noise partitions. Omit it to use dynamic
         function selectors, or rebuild it if selectors or matrix destinations change.
+    sparse_structure : SparseStructure | None
+        Optional static sparsity metadata produced by `run_build_step`. When given,
+        the carrier, signal and noise systems are assembled as structural-nonzero
+        value vectors and solved with sparse LU. Rebuild it whenever base matrices'
+        structure, selectors or matrix destinations change; omit it for the dense path.
 
     Returns
     -------
@@ -406,6 +420,33 @@ def simulate(
 
     # Quadrature-homodyne-detector phase factors (unit magnitude complex phase).
     qhd_phase_values = jnp.exp(1j * jnp.radians(parameters[0, qhd_parameter_indices]))
+
+    if sparse_structure is not None and SPARSE_SOLVES:
+        return _simulate_sparse(
+            sparse_structure,
+            component_groups,
+            parameters,
+            qhd_phase_values,
+            carrier_changing_parameter_indices,
+            carrier_changing_values,
+            signal_changing_parameter_indices,
+            signal_changing_values,
+            carrier_matrix,
+            signal_matrix,
+            noise_matrix,
+            noise_selection_vectors,
+            qhd_placing_indices,
+            carrier_function_input_indices,
+            carrier_function_indices,
+            carrier_output_indices,
+            signal_function_input_indices,
+            signal_function_indices,
+            signal_output_indices,
+            signal_carrier_indices,
+            noise_function_input_indices,
+            noise_function_indices,
+            noise_output_indices,
+        )
 
     # --------------------
     # Carrier solve
@@ -640,6 +681,185 @@ NOISE_REUSE_MODE: str = "broadcast"
 # the LU of the explicit A^H (identical LAPACK input) but a matvec that reads A
 # itself (x -> conj(A)^T x), so the transposed copy is not kept as an AD residual.
 NOISE_FACTOR_REUSE: str = "direct_implicit"
+
+
+# Solve the carrier, signal and noise systems with sparse LU (SciPy SuperLU) when
+# `run_build_step` supplied static sparsity metadata. False keeps the dense path.
+SPARSE_SOLVES: bool = True
+
+
+def _sparse_values(system: SparseSystem, base_matrix, outputs):
+    """Structural-nonzero values after the builder's update scatter, shape (B, nnz_total)."""
+    base = system.base_values(base_matrix).astype(jnp.complex128)
+    values = jnp.broadcast_to(base, (outputs.shape[0], base.shape[0]))
+    return values.at[:, system.write_positions].set(
+        outputs.astype(jnp.complex128), unique_indices=system.unique_writes
+    )
+
+
+def _batched_outputs(parameters, function_input_indices, output_indices, function_indices, groups):
+    return vmap(_component_outputs, in_axes=(0, None, None, None, None))(
+        parameters, function_input_indices, output_indices, function_indices, groups
+    )
+
+
+def _simulate_sparse(
+    structure: SparseStructure,
+    component_groups,
+    parameters,
+    qhd_phase_values,
+    carrier_changing_parameter_indices,
+    carrier_changing_values,
+    signal_changing_parameter_indices,
+    signal_changing_values,
+    carrier_matrix,
+    signal_matrix,
+    noise_matrix,
+    noise_selection_vectors,
+    qhd_placing_indices,
+    carrier_function_input_indices,
+    carrier_function_indices,
+    carrier_output_indices,
+    signal_function_input_indices,
+    signal_function_indices,
+    signal_output_indices,
+    signal_carrier_indices,
+    noise_function_input_indices,
+    noise_function_indices,
+    noise_output_indices,
+):
+    """Sparse-value equivalent of the dense carrier/signal/noise pass in `simulate`.
+
+    Every dense matrix operation of the reference implementation is applied to the
+    structural nonzeros only: the base values, the same ordered update scatter, the
+    carrier scaling of signal connectors and the sideband conjugation. Entries
+    outside the static pattern are identically zero in the dense formulation.
+    """
+    groups = component_groups if component_groups is not None else {}
+
+    # Carrier solve.
+    parameters = expand_parameters(parameters, carrier_changing_parameter_indices, carrier_changing_values)
+    carrier_system = structure.carrier
+    carrier_outputs = _batched_outputs(
+        parameters,
+        carrier_function_input_indices,
+        carrier_output_indices,
+        carrier_function_indices,
+        groups.get("carrier"),
+    )
+    carrier_values = _sparse_values(carrier_system, carrier_matrix, carrier_outputs)
+    carrier_coefficients, carrier_rhs = carrier_system.split(carrier_values)
+    carrier = sparse_solve(carrier_system.pattern, False, carrier_coefficients, carrier_rhs[:, None, :])[:, 0]
+    carrier_size = carrier.shape[1]
+
+    # Signal assembly.
+    parameters = expand_parameters(parameters, signal_changing_parameter_indices, signal_changing_values)
+    signal_system = structure.signal
+    signal_outputs = _batched_outputs(
+        parameters,
+        signal_function_input_indices,
+        signal_output_indices,
+        signal_function_indices,
+        groups.get("signal"),
+    )
+    signal_values = _sparse_values(signal_system, signal_matrix, signal_outputs)
+    placing = structure.signal_placing_positions
+    signal_entries = (
+        -signal_values.at[:, placing].get(unique_indices=structure.unique_placing)
+        * carrier[:, signal_carrier_indices.flatten()]
+    )
+    signal_values = signal_values.at[:, placing].set(signal_entries, unique_indices=structure.unique_placing)
+    signal_values = jnp.where(structure.signal_conjugate, jnp.conjugate(signal_values), signal_values)
+    signal_coefficients, signal_rhs = signal_system.split(signal_values)
+    count = signal_coefficients.shape[0]
+    size = signal_system.size
+
+    # Detector selections (frequency independent).
+    noise_selection_vectors = lax.scatter_mul(
+        noise_selection_vectors,
+        qhd_placing_indices.reshape(-1, 3),
+        qhd_phase_values,
+        lax.ScatterDimensionNumbers(
+            update_window_dims=(),
+            inserted_window_dims=(0, 1, 2),
+            scatter_dims_to_operand_dims=(0, 1, 2),
+        ),
+        unique_indices=True,
+    )
+    noise_selection_vectors = jnp.tile(noise_selection_vectors, (1, carrier.shape[0], 1))
+    upper_carrier_selections = noise_selection_vectors[:, :, :carrier_size] * carrier
+    upper_carrier_selections = noise_selection_vectors.at[:, :, :carrier_size].set(upper_carrier_selections)
+    lower_carrier_selections = jnp.conjugate(
+        upper_carrier_selections[:, :, carrier_size : carrier_size * 2] * carrier
+    )
+    carrier_selections = upper_carrier_selections.at[:, :, carrier_size : carrier_size * 2].set(
+        lower_carrier_selections
+    )
+    detector_count = carrier_selections.shape[0]
+    carrier_selections = jnp.broadcast_to(carrier_selections, (detector_count, count, size))
+    row_selections = jnp.moveaxis(carrier_selections, 0, 1).astype(jnp.complex128)  # (B, D, N)
+
+    # Noise source matrix values; built once when no noise input changes per row.
+    noise_system = structure.noise
+    reuse_noise = NOISE_ROW_REUSE and "noise_row_reuse" in groups
+    noise_rows = parameters[:1] if reuse_noise else parameters
+    noise_outputs = _batched_outputs(
+        noise_rows,
+        noise_function_input_indices,
+        noise_output_indices,
+        noise_function_indices,
+        groups.get("noise"),
+    )
+    noise_values = _sparse_values(noise_system, noise_matrix, noise_outputs)
+
+    # Noise weights: A^H w = s, i.e. conj(A)^T w = s.
+    noise_weights = sparse_solve(signal_system.pattern, True, jnp.conjugate(signal_coefficients), row_selections)
+    noise_pattern = noise_system.pattern
+    contributions = noise_values[:, None, :] * noise_weights[:, :, noise_pattern.cols]
+    noise_sources = jnp.zeros((count, detector_count, noise_pattern.size), dtype=jnp.complex128)
+    noise_sources = noise_sources.at[:, :, noise_pattern.rows].add(contributions)
+
+    # Signal and covariance solves share A: one factorization, 1 + D right-hand sides.
+    solutions = sparse_solve(
+        signal_system.pattern,
+        False,
+        signal_coefficients,
+        jnp.concatenate([signal_rhs[:, None, :], noise_sources], axis=1),
+    )
+    signal = solutions[:, 0]
+    covariances = solutions[:, 1:]
+
+    temporary_sum = jnp.sum(jnp.real(covariances * jnp.conjugate(row_selections)), axis=2)
+    noise = jnp.sqrt(2 * temporary_sum * UNIT_VACUUM * H_PLANCK * F0 * 0.25).T
+    return carrier.T, signal.T, noise.squeeze()
+
+
+def _build_sparse_structure(simulation_arrays):
+    """Derive static sparsity metadata from concrete built arrays (host side)."""
+    def host(name):
+        value = simulation_arrays[name]
+        if isinstance(value, (tuple, list)):
+            return tuple(np.asarray(item) for item in value)
+        return np.asarray(value)
+
+    carrier_matrix = host("carrier_matrix")
+    signal_matrix = host("signal_matrix")
+    noise_matrix = host("noise_matrix")
+    carrier_rows, carrier_cols = host("carrier_matrix_indices")
+    signal_rows, signal_cols = host("signal_matrix_indices")
+    placing_rows, placing_cols = host("signal_carrier_placing_indices")
+    noise_rows, noise_cols = host("noise_system_matrix_indices")
+    carrier_size = carrier_matrix.shape[0]
+    if signal_matrix.shape[0] != noise_matrix.shape[0] or signal_matrix.shape[1] != signal_matrix.shape[0] + 1:
+        return None
+    if carrier_matrix.shape[1] != carrier_size + 1:
+        return None
+    carrier = SparseSystem(carrier_matrix, carrier_rows, carrier_cols)
+    signal = SparseSystem(signal_matrix, signal_rows, signal_cols, placing_rows, placing_cols)
+    noise = SparseSystem(noise_matrix, noise_rows, noise_cols)
+    placing = signal.positions(placing_rows, placing_cols)
+    unique_placing = np.unique(placing).size == placing.size
+    return SparseStructure(carrier, signal, noise, carrier_size, placing, unique_placing)
 
 
 def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):
@@ -982,6 +1202,10 @@ def run_build_step(
         group["diff_slots"] = diff_slots
 
     simulation_arrays["component_groups"] = component_groups
+    if SPARSE_SOLVES:
+        sparse_structure = _build_sparse_structure(simulation_arrays)
+        if sparse_structure is not None:
+            simulation_arrays["sparse_structure"] = sparse_structure
 
     if timeit:
         for array in simulation_arrays.values():
