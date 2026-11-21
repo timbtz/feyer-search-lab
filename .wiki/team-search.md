@@ -6,6 +6,10 @@ instructions. Each colleague uses their own Claude or Codex account locally and
 their own AMD evaluator. Qwen, SMAC, a model API, and a central server are **not
 required** for this workflow.
 
+The [expanded capacity policy](capacity.md) records the later authorization for
+additional broker-managed CPU lanes, fresh budgets and exploratory-only timing
+contexts. Final comparisons still require quiet serial confirmation.
+
 The Git branch [`control/team-search`](https://github.com/timbtz/feyer-search-lab/tree/control/team-search)
 is the shared task queue and scientific history. Its rendered README shows
 ownership and lineage; `state.json` contains the full machine-readable record.

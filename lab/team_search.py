@@ -41,6 +41,7 @@ def initial_state(coordinator):
 def eligible(state, sha, instance=None, cohort=None):
     return [o for o in state['observations'].values()
             if o['evidence']['candidate_sha'] == sha and o['evidence']['eligible_full']
+            and o.get('comparison_context', {}).get('mode', 'serial') == 'serial'
             and (instance is None or o['instance'] == instance)
             and (cohort is None or o['evidence']['cohort_digest'] == cohort)]
 
@@ -72,6 +73,11 @@ def assess(state, task_id, sha, instance, cohort):
     result = dict(candidate_sha=sha, instance=instance, cohort=cohort,
                   counts={s: len(rows) for s, rows in samples.items()},
                   minimum_full_runs=minimum, classification='needs_confirmation')
+    excluded = [o['evidence']['job_id'] for o in state['observations'].values()
+                if o['instance'] == instance and o['evidence']['candidate_sha'] in targets
+                and o['evidence']['cohort_digest'] == cohort
+                and o.get('comparison_context', {}).get('mode', 'serial') != 'serial']
+    result['exploratory_jobs_excluded'] = excluded
     failures = [o['evidence']['job_id'] for o in state['observations'].values()
                 if o['instance'] == instance and o['evidence']['candidate_sha'] in targets
                 and o['evidence']['cohort_digest'] == cohort
@@ -80,6 +86,8 @@ def assess(state, task_id, sha, instance, cohort):
         result.update(classification='numerical_review_required', invalid_jobs=failures)
         return result
     if any(len(rows) < minimum for rows in samples.values()):
+        if excluded:
+            result['classification'] = 'needs_serial_confirmation'
         return result
     totals = {s: statistics.median(o['evidence']['metrics']['total'] for o in rows)
               for s, rows in samples.items()}
@@ -114,7 +122,16 @@ def apply(state, command, actor, data, now=None):
     state = copy.deepcopy(state)
     actor = name(actor)
     now = time.time() if now is None else now
-    if command == 'add':
+    if command == 'comparison-regime':
+        if actor != state['coordinator']:
+            raise ValueError('Only the coordinator changes the comparison regime')
+        if data.get('mode') not in ('serial', 'concurrent'):
+            raise ValueError('Unknown comparison regime')
+        if any(not isinstance(data.get(k), str) or not data[k].strip() for k in ('reason', 'receipt')):
+            raise ValueError('A resource receipt and concrete transition reason are required')
+        state['comparison_regime'] = dict(data, changed_at=now, epoch=len(state['events']) + 1)
+        output = state['comparison_regime']
+    elif command == 'add':
         if actor != state['coordinator']:
             raise ValueError('Only the coordinator admits work')
         task = copy.deepcopy(data)
@@ -219,6 +236,9 @@ def apply(state, command, actor, data, now=None):
         output = task
     elif command == 'record':
         observation = copy.deepcopy(data['observation'])
+        # The coordinator's execution regime, not an importer-supplied label,
+        # determines whether new timing evidence can enter a comparison.
+        observation.pop('comparison_context', None)
         from .evolution_evidence import normalize_job
         if observation['evidence'] != normalize_job(observation['job']):
             raise ValueError('Evidence must match the trusted job normalization')
@@ -227,9 +247,20 @@ def apply(state, command, actor, data, now=None):
         name(observation['instance'])
         previous = state['observations'].get(key)
         if previous:
-            if previous != observation:
+            original = {k: v for k, v in previous.items() if k != 'comparison_context'}
+            if original != observation:
                 raise ValueError('Job identity already has different evidence')
             return state, previous
+        regime = state.get('comparison_regime')
+        if regime:
+            mode = regime['mode']
+            started = observation['job'].get('started_at')
+            # Switching back to serial must not admit late arrivals from the
+            # overlapping epoch. Only a new, timestamped job can confirm timing.
+            if mode == 'serial' and (not finite_positive(started) or started < regime['changed_at']):
+                mode = 'unverified_timing'
+            observation['comparison_context'] = dict(mode=mode, epoch=regime['epoch'],
+                                                     receipt=regime['receipt'])
         task_id = observation.get('task')
         if task_id:
             task = state['tasks'][task_id]
@@ -268,6 +299,12 @@ def render(state):
     for t in state['tasks'].values():
         lines.append(f"| {t['id']} | {t['kind']} | {t['status']} | {t['owner'] or '—'} / {t['instance'] or '—'} | "
                      + ', '.join(s[:12] for s in t['parents']) + ' |')
+    regime = state.get('comparison_regime')
+    if regime:
+        lines += ['', '## Comparison regime', '',
+                  f"Current mode: **{regime['mode']}**, epoch {regime['epoch']}.", '',
+                  'Concurrent and unverified timing imports are exploratory and excluded from winner assessment.',
+                  '', f"Receipt: {regime['receipt']}", '', regime['reason']]
     lines += ['', '## Scientific lineage', '', '```mermaid', 'graph TD']
     shas = sorted({s for t in state['tasks'].values() for s in t['parents'] + t['candidates']})
     ids = {s: f'c{i}' for i, s in enumerate(shas)}
@@ -379,6 +416,10 @@ def main(argv=None):
     sub.add_parser('init')
     sub.add_parser('list')
     sub.add_parser('next')
+    regime = sub.add_parser('comparison-regime')
+    regime.add_argument('--mode', choices=('serial', 'concurrent'), required=True)
+    regime.add_argument('--reason', required=True)
+    regime.add_argument('--receipt', required=True)
     add = sub.add_parser('add'); add.add_argument('--spec', type=Path, required=True)
     claim = sub.add_parser('claim'); claim.add_argument('task'); claim.add_argument('--instance', required=True)
     candidate = sub.add_parser('candidate'); candidate.add_argument('task')
@@ -404,6 +445,8 @@ def main(argv=None):
     else:
         data = {}
         if args.command == 'add': data = json.loads(args.spec.read_text())
+        elif args.command == 'comparison-regime':
+            data = dict(mode=args.mode, reason=args.reason, receipt=args.receipt)
         elif args.command == 'claim': data = dict(task=args.task, instance=args.instance, claim_id=uuid.uuid4().hex)
         elif args.command == 'candidate':
             data = dict(task=args.task, sha=args.sha, claim_id=args.claim_id, code_branch=args.code_branch)
@@ -415,7 +458,8 @@ def main(argv=None):
             job = json.loads(args.job.read_text())
             # Logs may contain unrelated private content; publish numerical/source
             # evidence only. Never dump local environment or provider transcripts.
-            job = {key: job[key] for key in ('id', 'sha', 'profile', 'status', 'result', 'report.json', 'comparison.json') if key in job}
+            job = {key: job[key] for key in ('id', 'sha', 'profile', 'status', 'started_at', 'finished_at',
+                                           'result', 'report.json', 'comparison.json') if key in job}
             evidence = normalize_job(job)
             data = dict(claim_id=args.claim_id, observation=dict(instance=name(args.instance),
                         task=args.task, evidence=evidence, job=job))

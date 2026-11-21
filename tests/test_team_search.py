@@ -124,6 +124,42 @@ class TeamSearchTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             assess(self.state, 'solver', 'e' * 40, 'amd-a', cohort)
 
+    def test_concurrent_full_passes_are_not_serial_comparisons(self):
+        self.state['tasks']['solver']['candidates'] = [CHILD]
+        self.state, _ = apply(self.state, 'comparison-regime', 'coordinator', dict(
+            mode='concurrent', reason='Two lanes admitted', receipt='capacity-epoch-1.json'), now=100)
+        for sha, total in ((PARENT, 30), (CHILD, 25)):
+            for i in range(3):
+                obs = observation(sha, sha[:1] + str(i), total)
+                obs['comparison_context'] = {'mode':'serial'}  # cannot override the shared regime
+                self.state, _ = apply(self.state, 'record', 'coordinator', dict(observation=obs))
+        cohort = obs['evidence']['cohort_digest']
+        result = assess(self.state, 'solver', CHILD, 'amd-a', cohort)
+        self.assertEqual(result['classification'], 'needs_serial_confirmation')
+        self.assertEqual(len(result['exploratory_jobs_excluded']), 6)
+        self.assertTrue(all(o['evidence']['eligible_full'] for o in self.state['observations'].values()))
+        self.state, _ = apply(self.state, 'comparison-regime', 'coordinator', dict(
+            mode='serial', reason='All lanes and jobs drained', receipt='drained.json'), now=200)
+        repeated, _ = apply(self.state, 'record', 'coordinator', dict(observation=obs))
+        self.assertEqual(repeated, self.state)  # retry cannot relabel earlier evidence
+        for suffix, start in [('late', 150), ('missing', None), ('fresh', 201)]:
+            row = observation(CHILD, suffix, 25)
+            if start is not None:
+                row['job']['started_at'] = start
+                row['evidence'] = normalize_job(row['job'])
+            self.state, _ = apply(self.state, 'record', 'coordinator', dict(observation=row))
+        self.assertEqual(self.state['observations']['amd-a:late']['comparison_context']['mode'], 'unverified_timing')
+        self.assertEqual(self.state['observations']['amd-a:missing']['comparison_context']['mode'], 'unverified_timing')
+        self.assertEqual(self.state['observations']['amd-a:fresh']['comparison_context']['mode'], 'serial')
+
+    def test_regime_requires_coordinator_receipt_and_reason(self):
+        data = dict(mode='concurrent', reason='New lanes', receipt='receipt.json')
+        with self.assertRaises(ValueError):
+            apply(self.state, 'comparison-regime', 'alice', data)
+        for invalid in ({**data, 'mode':'unknown'}, {**data, 'receipt':''}, {**data, 'reason':''}):
+            with self.assertRaises(ValueError):
+                apply(self.state, 'comparison-regime', 'coordinator', invalid)
+
     def test_cycles_rejected(self):
         self.claim()
         self.state, _ = apply(self.state, 'candidate', 'alice', dict(task='solver', sha=CHILD,
