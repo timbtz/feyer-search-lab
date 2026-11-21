@@ -352,14 +352,25 @@ def simulate(
 
     # Apply conjugation rules to enforce upper and lower sideband symmetry.
     carrier_size = carrier.shape[1]
-    signal_matrix = signal_matrix.at[:, carrier_size : carrier_size * 2, carrier_size : carrier_size * 2].set(
-        jnp.conjugate(signal_matrix[:, carrier_size : carrier_size * 2, carrier_size : carrier_size * 2])
+    # The two conjugated blocks in the middle row are adjacent (including the
+    # RHS column). Assemble disjoint blocks rather than scattering three large
+    # slices into full matrices and retaining those updates for reverse AD.
+    middle_rows = jnp.concatenate(
+        (
+            signal_matrix[:, carrier_size : carrier_size * 2, :carrier_size],
+            jnp.conjugate(signal_matrix[:, carrier_size : carrier_size * 2, carrier_size:]),
+        ),
+        axis=2,
     )
-    signal_matrix = signal_matrix.at[:, carrier_size * 2 :, :carrier_size].set(
-        jnp.conjugate(signal_matrix[:, carrier_size * 2 :, :carrier_size])
+    bottom_rows = jnp.concatenate(
+        (
+            jnp.conjugate(signal_matrix[:, carrier_size * 2 :, :carrier_size]),
+            signal_matrix[:, carrier_size * 2 :, carrier_size:],
+        ),
+        axis=2,
     )
-    signal_matrix = signal_matrix.at[:, carrier_size : carrier_size * 2, carrier_size * 2 :].set(
-        jnp.conjugate(signal_matrix[:, carrier_size : carrier_size * 2, carrier_size * 2 :])
+    signal_matrix = jnp.concatenate(
+        (signal_matrix[:, :carrier_size, :], middle_rows, bottom_rows), axis=1
     )
 
     signal_system = signal_matrix[:, :, :-1]

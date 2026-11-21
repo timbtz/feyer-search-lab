@@ -116,3 +116,38 @@ last fully validated candidate. All checks and workloads remain unchanged.
 
 Local checks: AST parsing and git diff --check passed. No local numerical check
 or benchmark; supervisor evaluation pending.
+
+### Candidate 3 evaluator outcome: validated
+
+SHA `496ccefe934a87e55e695db450f24520bd47fbac`; screen
+`731decb118644bb3b01497d23bcf3db0`: 27.316873 s, limited checks passed.
+Full `d8e402872b1d40fbac3aeb9ab7490894`: official AND strict regression passed.
+First run 27.188263 s; warm median 14.067015 s; job wall 109.401669 s;
+peak RSS 12,677,304 KiB. Forward lower/compile/execute
+0.808863 / 8.056939 / 11.153533 s; gradient lower/compile/execute
+0.218092 / 2.589088 / 2.772124 s. Build 0.721193 s.
+
+Official max log sensitivity error 5.374104176780747e-6; gradient norm
+70517.10686388786; finite-difference checks passed with the same values as
+candidate 1. Strict saved physical outputs, parameters, and frequencies exact;
+gradient max absolute error 2.6020852139652106e-18, relative L2
+3.69040600052152e-23, maximum normalized error 4.5036895692410154e-11.
+The independent adjoint factorization repaired candidate 2's discrepancy.
+Candidate 3 is the current validated working basis. Its recorded first run is
+1.147006 s lower than candidate 1's; shared-host observations are exploratory.
+
+## Candidate 4: assemble conjugated matrix blocks directly
+
+Replace three dense slice scatters in the sideband conjugation step with
+concatenation of disjoint blocks. Middle-row conjugated blocks are adjacent,
+including the RHS, so they can be conjugated together. The top rows and other
+blocks retain exactly the original values. No solve or physical formula changes.
+
+Hypothesis (unmeasured): simpler block assembly reduces large scatter lowering,
+compilation, and reverse-AD memory traffic. Candidate 3 still spends about
+8 seconds compiling the forward stage and 11 seconds executing it.
+
+Local validation: Python AST parsing, git diff --check, and nine pure-Python
+complex block-partition equivalence cases passed (including empty mechanical
+blocks and the RHS column). JAX/full numerical validation awaits supervisor;
+no benchmark was run locally.
