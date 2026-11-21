@@ -1,0 +1,750 @@
+{
+  "source_commit": "b093f74efa76c6457ffef04ccb6c27436524565d",
+  "scope": "acceptance logic only; no physics or JAX executed",
+  "cases": {
+    "nan_candidate": {
+      "original_final_line": "OVERALL COMPATIBLE",
+      "hardened": {
+        "status": "failed",
+        "passed": false,
+        "setup": "voyager",
+        "required_tests": [
+          "value_and_grad_jit",
+          "descent_3_steps",
+          "vmap_value_and_grad",
+          "jvp",
+          "jacfwd_2",
+          "hvp_fwd_over_rev",
+          "hvp_rev_over_rev",
+          "eager_value_and_grad",
+          "public_run",
+          "checkpoint_grad",
+          "second_setup_same_process"
+        ],
+        "tolerance": 1e-06,
+        "checks": [
+          {
+            "test": "value_and_grad_jit",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: nonfinite numeric value"
+            ],
+            "passed": false
+          },
+          {
+            "test": "descent_3_steps",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: nonfinite numeric value"
+            ],
+            "passed": false
+          },
+          {
+            "test": "vmap_value_and_grad",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: nonfinite numeric value"
+            ],
+            "passed": false
+          },
+          {
+            "test": "jvp",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: nonfinite numeric value"
+            ],
+            "passed": false
+          },
+          {
+            "test": "jacfwd_2",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: nonfinite numeric value"
+            ],
+            "passed": false
+          },
+          {
+            "test": "hvp_fwd_over_rev",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: nonfinite numeric value"
+            ],
+            "passed": false
+          },
+          {
+            "test": "hvp_rev_over_rev",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: nonfinite numeric value"
+            ],
+            "passed": false
+          },
+          {
+            "test": "eager_value_and_grad",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: nonfinite numeric value"
+            ],
+            "passed": false
+          },
+          {
+            "test": "public_run",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: nonfinite numeric value"
+            ],
+            "passed": false
+          },
+          {
+            "test": "checkpoint_grad",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: nonfinite numeric value"
+            ],
+            "passed": false
+          },
+          {
+            "test": "second_setup_same_process",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: nonfinite numeric value"
+            ],
+            "passed": false
+          }
+        ],
+        "issues": []
+      }
+    },
+    "shape_changed": {
+      "original_final_line": "OVERALL COMPATIBLE",
+      "hardened": {
+        "status": "failed",
+        "passed": false,
+        "setup": "voyager",
+        "required_tests": [
+          "value_and_grad_jit",
+          "descent_3_steps",
+          "vmap_value_and_grad",
+          "jvp",
+          "jacfwd_2",
+          "hvp_fwd_over_rev",
+          "hvp_rev_over_rev",
+          "eager_value_and_grad",
+          "public_run",
+          "checkpoint_grad",
+          "second_setup_same_process"
+        ],
+        "tolerance": 1e-06,
+        "checks": [
+          {
+            "test": "value_and_grad_jit",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: shape differs ((2,) != (1, 2))"
+            ],
+            "passed": false
+          },
+          {
+            "test": "descent_3_steps",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: shape differs ((2,) != (1, 2))"
+            ],
+            "passed": false
+          },
+          {
+            "test": "vmap_value_and_grad",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: shape differs ((2,) != (1, 2))"
+            ],
+            "passed": false
+          },
+          {
+            "test": "jvp",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: shape differs ((2,) != (1, 2))"
+            ],
+            "passed": false
+          },
+          {
+            "test": "jacfwd_2",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: shape differs ((2,) != (1, 2))"
+            ],
+            "passed": false
+          },
+          {
+            "test": "hvp_fwd_over_rev",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: shape differs ((2,) != (1, 2))"
+            ],
+            "passed": false
+          },
+          {
+            "test": "hvp_rev_over_rev",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: shape differs ((2,) != (1, 2))"
+            ],
+            "passed": false
+          },
+          {
+            "test": "eager_value_and_grad",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: shape differs ((2,) != (1, 2))"
+            ],
+            "passed": false
+          },
+          {
+            "test": "public_run",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: shape differs ((2,) != (1, 2))"
+            ],
+            "passed": false
+          },
+          {
+            "test": "checkpoint_grad",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: shape differs ((2,) != (1, 2))"
+            ],
+            "passed": false
+          },
+          {
+            "test": "second_setup_same_process",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "value: shape differs ((2,) != (1, 2))"
+            ],
+            "passed": false
+          }
+        ],
+        "issues": []
+      }
+    },
+    "missing_leaf": {
+      "original_final_line": "OVERALL COMPATIBLE",
+      "hardened": {
+        "status": "failed",
+        "passed": false,
+        "setup": "voyager",
+        "required_tests": [
+          "value_and_grad_jit",
+          "descent_3_steps",
+          "vmap_value_and_grad",
+          "jvp",
+          "jacfwd_2",
+          "hvp_fwd_over_rev",
+          "hvp_rev_over_rev",
+          "eager_value_and_grad",
+          "public_run",
+          "checkpoint_grad",
+          "second_setup_same_process"
+        ],
+        "tolerance": 1e-06,
+        "checks": [
+          {
+            "test": "value_and_grad_jit",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "descent_3_steps",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "vmap_value_and_grad",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "jvp",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "jacfwd_2",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "hvp_fwd_over_rev",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "hvp_rev_over_rev",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "eager_value_and_grad",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "public_run",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "checkpoint_grad",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "second_setup_same_process",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          }
+        ],
+        "issues": []
+      }
+    },
+    "renamed_key": {
+      "original_final_line": "OVERALL COMPATIBLE",
+      "hardened": {
+        "status": "failed",
+        "passed": false,
+        "setup": "voyager",
+        "required_tests": [
+          "value_and_grad_jit",
+          "descent_3_steps",
+          "vmap_value_and_grad",
+          "jvp",
+          "jacfwd_2",
+          "hvp_fwd_over_rev",
+          "hvp_rev_over_rev",
+          "eager_value_and_grad",
+          "public_run",
+          "checkpoint_grad",
+          "second_setup_same_process"
+        ],
+        "tolerance": 1e-06,
+        "checks": [
+          {
+            "test": "value_and_grad_jit",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "descent_3_steps",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "vmap_value_and_grad",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "jvp",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "jacfwd_2",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "hvp_fwd_over_rev",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "hvp_rev_over_rev",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "eager_value_and_grad",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "public_run",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "checkpoint_grad",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          },
+          {
+            "test": "second_setup_same_process",
+            "status": "failed",
+            "max_relative_difference": null,
+            "issues": [
+              "numeric tree keys or leaf counts differ"
+            ],
+            "passed": false
+          }
+        ],
+        "issues": []
+      }
+    },
+    "empty_inventory": {
+      "original_final_line": "OVERALL COMPATIBLE",
+      "hardened": {
+        "status": "failed",
+        "passed": false,
+        "setup": "voyager",
+        "required_tests": [
+          "value_and_grad_jit",
+          "descent_3_steps",
+          "vmap_value_and_grad",
+          "jvp",
+          "jacfwd_2",
+          "hvp_fwd_over_rev",
+          "hvp_rev_over_rev",
+          "eager_value_and_grad",
+          "public_run",
+          "checkpoint_grad",
+          "second_setup_same_process"
+        ],
+        "tolerance": 1e-06,
+        "checks": [
+          {
+            "test": "value_and_grad_jit",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value",
+              "candidate: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "descent_3_steps",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value",
+              "candidate: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "vmap_value_and_grad",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value",
+              "candidate: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "jvp",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value",
+              "candidate: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "jacfwd_2",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value",
+              "candidate: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "hvp_fwd_over_rev",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value",
+              "candidate: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "hvp_rev_over_rev",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value",
+              "candidate: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "eager_value_and_grad",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value",
+              "candidate: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "public_run",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value",
+              "candidate: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "checkpoint_grad",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value",
+              "candidate: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "second_setup_same_process",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value",
+              "candidate: missing, failed, or missing value"
+            ]
+          }
+        ],
+        "issues": [
+          "reference: test inventory differs from required eleven tests",
+          "candidate: test inventory differs from required eleven tests"
+        ]
+      }
+    },
+    "failed_reference": {
+      "original_final_line": "OVERALL COMPATIBLE",
+      "hardened": {
+        "status": "failed",
+        "passed": false,
+        "setup": "voyager",
+        "required_tests": [
+          "value_and_grad_jit",
+          "descent_3_steps",
+          "vmap_value_and_grad",
+          "jvp",
+          "jacfwd_2",
+          "hvp_fwd_over_rev",
+          "hvp_rev_over_rev",
+          "eager_value_and_grad",
+          "public_run",
+          "checkpoint_grad",
+          "second_setup_same_process"
+        ],
+        "tolerance": 1e-06,
+        "checks": [
+          {
+            "test": "value_and_grad_jit",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "descent_3_steps",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "vmap_value_and_grad",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "jvp",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "jacfwd_2",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "hvp_fwd_over_rev",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "hvp_rev_over_rev",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "eager_value_and_grad",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "public_run",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "checkpoint_grad",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value"
+            ]
+          },
+          {
+            "test": "second_setup_same_process",
+            "status": "unavailable",
+            "max_relative_difference": null,
+            "issues": [
+              "reference: missing, failed, or missing value"
+            ]
+          }
+        ],
+        "issues": []
+      }
+    }
+  },
+  "mismatch_cli": {
+    "returncode": 0,
+    "final_line": "OVERALL INCOMPATIBLE OR DIFFERENT"
+  },
+  "toy_loop": {
+    "wrong": "wrong              ok   max rel diff vs dense 9.9e+01",
+    "nonfinite": "nonfinite          ok   max rel diff vs dense nan"
+  }
+}

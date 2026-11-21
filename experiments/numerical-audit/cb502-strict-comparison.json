@@ -1,0 +1,106 @@
+{
+  "status": "failed",
+  "passed": false,
+  "setup": "voyager",
+  "required_tests": [
+    "value_and_grad_jit",
+    "descent_3_steps",
+    "vmap_value_and_grad",
+    "jvp",
+    "jacfwd_2",
+    "hvp_fwd_over_rev",
+    "hvp_rev_over_rev",
+    "eager_value_and_grad",
+    "public_run",
+    "checkpoint_grad",
+    "second_setup_same_process"
+  ],
+  "tolerance": 1e-06,
+  "checks": [
+    {
+      "test": "value_and_grad_jit",
+      "status": "passed",
+      "max_relative_difference": 2.357093384974352e-13,
+      "issues": [],
+      "passed": true
+    },
+    {
+      "test": "descent_3_steps",
+      "status": "unavailable",
+      "max_relative_difference": null,
+      "issues": [
+        "candidate: missing, failed, or missing value"
+      ]
+    },
+    {
+      "test": "vmap_value_and_grad",
+      "status": "failed",
+      "max_relative_difference": null,
+      "issues": [
+        "value: nonfinite numeric value"
+      ],
+      "passed": false
+    },
+    {
+      "test": "jvp",
+      "status": "unavailable",
+      "max_relative_difference": null,
+      "issues": [
+        "candidate: missing, failed, or missing value"
+      ]
+    },
+    {
+      "test": "jacfwd_2",
+      "status": "unavailable",
+      "max_relative_difference": null,
+      "issues": [
+        "candidate: missing, failed, or missing value"
+      ]
+    },
+    {
+      "test": "hvp_fwd_over_rev",
+      "status": "unavailable",
+      "max_relative_difference": null,
+      "issues": [
+        "candidate: missing, failed, or missing value"
+      ]
+    },
+    {
+      "test": "hvp_rev_over_rev",
+      "status": "unavailable",
+      "max_relative_difference": null,
+      "issues": [
+        "candidate: missing, failed, or missing value"
+      ]
+    },
+    {
+      "test": "eager_value_and_grad",
+      "status": "passed",
+      "max_relative_difference": 2.3462211830141287e-13,
+      "issues": [],
+      "passed": true
+    },
+    {
+      "test": "public_run",
+      "status": "passed",
+      "max_relative_difference": 2.540200919489761e-13,
+      "issues": [],
+      "passed": true
+    },
+    {
+      "test": "checkpoint_grad",
+      "status": "passed",
+      "max_relative_difference": 2.357093384974352e-13,
+      "issues": [],
+      "passed": true
+    },
+    {
+      "test": "second_setup_same_process",
+      "status": "passed",
+      "max_relative_difference": 7.979251156003197e-10,
+      "issues": [],
+      "passed": true
+    }
+  ],
+  "issues": []
+}
