@@ -109,3 +109,20 @@
   noise, sensitivity, powers; gradient max rel 1.7e-15. Cross-setup vs candidate 2: forward
   outputs bitwise identical on all 8 setups; gradient relL2 <= 8e-17; every case 0.4-0.7 s
   faster (harness first-run excl. imports, e.g. dev 8.12 -> 7.45 s, voyager 7.88 -> 7.10 s).
+- SHA `ac49ee4dcc23443f5ffdf4eb740fcdc2e09b1ff7`. Screen `3f07f5a979a54981b7c1d4075e4e571e`:
+  7.733 s. Full `4f57030fada14a84b5d2eb30d61cd277`: **official PASS**, strict FAIL (same
+  failure class as candidate 2); first run **7.738 s**.
+- Candidate 2 repeat full `6b9deb9657e64992bf65e562ee77b670` (same SHA 4af20b7): 8.634 s
+  (first sample 8.639 s) — two samples 0.005 s apart.
+
+## Rejected experiment — rematerialized component evaluation (flag COMPONENT_REMAT, off)
+- Dev A/B: forward vjp compile 4.50 -> 3.25 s, gradient compile 1.07 -> 3.25 s: net +0.9 s.
+
+## Candidate 4 — candidate 3 + joint evaluation of lower variants with their base
+- `JOINT_LOWER_GROUPS`: `space`+`space_lower`, `space_modulation`+`space_modulation_lower`
+  (and laser frequency modulation when present) evaluated by the base function on
+  concatenated rows with slot 0 negated for the lower rows; gradient-stop masks are the OR of
+  both groups' masks.
+- Dev A/B: forward vjp compile 4.41 -> 4.07 s; gradient compile 1.07 -> 1.04 s.
+- Numerics: forward outputs bitwise identical to candidate 3 on all 8 setups; gradient relL2
+  <= 6.7e-17. Harness first run (excl. imports) 0.1-0.5 s lower per case (dev 7.45 -> 6.91 s).

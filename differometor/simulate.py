@@ -699,9 +699,10 @@ def _sparse_values(system: SparseSystem, base_matrix, outputs):
 
 def _batched_outputs(parameters, function_input_indices, output_indices, function_indices, groups, indices=None):
     if SHARED_COMPONENT_COLUMNS and indices is not None and groups is not None and "output_rows" in groups:
-        return vmap(_shared_component_outputs, in_axes=(0, None, None, None))(
-            parameters, output_indices, groups, indices
-        )
+        evaluate = vmap(_shared_component_outputs, in_axes=(0, None, None, None))
+        if COMPONENT_REMAT:
+            evaluate = jax.checkpoint(evaluate, prevent_cse=False, static_argnums=(2, 3))
+        return evaluate(parameters, output_indices, groups, indices)
     return vmap(_component_outputs, in_axes=(0, None, None, None, None))(
         parameters, function_input_indices, output_indices, function_indices, groups
     )
@@ -713,6 +714,13 @@ def _batched_outputs(parameters, function_input_indices, output_indices, functio
 # identical operands and XLA's common-subexpression elimination can merge them.
 # The arithmetic of every component is unchanged.
 SHARED_COMPONENT_COLUMNS: bool = True
+# Rematerialize shared component evaluation in the reverse pass (experiment flag).
+# Measured (dev, CPU 100): forward vjp compile 4.50 -> 3.25 s but gradient compile
+# 1.07 -> 3.25 s, a net loss; keep False.
+COMPONENT_REMAT: bool = False
+# Evaluate each `*_lower` variant together with its base function on concatenated
+# rows (slot 0 negated for the lower rows), halving those groups' kernels.
+JOINT_LOWER_GROUPS: bool = True
 
 
 def _shared_component_outputs(parameters, output_indices, groups, indices):
@@ -725,19 +733,60 @@ def _shared_component_outputs(parameters, output_indices, groups, indices):
             columns[key] = parameters[index_column]
         return columns[key]
 
-    group_values = []
     diff_slots = groups.get("diff_slots")
-    for function_index in sorted(groups["function_rows"]):
+    present = sorted(groups["function_rows"])
+
+    def slots_of(function_index):
+        group_indices = indices[function_index]
+        return tuple(column(np.ascontiguousarray(group_indices[:, slot])) for slot in range(group_indices.shape[1]))
+
+    def mask_of(function_index, count):
+        if COMPONENT_SLOT_PRUNING and diff_slots is not None and function_index in diff_slots:
+            return tuple(slot in diff_slots[function_index] for slot in range(count))
+        return (True,) * count
+
+    # Pair lower variants with their base function when both are present with 2-D inputs.
+    joint = {}
+    if JOINT_LOWER_GROUPS and LOWER_SLOT_PRUNING:
+        for function_index in present:
+            base = _LOWER_TO_BASE.get(FUNCTIONS[function_index])
+            if base is None:
+                continue
+            base_index = FUNCTIONS.index(base)
+            if (
+                base_index in present
+                and indices[function_index].ndim == 2
+                and indices[base_index].ndim == 2
+                and indices[function_index].shape[1] == indices[base_index].shape[1]
+                and indices[function_index].shape[1] > 0
+            ):
+                joint[base_index] = function_index
+
+    results = {}
+    for function_index in present:
+        if function_index in results:
+            continue
         group_indices = indices[function_index]
         if group_indices.ndim != 2:
-            group_values.append(_evaluate_component_group(function_index, parameters[group_indices]))
+            results[function_index] = _evaluate_component_group(function_index, parameters[group_indices])
             continue
-        slots = tuple(column(np.ascontiguousarray(group_indices[:, slot])) for slot in range(group_indices.shape[1]))
-        if COMPONENT_SLOT_PRUNING and diff_slots is not None and function_index in diff_slots:
-            differentiable = tuple(slot in diff_slots[function_index] for slot in range(len(slots)))
-        else:
-            differentiable = (True,) * len(slots)
-        group_values.append(_evaluate_component_columns(function_index, differentiable, slots))
+        if function_index in joint:
+            lower_index = joint[function_index]
+            base_slots, lower_slots = slots_of(function_index), slots_of(lower_index)
+            count = len(base_slots)
+            keep = tuple(a or b for a, b in zip(mask_of(function_index, count), mask_of(lower_index, count)))
+            joint_columns = [jnp.concatenate([base_slots[0], -lower_slots[0]], axis=0)]
+            joint_columns += [jnp.concatenate([b, l], axis=0) for b, l in zip(base_slots[1:], lower_slots[1:])]
+            joint_columns = tuple(value if k else lax.stop_gradient(value) for value, k in zip(joint_columns, keep))
+            function = FUNCTIONS[function_index]
+            values = vmap(lambda *items: function(_ParameterSlots(items)))(*joint_columns)
+            rows = base_slots[0].shape[0]
+            results[function_index] = values[:rows]
+            results[lower_index] = values[rows:]
+            continue
+        slots = slots_of(function_index)
+        results[function_index] = _evaluate_component_columns(function_index, mask_of(function_index, len(slots)), slots)
+    group_values = [results[function_index] for function_index in present]
     output_matrix = jnp.concatenate(group_values, axis=0)
     output_rows = groups["output_rows"][output_indices[0]]
     return output_matrix[output_rows, output_indices[1]]
