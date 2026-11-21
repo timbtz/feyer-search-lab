@@ -9,7 +9,7 @@ From a checkout containing `lab/live_dashboard.py`:
 ```bash
 python3 -m lab.live_dashboard \
   --repo '/Users/t.betz/Documents/Feyer challenge' \
-  --port 8765 --sync-remote
+  --port 8765 --sync-remote --sync-team
 ```
 
 Open <http://localhost:8765>. `--repo` points to the main repository holding `.lab`, even when the dashboard runs from an isolated worktree. `--sync-remote` uses the existing `amd-hackathon` SSH configuration to read queue records; omit it for an offline view. The server only binds `127.0.0.1`, provides no mutation endpoints, and refreshes browser data every five seconds. Remote queue polling is every fifteen seconds after the previous poll finishes. It never launches benchmarks or models.
@@ -20,7 +20,7 @@ Stop the foreground server with Ctrl-C. This only stops the dashboard; it does n
 
 ## Interface and design system
 
-The interface has three views: **Overview** for current work and comparable outcomes, **How it works** for a selectable five-step walkthrough, and **Results** for full measurements and implementation history. Raw event records, queue payloads and bounded log tails are behind **Technical details**. Individual results expose phase timings, validation records, SMAC acquisition ranks, and GitHub links on demand.
+The default **Search graph** fills the workspace with an automatically laid out DAG. It maps recorded research workers and model invocations, frozen topology/operator spaces, small-parameter search lanes, candidate ancestry, research guidance, and optional individual evaluations. **Overview**, **How it works**, and **Results** remain supporting reports. The graph is a read-only map; it has no node dragging, connection editing, or workflow construction. Raw event records, queue payloads and bounded log tails are behind **Technical details**. Individual results expose phase timings, validation records, SMAC acquisition ranks, and GitHub links on demand.
 
 The frontend uses the actual [Porsche Design System v4](https://designsystem.porsche.com/v4/), pinned to `@porsche-design-system/components-js@4.10.1`, with Feyer branding. The official loader and global CSS are generated without modification from the npm package. Component chunks and font resources load from `https://cdn.ui.porsche.com`; the server permits only that additional asset origin in its CSP. Local campaign data stays on the existing localhost API. No Porsche logo, crest or wordmark is used. The package license and third-party notices are retained in `lab/dashboard`.
 
@@ -36,7 +36,7 @@ If the design-system CDN is unavailable, native navigation and readable content 
 
 ## How the system fits together
 
-The scientific lineage is a directed acyclic graph: immutable candidate commits point to their parent candidates. The execution pipeline has feedback: a completed evaluation informs the next proposal. The walkthrough explains the execution steps; the result detail shows parent-to-candidate history. Feedback is a decision to create a subsequent attempt, not a backwards edge in source ancestry.
+The scientific lineage is a directed acyclic graph: immutable candidate commits point to their parent candidates. The execution pipeline has feedback: a completed evaluation informs the next proposal. Solid graph edges represent explicit recorded dependencies (including all combination parents, model-call provenance, research starting points, and exact candidate evaluations). Dashed edges show grouping or lane membership, not scientific ancestry. Worker identity is linked only by recorded IDs, session IDs, or historical branch identity. Unlinked workers remain visible without an invented candidate relationship. The view distinguishes research proposals from admitted search spaces and validated candidates; it does not claim to reconstruct the simulator’s internal computational graph from source code. Feedback is a decision to create a subsequent attempt, not a backwards edge in source ancestry.
 
 1. A coordinator assigns a bounded task to headless Codex or Claude. Strong agents investigate an approach and propose code or a future operator. Qwen is optional for narrow tasks.
 2. Reviewed operators become a frozen round: legal parameters, constraints, parent candidates, objective, ownership and budget are recorded before search begins. The 193 physical variables and 101 frequencies remain fixed workload requirements.
@@ -48,6 +48,24 @@ The scientific lineage is a directed acyclic graph: immutable candidate commits 
 8. A lane's frozen stall limit or exhaustion leads to a coordinator decision. The default is three terminal non-improvements; finite enumeration can explicitly use a different frozen limit. New operators require a new reviewed round. Deadlines are not silently extended.
 
 The Mac runs the local controller, dashboard and authorized local agent sessions. Hetzner hosts the native Codex execution broker and isolated search tooling. AMD executes the CPU benchmarks in the fixed environment. The Radeon GPU's VRAM is separate from system RAM and is not the memory budget for these CPU evaluations. GitHub carries immutable commits, assignments, guidance and published evidence.
+
+## Graph navigation
+
+The initial map includes all campaign evidence and observed workers. Use **Scope** for the selected campaign, **Earlier experiments** for historical research results, and **Evaluation runs** for individual screen/full requests. **Fit graph**, zoom buttons, scrolling, and **Expand** navigate the graph without moving its nodes. Search matches models, hypotheses, IDs, commits, and source records; Enter focuses the first match. Selecting a node highlights its recorded ancestors and descendants and opens metrics, parameters, connected evidence, and the original sanitized record. Grouping edges do not pull unrelated siblings into a lineage trace. Refresh preserves selection and camera position. Cyclic or missing relationships are reported rather than silently invented.
+
+Graph regression checks use `node --test lab/dashboard/tests/graph.test.cjs`; API checks use `python3 -m unittest tests.test_live_dashboard`.
+
+## Shared team workflow
+
+The default **Team workflow** scope renders `feyer-team-search-v1` as a top-down DAG: exact reference implementations feed explore/refine/combine/confirm/diagnose tasks, and tasks produce exact candidate SHAs. Combinations retain all parents. A refine task admits one successor to the frozen incumbent. Claimed/done/stalled/blocked are task-routing states, never evidence of a live model or final winner. The next-work panel respects recorded dependencies and deadlines.
+
+`--sync-team` uses local GitHub CLI authentication to read only `control/team-search/state.json` every 30 seconds. It does not claim tasks, change the ledger, or launch agents. `team_search_source` distinguishes successful observation time, source event time, unavailable data, and staleness (90 seconds or fetch error). Without the flag, the optional `.lab/team/state.json` export is read locally; its file age is preserved. Last-good data remains visible on failure. A missing source is not an empty queue.
+
+See the [three-instance workflow and architecture diagram](https://github.com/timbtz/feyer-search-frontend/blob/main/docs/SEARCH_WORKFLOW.md) and the [team CLI runbook](team-search.md). Every host keeps its own serial evaluator and reference cohort; the UI never pools timing values across hosts. Historical/finite Campaign evidence is a separate graph scope, not retroactive team ownership.
+
+## Timing profile
+
+The optional `.lab/profiler/report.json` collection is exposed as `profiler_reports` plus `profiler_source`. The Timing profile tab filters by exact SHA/job and ranks recorded first-run phases by contribution, with warm timing and job wall time shown separately. Invalid or conflicting artifacts remain visible with their issues and do not produce phase rankings. The frontend does not run the collector or infer source-code hotspots, successful optimizations, or a champion from these profiles. File observation age and last-good/error status remain explicit.
 
 ## Reading results
 

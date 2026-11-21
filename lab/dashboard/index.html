@@ -16,24 +16,50 @@
 <body>
   <a href="#main" class="skip-link">Skip to content</a>
   <header class="site-header">
-    <a class="brand" href="#overview" aria-label="Feyer search lab home">FEYER<span>Search lab</span></a>
-    <div class="header-right"><span id="connection" role="status">Connecting…</span><a href="https://github.com/timbtz/feyer-search-lab" target="_blank" rel="noopener noreferrer">GitHub</a></div>
+    <a class="brand" href="#graph" aria-label="Feyer search lab home">FEYER<span>Search lab</span></a>
+    <div class="header-right"><span id="connection" role="status">Connecting…</span><a href="https://github.com/timbtz/feyer-search-frontend" target="_blank" rel="noopener noreferrer">GitHub</a></div>
   </header>
   <main id="main">
     <div class="intro">
-      <p class="eyebrow">Faster physics. Measured progress.</p>
-      <p-heading tag="h1" size="xx-large">The optimization lab.</p-heading>
-      <p class="lead">Follow what we are trying, how we test it, and what actually gets faster.</p>
+      <p class="eyebrow">Research / topology / optimization</p>
+      <p-heading tag="h1" size="large">The search, connected.</p-heading>
+      <p class="lead">Trace the ideas, model runs, and small optimizations behind every candidate.</p>
     </div>
     <p-tabs-bar id="navigation" compact="true" active-tab-index="0" aria="{'aria-label':'Search lab views'}">
+      <button type="button" data-view="graph" id="tab-graph" aria-controls="graph">Search graph</button>
       <button type="button" data-view="overview" id="tab-overview" aria-controls="overview">Overview</button>
       <button type="button" data-view="workflow" id="tab-workflow" aria-controls="workflow">How it works</button>
+      <button type="button" data-view="profiler" id="tab-profiler" aria-controls="profiler">Timing profile</button>
       <button type="button" data-view="results" id="tab-results" aria-controls="results">Results</button>
     </p-tabs-bar>
     <div class="round-bar"><div><label for="campaign">Search round</label><select id="campaign"><option value="">Loading…</option></select></div><p id="round-caption"></p></div>
     <div id="notice" class="notice" hidden role="status"></div>
 
-    <section id="overview" class="view" role="tabpanel" aria-labelledby="tab-overview" tabindex="0" aria-label="Overview">
+    <section id="graph" class="view" role="tabpanel" aria-labelledby="tab-graph">
+      <div id="team-summary" class="team-summary" role="status"></div>
+      <details class="team-queue"><summary>Next work and open search space</summary><div id="team-next"></div></details>
+      <div class="graph-toolbar">
+        <div class="graph-options">
+          <label>Scope<select id="graph-scope"><option value="team">Team workflow</option><option value="all">Campaign evidence</option><option value="campaign">Selected search round</option></select></label>
+          <label>Layout<select id="graph-direction"><option value="down">Top down</option><option value="right">Left to right</option></select></label>
+          <label class="graph-check"><input id="graph-history" type="checkbox" checked> Earlier experiments</label>
+          <label class="graph-check"><input id="graph-evaluations" type="checkbox"> Evaluation runs</label>
+        </div>
+        <div class="graph-tools"><label class="graph-find"><span class="sr-only">Find a graph node</span><input id="graph-find" type="search" placeholder="Find model, idea, commit…"></label><button id="graph-fit" type="button">Fit graph</button><button id="graph-reset" type="button">100%</button><button id="graph-fullscreen" type="button">Expand</button></div>
+      </div>
+      <div id="graph-workspace" class="graph-workspace">
+        <div id="graph-viewport" class="graph-viewport" tabindex="0" aria-label="Search DAG. Scroll to navigate, use zoom buttons to change scale, and select a node to inspect its connections.">
+          <div id="graph-plane"><svg id="graph-edges" aria-hidden="true"></svg><div id="graph-nodes"></div></div>
+          <p id="graph-empty" class="graph-empty" hidden>No search evidence has been recorded yet.</p>
+        </div>
+        <div class="graph-zoom"><button id="graph-minus" aria-label="Zoom out">−</button><output id="graph-scale">100%</output><button id="graph-plus" aria-label="Zoom in">+</button></div>
+        <aside id="graph-inspector" class="graph-inspector" hidden aria-label="Selected graph node"><button id="graph-close" class="text-button">Close details</button><div id="graph-detail"></div></aside>
+      </div>
+      <div class="graph-legend"><span class="legend-research">Research / LLM</span><span class="legend-topology">Topology / search space</span><span class="legend-candidate">Candidate / optimization</span><span class="legend-evaluation">Measurement</span><span class="legend-line">Recorded dependency</span><span class="legend-line dashed">Grouping / lane membership</span><output id="graph-count" aria-live="polite"></output></div>
+      <p class="graph-caption">Select a node to trace its ancestors and descendants. Scroll to explore; nodes are positioned automatically. Guidance stays a proposal until admitted and evaluated. Expand evaluation runs to see individual screen and full measurements.</p>
+    </section>
+
+    <section id="overview" class="view" role="tabpanel" aria-labelledby="tab-overview" tabindex="0" hidden aria-label="Overview">
       <div id="summary" class="summary-grid"></div>
       <div class="section-heading"><h2>What’s happening</h2><button class="text-button" id="show-workflow">Understand the process</button></div>
       <div class="now-grid"><article class="surface-card" id="search-status"></article><article class="surface-card"><h3>Research agents</h3><p class="muted card-caption">Agents develop ideas. The evaluator measures them.</p><div id="agents"></div></article></div>
@@ -55,6 +81,11 @@
       <p class="table-note">Times are medians of recorded full runs where available. Single measurements need confirmation. Comparisons stay within the same hardware and validation cohort.</p>
       <div id="result-detail" class="result-detail" hidden></div>
       <p-accordion ><h3 slot="summary">How we judge an improvement</h3><div class="accordion-body prose"><h3>Primary objective</h3><p>Minimize complete first-run time: imports and setup, compilation, forward simulation, sensitivity, gradients, and result transfer.</p><h3>Useful tradeoffs</h3><p>Compilation, execution time, and peak memory also form a Pareto comparison. A gain in one can come with a cost in another. Exact Pareto membership and improvement beyond measurement noise are recorded separately.</p><h3>Correctness first</h3><p>Screening is provisional. Full acceptance requires the official benchmark and our separate saved-output and all-gradient comparison to pass.</p></div></p-accordion>
+    </section>
+    <section id="profiler" class="view" role="tabpanel" aria-labelledby="tab-profiler" hidden>
+      <div class="section-intro"><h2>Where the time goes.</h2><p>Recorded benchmark phases for one exact job. First-run, warm timing, and job wall time remain separate.</p></div>
+      <div class="profiler-controls"><label>Find an exact job or commit<input id="profiler-filter" type="search" placeholder="Job ID or candidate SHA"></label><label>Recorded evaluation<select id="profiler-select"></select></label></div>
+      <p id="profiler-source" class="meta-line" role="status"></p><div id="profiler-detail"></div>
     </section>
     <footer><span id="freshness">Waiting for evidence.</span><button id="technical-toggle" class="text-button">Technical details</button></footer>
     <section id="technical" hidden aria-label="Technical details"><div class="technical-heading"><h2>Technical details</h2><p>Source records and logs for debugging. This view is read-only.</p></div><div id="technical-content"></div></section>

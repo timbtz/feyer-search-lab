@@ -1,13 +1,16 @@
 import json
+import os
 from pathlib import Path
 import sqlite3
+import subprocess
 import tempfile
 import time
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
 from lab.evolution import Campaign
-from lab.live_dashboard import Observatory, ReadOnlyCampaign, public, process_status, job_summary, tail
+from lab.live_dashboard import Observatory, ReadOnlyCampaign, public, process_status, job_summary, tail, TEAM_ENDPOINT
 
 
 class ObservatoryTests(unittest.TestCase):
@@ -115,6 +118,259 @@ class ObservatoryTests(unittest.TestCase):
         state=self.obs.state()
         self.assertEqual([c['id'] for c in state['campaigns']],['test'])
         self.assertTrue(any('broken' in a for a in state['alerts']))
+
+    def team_fixture(self):
+        return dict(schema='feyer-team-search-v1', coordinator='owner', tasks={}, observations={}, events=[])
+
+    def write_team(self, value):
+        path = self.root / '.lab/team/state.json'
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(value))
+        return path
+
+    def test_unavailable_team_source_is_distinct_from_empty_ledger(self):
+        missing = self.obs.state()
+        self.assertIsNone(missing['team_search'])
+        self.assertFalse(missing['team_search_source']['available'])
+        self.assertTrue(missing['team_search_source']['stale'])
+        self.assertIsNone(missing['team_search_source']['observed_at'])
+        self.assertTrue(missing['team_search_source']['error'])
+        self.assertEqual(len(missing['campaigns']), 1)
+        self.write_team(self.team_fixture())
+        empty = self.obs.state()
+        self.assertEqual(empty['team_search']['tasks'], {})
+        self.assertTrue(empty['team_search_source']['available'])
+        self.assertFalse(empty['team_search_source']['stale'])
+        self.assertIsNone(empty['team_search_source']['error'])
+        self.assertIsNone(empty['team_search_source']['source_updated_at'])
+
+    def test_local_copy_age_is_not_reset_by_browser_reads(self):
+        data = self.team_fixture()
+        data['events'] = [dict(at=25, command='add')]
+        path = self.write_team(data)
+        os.utime(path, (100, 100))
+        _, source = self.obs.team_snapshot(150)
+        self.assertEqual(source['observed_at'], 100)
+        self.assertEqual(source['source_updated_at'], 25)
+        self.assertFalse(source['stale'])
+        _, later = self.obs.team_snapshot(200)
+        self.assertEqual(later['observed_at'], 100)
+        self.assertTrue(later['stale'])
+        self.assertEqual(later['mode'], 'local_snapshot')
+
+    def test_corrupt_or_removed_snapshot_preserves_last_good_evidence(self):
+        original = self.team_fixture()
+        path = self.write_team(original)
+        good = self.obs.state()
+        path.write_text('corrupt JSON')
+        corrupt = self.obs.state()
+        self.assertEqual(corrupt['team_search'], original)
+        self.assertEqual(corrupt['team_search_source']['observed_at'], good['team_search_source']['observed_at'])
+        self.assertTrue(corrupt['team_search_source']['error'])
+        self.assertTrue(corrupt['team_search_source']['stale'])
+        self.assertEqual(len(corrupt['campaigns']), 1)
+        path.unlink()
+        self.assertEqual(self.obs.state()['team_search'], original)
+
+    def test_malformed_team_shapes_are_unavailable(self):
+        values = [[], {**self.team_fixture(), 'schema':'wrong'},
+                  {**self.team_fixture(), 'tasks':[]},
+                  {**self.team_fixture(), 'observations':{'bad':{'evidence':[]}}},
+                  {**self.team_fixture(), 'events':{}},
+                  {**self.team_fixture(), 'tasks':{'a':{'id':'b'}}},
+                  {**self.team_fixture(), 'tasks':{'a':{'id':'a','parents':{}}}}]
+        for value in values:
+            with self.subTest(value=value):
+                self.write_team(value)
+                fresh = Observatory(self.root).state()
+                self.assertIsNone(fresh['team_search'])
+                self.assertTrue(fresh['team_search_source']['error'])
+
+    def test_team_credentials_redacted_without_reclassifying_results(self):
+        data = self.team_fixture()
+        data['tasks'] = {'a':dict(id='a', status='done', parents=[], candidates=[],
+                                 api_key='credential-value', hypothesis='Bearer private-credential')}
+        data['observations'] = {'amd-a:job':dict(instance='amd-a', evidence=dict(
+            eligible_full=False, category='infrastructure_error', access_token='hidden-access'))}
+        data['events'] = [dict(at=100, payload={'claim_token':'private-claim'})]
+        path = self.write_team(data)
+        before = path.read_bytes()
+        snapshot = self.obs.state()
+        encoded = json.dumps(snapshot)
+        for secret in ('credential-value', 'private-credential', 'hidden-access', 'private-claim'):
+            self.assertNotIn(secret, encoded)
+        self.assertFalse(snapshot['team_search']['observations']['amd-a:job']['evidence']['eligible_full'])
+        self.assertEqual(snapshot['team_search']['tasks']['a']['status'], 'done')
+        self.assertEqual(path.read_bytes(), before)
+
+    def test_symlink_snapshot_is_not_read(self):
+        outside = self.root / 'private.json'
+        outside.write_text(json.dumps(self.team_fixture()))
+        path = self.root / '.lab/team/state.json'
+        path.parent.mkdir(parents=True)
+        path.symlink_to(outside)
+        self.assertIsNone(self.obs.state()['team_search'])
+
+    def test_github_poll_is_explicit_read_only_and_reports_source_freshness(self):
+        obs = Observatory(self.root, team=True)
+        data = self.team_fixture()
+        data['events'] = [dict(at=20, command='init'), dict(at=50, command='add')]
+        reply = SimpleNamespace(stdout=json.dumps(data))
+        with patch('lab.live_dashboard.subprocess.run', return_value=reply) as request, \
+             patch('lab.live_dashboard.time.time', return_value=100):
+            obs.refresh_team()
+        request.assert_called_once_with(
+            ['gh','api','--hostname','github.com','--method','GET',TEAM_ENDPOINT,'--header','Accept: application/vnd.github.raw+json'],
+            capture_output=True,text=True,check=True,timeout=20)
+        value, source = obs.team_snapshot(150)
+        self.assertEqual(value, data)
+        self.assertEqual(source['mode'], 'github')
+        self.assertEqual(source['observed_at'], 100)
+        self.assertEqual(source['source_updated_at'], 50)
+        self.assertFalse(source['stale'])
+        self.assertTrue(obs.team_snapshot(191)[1]['stale'])
+        self.assertFalse((self.root / '.lab/team/state.json').exists())
+
+    def test_failed_github_poll_retains_evidence_without_leaking_stderr(self):
+        obs = Observatory(self.root, team=True)
+        data = self.team_fixture()
+        with patch('lab.live_dashboard.subprocess.run', return_value=SimpleNamespace(stdout=json.dumps(data))), \
+             patch('lab.live_dashboard.time.time', return_value=100):
+            obs.refresh_team()
+        failure = subprocess.CalledProcessError(1, ['gh'], stderr='private-unredacted-credential')
+        with patch('lab.live_dashboard.subprocess.run', side_effect=failure):
+            obs.refresh_team()
+        value, source = obs.team_snapshot(101)
+        self.assertEqual(value, data)
+        self.assertEqual(source['observed_at'], 100)
+        self.assertTrue(source['stale'])
+        self.assertNotIn('private-unredacted-credential', source['error'])
+        with patch('lab.live_dashboard.subprocess.run', return_value=SimpleNamespace(stdout=json.dumps(data))):
+            obs.refresh_team()
+        self.assertIsNone(obs.team_snapshot(time.time())[1]['error'])
+
+    def test_disabled_github_poll_does_not_invoke_a_command(self):
+        with patch('lab.live_dashboard.subprocess.run') as command:
+            self.obs.refresh_team()
+        command.assert_not_called()
+
+    def profiler_fixture(self):
+        return dict(profiler_reports=[dict(schema='feyer-profiler-v1', status='ok',
+            job_id='job-one', candidate_sha='a' * 40, instance='amd-a', cohort_digest='cohort-one',
+            first_run_seconds=10, phases=[dict(key='forward', seconds=5, share=.5)],
+            groups=[dict(key='execution', seconds=5, share=.5)], warm_timing={},
+            job_wall_seconds=15, limits=['Phase summary only'], issues=[], eligible_full=False)])
+
+    def write_profiler(self, value):
+        path = self.root / '.lab/profiler/report.json'
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(value))
+        return path
+
+    def test_profiler_unavailable_is_distinct_from_empty_collection(self):
+        missing = self.obs.state()
+        self.assertEqual(missing['profiler_reports'], [])
+        self.assertFalse(missing['profiler_source']['available'])
+        self.assertTrue(missing['profiler_source']['stale'])
+        self.assertTrue(missing['profiler_source']['error'])
+        self.write_profiler(dict(profiler_reports=[]))
+        empty = self.obs.state()
+        self.assertEqual(empty['profiler_reports'], [])
+        self.assertTrue(empty['profiler_source']['available'])
+        self.assertFalse(empty['profiler_source']['stale'])
+        self.assertIsNone(empty['profiler_source']['error'])
+
+    def test_profiler_records_preserved_without_validation_inference(self):
+        data = self.profiler_fixture()
+        invalid = dict(schema='feyer-profiler-v1', status='invalid_report', job_id='bad-job',
+                       candidate_sha=None, phases=[], groups=[], first_run_seconds=None,
+                       issues=['Missing timing report'], limits=[], warm_timing={})
+        data['profiler_reports'].append(invalid)
+        data['schema'] = 'feyer-profiler-collection-v1'
+        path = self.write_profiler(data)
+        before = path.read_bytes()
+        with patch('lab.live_dashboard.subprocess.run') as command:
+            reports, source = self.obs.profiler_snapshot(time.time())
+        command.assert_not_called()
+        self.assertEqual(reports, data['profiler_reports'])
+        self.assertFalse(reports[0]['eligible_full'])
+        self.assertEqual(reports[1]['status'], 'invalid_report')
+        self.assertNotIn('eligible_full', reports[1])
+        self.assertTrue(source['available'])
+        self.assertEqual(path.read_bytes(), before)
+
+    def test_conflicting_profiler_artifacts_remain_visible_without_discarding_other_reports(self):
+        data = self.profiler_fixture()
+        conflict = dict(schema='feyer-profiler-v1', status='conflicting_artifacts',
+                        job_id='same-job', candidate_sha='b'*40, phases=[], groups=[],
+                        eligible_full=False, issues=['Two records disagree'])
+        data['profiler_reports'].append(conflict)
+        self.write_profiler(data)
+        state = self.obs.state()
+        self.assertEqual(len(state['profiler_reports']), 2)
+        self.assertEqual(state['profiler_reports'][1]['status'], 'conflicting_artifacts')
+        self.assertFalse(state['profiler_reports'][1]['eligible_full'])
+        self.assertIsNone(state['profiler_source']['error'])
+
+    def test_profiler_schema_error_retains_last_good_collection(self):
+        data = self.profiler_fixture()
+        self.write_profiler(data)
+        first = self.obs.state()
+        malformed = [[], {'profiler_reports':{}}, {'profiler_reports':[[]]},
+                     {'schema':'unexpected','profiler_reports':[]},
+                     {'profiler_reports':[{'schema':'other','status':'ok'}]},
+                     {'profiler_reports':[{'schema':'feyer-profiler-v1','status':'passed'}]},
+                     {'profiler_reports':[{'schema':'feyer-profiler-v1','status':'ok','phases':{}}]}]
+        for value in malformed:
+            with self.subTest(value=value):
+                self.write_profiler(value)
+                current = self.obs.state()
+                self.assertEqual(current['profiler_reports'], first['profiler_reports'])
+                self.assertEqual(current['profiler_source']['observed_at'], first['profiler_source']['observed_at'])
+                self.assertTrue(current['profiler_source']['stale'])
+                self.assertTrue(current['profiler_source']['error'])
+                self.assertEqual(len(current['campaigns']), 1)
+        self.write_profiler(data)
+        self.assertIsNone(self.obs.state()['profiler_source']['error'])
+
+    def test_profiler_corrupt_and_removed_source_retains_last_good(self):
+        data = self.profiler_fixture()
+        path = self.write_profiler(data)
+        self.obs.state()
+        path.write_text('invalid JSON')
+        self.assertEqual(self.obs.state()['profiler_reports'], data['profiler_reports'])
+        path.unlink()
+        state = self.obs.state()
+        self.assertEqual(state['profiler_reports'], data['profiler_reports'])
+        self.assertTrue(state['profiler_source']['stale'])
+
+    def test_profiler_snapshot_age_tracks_file_not_browser_refresh(self):
+        path = self.write_profiler(self.profiler_fixture())
+        os.utime(path, (100, 100))
+        _, first = self.obs.profiler_snapshot(150)
+        _, later = self.obs.profiler_snapshot(191)
+        self.assertEqual(first['observed_at'], 100)
+        self.assertEqual(later['observed_at'], 100)
+        self.assertFalse(first['stale'])
+        self.assertTrue(later['stale'])
+        self.assertEqual(later['source'], '.lab/profiler/report.json')
+
+    def test_profiler_secrets_redacted_and_symlink_or_oversize_rejected(self):
+        data = self.profiler_fixture()
+        data['profiler_reports'][0].update(api_key='private-key-value', issues=['Bearer private-credential'])
+        path = self.write_profiler(data)
+        encoded = json.dumps(self.obs.state()['profiler_reports'])
+        self.assertNotIn('private-key-value', encoded)
+        self.assertNotIn('private-credential', encoded)
+        path.unlink()
+        target = self.root / 'external-profile.json'
+        target.write_text(json.dumps(data))
+        path.symlink_to(target)
+        self.assertFalse(Observatory(self.root).state()['profiler_source']['available'])
+        path.unlink()
+        with path.open('wb') as stream:
+            stream.truncate(16_000_001)
+        self.assertFalse(Observatory(self.root).state()['profiler_source']['available'])
 
 
 if __name__=='__main__':

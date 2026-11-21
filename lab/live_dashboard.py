@@ -1,6 +1,6 @@
 """Read-only, loopback-only search observatory. No model calls or queue mutations.
 
-python -m lab.live_dashboard --repo /path/to/main --port 8765 --sync-remote
+python -m lab.live_dashboard --repo /path/to/main --port 8765 --sync-remote --sync-team
 """
 from __future__ import annotations
 
@@ -27,6 +27,10 @@ PRIVATE = re.compile(r'-----BEGIN [^-]*PRIVATE KEY-----.*?(?:-----END [^-]*PRIVA
 TERMINAL = {'completed', 'failed', 'timed_out', 'interrupted', 'rejected'}
 WORKER_TERMINAL = {'complete', 'completed', 'failed', 'budget_exhausted', 'stopped', 'blocked', 'no_candidate'}
 REPO_URL = 'https://github.com/timbtz/feyer-search-lab'
+TEAM_ENDPOINT = 'repos/timbtz/feyer-search-lab/contents/state.json?ref=control/team-search'
+TEAM_LIMIT = 16_000_000
+TEAM_STALE_SECONDS = 90
+PROFILER_STALE_SECONDS = 90
 
 
 def public(value):
@@ -48,6 +52,68 @@ def read_json(path, limit=16_000_000):
     if path.is_symlink() or path.stat().st_size > limit:
         raise ValueError('Refusing symlink or oversized data file')
     return json.loads(path.read_text())
+
+
+def team_state(value):
+    """Validate the presentation envelope without inferring scientific eligibility."""
+    if not isinstance(value, dict) or value.get('schema') != 'feyer-team-search-v1':
+        raise ValueError('Unsupported team search snapshot')
+    if not isinstance(value.get('coordinator'), str) or not value['coordinator']:
+        raise ValueError('Team coordinator is missing')
+    for name in ('tasks', 'observations'):
+        rows = value.get(name)
+        if not isinstance(rows, dict) or any(not isinstance(k, str) or not isinstance(v, dict)
+                                             for k, v in rows.items()):
+            raise ValueError('Invalid team ' + name)
+    for identity, task in value['tasks'].items():
+        if task.get('id') != identity:
+            raise ValueError('Task identity does not match its key')
+        for name in ('parents', 'candidates', 'depends_on'):
+            rows = task.get(name, [])
+            if not isinstance(rows, list) or any(not isinstance(v, str) for v in rows):
+                raise ValueError('Invalid task ' + name)
+        if not isinstance(task.get('candidate_branches', {}), dict):
+            raise ValueError('Invalid candidate branch map')
+    for observation in value['observations'].values():
+        if not isinstance(observation.get('evidence'), dict):
+            raise ValueError('Invalid observation evidence')
+        if 'job' in observation and not isinstance(observation['job'], dict):
+            raise ValueError('Invalid observation job')
+    if not isinstance(value.get('events'), list) or any(not isinstance(e, dict) for e in value['events']):
+        raise ValueError('Invalid team event history')
+    return public(value)
+
+
+def team_updated_at(value):
+    """Latest recorded source event, distinct from successful fetch/copy time."""
+    stamps = [e.get('at') for e in value['events']]
+    stamps += [t.get(key) for t in value['tasks'].values()
+               for key in ('created_at', 'claimed_at', 'updated_at')]
+    return max((s for s in stamps if type(s) in (int, float) and math.isfinite(s) and s > 0), default=None)
+
+
+def profiler_state(value):
+    """Read profiler presentation records without deriving a validation verdict."""
+    if not isinstance(value, dict) or not isinstance(value.get('profiler_reports'), list):
+        raise ValueError('Invalid profiler collection')
+    if 'schema' in value and value['schema'] != 'feyer-profiler-collection-v1':
+        raise ValueError('Unsupported profiler collection schema')
+    for report in value['profiler_reports']:
+        if not isinstance(report, dict) or report.get('schema') != 'feyer-profiler-v1':
+            raise ValueError('Unsupported profiler record schema')
+        if report.get('status') not in ('ok', 'invalid_report', 'conflicting_artifacts'):
+            raise ValueError('Unknown profiler record status')
+        for name in ('phases', 'groups'):
+            rows = report.get(name, [])
+            if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+                raise ValueError('Invalid profiler ' + name)
+        for name in ('issues', 'limits'):
+            rows = report.get(name, [])
+            if not isinstance(rows, list) or any(not isinstance(row, str) for row in rows):
+                raise ValueError('Invalid profiler ' + name)
+        if not isinstance(report.get('warm_timing', {}), dict):
+            raise ValueError('Invalid profiler warm timing')
+    return public(value['profiler_reports'])
 
 
 def tail(path, size=10000):
@@ -127,12 +193,18 @@ def job_summary(job, source='local artifact'):
 
 
 class Observatory:
-    def __init__(self, repo, remote=False, host='amd-hackathon', root='/workspace/feyer-lab'):
+    def __init__(self, repo, remote=False, host='amd-hackathon', root='/workspace/feyer-lab', team=False):
         self.repo = Path(repo).resolve()
         self.lab = self.repo / '.lab'
         self.lock = threading.Lock()
         self.remote = dict(enabled=remote, observed_at=None, error=None, jobs=[])
         self.remote_details = {}
+        self.team = dict(sync_enabled=team, mode='github' if team else 'local_snapshot',
+                         source=REPO_URL + '/blob/control/team-search/state.json' if team else '.lab/team/state.json',
+                         observed_at=None, source_updated_at=None, error=None)
+        self.team_data = None
+        self.profiler = dict(source='.lab/profiler/report.json', observed_at=None, error=None)
+        self.profiler_data = None
         self.cached_files = {}
         self.host, self.root = host, root
         self.stop = threading.Event()
@@ -145,6 +217,73 @@ class Observatory:
         data = read_json(path)
         self.cached_files[str(path)] = (stamp, data)
         return data
+
+    def refresh_team(self):
+        """One read-only GitHub observation; credentials stay in the gh process."""
+        if not self.team['sync_enabled']:
+            return
+        try:
+            response = subprocess.run(['gh', 'api', '--hostname', 'github.com', '--method', 'GET', TEAM_ENDPOINT,
+                                       '--header', 'Accept: application/vnd.github.raw+json'],
+                                      capture_output=True, text=True, check=True, timeout=20)
+            if len(response.stdout.encode('utf-8')) > TEAM_LIMIT:
+                raise ValueError('Oversized team snapshot')
+            data = team_state(json.loads(response.stdout))
+            with self.lock:
+                self.team_data = data
+                self.team.update(observed_at=time.time(), source_updated_at=team_updated_at(data), error=None)
+        except (OSError, ValueError, TypeError, subprocess.SubprocessError) as exc:
+            with self.lock:
+                self.team['error'] = (f'{type(exc).__name__}: GitHub team search unavailable; '
+                                      'last successful observation retained if available')
+
+    def poll_team(self):
+        while not self.stop.is_set():
+            self.refresh_team()
+            self.stop.wait(30)
+
+    def team_snapshot(self, now):
+        if not self.team['sync_enabled']:
+            path = self.lab / 'team' / 'state.json'
+            try:
+                if path.is_symlink() or path.parent.is_symlink():
+                    raise ValueError('Refusing symlink team snapshot')
+                data = team_state(self.cached_json(path))
+                # Reading an unchanged local export must not make it appear live.
+                observed_at = path.stat().st_mtime
+                with self.lock:
+                    self.team_data = data
+                    self.team.update(observed_at=observed_at,
+                                     source_updated_at=team_updated_at(data), error=None)
+            except (OSError, ValueError, TypeError) as exc:
+                with self.lock:
+                    self.team['error'] = (f'{type(exc).__name__}: local team search snapshot unavailable; '
+                                          'last successful observation retained if available')
+        with self.lock:
+            data, source = self.team_data, dict(self.team)
+        source['available'] = data is not None
+        source['stale'] = bool(source['error']) or source['observed_at'] is None or now - source['observed_at'] > TEAM_STALE_SECONDS
+        return data, source
+
+    def profiler_snapshot(self, now):
+        path = self.lab / 'profiler' / 'report.json'
+        try:
+            if path.is_symlink() or path.parent.is_symlink():
+                raise ValueError('Refusing symlink profiler snapshot')
+            reports = profiler_state(self.cached_json(path))
+            observed_at = path.stat().st_mtime
+            with self.lock:
+                self.profiler_data = reports
+                self.profiler.update(observed_at=observed_at, error=None)
+        except (OSError, ValueError, TypeError) as exc:
+            with self.lock:
+                self.profiler['error'] = (f'{type(exc).__name__}: local profiler snapshot unavailable; '
+                                          'last successful observation retained if available')
+        with self.lock:
+            reports, source = self.profiler_data, dict(self.profiler)
+        source['available'] = reports is not None
+        source['stale'] = bool(source['error']) or source['observed_at'] is None or now - source['observed_at'] > PROFILER_STALE_SECONDS
+        return reports if reports is not None else [], source
 
     def poll_remote(self):
         from .client import Client
@@ -244,6 +383,8 @@ class Observatory:
 
     def state(self):
         now = time.time()
+        team, team_source = self.team_snapshot(now)
+        profiles, profiler_source = self.profiler_snapshot(now)
         alerts, campaigns, jobs = [], [], {}
         for path in sorted((self.lab/'campaigns').glob('*/campaign.sqlite3')):
             try:
@@ -287,6 +428,8 @@ class Observatory:
         return public(dict(generated_at=now, repo_url=REPO_URL, storage={'free_bytes':free.free,'total_bytes':free.total},
             campaigns=campaigns, workers=workers, infrastructure=infrastructure, jobs=list(jobs.values()),
             queue=queue, historical=historical, alerts=alerts,
+            team_search=team, team_search_source=team_source,
+            profiler_reports=profiles, profiler_source=profiler_source,
             read_only=True, refresh_seconds=5,
             stage_policy={'screen':'Complete physical workload, provisional checks; omits finite-difference gradient sanity check and strict saved-array comparison.',
                 'full':'Official full benchmark plus separate strict saved-array / all-gradient comparison.',
@@ -341,14 +484,17 @@ def main():
     parser.add_argument('--repo', type=Path, required=True, help='Main repository containing .lab state')
     parser.add_argument('--port', type=int, default=8765)
     parser.add_argument('--sync-remote', action='store_true', help='Poll AMD via existing SSH; list/show only, no submissions')
+    parser.add_argument('--sync-team', action='store_true', help='Read GitHub control/team-search every 30 seconds via gh; no ledger mutations')
     parser.add_argument('--host', default='amd-hackathon')
     parser.add_argument('--root', default='/workspace/feyer-lab')
     args = parser.parse_args()
-    obs = Observatory(args.repo, args.sync_remote, args.host, args.root)
+    obs = Observatory(args.repo, args.sync_remote, args.host, args.root, team=args.sync_team)
     server = ThreadingHTTPServer(('127.0.0.1', args.port), handler_for(obs))
     server.daemon_threads = True
     if args.sync_remote:
         threading.Thread(target=obs.poll_remote, daemon=True).start()
+    if args.sync_team:
+        threading.Thread(target=obs.poll_team, daemon=True).start()
     print(f'Feyer Search Observatory: http://localhost:{server.server_port} (read-only)', flush=True)
     try:
         server.serve_forever()
