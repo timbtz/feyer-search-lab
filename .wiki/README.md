@@ -14,6 +14,7 @@ The team repository is [timbtz/feyer-search-lab](https://github.com/timbtz/feyer
 - [Machine and baseline](baseline.md) records the measured starting point.
 - [Storage and retention](storage.md) explains what to retain and what can be recreated.
 - [Token Factory](token-factory.md) covers the Qwen API client, credentials and measured request limits.
+- [Optional Qwen reviews](qwen-worker.md) records bounded streaming, measured limitations and the default proposer-owned repair flow.
 - [Phase exploration](phase-exploration.md) explains candidate comparisons, the interactive viewer and observed Pareto tradeoffs.
 - [A second interactive agent](second-agent.md) explains isolated worktrees and conversation forks.
 - [System audit](system-audit.md) records correctness/resource decisions, fixes and unresolved organizer questions.
