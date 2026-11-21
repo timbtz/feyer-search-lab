@@ -1,0 +1,22 @@
+{
+  "schema": "feyer-research-assignment-v1",
+  "name": "codex-profile-guided-v1-compiler-gap",
+  "owner_session": "01a1ffba-57ec-7191-8ba9-c6163633a3b3",
+  "actor": "codex-profile-guided-v1",
+  "branch": "explore/codex-profile-guided-v1",
+  "worktree": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/codex-profile-guided-v1",
+  "status": "awaiting_current_evaluation",
+  "observed_at": 1795294374.613261,
+  "pid": 62165,
+  "runtime_commit": "8bf6e8fbe58a0b605857659a3bff032350f0180c",
+  "fixed_deadline_unix": 1795295364.088367,
+  "direction": "sparse scan outputs followed by dense assembly",
+  "parent_candidate_sha": "7d1ccc59cef3d7436870bb0e6c941dbde4c30770",
+  "brief_path": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/compiler-followup-runtime-v1/experiments/briefs/compiler-gap-followup.md",
+  "brief_sha256": "59076ef8431198386dfe6d2ad6ef0152d92eb902cca2818dbec86faf17a5c4d0",
+  "input_receipt": null,
+  "actual_model": null,
+  "requested_model": "gpt-6-astra",
+  "reasoning_effort": "high",
+  "note": "Same session and original deadline. Current remote jobs preserved. Astra actual model requires next-turn rollout verification."
+}
