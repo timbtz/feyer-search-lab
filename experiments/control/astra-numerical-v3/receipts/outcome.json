@@ -1,0 +1,9 @@
+{
+  "status": "blocked_review",
+  "reason": "Parameter menu awaits source/ownership review; no further admissions by seed bootstrap.",
+  "seed_job_id": "289b4b960fa642a7996354692d43e873",
+  "cohort_digest": "d78b193bdd3e61a0c054f0ba4b2645e67f80f7007e9e5fd6acea817f876795f6",
+  "jobs_used": 1,
+  "deadline_unix": 1795299882.878179,
+  "observed_at": 1795296383.050774
+}
