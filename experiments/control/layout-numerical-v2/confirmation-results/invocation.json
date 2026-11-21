@@ -1,0 +1,20 @@
+{
+  "pid": 54735,
+  "started_at": 1795293931.781605,
+  "deadline_unix": 1795296029.2574458,
+  "command": [
+    "/Users/t.betz/Documents/Feyer challenge/.lab/venv-topology-smac/bin/python",
+    "-u",
+    "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/layout-numerical-control/experiments/control/layout-numerical-v2/continue_window.py",
+    "--root",
+    "/Users/t.betz/Documents/Feyer challenge"
+  ],
+  "cwd": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/topology-lane-policy",
+  "control_commit": "c24eb7d",
+  "adapter_commit": "838a2370de8b5b97a3f204326f4f2363720ed877",
+  "script_sha256": "de84e3a17cefe8e88adae95bb7cd036a319bd66d39dc15407f261b8114e7794a",
+  "log": "/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/layout-window-confirmations/controller.log",
+  "status": "waiting_for_both_searches_to_drain",
+  "max_repeat_jobs": 14,
+  "global_job_ceiling": 40
+}

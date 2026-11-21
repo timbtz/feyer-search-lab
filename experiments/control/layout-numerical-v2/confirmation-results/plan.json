@@ -1,0 +1,240 @@
+{
+  "deadline_unix": 1795296029.2574458,
+  "search_and_calibration_jobs": 26,
+  "max_total_jobs": 40,
+  "max_repeat_jobs": 14,
+  "policy": {
+    "worker_sha256": "d3c212da0ab1215187407d9cd21dc2cbb5f88dc0b5ee7885135bf7f002d14b58",
+    "evaluator_sha256": "d5950bbd872e5b00ad63f0bd7081e5096fb14ba9c96c80a6854a3b714719bd4e",
+    "comparison_evaluator_sha256": "1bc9b39fe0023afc3db93211b9e3d6cd37ed2b13ee281f142749c2237a16ea8f",
+    "reference_arrays_sha256": "c3f6cba045f8b41f488dc19c960f5056b5f2e75cfa64f9a687b52f2a9ba2751e",
+    "memory_budget_bytes": 16000000000,
+    "cpu": 34
+  },
+  "cohort_digest": "d78b193bdd3e61a0c054f0ba4b2645e67f80f7007e9e5fd6acea817f876795f6",
+  "host": "amd-hackathon",
+  "root": "/workspace/feyer-lab-lane1",
+  "targets": {
+    "42d3a675e25187fd63387a4b13cf79469936668d": {
+      "sha": "42d3a675e25187fd63387a4b13cf79469936668d",
+      "branch": "explore/layout-numerical-lane1",
+      "roles": [
+        "lane34-finalist"
+      ],
+      "source_hashes": {
+        "differometor/__init__.py": "505d559d5a17409680a91f555882edf23f78cbb7c98ee28845018fa9bfeba7e7",
+        "differometor/build.py": "12a5690f48ca736fd9f0bd5301b3b3380a5f9f0b8754cc98781f39c9d413be9b",
+        "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+        "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+        "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+        "differometor/simulate.py": "1aced5d4732e601d5d6eb4fe966a530f7600c516b971000a2457824716317b92",
+        "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+      },
+      "existing_job_ids": [
+        "afe6da51441a4a499c74c84537225e2c"
+      ]
+    },
+    "161927b5028ae24b01f25919d44d239ed7df5c32": {
+      "sha": "161927b5028ae24b01f25919d44d239ed7df5c32",
+      "branch": "explore/layout-numerical-lane1",
+      "roles": [
+        "lane34-finalist"
+      ],
+      "source_hashes": {
+        "differometor/__init__.py": "505d559d5a17409680a91f555882edf23f78cbb7c98ee28845018fa9bfeba7e7",
+        "differometor/build.py": "12a5690f48ca736fd9f0bd5301b3b3380a5f9f0b8754cc98781f39c9d413be9b",
+        "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+        "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+        "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+        "differometor/simulate.py": "7a7005c62cfa621a5e0382f309580dc1cf1c66f42b92dcfd2a90774d6b54e746",
+        "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+      },
+      "existing_job_ids": [
+        "ed0893f1f7754c7a85ba150c71d0e603"
+      ]
+    },
+    "003a9a7e040aa630afcdf0d5ccfd800c0c3ff326": {
+      "sha": "003a9a7e040aa630afcdf0d5ccfd800c0c3ff326",
+      "branch": "explore/layout-numerical-lane1",
+      "roles": [
+        "lane34-finalist"
+      ],
+      "source_hashes": {
+        "differometor/__init__.py": "505d559d5a17409680a91f555882edf23f78cbb7c98ee28845018fa9bfeba7e7",
+        "differometor/build.py": "12a5690f48ca736fd9f0bd5301b3b3380a5f9f0b8754cc98781f39c9d413be9b",
+        "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+        "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+        "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+        "differometor/simulate.py": "16f859e43143e1cc95dd299ccd7279193c88fa0f9b89d2f52c3ffa792ae0f3bd",
+        "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+      },
+      "existing_job_ids": [
+        "e48cc4399692422ebbb6649fb8a813f5"
+      ]
+    },
+    "96474bdd4d83bb02c163640f63fae1c4bd7a21d4": {
+      "sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+      "branch": "explore/claude-noise-reuse",
+      "roles": [
+        "reference"
+      ],
+      "source_hashes": {
+        "differometor/__init__.py": "505d559d5a17409680a91f555882edf23f78cbb7c98ee28845018fa9bfeba7e7",
+        "differometor/build.py": "12a5690f48ca736fd9f0bd5301b3b3380a5f9f0b8754cc98781f39c9d413be9b",
+        "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+        "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+        "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+        "differometor/simulate.py": "d7bacdd996e29bc33fb0abd3e6bb404ae9ce47bec2fa691d4f02d46b110884be",
+        "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+      },
+      "existing_job_ids": [
+        "7da252d634e542b6a3c64c7e743b77e3"
+      ]
+    },
+    "e0a1dc69f4951c100fefbc9fc08a23c3c12058dc": {
+      "sha": "e0a1dc69f4951c100fefbc9fc08a23c3c12058dc",
+      "branch": "explore/layout-round-seed",
+      "roles": [
+        "layout-reference"
+      ],
+      "source_hashes": {
+        "differometor/__init__.py": "505d559d5a17409680a91f555882edf23f78cbb7c98ee28845018fa9bfeba7e7",
+        "differometor/build.py": "12a5690f48ca736fd9f0bd5301b3b3380a5f9f0b8754cc98781f39c9d413be9b",
+        "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+        "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+        "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+        "differometor/simulate.py": "5a33ffb5e6ee04474cd3637e15d55ca296e83e92f7216e011bccffc1e547ba94",
+        "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+      },
+      "existing_job_ids": [
+        "be32d82593f043489d653a13f6e2694a"
+      ]
+    },
+    "3a2073ad5add8770eab0d37b55ad67cea71b448b": {
+      "sha": "3a2073ad5add8770eab0d37b55ad67cea71b448b",
+      "branch": "explore/layout-numerical-v2",
+      "roles": [
+        "cpu2-finalist-new-lane-measurement"
+      ],
+      "source_hashes": {
+        "differometor/__init__.py": "505d559d5a17409680a91f555882edf23f78cbb7c98ee28845018fa9bfeba7e7",
+        "differometor/build.py": "12a5690f48ca736fd9f0bd5301b3b3380a5f9f0b8754cc98781f39c9d413be9b",
+        "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+        "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+        "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+        "differometor/simulate.py": "d71429521fe64e53ac5d54e4a29483f184d52b2d04ae6a8d5c13b75012d2cf89",
+        "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+      },
+      "existing_job_ids": []
+    }
+  },
+  "requests": [
+    {
+      "sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+      "request_id": null,
+      "job_id": null,
+      "status": "planned"
+    },
+    {
+      "sha": "e0a1dc69f4951c100fefbc9fc08a23c3c12058dc",
+      "request_id": null,
+      "job_id": null,
+      "status": "planned"
+    },
+    {
+      "sha": "003a9a7e040aa630afcdf0d5ccfd800c0c3ff326",
+      "request_id": null,
+      "job_id": null,
+      "status": "planned"
+    },
+    {
+      "sha": "161927b5028ae24b01f25919d44d239ed7df5c32",
+      "request_id": null,
+      "job_id": null,
+      "status": "planned"
+    },
+    {
+      "sha": "3a2073ad5add8770eab0d37b55ad67cea71b448b",
+      "request_id": null,
+      "job_id": null,
+      "status": "planned"
+    },
+    {
+      "sha": "42d3a675e25187fd63387a4b13cf79469936668d",
+      "request_id": null,
+      "job_id": null,
+      "status": "planned"
+    },
+    {
+      "sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+      "request_id": null,
+      "job_id": null,
+      "status": "planned"
+    },
+    {
+      "sha": "e0a1dc69f4951c100fefbc9fc08a23c3c12058dc",
+      "request_id": null,
+      "job_id": null,
+      "status": "planned"
+    },
+    {
+      "sha": "003a9a7e040aa630afcdf0d5ccfd800c0c3ff326",
+      "request_id": null,
+      "job_id": null,
+      "status": "planned"
+    },
+    {
+      "sha": "161927b5028ae24b01f25919d44d239ed7df5c32",
+      "request_id": null,
+      "job_id": null,
+      "status": "planned"
+    },
+    {
+      "sha": "3a2073ad5add8770eab0d37b55ad67cea71b448b",
+      "request_id": null,
+      "job_id": null,
+      "status": "planned"
+    },
+    {
+      "sha": "42d3a675e25187fd63387a4b13cf79469936668d",
+      "request_id": null,
+      "job_id": null,
+      "status": "planned"
+    },
+    {
+      "sha": "3a2073ad5add8770eab0d37b55ad67cea71b448b",
+      "request_id": null,
+      "job_id": null,
+      "status": "planned"
+    }
+  ],
+  "search_coverage": [
+    {
+      "campaign": "layout-numerical-v2",
+      "manifest_digest": "131c6e7c3117b1bbf860e967014c77c548fdfa4108a6457a72672f3e4051e835",
+      "tried": 4,
+      "legal": 4,
+      "unseen": [],
+      "eligible_full_configurations": 4,
+      "stop": {
+        "status": "combine",
+        "observed_at": 1795293105.3522592
+      },
+      "interpretation": "Frozen menu coverage only; neither budget nor menu exhaustion proves a local optimum."
+    },
+    {
+      "campaign": "layout-numerical-lane1",
+      "manifest_digest": "3a21e9a9edd5c05ca3364820521a0c0feec14fb029fe98e00b05a2cfa6902bb2",
+      "tried": 9,
+      "legal": 9,
+      "unseen": [],
+      "eligible_full_configurations": 9,
+      "stop": {
+        "status": "budget_exhausted",
+        "observed_at": 1795294597.107336
+      },
+      "interpretation": "Frozen menu coverage only; neither budget nor menu exhaustion proves a local optimum."
+    }
+  ],
+  "comparison_context": "Same CPU34 capacity-expansion regime; no cross-lane timing ranking or final quiet promotion."
+}
