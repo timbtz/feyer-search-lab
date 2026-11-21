@@ -820,6 +820,36 @@ if(typeof module!=='undefined')module.exports.SessionGraph=SessionGraph;
   $('profiler-select').addEventListener('change',e=>{selectedProfile=e.target.value;renderProfiler();});
   $('profiler-filter').addEventListener('input',renderProfiler);
 
+  let selectedGeneralization='';
+  const CASE_NAMES={dev:'Supplied example (uifo 800–3000)',dev_perturbed:'Supplied example, perturbed values',uifo_20_5000:'UIFO 20–5000, balanced homodyne',uifo_rand1:'Random 3×3 UIFO, seed 1',uifo_rand2:'Random 3×3 UIFO, seed 2',uifo_rand3:'Random 3×3 UIFO, seed 3',voyager:'Voyager',aligo:'aLIGO'};
+  const sci=v=>!numeric(v)?'—':v===0?'0':v.toExponential(1);
+  function renderGeneralization(){
+    const reports=list(S.data?.generalization_reports),source=S.data?.generalization_source,query=$('generalization-filter').value.trim().toLowerCase();
+    const matching=reports.filter(r=>[r.candidate_sha,r.label,r.branch].join(' ').toLowerCase().includes(query)).sort((a,b)=>(stamp(b.observed_at)||0)-(stamp(a.observed_at)||0));
+    const select=clear('generalization-select'),target=clear('generalization-detail');
+    if(!matching.some(r=>r.candidate_sha===selectedGeneralization))selectedGeneralization=matching[0]?.candidate_sha||'';
+    for(const r of matching)select.append(new Option(`${short(r.candidate_sha)} · ${r.label||'unlabelled'} · ${r.status==='ok'?'all setups hold':'needs review'}`,r.candidate_sha));
+    select.value=selectedGeneralization;
+    $('generalization-source').textContent=!reports.length?`No cross-setup comparisons recorded${source?.error?` · ${source.error}`:''}`:`${reports.length} recorded comparisons · file observed ${time(source?.observed_at)}${source?.error?` · ${source.error}`:''}`;
+    const r=matching.find(r=>r.candidate_sha===selectedGeneralization);
+    if(!r){target.append(make('p','empty',reports.length?'No comparisons match this commit or label.':'Run lab.gencheck report to record a candidate. A missing record does not mean the candidate generalizes.'));return;}
+    const cases=list(r.cases),held=cases.filter(c=>c.status==='ok').length;
+    const heading=make('div','detail-header'),identity=make('div');add(identity,make('h3','',r.label||`Commit ${short(r.candidate_sha)}`),make('p','',`${r.instance||'Instance not recorded'}${numeric(r.cpu)?` · CPU ${r.cpu}`:''} · reference ${short(r.reference_sha)} · recorded ${time(r.observed_at)}`));add(heading,identity,pill(r.status==='ok'?`Holds on ${held}/${cases.length} setups`:`Review ${cases.length-held}/${cases.length} setups`,r.status==='ok'?'valid':'failed'));target.append(heading);
+    const wrap=make('div','table-wrap'),table=make('table'),head=make('thead'),hr=make('tr');
+    for(const title of ['Setup','Frequencies · variables','Max |Δ log S|','Max output Δ (rel.)','Gradient Δ (rel. L2)','Time, unchanged → candidate','Result'])hr.append(make('th','',title));head.append(hr);table.append(head);
+    const body=make('tbody');
+    for(const c of cases){const tr=make('tr'),name=make('td');add(name,make('div','',CASE_NAMES[c.case]||human(c.case)),list(c.issues).length?make('p','cell-subtitle',list(c.issues).join(' · ')):null);
+      const outputs=Object.values(c.max_relative_output_error||{}).filter(numeric),maxOut=outputs.length?Math.max(...outputs):null,gain=numeric(c.reference_seconds)&&numeric(c.candidate_seconds)&&c.reference_seconds>0?(1-c.candidate_seconds/c.reference_seconds)*100:null;
+      const timeCell=make('td','number',numeric(c.candidate_seconds)?`${seconds(c.reference_seconds)} → ${seconds(c.candidate_seconds)}`:'—');if(numeric(gain))timeCell.append(make('p',`cell-subtitle ${gain>0?'positive':'negative'}`,`${Math.abs(gain).toFixed(0)}% ${gain>0?'faster':'slower'}`));
+      const result=make('td');result.append(pill(c.status==='ok'?'Holds':human(c.status),c.status==='ok'?'valid':c.status==='reference_unavailable'?'':'failed'));
+      add(tr,name,make('td','number',numeric(c.frequencies)?`${c.frequencies} · ${c.design_variables}`:'—'),make('td','number',sci(c.max_abs_log_sensitivity_error)),make('td','number',sci(maxOut)),make('td','number',sci(c.gradient_relative_l2)),timeCell,result);body.append(tr);}
+    table.append(body);wrap.append(table);target.append(wrap);
+    target.append(make('p','table-note',`A setup holds when every output and gradient is finite, max |Δ log sensitivity| ≤ ${sci(r.thresholds?.max_abs_log_sensitivity_error)} (the official bound) and gradient relative L2 ≤ ${sci(r.thresholds?.gradient_relative_l2)}. ${r.timing_scope||''} The team's strict 1e-7 saved-array check and the official queue result remain separate evidence.`));
+    add(target,commitLink(r.candidate_sha),branchLink(r.branch));disclosure(target,'Per-stage timings and complete comparison record',r,'generalization-record');
+  }
+  $('generalization-select').addEventListener('change',e=>{selectedGeneralization=e.target.value;renderGeneralization();});
+  $('generalization-filter').addEventListener('input',renderGeneralization);
+
   function render() {
     const focused=document.activeElement?.id;
     const opened=[...document.querySelectorAll('details[open]')].map(n=>n.dataset.key);
@@ -834,15 +864,16 @@ if(typeof module!=='undefined')module.exports.SessionGraph=SessionGraph;
     else if(pending&&c?.controller?.process_alive===false){notice.textContent='The local controller has stopped with work still pending. Remote results remain available; see technical details.';notice.hidden=false;}
     else if(S.data?.queue?.enabled&&S.data.queue.stale&&S.data.queue.error){notice.textContent='The AMD connection is unavailable. Showing the last recorded results.';notice.hidden=false;}
     $('round-caption').textContent=c?`${statusLabel(c)}${c.source_updated_at?` · last evidence ${time(c.source_updated_at)}`:''}`:'No search evidence available.';
-    renderProfiler();renderTeam();renderProgression();renderTopology();renderGraph();renderSummary();renderNow();drawTable($('latest'),rows().filter(r=>r.kind!=='seed').slice(-3).reverse(),true);renderWorkflow();renderResults();renderTechnical();
+    renderProfiler();renderGeneralization();renderTeam();renderProgression();renderTopology();renderGraph();renderSummary();renderNow();drawTable($('latest'),rows().filter(r=>r.kind!=='seed').slice(-3).reverse(),true);renderWorkflow();renderResults();renderTechnical();
     for(const d of document.querySelectorAll('details[data-key]'))d.open=opened.includes(d.dataset.key);
     if(focused&&document.activeElement===document.body&&$(focused))$(focused).focus({preventScroll:true});
     $('freshness').textContent=`${S.data?.snapshot?'Saved snapshot · source time':S.data?.demo?'Synthetic demo · example time':'Read-only · refreshed'} ${time(S.data?.generated_at)}${S.data?.queue?.enabled&&!S.data?.snapshot?` · AMD ${S.data.queue.stale?'last observation':'connected'}`:''}`;
   }
+  const VIEWS=['graph','overview','workflow','profiler','results','generalization'];
   function showView(view) {
-    if(!['graph','overview','workflow','profiler','results'].includes(view))view='graph';S.view=view;
-    for(const id of ['graph','overview','workflow','profiler','results'])$(id).hidden=id!==view;
-    const index=['graph','overview','workflow','profiler','results'].indexOf(view);$('navigation').setAttribute('active-tab-index',String(index));if(customElements.get('p-tabs-bar'))$('navigation').activeTabIndex=index;
+    if(!VIEWS.includes(view))view='graph';S.view=view;
+    for(const id of VIEWS)$(id).hidden=id!==view;
+    const index=VIEWS.indexOf(view);$('navigation').setAttribute('active-tab-index',String(index));if(customElements.get('p-tabs-bar'))$('navigation').activeTabIndex=index;
     for(const button of document.querySelectorAll('[data-view]'))button.setAttribute('aria-selected',String(button.dataset.view===view));
     document.body.classList.toggle('showing-graph',view==='graph');
     if(view==='graph'){requestAnimationFrame(drawProgressLines);requestAnimationFrame(drawTopologyLines);}
@@ -858,7 +889,7 @@ if(typeof module!=='undefined')module.exports.SessionGraph=SessionGraph;
   $('campaign').addEventListener('change',e=>{S.campaign=e.target.value;S.selected=null;render();});
   document.querySelector('.brand').addEventListener('click',e=>{e.preventDefault();showView('graph');window.scrollTo({top:0,behavior:'smooth'});});
   for(const b of document.querySelectorAll('[data-view]'))b.addEventListener('click',()=>showView(b.dataset.view));
-  $('navigation').addEventListener('update',e=>{if(e.target===$('navigation'))showView(['graph','overview','workflow','profiler','results'][e.detail.activeTabIndex]);});
+  $('navigation').addEventListener('update',e=>{if(e.target===$('navigation'))showView(VIEWS[e.detail.activeTabIndex]);});
   for(const a of document.querySelectorAll('p-accordion'))a.addEventListener('update',e=>{if(e.target===a)a.open=e.detail.open;});
   $('show-workflow').addEventListener('click',()=>showView('workflow'));$('show-results').addEventListener('click',()=>showView('results'));
   $('result-filter').addEventListener('change',e=>{S.filter=e.target.value;renderResults();});

@@ -104,3 +104,7 @@ Search progression retains each exact evaluation. Use **Expand decisions & feedb
 The default Topology map uses compact candidate nodes and declared parent arrows. Direct node selection opens the side inspector; profiler and run details can expand locally. Collapse all restores the overview. Topology, admitted implementation space, and declared phase focus are labelled distinctly; absent topology stays unclassified. Branch dropdowns have been removed.
 
 The process overview now flows horizontally. Recorded agent sessions expand into candidate revisions and separate evaluation jobs. Same-agent sessions remain distinct; shared-branch ambiguity stays unassigned. Numerical menus are blue rectangles; decisions are orange circles with explicit reasons. Complete menu coverage and controller budget exhaustion remain separate. Disable Group agent sessions for the individual-candidate view. Aggregated candidate ancestry links are not evidence of model-feedback delivery.
+
+## Other setups
+
+The **Other setups** tab reads `.lab/generalization/report.json` (`feyer-generalization-collection-v1`), written by `python -m lab.gencheck report`. Each record compares one exact candidate with the unchanged simulator on several optical setups and shows per-setup sensitivity, output and gradient differences and exploratory timings. A missing file means no comparison has been recorded. It does not mean a candidate generalizes. These records do not change official, strict, eligibility or Pareto status. See [Generalization to other setups](generalization.md).

@@ -116,6 +116,38 @@ def profiler_state(value):
     return public(value['profiler_reports'])
 
 
+GENERALIZATION_CASE_STATUSES = ('ok', 'needs_review', 'candidate_error', 'reference_unavailable', 'candidate_missing')
+
+
+def generalization_state(value):
+    """Read cross-setup comparison records written by `lab.gencheck report`.
+
+    These are development comparisons against the unchanged simulator on other
+    optical setups. They are not queue measurements and do not change a
+    candidate's official, strict or Pareto status.
+    """
+    if not isinstance(value, dict) or value.get('schema') != 'feyer-generalization-collection-v1':
+        raise ValueError('Unsupported generalization collection schema')
+    reports = value.get('reports')
+    if not isinstance(reports, list):
+        raise ValueError('Invalid generalization collection')
+    for report in reports:
+        if not isinstance(report, dict) or report.get('schema') != 'feyer-generalization-v1':
+            raise ValueError('Unsupported generalization record schema')
+        if report.get('status') not in ('ok', 'needs_review'):
+            raise ValueError('Unknown generalization record status')
+        if not isinstance(report.get('candidate_sha'), str) or not isinstance(report.get('cases'), list):
+            raise ValueError('Invalid generalization record identity')
+        for case in report['cases']:
+            if not isinstance(case, dict) or not isinstance(case.get('case'), str):
+                raise ValueError('Invalid generalization case')
+            if case.get('status') not in GENERALIZATION_CASE_STATUSES:
+                raise ValueError('Unknown generalization case status')
+            if not isinstance(case.get('issues', []), list):
+                raise ValueError('Invalid generalization case issues')
+    return public(reports)
+
+
 def tail(path, size=10000):
     if not path.is_file() or path.is_symlink():
         return ''
@@ -234,6 +266,8 @@ class Observatory:
         self.team_data = None
         self.profiler = dict(source='.lab/profiler/report.json', observed_at=None, error=None)
         self.profiler_data = None
+        self.generalization = dict(source='.lab/generalization/report.json', observed_at=None, error=None)
+        self.generalization_data = None
         self.cached_files = {}
         self.host, self.root = host, root
         self.stop = threading.Event()
@@ -312,6 +346,29 @@ class Observatory:
             reports, source = self.profiler_data, dict(self.profiler)
         source['available'] = reports is not None
         source['stale'] = bool(source['error']) or source['observed_at'] is None or now - source['observed_at'] > PROFILER_STALE_SECONDS
+        return reports if reports is not None else [], source
+
+    def generalization_snapshot(self, now):
+        path = self.lab / 'generalization' / 'report.json'
+        try:
+            if path.is_symlink() or path.parent.is_symlink():
+                raise ValueError('Refusing symlink generalization snapshot')
+            reports = generalization_state(self.cached_json(path))
+            observed_at = path.stat().st_mtime
+            with self.lock:
+                self.generalization_data = reports
+                self.generalization.update(observed_at=observed_at, error=None)
+        except FileNotFoundError:
+            with self.lock:
+                self.generalization['error'] = None if self.generalization_data is None else (
+                    'FileNotFoundError: generalization snapshot removed; last successful observation retained')
+        except (OSError, ValueError, TypeError) as exc:
+            with self.lock:
+                self.generalization['error'] = (f'{type(exc).__name__}: local generalization snapshot unavailable; '
+                                                'last successful observation retained if available')
+        with self.lock:
+            reports, source = self.generalization_data, dict(self.generalization)
+        source['available'] = reports is not None
         return reports if reports is not None else [], source
 
     def poll_remote(self):
@@ -458,6 +515,7 @@ class Observatory:
         now = time.time()
         team, team_source = self.team_snapshot(now)
         profiles, profiler_source = self.profiler_snapshot(now)
+        generalization, generalization_source = self.generalization_snapshot(now)
         alerts, campaigns, jobs = [], [], {}
         for path in sorted((self.lab/'campaigns').glob('*/campaign.sqlite3')):
             try:
@@ -504,6 +562,7 @@ class Observatory:
             queue=queue, historical=historical, alerts=alerts,
             team_search=team, team_search_source=team_source,
             profiler_reports=profiles, profiler_source=profiler_source,
+            generalization_reports=generalization, generalization_source=generalization_source,
             read_only=True, refresh_seconds=5,
             stage_policy={'screen':'Complete physical workload, provisional checks; omits finite-difference gradient sanity check and strict saved-array comparison.',
                 'full':'Official full benchmark plus separate strict saved-array / all-gradient comparison.',

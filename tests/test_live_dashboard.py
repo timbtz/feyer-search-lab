@@ -502,3 +502,75 @@ class ObservatoryTests(unittest.TestCase):
 
 if __name__=='__main__':
     unittest.main()
+
+
+class GeneralizationSourceTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        (self.root/'.lab').mkdir()
+        self.obs = Observatory(self.root)
+        self.path = self.root/'.lab/generalization/report.json'
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def fixture(self, status='ok'):
+        case = dict(case='uifo_20_5000', status=status, issues=[], frequencies=100, design_variables=192,
+                    max_abs_log_sensitivity_error=0.0, gradient_relative_l2=1e-18,
+                    reference_seconds=35.1, candidate_seconds=17.8)
+        return dict(schema='feyer-generalization-collection-v1', reports=[dict(
+            schema='feyer-generalization-v1', candidate_sha='a'*40, label='candidate', status=status,
+            observed_at=100.0, cases=[case])])
+
+    def write(self, value):
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(json.dumps(value))
+
+    def test_missing_collection_is_unavailable_not_an_error(self):
+        state = self.obs.state()
+        self.assertEqual(state['generalization_reports'], [])
+        self.assertFalse(state['generalization_source']['available'])
+        self.assertIsNone(state['generalization_source']['error'])
+
+    def test_records_preserved_without_changing_queue_verdicts(self):
+        data = self.fixture('needs_review')
+        self.write(data)
+        before = self.path.read_bytes()
+        with patch('lab.live_dashboard.subprocess.run') as command:
+            reports, source = self.obs.generalization_snapshot(time.time())
+        command.assert_not_called()
+        self.assertEqual(reports, data['reports'])
+        self.assertTrue(source['available'])
+        self.assertEqual(self.path.read_bytes(), before)
+        self.assertEqual(self.obs.state()['jobs'], [])
+
+    def test_malformed_collection_retains_last_good(self):
+        data = self.fixture()
+        self.write(data)
+        first = self.obs.state()['generalization_reports']
+        malformed = [[], {'reports': []}, {'schema': 'feyer-generalization-collection-v1', 'reports': {}},
+                     {'schema': 'feyer-generalization-collection-v1', 'reports': [{'schema': 'other'}]},
+                     {'schema': 'feyer-generalization-collection-v1', 'reports': [dict(data['reports'][0], status='passed')]},
+                     {'schema': 'feyer-generalization-collection-v1', 'reports': [dict(data['reports'][0], cases=[{'case': 'x', 'status': 'great'}])]}]
+        for value in malformed:
+            with self.subTest(value=value):
+                self.write(value)
+                state = self.obs.state()
+                self.assertEqual(state['generalization_reports'], first)
+                self.assertTrue(state['generalization_source']['error'])
+        self.path.unlink()
+        state = self.obs.state()
+        self.assertEqual(state['generalization_reports'], first)
+        self.assertTrue(state['generalization_source']['error'])
+
+    def test_symlink_rejected_and_secrets_redacted(self):
+        data = self.fixture()
+        data['reports'][0]['label'] = 'Bearer private-credential'
+        self.write(data)
+        self.assertNotIn('private-credential', json.dumps(self.obs.state()['generalization_reports']))
+        self.path.unlink()
+        target = self.root/'external.json'
+        target.write_text(json.dumps(self.fixture()))
+        self.path.symlink_to(target)
+        self.assertFalse(Observatory(self.root).state()['generalization_source']['available'])
