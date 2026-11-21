@@ -177,3 +177,62 @@ Validation: every simulator module parses; whitespace passes; AST comparison con
 Turn-4 shared evidence generated Unix `1795297076.1527739`, collector trusted-local-artifacts-v1, instance amd-tim. Team digest `922c284037a5d8f7be5e5b299abffb478d7441b59b987196ed74184b846da99d`, policy digest `54fffa2b291a30d2d20eb7b881da57f3f127ed0d3559330d7d5685838532e01c`, evidence digest `ad15ce108fe222fc437484e817ff41128833856915b0919c341722aac0a4f527`, content digest `23cf374a2b871f4209c4569c6f46ad74d6210328224ce6c646d27bd343fe2841`. Other cohorts and unknown contexts remain incomparable.
 
 Continue after candidate four while time remains. Session `astra-guided-v2`, thread `01a1fffd-808b-7df1-9718-3c929f0deb90`; unchanged deadline 2026-11-21 22:22:45.341115 UTC. Supervisor owns commits/evaluation. No agents, SSH, Git writes or protected-path changes.
+
+
+## Candidate 4 result: retain provisionally
+
+Exact SHA **`c99bd28b0ba6201e10176997813b3327040da151`**, screen **`7478ae1ce24341a3bad8f3f53301e580`**, full **`93b9c1726a99441eb8441caf5878687e`**. Official/strict/resource/source/workload/precision pass. Local full report and every saved-output/gradient check inspected. Screen first run 18.063763388 s, compilation/lowering 7.224385235 s, wall 19.074162744 s; provisional evidence only.
+
+Full first run **18.017013432 s**, compared with retained exact parent candidate 2 `3581734de67e45f701259839d640442add500777`, full `445a35d5836749ae92a4f30d0b70e41b`, 19.698403006 s: observed reduction **1.681389574 s**. Compilation/lowering 7.072752636 s versus 8.736152118 s, reduction 1.663399482 s. Gradient compilation 2.449156754 s versus 3.993684176 s, reduction 1.544527423 s. This supports the pruning hypothesis on this combination; individual primitive/kernel time was not measured. Forward execution rose slightly to 8.372780466 s from 8.301623050 s. Full remains one exploratory observation in amd-tim cohort `10567ad0f8dcb7122b6b182e1be342313b89eef340d4070073fdf62d6342204c`, concurrent epoch 14. Quiet matched confirmation against candidate 2 and compatible donor parents remains outstanding; no promotion claim.
+
+Warm median 10.307053125 s; samples 10.307053125, 10.307959644, 10.303746864 s. Job wall 81.349728243 s; peak RSS 6,902,564 KiB; sampled peak 7,066,820,608 bytes. Warm execution and job wall are distinct from first run.
+
+| Phase | Seconds |
+| --- | ---: |
+| imports | 0.290794786 |
+| initialize | 0.002879091 |
+| load | 0.001499444 |
+| build | 0.831181817 |
+| forward_lower | 0.715897029 |
+| forward_compile | 3.340866249 |
+| forward | 8.372780466 |
+| sensitivity_lower | 0.077279421 |
+| sensitivity_compile | 0.275532052 |
+| sensitivity | 0.000904489 |
+| gradient_lower | 0.214021131 |
+| gradient_compile | 2.449156754 |
+| gradient | 1.443781896 |
+| host_transfer | 0.000438808 |
+
+All saved checks (last warm scope):
+
+| Output | Max absolute error | Relative L2 | Max normalized error | Failures |
+| --- | ---: | ---: | ---: | ---: |
+| carrier | 0 | 0 | 0 | 0 |
+| signal | 0 | 0 | 0 | 0 |
+| noise | 0 | 0 | 0 | 0 |
+| sensitivity | 0 | 0 | 0 | 0 |
+| powers | 0 | 0 | 0 | 0 |
+| gradient | 4.54747350886464e-13 | 6.64722166067799e-18 | 1.63809701493981e-08 | 0 |
+| parameters | 0 | 0 | 0 | 0 |
+| frequencies | 0 | 0 | 0 | 0 |
+
+All failure lists empty. Official finite-difference spot check passes; sensitivity max log error 5.374104176780747e-6. Gradient shape 193, norm 70517.10686388786; loss 9.793036291535532e-8. Candidate 4 is retained as the new scientific parent; candidate 2 remains preserved for confirmation.
+
+## Candidate 5: preserve scalar input slots through lower-sideband wrappers
+
+Scientific combination parents: **`c99bd28b0ba6201e10176997813b3327040da151`** and mechanism donor **`3b805077bb5c61d85115faf38af243cc001d0fee`**. Candidate SHA and screen/full IDs pending supervisor. Initial worktree clean.
+
+Exact measured parent full **`93b9c1726a99441eb8441caf5878687e`** is dominated by forward execution **8.372780466 s (46.47%)**, forward compilation **3.340866249 s (18.54%)**, and gradient compilation **2.449156754 s (13.59%)**. Total lowering/compilation is 7.072752636 s (39.26%). This candidate targets both compilation phases, with the largest likely effect on gradient compilation because component rematerialization is there. It does not attribute the forward 8.37 s to a particular native operation.
+
+The three lower-sideband functions reconstruct a dense array of `[-p[0], p[1], ...]` before calling their base function. This can discard symbolic-zero tangent information from constant scalar slots. The focused change routes their existing slot evaluator directly to the identical base function using `_ParameterSlots` with only slot 0 negated. Function-identity lookup covers space_lower, space_modulation_lower and laser_frequency_modulation_lower; all other functions retain the existing path. No component formula, dtype, input dependency mask, checkpoint boundary, build logic, solver arithmetic, batching setting or physical workload changes. No new tuning flag. The original public wrapper functions and generic evaluation path remain intact.
+
+Read donor's exact simulator diff and its recorded result in completed `633689f9bf054a90ca21b7b6087120cd86fa0d0e` notes. Donor full **`57ef1df7269d4b56acf28bcd89958873`** passes official/strict/resource/source/workload/precision in the same cohort and concurrent epoch 14: total 19.566764480 s, forward compile 6.472866856 s, gradient compile 1.288536770 s. Its parent `10a311f6...` full `3a030c65057c4134ae07d46f012d674a` was 19.766133159 s, forward compile 6.619912855 s, gradient compile 1.318031559 s. The small observed improvement is not repeat-confirmed. Its build and checkpoint structure differ from ours, so savings are not assumed additive. Also inspected the newer peer row-splitting diff (`633689f9...`) but did not transfer it: it is a distinct transformation requiring adaptation to our flat output indices.
+
+Hypothesis: avoiding array reconstruction should let AD omit constant-slot derivative terms within these lower-sideband groups, reducing forward/gradient compilation and perhaps lowering. Execution should be similar; native costs are unknown. Tentative first-run opportunity 0–0.3 s is unmeasured. The compiler may already eliminate some terms, or layout/trace changes may outweigh the savings. Keep only if complete first-run results and strict outputs justify it, not because one phase improves.
+
+Validation: simulator syntax and whitespace pass. AST checks establish that the new evaluator equals the enabled donor implementation, and every other parent function/class is unchanged. Checked original wrapper ASTs explicitly: each applies exactly one negation to slot 0 and passes the required remaining slots unchanged to the mapped base. This verifies the source-level scalar/sign mapping, not compiled numerical identity. No local JAX/simulator/benchmark execution. Supervisor screen/full and all strict physical-output/full-gradient checks remain required. Preserve all 101 frequencies, 193 variables, double precision and the official three JIT stages.
+
+Shared feed generated Unix `1795297510.331399`, amd-tim trusted-local-artifacts-v1. Team digest `922c284037a5d8f7be5e5b299abffb478d7441b59b987196ed74184b846da99d`, policy digest `54fffa2b291a30d2d20eb7b881da57f3f127ed0d3559330d7d5685838532e01c`, evidence digest `68516222c08d64da74a3b577626ad87b80c329f07a971233c829698bc3ddfd07`, content digest `63401845a3d39c1ba004f38acb69b24863b7ab74aa8fafae06462c52cd8d5a92`. Feed precedes our candidate 4 completion; supplied exact feedback is authoritative for this result. Other cohorts/unknown contexts remain separate.
+
+Continue within fixed deadline 2026-11-21 22:22:45.341115 UTC; session astra-guided-v2, thread `01a1fffd-808b-7df1-9718-3c929f0deb90`. No candidate cap, agents, Git writes, SSH or protected-path modifications.

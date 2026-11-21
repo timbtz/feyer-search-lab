@@ -28,6 +28,7 @@ from jax import lax, vmap, jit
 from differometor.setups import Setup
 from differometor.build import build, pairs_to_arrays, prepare_arrays, LINKING_FUNCTIONS
 from differometor.components import FUNCTIONS, UNIT_VACUUM, H_PLANCK, F0
+from differometor import components as _components
 
 
 jax.config.update("jax_enable_x64", True)
@@ -108,7 +109,21 @@ def _evaluate_component_group_slots(function_index, differentiable, function_inp
         function_inputs[:, slot] if keep else lax.stop_gradient(function_inputs[:, slot])
         for slot, keep in enumerate(differentiable)
     )
+    base = _LOWER_TO_BASE.get(function)
+    if base is not None:
+        # Preserve symbolic-zero slot tangents through lower-sideband wrappers.
+        # Their array reconstruction otherwise gives the base a dense tangent.
+        def evaluate(*values):
+            return base(_ParameterSlots((-values[0],) + tuple(values[1:])))
+        return vmap(evaluate)(*columns)
     return vmap(lambda *values: function(_ParameterSlots(values)))(*columns)
+
+
+_LOWER_TO_BASE = {
+    _components.space_lower: _components.space,
+    _components.space_modulation_lower: _components.space_modulation,
+    _components.laser_frequency_modulation_lower: _components.laser_frequency_modulation,
+}
 
 
 def _save_assembly_indices(primitive, *avals, **params):
