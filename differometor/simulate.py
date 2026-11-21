@@ -70,12 +70,6 @@ def _evaluate_component(function_and_inputs):
     return lax.switch(function_index, branches, function_inputs)
 
 
-@partial(jit, static_argnums=(0,), inline=True)
-def _evaluate_component_group(function_index, function_inputs):
-    """Vectorize one component type without batching a dynamic branch selector."""
-    return vmap(FUNCTIONS[function_index])(function_inputs)
-
-
 def _save_assembly_indices(primitive, *avals, **params):
     """Retain only discrete indexing results; recompute complex arithmetic."""
     # JAX 0.9.0 inserts reduce_precision on saved inexact residuals, which
@@ -98,7 +92,13 @@ def _save_assembly_indices(primitive, *avals, **params):
     )
 
 
-@partial(jax.checkpoint, prevent_cse=False, policy=_save_assembly_indices)
+@partial(jit, static_argnums=(0,), inline=True)
+@partial(jax.checkpoint, static_argnums=(0,), prevent_cse=False, policy=_save_assembly_indices)
+def _evaluate_component_group(function_index, function_inputs):
+    """Recompute one component type, retaining its gathered inputs outside."""
+    return vmap(FUNCTIONS[function_index])(function_inputs)
+
+
 def _component_values(
     parameters,
     function_input_indices,
@@ -106,7 +106,7 @@ def _component_values(
     function_indices,
     component_groups,
 ):
-    """Recompute component values; carrier coupling and dense assembly stay outside."""
+    """Checkpoint component groups; keep gathers and output routing outside."""
     output_rows = output_indices[0]
     # Keep the function selector scalar so only the selected component branch
     # executes. The outer vmap in simulate still batches frequency samples.
