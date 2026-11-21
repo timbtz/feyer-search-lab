@@ -1,0 +1,9 @@
+# Authorized follow-up: noise matrix reuse feasibility
+
+Resume Claude session 2d000df0-57f8-472c-bf84-2ceb7a769b7c. The user extended the original task to ONE HOUR TOTAL from 1795283239.545374, with an absolute deadline of 1795286839.545374. This is a second notes-only turn; do not start a new hour. The first turn and its receipt remain preserved.
+
+Deepen your proposed noise-matrix reuse operator. Independently challenge its dependency and gradient assumptions. Trace linking, real changing indices, padding, carrier/signal expansion, vmap shapes and optimized db/angle gradients. Give a precise guarded predicate and fallback behavior, identify counterexamples, and distinguish shape-derived buffer estimates from compiled materialization. Inspect compatibility of a trailing argument with current callers and the fixed three JIT stages. Derive a minimal validation matrix for a later approved implementation, including full outputs/all gradients, parameter-sweep fallback cases and HLO/RSS evidence. Revise or reject the proposal if the source contradicts it. Include exact source references and uncertainty; do not claim measured savings.
+
+Only edit experiments/notes/claude-setup-audit.md. Preserve its initial findings and add a clearly labeled follow-up section with corrections. No simulator edits, benchmarks, shell, Git/SSH, provider calls, installations, extra agents, queue submissions or changes to the evaluator. Synthetic executable checks are deferred to an approved numerical experiment; this turn uses source and mathematical reasoning only. Do not overlap the other agent's component assembly implementation.
+
+Return summary, hypothesis, ready_for_evaluation=false, stop=true and notes. Finishing early is fine when evidence is sufficient. The supervisor commits and publishes your note and provenance.
