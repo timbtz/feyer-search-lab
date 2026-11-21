@@ -76,3 +76,42 @@ Decision: retain candidate 1 as this direction's best fully validated candidate.
 - Candidate SHA/run IDs and measurements pending supervisor. Require a new screen and full official plus strict saved-output/gradient validation before acceptance; candidate 1 remains the fallback.
 
 Implementation complete. Syntax and `git diff --check` passed. AST isolation check confirms that only the homogeneous helper's map expression and docstring changed relative to candidate 1; checkpoint configuration is identical. `build.py` is byte-identical to candidate 1. No local numerical evaluation, benchmark, environment change or protected-file edit. Ready for evaluation; no candidate-2 speedup is claimed.
+
+## Candidate 2 evaluation and decision
+
+- SHA `1b0def4a91575f7fb5bf9d062b3bff46b6c1593d`; implementation parent is candidate 1 `302e886f6297a80d92b4428d97dfd9b56fd75f52`. Supervisor provenance still lists the original seed8 direction parent; this note identifies the immediate candidate ancestry explicitly. No external candidate combined.
+- Screen `a6ac6d33ff5d45dcb7c4f828343683f9`, request `414d0fc64e464acf8fae0a8045ed98f8`: passed, first-run 26.948518388 s, compilation/lowering 11.648736611 s, process wall 28.175187925 s, peak RSS 13319728 KiB.
+- Full `e967936d11324615ab060a031d2dd111`, request `a8540aa17b7942268cd1bf9bef40a56c`: official and strict checks passed. First-run 26.808539582 s, compilation/lowering 11.591000492 s, warm median 14.294151178 s, process wall 109.171114543 s, peak RSS 13347880 KiB. Full workload and fixed CPU2 environment unchanged.
+
+| Full first-run phase | Seconds |
+| --- | ---: |
+| imports | 0.285187881 |
+| initialize | 0.002887400 |
+| load | 0.001398889 |
+| build | 0.781435676 |
+| forward lower | 0.780527916 |
+| forward compile | 4.792930365 |
+| forward execute | 12.275597235 |
+| sensitivity lower | 0.076766603 |
+| sensitivity compile | 0.372278752 |
+| sensitivity execute | 0.000874709 |
+| gradient lower | 0.271917293 |
+| gradient compile | 5.296579564 |
+| gradient execute | 1.869828904 |
+| host transfer | 0.000328396 |
+
+Saved-array comparison inspected: all physical outputs, parameters and frequencies have zero maximum absolute and relative-L2 errors. Full gradient maximum absolute error 2.168404344971009e-18, relative L2 3.0759654812695556e-23, normalized tolerance error 3.7530746410341796e-11, zero failing coordinates. Tolerances remain rtol=1e-7, scale_atol=1e-12. Reported loss unchanged at 9.793036291535532e-08; official finite-difference check passed and maximum log-sensitivity error remains 5.374104176780747e-06. Saved-array scope is last warm evaluation.
+
+Decision: retain candidate 2 for the next isolated experiment. Its first-run sample is 0.188844 s below candidate 1, with lower first forward/gradient execution and warm median but slightly higher compilation. This does not establish repeatable superiority; both candidates remain validated alternatives. Candidate 2 is the lowest observed fully validated first-run result in this session.
+
+## Candidate 3 proposal
+
+Resumed with 2903 seconds remaining; same session/thread `01a1fedf-f7aa-77b2-885d-75aceeb4c48c`. Numerical parent `1b0def4a91575f7fb5bf9d062b3bff46b6c1593d`; no other combination.
+
+Source evidence: `update` reconstructs the K-by-4 function-output matrix using a separate `.at[rows].set(...)` for every type. The builder's groups partition the original rows exactly once, so these scatters do not overlap. Their order is therefore immaterial. This is different from the final physical matrix scatter, whose ordering must remain unchanged.
+
+Proposal: concatenate all evaluated group outputs and their original row indices, then restore the complete function-output matrix with one scatter. Leave homogeneous vectorization, checkpointing, JIT boundaries, all original output selection and the final physical matrix scatter unchanged. Keep the empty-group case and dynamic fallback. No parameter values or zero entries are filtered.
+
+Hypothesis: one reconstruction scatter may reduce intermediate update/transpose work and compilation compared with a chain of per-type scatters. Concatenation costs may offset this benefit; backend elimination of the previous intermediates has not been measured. No HLO or speedup claim. Require fresh full official and strict checks before accepting candidate 3; candidate 2 remains the validated fallback.
+
+Implementation complete. Syntax and diff whitespace checks passed. AST comparison against candidate 2 confirms that only the grouped output-reconstruction branch changed. Executed the actual old and new reconstruction AST blocks with list-backed array/scatter stubs on 104 deterministic cases, including empty groups, all 19 possible IDs, shuffled group order and zero-valued entries: restored outputs matched in every case. This verifies indexing/ordering mechanics, not JAX lowering, derivatives or physics. No local simulator or benchmark run. Candidate SHA and evaluation run IDs pending supervisor.

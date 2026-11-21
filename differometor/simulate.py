@@ -139,9 +139,16 @@ def update(
         # In particular, do not reorder the final scatter's possibly overlapping
         # destinations, or omit entries whose current parameter value is zero.
         output_matrix = jnp.zeros((function_inputs.shape[0], 4), dtype=jnp.complex128)
+        group_rows = []
+        group_values = []
         for function_index, rows in component_groups.items():
-            group_outputs = _evaluate_component_group(function_index, function_inputs[rows])
-            output_matrix = output_matrix.at[rows].set(group_outputs)
+            group_rows.append(rows)
+            group_values.append(_evaluate_component_group(function_index, function_inputs[rows]))
+        if group_values:
+            # Groups partition the function rows; restore them in one scatter.
+            output_matrix = output_matrix.at[jnp.concatenate(group_rows)].set(
+                jnp.concatenate(group_values, axis=0)
+            )
     outputs = output_matrix[output_indices[0], output_indices[1]]
     return matrix.at[matrix_indices[0], matrix_indices[1]].set(outputs)
 
