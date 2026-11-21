@@ -1,0 +1,567 @@
+[
+  {
+    "schema": "feyer-research-record-v1",
+    "kind": "diagnose",
+    "record_id": "verification-cb502-bounded-followup-v2",
+    "executor": {
+      "kind": "manual",
+      "id": "independent-followup-review"
+    },
+    "status": "evaluated",
+    "candidate_sha": "cb502e8a5a15689e6f41971bd4a611cf6612283f",
+    "parents": [
+      "e2fd659e6f426289c526f79ae758bed4182879a9"
+    ],
+    "target_phases": [],
+    "hypothesis": "Challenge earlier compatibility and numerical claims with source-bound diagnostics.",
+    "change_summary": "Both bounded Voyager tests passed; exact-bound two-capability policy satisfied. This does not supersede broader transformation failures.",
+    "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/reviews/teammate-host-engine/followup/bounded-comparison.json",
+    "source_digest": "8d03f46080c7b1d37d78186fa510a2fb51c96a05404ade36fb14dd62459e36f2",
+    "source_digest_kind": "file_bytes_sha256",
+    "evaluations": [],
+    "verification": {
+      "schema": "feyer-verification-v1",
+      "candidate_sha": "cb502e8a5a15689e6f41971bd4a611cf6612283f",
+      "checks": [
+        {
+          "id": "bounded_descent_3_steps",
+          "capability": "bounded_descent_3_steps",
+          "setup": "voyager-bounded-40freq-45params",
+          "method": "Sequential pinned CPU101 run against clean unchanged02ec741; saved input trajectories checked",
+          "status": "passed",
+          "evidence_kind": "independent_measurement",
+          "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/reviews/teammate-host-engine/followup/bounded-comparison.json",
+          "source_digest": "8d03f46080c7b1d37d78186fa510a2fb51c96a05404ade36fb14dd62459e36f2",
+          "observed_at": 1795301695.311719,
+          "binding": {
+            "setup_digest": "2c875861636a0a0f71c91c83823f36cbdf42761aa219211b26c3f68c5c6ecb0d",
+            "harness_digest": "2c0dee744118d2324c4a09db5cec76c15822c7095ba198a00f73453911a8dd16",
+            "environment_digest": "3d71b534e4f904a39838439d79bfaec287ba6d6bd32b60d1cc6e67e9763edc3a",
+            "acceptance_digest": "7628f3eb554f0a41565b9c1965ab49aa4f2d8d28e8eab4c57f2d723927ca270d"
+          },
+          "outputs": {
+            "test": "bounded_descent_3_steps",
+            "status": "passed",
+            "passed": true,
+            "issues": [],
+            "max_relative_difference": 5.248394315899152e-10
+          },
+          "summary": "Valid-input diagnostic only; does not replace historical stress or certify full JAX. Maximum relative comparison 5.24839432e-10.",
+          "thresholds": {
+            "relative_output_tolerance": 1e-06
+          },
+          "name": "bounded descent 3 steps",
+          "next_action": "Retain full JAX and cross-setup requirements separately."
+        },
+        {
+          "id": "bounded_vmap_value_and_grad",
+          "capability": "bounded_vmap_value_and_grad",
+          "setup": "voyager-bounded-40freq-45params",
+          "method": "Sequential pinned CPU101 run against clean unchanged02ec741; saved input trajectories checked",
+          "status": "passed",
+          "evidence_kind": "independent_measurement",
+          "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/reviews/teammate-host-engine/followup/bounded-comparison.json",
+          "source_digest": "8d03f46080c7b1d37d78186fa510a2fb51c96a05404ade36fb14dd62459e36f2",
+          "observed_at": 1795301695.311719,
+          "binding": {
+            "setup_digest": "2c875861636a0a0f71c91c83823f36cbdf42761aa219211b26c3f68c5c6ecb0d",
+            "harness_digest": "2c0dee744118d2324c4a09db5cec76c15822c7095ba198a00f73453911a8dd16",
+            "environment_digest": "3d71b534e4f904a39838439d79bfaec287ba6d6bd32b60d1cc6e67e9763edc3a",
+            "acceptance_digest": "7628f3eb554f0a41565b9c1965ab49aa4f2d8d28e8eab4c57f2d723927ca270d"
+          },
+          "outputs": {
+            "test": "bounded_vmap_value_and_grad",
+            "status": "passed",
+            "passed": true,
+            "issues": [],
+            "max_relative_difference": 1.6487996628387612e-13
+          },
+          "summary": "Valid-input diagnostic only; does not replace historical stress or certify full JAX. Maximum relative comparison 1.64879966e-13.",
+          "thresholds": {
+            "relative_output_tolerance": 1e-06
+          },
+          "name": "bounded vmap value and grad",
+          "next_action": "Retain full JAX and cross-setup requirements separately."
+        }
+      ]
+    }
+  },
+  {
+    "schema": "feyer-research-record-v1",
+    "kind": "diagnose",
+    "record_id": "verification-cb502-hardened-followup-v2",
+    "executor": {
+      "kind": "manual",
+      "id": "independent-followup-review"
+    },
+    "status": "evaluated",
+    "candidate_sha": "cb502e8a5a15689e6f41971bd4a611cf6612283f",
+    "parents": [
+      "e2fd659e6f426289c526f79ae758bed4182879a9"
+    ],
+    "target_phases": [],
+    "hypothesis": "Challenge earlier compatibility and numerical claims with source-bound diagnostics.",
+    "change_summary": "Corrected result:5 numeric passes,1nonfinite batch,5 unavailable; physical input caveat retained.",
+    "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/numerical-audit/cb502-strict-comparison.json",
+    "source_digest": "03641d4d778c0e7f8cced005e0a935328d1f8c7c31d1ce72aebe85f7ca7f4929",
+    "source_digest_kind": "file_bytes_sha256",
+    "evaluations": [],
+    "verification": {
+      "candidate_sha": "cb502e8a5a15689e6f41971bd4a611cf6612283f",
+      "checks": [
+        {
+          "id": "hardened-value_and_grad_jit",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "Hardened value_and_grad_jit",
+          "status": "passed",
+          "method": "Reanalyse existing independent raw results using complete-inventory finite-shape comparator",
+          "summary": "{'test': 'value_and_grad_jit', 'status': 'passed', 'max_relative_difference': 2.357093384974352e-13, 'issues': [], 'passed': True}",
+          "evidence_kind": "independent_measurement",
+          "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/numerical-audit/cb502-strict-comparison.json",
+          "next_action": "Preserve original and follow-up scopes."
+        },
+        {
+          "id": "hardened-descent_3_steps",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "Hardened descent_3_steps",
+          "status": "unsupported",
+          "method": "Reanalyse existing independent raw results using complete-inventory finite-shape comparator",
+          "summary": "Historical unbounded batch/descent exceed physical reflectivity bounds; separately bounded follow-up passed. {'test': 'descent_3_steps', 'status': 'unavailable', 'max_relative_difference': None, 'issues': ['candidate: missing, failed, or missing value']}",
+          "evidence_kind": "independent_measurement",
+          "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/numerical-audit/cb502-strict-comparison.json",
+          "next_action": "Keep forward/second-order transformations unresolved until full simulator migration passes."
+        },
+        {
+          "id": "hardened-vmap_value_and_grad",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "Hardened vmap_value_and_grad",
+          "status": "failed",
+          "method": "Reanalyse existing independent raw results using complete-inventory finite-shape comparator",
+          "summary": "Historical unbounded batch/descent exceed physical reflectivity bounds; separately bounded follow-up passed. {'test': 'vmap_value_and_grad', 'status': 'failed', 'max_relative_difference': None, 'issues': ['value: nonfinite numeric value'], 'passed': False}",
+          "evidence_kind": "independent_measurement",
+          "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/numerical-audit/cb502-strict-comparison.json",
+          "next_action": "Preserve original and follow-up scopes."
+        },
+        {
+          "id": "hardened-jvp",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "Hardened jvp",
+          "status": "unsupported",
+          "method": "Reanalyse existing independent raw results using complete-inventory finite-shape comparator",
+          "summary": "{'test': 'jvp', 'status': 'unavailable', 'max_relative_difference': None, 'issues': ['candidate: missing, failed, or missing value']}",
+          "evidence_kind": "independent_measurement",
+          "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/numerical-audit/cb502-strict-comparison.json",
+          "next_action": "Keep forward/second-order transformations unresolved until full simulator migration passes."
+        },
+        {
+          "id": "hardened-jacfwd_2",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "Hardened jacfwd_2",
+          "status": "unsupported",
+          "method": "Reanalyse existing independent raw results using complete-inventory finite-shape comparator",
+          "summary": "{'test': 'jacfwd_2', 'status': 'unavailable', 'max_relative_difference': None, 'issues': ['candidate: missing, failed, or missing value']}",
+          "evidence_kind": "independent_measurement",
+          "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/numerical-audit/cb502-strict-comparison.json",
+          "next_action": "Keep forward/second-order transformations unresolved until full simulator migration passes."
+        },
+        {
+          "id": "hardened-hvp_fwd_over_rev",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "Hardened hvp_fwd_over_rev",
+          "status": "unsupported",
+          "method": "Reanalyse existing independent raw results using complete-inventory finite-shape comparator",
+          "summary": "{'test': 'hvp_fwd_over_rev', 'status': 'unavailable', 'max_relative_difference': None, 'issues': ['candidate: missing, failed, or missing value']}",
+          "evidence_kind": "independent_measurement",
+          "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/numerical-audit/cb502-strict-comparison.json",
+          "next_action": "Keep forward/second-order transformations unresolved until full simulator migration passes."
+        },
+        {
+          "id": "hardened-hvp_rev_over_rev",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "Hardened hvp_rev_over_rev",
+          "status": "unsupported",
+          "method": "Reanalyse existing independent raw results using complete-inventory finite-shape comparator",
+          "summary": "{'test': 'hvp_rev_over_rev', 'status': 'unavailable', 'max_relative_difference': None, 'issues': ['candidate: missing, failed, or missing value']}",
+          "evidence_kind": "independent_measurement",
+          "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/numerical-audit/cb502-strict-comparison.json",
+          "next_action": "Keep forward/second-order transformations unresolved until full simulator migration passes."
+        },
+        {
+          "id": "hardened-eager_value_and_grad",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "Hardened eager_value_and_grad",
+          "status": "passed",
+          "method": "Reanalyse existing independent raw results using complete-inventory finite-shape comparator",
+          "summary": "{'test': 'eager_value_and_grad', 'status': 'passed', 'max_relative_difference': 2.3462211830141287e-13, 'issues': [], 'passed': True}",
+          "evidence_kind": "independent_measurement",
+          "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/numerical-audit/cb502-strict-comparison.json",
+          "next_action": "Preserve original and follow-up scopes."
+        },
+        {
+          "id": "hardened-public_run",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "Hardened public_run",
+          "status": "passed",
+          "method": "Reanalyse existing independent raw results using complete-inventory finite-shape comparator",
+          "summary": "{'test': 'public_run', 'status': 'passed', 'max_relative_difference': 2.540200919489761e-13, 'issues': [], 'passed': True}",
+          "evidence_kind": "independent_measurement",
+          "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/numerical-audit/cb502-strict-comparison.json",
+          "next_action": "Preserve original and follow-up scopes."
+        },
+        {
+          "id": "hardened-checkpoint_grad",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "Hardened checkpoint_grad",
+          "status": "passed",
+          "method": "Reanalyse existing independent raw results using complete-inventory finite-shape comparator",
+          "summary": "{'test': 'checkpoint_grad', 'status': 'passed', 'max_relative_difference': 2.357093384974352e-13, 'issues': [], 'passed': True}",
+          "evidence_kind": "independent_measurement",
+          "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/numerical-audit/cb502-strict-comparison.json",
+          "next_action": "Preserve original and follow-up scopes."
+        },
+        {
+          "id": "hardened-second_setup_same_process",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "Hardened second_setup_same_process",
+          "status": "passed",
+          "method": "Reanalyse existing independent raw results using complete-inventory finite-shape comparator",
+          "summary": "{'test': 'second_setup_same_process', 'status': 'passed', 'max_relative_difference': 7.979251156003197e-10, 'issues': [], 'passed': True}",
+          "evidence_kind": "independent_measurement",
+          "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/numerical-audit/cb502-strict-comparison.json",
+          "next_action": "Preserve original and follow-up scopes."
+        }
+      ]
+    }
+  },
+  {
+    "schema": "feyer-research-record-v1",
+    "kind": "diagnose",
+    "record_id": "verification-aac9904-cached-hardened-v2",
+    "executor": {
+      "kind": "manual",
+      "id": "independent-followup-review"
+    },
+    "status": "evaluated",
+    "candidate_sha": "aac9904cb4dd9b2caae377d8d4694f6782ec3498",
+    "parents": [],
+    "target_phases": [],
+    "hypothesis": "Challenge earlier compatibility and numerical claims with source-bound diagnostics.",
+    "change_summary": "Historical results survive hardened comparison; provenance remains author-reported.",
+    "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/reviews/teammate-host-engine/followup/cached-aac9904-hardened.json",
+    "source_digest": "9550e667d4db051a8a88612339741d68a85b97ddf602e4d2d44cd8f76629403e",
+    "source_digest_kind": "file_bytes_sha256",
+    "evaluations": [],
+    "verification": {
+      "candidate_sha": "aac9904cb4dd9b2caae377d8d4694f6782ec3498",
+      "checks": [
+        {
+          "id": "hardened-cached-value_and_grad_jit",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "value_and_grad_jit",
+          "status": "passed",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'value_and_grad_jit', 'status': 'passed', 'max_relative_difference': 8.493907781417032e-19, 'issues': [], 'passed': True}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-descent_3_steps",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "descent_3_steps",
+          "status": "passed",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'descent_3_steps', 'status': 'passed', 'max_relative_difference': 8.07793566891957e-31, 'issues': [], 'passed': True}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-vmap_value_and_grad",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "vmap_value_and_grad",
+          "status": "passed",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'vmap_value_and_grad', 'status': 'passed', 'max_relative_difference': 2.54817233442511e-18, 'issues': [], 'passed': True}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-jvp",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "jvp",
+          "status": "passed",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'jvp', 'status': 'passed', 'max_relative_difference': 0.0, 'issues': [], 'passed': True}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-jacfwd_2",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "jacfwd_2",
+          "status": "passed",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'jacfwd_2', 'status': 'passed', 'max_relative_difference': 0.0, 'issues': [], 'passed': True}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-hvp_fwd_over_rev",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "hvp_fwd_over_rev",
+          "status": "passed",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'hvp_fwd_over_rev', 'status': 'passed', 'max_relative_difference': 1.4660677149001313e-21, 'issues': [], 'passed': True}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-hvp_rev_over_rev",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "hvp_rev_over_rev",
+          "status": "passed",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'hvp_rev_over_rev', 'status': 'passed', 'max_relative_difference': 1.0980595858708005e-15, 'issues': [], 'passed': True}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-eager_value_and_grad",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "eager_value_and_grad",
+          "status": "passed",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'eager_value_and_grad', 'status': 'passed', 'max_relative_difference': 1.956996352838476e-14, 'issues': [], 'passed': True}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-public_run",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "public_run",
+          "status": "passed",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'public_run', 'status': 'passed', 'max_relative_difference': 3.2182863741325787e-15, 'issues': [], 'passed': True}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-checkpoint_grad",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "checkpoint_grad",
+          "status": "passed",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'checkpoint_grad', 'status': 'passed', 'max_relative_difference': 8.493907781417032e-19, 'issues': [], 'passed': True}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-second_setup_same_process",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "second_setup_same_process",
+          "status": "passed",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'second_setup_same_process', 'status': 'passed', 'max_relative_difference': 6.765201856792499e-17, 'issues': [], 'passed': True}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        }
+      ]
+    }
+  },
+  {
+    "schema": "feyer-research-record-v1",
+    "kind": "diagnose",
+    "record_id": "verification-ac49ee4-cached-hardened-v2",
+    "executor": {
+      "kind": "manual",
+      "id": "independent-followup-review"
+    },
+    "status": "evaluated",
+    "candidate_sha": "ac49ee4dcc23443f5ffdf4eb740fcdc2e09b1ff7",
+    "parents": [],
+    "target_phases": [],
+    "hypothesis": "Challenge earlier compatibility and numerical claims with source-bound diagnostics.",
+    "change_summary": "Historical results survive hardened comparison; provenance remains author-reported.",
+    "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/reviews/teammate-host-engine/followup/cached-ac49ee4-hardened.json",
+    "source_digest": "38f44cc5c7f44dbf45600f002cc1c34b66e70aad9b3981b03b1fb029021460d8",
+    "source_digest_kind": "file_bytes_sha256",
+    "evaluations": [],
+    "verification": {
+      "candidate_sha": "ac49ee4dcc23443f5ffdf4eb740fcdc2e09b1ff7",
+      "checks": [
+        {
+          "id": "hardened-cached-value_and_grad_jit",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "value_and_grad_jit",
+          "status": "passed",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'value_and_grad_jit', 'status': 'passed', 'max_relative_difference': 3.991800706225435e-10, 'issues': [], 'passed': True}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-descent_3_steps",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "descent_3_steps",
+          "status": "passed",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'descent_3_steps', 'status': 'passed', 'max_relative_difference': 1.3606020513068477e-08, 'issues': [], 'passed': True}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-vmap_value_and_grad",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "vmap_value_and_grad",
+          "status": "passed",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'vmap_value_and_grad', 'status': 'passed', 'max_relative_difference': 3.991800706225435e-10, 'issues': [], 'passed': True}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-jvp",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "jvp",
+          "status": "unsupported",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'jvp', 'status': 'unavailable', 'max_relative_difference': None, 'issues': ['candidate: missing, failed, or missing value']}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-jacfwd_2",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "jacfwd_2",
+          "status": "unsupported",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'jacfwd_2', 'status': 'unavailable', 'max_relative_difference': None, 'issues': ['candidate: missing, failed, or missing value']}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-hvp_fwd_over_rev",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "hvp_fwd_over_rev",
+          "status": "unsupported",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'hvp_fwd_over_rev', 'status': 'unavailable', 'max_relative_difference': None, 'issues': ['candidate: missing, failed, or missing value']}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-hvp_rev_over_rev",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "hvp_rev_over_rev",
+          "status": "unsupported",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'hvp_rev_over_rev', 'status': 'unavailable', 'max_relative_difference': None, 'issues': ['candidate: missing, failed, or missing value']}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-eager_value_and_grad",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "eager_value_and_grad",
+          "status": "passed",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'eager_value_and_grad', 'status': 'passed', 'max_relative_difference': 3.9948666671781985e-10, 'issues': [], 'passed': True}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-public_run",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "public_run",
+          "status": "passed",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'public_run', 'status': 'passed', 'max_relative_difference': 9.27061069810014e-12, 'issues': [], 'passed': True}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-checkpoint_grad",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "checkpoint_grad",
+          "status": "passed",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'checkpoint_grad', 'status': 'passed', 'max_relative_difference': 3.991800706225435e-10, 'issues': [], 'passed': True}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        },
+        {
+          "id": "hardened-cached-second_setup_same_process",
+          "setup": "historical Voyager \u00b7 40 frequencies / 45 variables",
+          "name": "second_setup_same_process",
+          "status": "passed",
+          "method": "Hardened comparator reanalysis of b093f74 author reports; no new physics run",
+          "summary": "{'test': 'second_setup_same_process', 'status': 'passed', 'max_relative_difference': 3.991800706225435e-10, 'issues': [], 'passed': True}",
+          "evidence_kind": "author_reported",
+          "next_action": "Independent source-bound rerun needed before satisfying internal policy."
+        }
+      ]
+    }
+  },
+  {
+    "schema": "feyer-research-record-v1",
+    "kind": "diagnose",
+    "record_id": "review-synthetic-linear-solve-verified-v2",
+    "executor": {
+      "kind": "manual",
+      "id": "independent-followup-review"
+    },
+    "status": "evaluated",
+    "candidate_sha": null,
+    "parents": [
+      "cb502e8a5a15689e6f41971bd4a611cf6612283f"
+    ],
+    "target_phases": [],
+    "hypothesis": "Challenge earlier compatibility and numerical claims with source-bound diagnostics.",
+    "change_summary": "Independent pinned synthetic30x30 custom_linear_solve passes8/8 incl Hessian/JVP; worst6.36e-16. Not a full simulator candidate or speed claim.",
+    "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/reviews/teammate-host-engine/followup/linear-solve-probe.json",
+    "source_digest": "e6022f740deef9cc1cc92dbaa49eb6de9adc1fa3742b05cb7fc7807bfd7c42d2",
+    "source_digest_kind": "file_bytes_sha256",
+    "evaluations": []
+  },
+  {
+    "schema": "feyer-research-record-v1",
+    "kind": "diagnose",
+    "record_id": "review-numerical-proxy-evidence-qualified-v2",
+    "executor": {
+      "kind": "manual",
+      "id": "independent-followup-review"
+    },
+    "status": "evaluated",
+    "candidate_sha": null,
+    "parents": [
+      "cb502e8a5a15689e6f41971bd4a611cf6612283f"
+    ],
+    "target_phases": [],
+    "hypothesis": "Challenge earlier compatibility and numerical claims with source-bound diagnostics.",
+    "change_summary": "Prior worker proxy evidence favors refined sparse accuracy; raw reproducibility and gradient33/161/180 arbitration remain open.",
+    "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/reviews/teammate-host-engine/followup/README.md",
+    "source_digest": "4738edb4aee247d0108b4c843427f56789ae47cfce20068779f23b8930e8ffc5",
+    "source_digest_kind": "file_bytes_sha256",
+    "evaluations": []
+  },
+  {
+    "schema": "feyer-research-record-v1",
+    "kind": "diagnose",
+    "record_id": "review-infrastructure-validation-v2",
+    "executor": {
+      "kind": "manual",
+      "id": "independent-followup-review"
+    },
+    "status": "evaluated",
+    "candidate_sha": null,
+    "parents": [
+      "cb502e8a5a15689e6f41971bd4a611cf6612283f"
+    ],
+    "target_phases": [],
+    "hypothesis": "Challenge earlier compatibility and numerical claims with source-bound diagnostics.",
+    "change_summary": "59 infrastructure +36 JS +6 server tests pass. Combined explorer8770 desktop/mobile browser checks pass. Exact-source optional gates available; automatic promotion unchanged.",
+    "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/faea3d19b081997afe9e9669e86194a3ad695798/experiments/reviews/teammate-host-engine/followup/infrastructure-validation.json",
+    "source_digest": "e0eaab32290eae6e43340f0bac57b2fdce2de93ed29bc31d318f83349712b7fe",
+    "source_digest_kind": "file_bytes_sha256",
+    "evaluations": []
+  }
+]
