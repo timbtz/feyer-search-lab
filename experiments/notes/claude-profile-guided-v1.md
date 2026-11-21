@@ -146,5 +146,35 @@
   - All outputs and the gradient bitwise equal to candidate 2. Any nonzero output error would prove a base entry survives, and would be grounds to reject.
 - **Ceiling:** 0.81 s (the whole build phase). A realistic saving is likely ≤0.3 s, and it is not measured.
 
-### Results
-- Candidate SHA: pending.
+### Results: candidate SHA `446f2fa8f663d5c8e92e234afde9ad4ebca1e1cf` — **KEPT (new best eligible revision)**
+
+**Screen** (`e966ac583e6d43e9b9f31679b6504d19`): 21.600 s, build 0.396 s. Provisional.
+
+**Full** (`400dbc0754254d549cbc00642b42b7dd`): **official PASS, strict PASS**.
+
+| Phase | Seconds | Candidate 2 (`f60d64b6`) |
+| --- | --- | --- |
+| Complete first run | **21.593** | 22.051 |
+| Build | **0.397** | 0.807 |
+| Forward lower | 0.786 | 0.807 |
+| Forward compile | 7.624 | 7.664 |
+| Forward execute | 8.405 | 8.396 |
+| Gradient compile | 1.968 | 1.948 |
+| Gradient execute | 1.516 | 1.501 |
+
+- Warm median: 10.516 s (candidate 2: 10.060 s). Warm execution is untouched by this change, so the difference is run-to-run noise.
+- Total job wall time: 86.8 s.
+- Peak RSS: 8.07 GB.
+
+**Strict comparison:** identical to candidate 2. All outputs have error 0; gradient max absolute error 4.5e-13, normalized 1.6e-8. This confirms that every replaced base entry is overwritten before any solve.
+
+**Interpretation:** build −0.41 s on both screen and full (2 of 2 runs), with no other phase moving beyond noise. This is a well-attributed phase gain. The total moves −0.46 s against candidate 2 and −0.77 s against the seed 96474bd (22.366 s); the totals are single full runs.
+
+## Candidate 4: repeat measurement (notes-only revision)
+- **Purpose:** this revision changes notes only. Its simulator files are byte-identical to `446f2fa`, so its screen and full runs are **repeat observations of candidate 3's code**, not a new candidate. They test whether the 21.59 s first run holds.
+- **Why no new simulator change:**
+  - Remaining build (0.40 s) is pure-Python graph and instruction work, with no eager JAX left in `build()`.
+  - Imports were already tested by the initial agent: deferring plotly gave no gain.
+  - The two batched LUs are numerically locked (gradient index 161).
+  - Forward compile (7.6 s) and forward lower (0.8 s) have no operator or pass attribution.
+- Results: pending.
