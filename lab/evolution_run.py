@@ -291,9 +291,10 @@ def _run_owned(args):
                                  'metrics': c.get('metrics')} for c in snapshot['candidates'][-6:]]}
         context_ref = freeze_context(supplied_context, directory)
         context_sha = context_ref['sha256']
-        prompt = ('Select one untested implementation recipe. Return only JSON with integer choice and short rationale. '
-            'Do not change physics, tolerances, or claim an unmeasured gain. We minimize complete first-run time '
-            'subject to full correctness; phase improvements are useful evidence.\n'
+        prompt = ('Pick one experiment from choices. Return exactly {"choice":0,"rationale":"at most twelve words"}, '
+            'using your selected integer. No Markdown or additional text. Keep the rationale under twelve words. '
+            'These are untested alternatives; do not assert correctness or speed. Objective: lower complete first-run time '
+            'while passing our fixed checks.\n'
             + canonical(supplied_context))
         call_id = uuid.uuid4().hex
         prompt_ref = store_text_artifact(prompt, directory, kind='prompts')
@@ -302,9 +303,11 @@ def _run_owned(args):
             raise ValueError('Model identity changed after campaign freeze')
         campaign.record_model_call('coordinator', secrets['coordinator'], call_id,
             {'actor': plan['owner'], 'model': snapshot['campaign']['spec']['model_manifest']['qwen'],
-             'context_sha256': context_sha, 'prompt': prompt_ref, 'max_tokens': 768})
+             'context_sha256': context_sha, 'prompt': prompt_ref, 'max_tokens': 1024,
+             'controller_commit': git(Path(__file__).resolve().parents[1], 'rev-parse', 'HEAD'),
+             'reasoning_effort': 'low', 'temperature': 0})
         publish(campaign, state, checkpoint='model-call-reserved')
-        response = TokenFactory(key, model, timeout=50).chat([{'role': 'user', 'content': prompt}], max_tokens=768)
+        response = TokenFactory(key, model, timeout=50).chat([{'role': 'user', 'content': prompt}], max_tokens=1024)
         choices = response.get('data', {}).get('choices') or []
         content = (choices[0].get('message', {}).get('content') or '') if choices else ''
         response_ref = store_text_artifact(json.dumps({'call_id': call_id, 'prompt': prompt_ref,
