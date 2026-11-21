@@ -100,6 +100,10 @@ the guidance should continue to apply.
 New dispatched turns also retain their complete prompt in the ignored session
 directory as `turn-NN-prompt-SHA256.json`. Candidate feedback links that artifact
 through `input_receipt` (`path`, prompt `sha256`, `turn`, preceding `thread_id`).
+When a previous evaluator feedback object is supplied, the receipt also records
+`consumed_candidate_sha` and `consumed_feedback_digest` (SHA-256 of its canonical
+JSON: sorted keys, compact separators, finite numbers). That links the previous
+candidate's recorded feedback to this turn's input without exporting the prompt.
 This is the exact constructed input, including runtime instructions and feedback;
 the transcript may contain additional provider-side context. Historical turns
 without this artifact must not be presented as exact captured inputs. A local

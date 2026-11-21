@@ -463,6 +463,13 @@ def _run_locked(args, repo, worktree, directory, status_file, lock_fds):
             prompt_path = directory / f'turn-{turn_number:02d}-prompt-{prompt_digest}.json'
             input_receipt = {'path': str(prompt_path), 'sha256': prompt_digest,
                              'turn': turn_number, 'thread_id': thread}
+            if state.get('feedback'):
+                consumed = state['feedback']
+                input_receipt.update(
+                    consumed_feedback_digest=hashlib.sha256(json.dumps(
+                        consumed, sort_keys=True, separators=(',', ':'), allow_nan=False
+                    ).encode('utf-8')).hexdigest(),
+                    consumed_candidate_sha=consumed.get('candidate_sha'))
             if not prompt_path.exists():
                 write_json(prompt_path, dict(input_receipt, prompt=prompt))
             pending['input_receipt'] = input_receipt

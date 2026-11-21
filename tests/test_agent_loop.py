@@ -1,5 +1,6 @@
 """Guards used before an autonomous edit becomes a committed candidate."""
 import subprocess
+import hashlib
 import json
 import tempfile
 import time
@@ -332,6 +333,10 @@ class AgentLoopIntegrationTests(unittest.TestCase):
                 captured = json.loads(Path(third['input_receipt']['path']).read_text())
                 self.assertEqual(captured['prompt'], calls[-1][1])
                 self.assertEqual(captured['thread_id'], 'same-thread')
+                self.assertEqual(captured['consumed_candidate_sha'], previous_feedback['candidate_sha'])
+                self.assertEqual(captured['consumed_feedback_digest'], hashlib.sha256(json.dumps(
+                    previous_feedback, sort_keys=True, separators=(',', ':'), allow_nan=False
+                ).encode()).hexdigest())
                 receipt = third['agent_context']['continuation_guidance']
                 self.assertEqual(receipt['text'], guidance.read_text())
                 saved = repo / '.lab/sessions/trial/continuation-guidance' / (receipt['sha256'] + '.json')
