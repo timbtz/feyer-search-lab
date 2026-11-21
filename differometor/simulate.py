@@ -84,6 +84,7 @@ def update(
     matrix_indices: tuple[jnp.ndarray, jnp.ndarray],
     function_indices: jnp.ndarray,
     component_groups: dict | None = None,
+    carrier_entries: jnp.ndarray | None = None,
 ) -> jnp.ndarray:
     """
     Update selected entries of a system matrix by evaluating component functions.
@@ -119,7 +120,10 @@ def update(
         An optional `unique_matrix_indices` key marks verified distinct destinations.
         `flat_matrix_indices` supplies normalized, in-bounds row-major destinations.
         Omit or rebuild metadata when changing selectors, input indices, matrix shape
-        or matrix destinations.
+        or matrix destinations, including carrier coupling destinations.
+    carrier_entries : jnp.ndarray | None
+        Optional carrier factors, used only with builder-proven
+        `carrier_output_positions` to scale component values before matrix assembly.
 
     Returns
     -------
@@ -162,6 +166,10 @@ def update(
         else:
             output_matrix = jnp.zeros((function_input_indices.shape[0], 4), dtype=jnp.complex128)
     outputs = output_matrix[output_rows, output_indices[1]]
+    if carrier_entries is not None:
+        positions = component_groups["carrier_output_positions"]
+        scaled_outputs = -outputs[positions] * carrier_entries
+        outputs = outputs.at[positions].set(scaled_outputs, unique_indices=True)
     if component_groups is not None and "flat_matrix_indices" in component_groups:
         # Builder-proven unique, in-bounds offsets avoid tracing the generic
         # two-coordinate indexing path. Update order and component values stay
@@ -629,14 +637,21 @@ def _assemble_signal_and_noise(
     `parameters` has shape (B, P). Returns the conjugation-adjusted augmented signal
     matrices (B, SN, SN + 1) and the noise source matrices (B, NN, NN).
     """
-    signal_matrix = vmap(update, in_axes=(0, None, None, None, None, None, None))(
+    signal_groups = None if component_groups is None else component_groups["signal"]
+    fuse_carrier_scaling = signal_groups is not None and "carrier_output_positions" in signal_groups
+    scaling_entries = (
+        jnp.broadcast_to(carrier_entries, (parameters.shape[0], carrier_entries.shape[1]))
+        if fuse_carrier_scaling else None
+    )
+    signal_matrix = vmap(update, in_axes=(0, None, None, None, None, None, None, 0 if fuse_carrier_scaling else None))(
         parameters,
         signal_matrix,
         signal_function_input_indices,
         signal_output_indices,
         signal_matrix_indices,
         signal_function_indices,
-        None if component_groups is None else component_groups["signal"],
+        signal_groups,
+        scaling_entries,
     )
 
     # Scale signal connector entries by the carrier solution at the respective spaces.
@@ -645,16 +660,17 @@ def _assemble_signal_and_noise(
         component_groups is not None
         and "unique_carrier_placing_indices" in component_groups["signal"]
     )
-    signal_entries = (
-        -signal_matrix.at[:, signal_carrier_placing_indices[0], signal_carrier_placing_indices[1]].get(
-            unique_indices=unique_carrier_placing_indices
+    if not fuse_carrier_scaling:
+        signal_entries = (
+            -signal_matrix.at[:, signal_carrier_placing_indices[0], signal_carrier_placing_indices[1]].get(
+                unique_indices=unique_carrier_placing_indices
+            )
+            * carrier_entries
         )
-        * carrier_entries
-    )
-    signal_matrix = signal_matrix.at[:, signal_carrier_placing_indices[0], signal_carrier_placing_indices[1]].set(
-        signal_entries,
-        unique_indices=unique_carrier_placing_indices,
-    )
+        signal_matrix = signal_matrix.at[:, signal_carrier_placing_indices[0], signal_carrier_placing_indices[1]].set(
+            signal_entries,
+            unique_indices=unique_carrier_placing_indices,
+        )
 
     # Apply conjugation rules to enforce upper and lower sideband symmetry.
     rows = jnp.arange(signal_matrix.shape[1])[:, None]

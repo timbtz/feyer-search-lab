@@ -1730,6 +1730,26 @@ def pairs_to_arrays(
             if component_groups is not None and matrix_shapes is not None:
                 if _matrix_indices_are_unique(carrier_solution_placing_indices, matrix_shapes[system]):
                     component_groups[system]["unique_carrier_placing_indices"] = ()
+                    if "unique_matrix_indices" in component_groups[system]:
+                        # Fuse carrier scaling into component values only if every
+                        # coupling destination is written by exactly one component.
+                        height, width = matrix_shapes[system]
+
+                        def offsets(indices):
+                            rows, columns = indices
+                            rows = np.where(rows < 0, rows + height, rows)
+                            columns = np.where(columns < 0, columns + width, columns)
+                            return rows * width + columns
+
+                        output_positions = {
+                            int(offset): position
+                            for position, offset in enumerate(offsets(system_matrix_indices))
+                        }
+                        coupling_offsets = offsets(carrier_solution_placing_indices)
+                        if all(int(offset) in output_positions for offset in coupling_offsets):
+                            component_groups[system]["carrier_output_positions"] = jnp.array(
+                                [output_positions[int(offset)] for offset in coupling_offsets], dtype=int
+                            )
 
             return (
                 jnp.array(function_input_indices, dtype=int),

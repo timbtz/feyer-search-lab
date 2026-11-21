@@ -58,3 +58,57 @@ Prediction (unmeasured): modest forward compile/lower reduction, perhaps 0–0.5
 Checks: AST syntax parsing and `git diff --check` pass; standard-library-only offset identity checks cover positive coordinates, negative aliases and a 751x752 shape. No JAX imports, simulator execution, local benchmark, new test infrastructure, dependency change, commit, publication or evaluation launch. No performance/numerical measurements for this candidate yet.
 
 Decision: ready for supervisor screen, then unchanged official full and every saved-output/full-gradient check if eligible. Retained best remains seed. Next action on resume: record exact candidate SHA and run IDs; compare complete first run, all 14 phase deltas, warm time, memory and job wall against exact parent under matching conditions. Reject numerical failures or total regressions; treat a single low result as provisional pending repeat/noise policy. Re-rank phases before choosing another hypothesis. If structural scatter work has no useful effect, request coordinator-owned deeper compile attribution rather than inventing internal timing.
+
+
+## Candidate 1 evaluation — retain provisionally
+
+SHA **`0f865e2c7fc9f53b44e65787091b28fbcb129b0f`**, parent `96474bdd4d83bb02c163640f63fae1c4bd7a21d4`.
+
+- Screen `c59a4703a868402ba029f66ac78fc7a7`, request `e23c9bda416f49c8ab9ef43087c36144`: screened, first run **22.100480540 s**, combined lowering/compilation 10.865973679 s, job wall 23.078936845 s, peak 8,100,908 KiB. No official/strict/full finite-difference or warm checks in screen; provisional only. Source `feedback.screen`, cohort `fc9228f32197f0d2653ba0de06fc01d528953444ab2039dbff6e1284cf689351`; screen evaluator SHA256 `2bf4249e453271d1f665c35356485739ad66a9b0327153d678a5b34d81192458`.
+- Full **`8c5a5542fdc44245810ea3d508c9d738`**, request `3387b37cd48c4a4ea43331a65a17a005`: official **PASS**, strict **PASS**, resource/source/workload/precision **PASS**, eligible full. Source `feedback.full`, profiler schemas unchanged, cohort `10567ad0f8dcb7122b6b182e1be342313b89eef340d4070073fdf62d6342204c`, matching exact-parent cohort. Full evaluator, worker, comparison evaluator and reference-array hashes equal the seed identities recorded above.
+- Full complete first run **22.179132165 s**, delta **-0.186418548 s (-0.83%)** against supplied parent full. Combined lowering/compilation **10.954239441 s**, delta **-0.204036243 s**. These are one full observation per candidate, not paired repeat evidence.
+- Warm median **10.702447992 s**, delta **+0.093047272 s**. Samples 10.215003151, 10.788764466, 10.702447992 s. Warm phase medians: forward 9.046335921, sensitivity 0.178406758, gradient 1.477481985, transfer 0.000237776 s.
+- Job wall **88.159880348 s**, delta **+0.091358995 s**. GNU time peak **8,108,620 KiB** (-18,508 KiB); sampled process-group peak **8,304,275,456 bytes**. Memory changes are small; no substantive reduction claimed.
+
+All phase deltas against exact parent full, in seconds:
+
+| Phase | Candidate 1 | Delta vs seed |
+| --- | ---: | ---: |
+| imports | 0.298724690 | +0.001807980 |
+| initialize | 0.002943238 | -0.000136646 |
+| load | 0.001421373 | -0.000167979 |
+| build | 0.827977678 | +0.006903972 |
+| forward_lower | 0.821310528 | -0.002836175 |
+| forward_compile | 7.516254393 | -0.117569348 |
+| forward | 8.604778981 | -0.003966145 |
+| sensitivity_lower | 0.092000728 | -0.000091646 |
+| sensitivity_compile | 0.425574612 | -0.033654755 |
+| sensitivity | 0.000916431 | +0.000053270 |
+| gradient_lower | 0.178390548 | -0.008610187 |
+| gradient_compile | 1.920708632 | -0.041274132 |
+| gradient | 1.487782247 | +0.013129819 |
+| host_transfer | 0.000348086 | -0.000006577 |
+
+Strict saved-array checks inspected individually: carrier, signal, noise, sensitivity, powers, parameters and frequencies each pass, are finite, and have zero max absolute error, relative L2 error, max normalized error and failing count. Parameters/frequencies satisfy exact equality. Full 193-coordinate gradient passes: max absolute **5.093170329928398e-10**, relative L2 **7.576529280174932e-15**, max normalized **6.039550882495327e-7**, zero failing coordinates, empty mismatch details, no truncation. These match the seed's comparison metrics; comfortably below error boundary. Scope last warm evaluation, rtol `1e-7`, scale_atol `1e-12`. Official sensitivity error `5.374104176780747e-6`, finite-difference check, dtypes, shapes and finite outputs all pass unchanged. Matching comparison summaries do not by themselves establish bitwise equality of the two gradients.
+
+Decision: retain candidate 1 as **best observed eligible session candidate**, while seed remains the repeat-established fallback. The full total is lower and numerical margin intact, but neither robust improvement nor native scatter cost has been established. Warm median/job wall increased slightly; the primary-objective observation is favorable. Repeat/noise-policy confirmation is still required for promotion as a robust gain.
+
+Updated ranking: forward execution **8.604778981 s (38.80%)**, forward compile **7.516254393 s (33.89%)**, gradient compile **1.920708632 s (8.66%)**, gradient execution **1.487782247 s (6.71%)**, build 0.827977678 s, forward lowering 0.821310528 s. Compilation remains 49.39% in aggregate; its priority is still justified. No diagnostic of individual native operators was supplied.
+
+## Candidate 2 — fuse carrier scaling into component update values
+
+Same session `01a1ffba-57ec-7191-8ba9-c6163633a3b3`, same absolute deadline; resumed with 3291 seconds remaining. Exact parent and retained candidate: `0f865e2c7fc9f53b44e65787091b28fbcb129b0f`. Candidate SHA/run IDs pending supervisor.
+
+Measured target: full job **`8c5a5542fdc44245810ea3d508c9d738`**, forward compile **7.516254393 s (33.89%)**, with possible forward execution effects in **8.604778981 s (38.80%)**. Those phases are measured; cost attributable to carrier assembly inside them remains unknown.
+
+Source mechanism: `_assemble_signal_and_noise` first scatters all component values into the dense signal matrix, gathers a subset for multiplication by the carrier, and scatters those scaled entries into the dense matrix again. When the builder proves both destination lists unique/in-bounds and every coupling destination belongs to the component update list, compose the destination mapping on the host. Apply the same unary minus and complex multiply to the small component-output vector before its existing dense scatter. This replaces one dense gather/scatter pair with a small-vector gather/scatter pair. No component evaluation, matrix entry, parameter-dependent zero, frequency, design variable, physical value, solve or noise contraction is removed. All three official JIT stages stay fixed. Distinct from Claude's contraction-scheduling work.
+
+Guard: existing negative-alias-aware uniqueness/bounds proofs for both lists, followed by complete subset check on normalized flat destinations. Mapping preserves original coupling order and distinct output positions. If any coupling destination is absent, duplicated or invalid, or metadata is absent, retain the original dense path. Dummy paths retain fallback. Generic callers must rebuild metadata after changing topology/indices/shapes. Metadata contains only integer topology, never physical answers.
+
+Predicted direction: lower forward compilation and potentially forward execution/memory traffic, with a tentative **0–0.5 s net saving** expectation, unmeasured. The entire forward compile duration **7.516254393 s** bounds savings from eliminating that phase alone; execution has its own **8.604778981 s** ceiling. Neither is an estimate of internal assembly cost. New host mapping, small-vector scatter, compiler layout/fusion and residual changes may negate benefits or increase total/memory. Forward arithmetic ordering within each scaled value is preserved, but AD accumulation/fusion can change; strict full-gradient validation is required.
+
+Implementation: `build.py` prepares optional `carrier_output_positions`; `update` accepts optional carrier factors and scales mapped component values before its final matrix scatter; `_assemble_signal_and_noise` uses the guarded path and otherwise keeps original behavior. No other simulator mechanisms changed.
+
+Validation: syntax parsing and diff whitespace checks pass; a standard-library-only complex-valued algebra check verifies sparse scaling before matrix assembly equals dense gather/scale/scatter with reordered destination lists, and checks missing-destination fallback condition. No JAX/simulator execution, local benchmark, diagnostic run, new infrastructure, dependency change or publication. Guard activation on the official workload is not directly measured locally. If feedback shows no effect, that remains a possible explanation requiring coordinator attribution rather than an invented cost claim.
+
+Next: supervisor screen/full; inspect every saved output and full-gradient error, all 14 phase deltas, total, warm, memory and job duration against exact parent and seed. Reject strict failures or first-run regressions; keep candidate 1 available. Re-rank phases before subsequent changes.
