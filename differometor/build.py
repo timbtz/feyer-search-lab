@@ -1497,21 +1497,21 @@ def build(setup: Setup):
         (carrier_instructions, signal_instructions, noise_instructions, signal_components, parameter_names),
         (
             _host_array([parameters], complex),
-            jnp.array(carrier_matrix),
-            jnp.array(signal_matrix),
-            jnp.array(noise_matrix, dtype=complex),
-            jnp.array(noise_selection_vectors, dtype=complex),
-            jnp.array(qhd_parameter_indices, dtype=int),
-            jnp.array(qhd_placing_indices, dtype=int),
-            jnp.array(linked_indices, dtype=int),
-            jnp.array(linking_function_indices, dtype=int),
-            jnp.array(indices_to_link, dtype=int),
+            jnp.asarray(np.array(carrier_matrix)),
+            jnp.asarray(np.array(signal_matrix)),
+            _host_array(noise_matrix, complex),
+            _host_array(noise_selection_vectors, complex),
+            _host_array(qhd_parameter_indices, int),
+            _host_array(qhd_placing_indices, int),
+            _host_array(linked_indices, int),
+            _host_array(linking_function_indices, int),
+            _host_array(indices_to_link, int),
         ),
         (
-            jnp.array(detector_indices, dtype=int),
-            jnp.array(mirror_indices, dtype=int),
-            jnp.array(beamsplitter_indices, dtype=int),
-            jnp.array(isolator_indices, dtype=int),
+            _host_array(detector_indices, int),
+            _host_array(mirror_indices, int),
+            _host_array(beamsplitter_indices, int),
+            _host_array(isolator_indices, int),
             port_to_index,
         ),
     )
@@ -1798,27 +1798,27 @@ def pairs_to_arrays(
                     component_groups[system]["unique_carrier_placing_indices"] = ()
 
             return (
-                jnp.array(function_input_indices, dtype=int),
+                _host_array(function_input_indices, int),
                 _host_array(arrays["function_indices"], int),
-                jnp.array(output_indices, dtype=int),
-                jnp.array(system_matrix_indices, dtype=int),
-                jnp.array(carrier_solution_indices, dtype=int),
-                jnp.array(carrier_solution_placing_indices, dtype=int),
+                _host_array(output_indices, int),
+                _host_array(system_matrix_indices, int),
+                _host_array(carrier_solution_indices, int),
+                _host_array(carrier_solution_placing_indices, int),
             )
 
         return (
-            jnp.array(function_input_indices, dtype=int),
+            _host_array(function_input_indices, int),
             _host_array(arrays["function_indices"], int),
-            jnp.array(output_indices, dtype=int),
-            jnp.array(system_matrix_indices, dtype=int),
+            _host_array(output_indices, int),
+            _host_array(system_matrix_indices, int),
         )
 
     return (
         (
             _host_array(optimized_parameter_indices, int),
             _host_array(optimization_value_indices, int),
-            jnp.array(carrier_changing_parameter_indices, dtype=int),
-            jnp.array(signal_changing_parameter_indices, dtype=int),
+            _host_array(carrier_changing_parameter_indices, int),
+            _host_array(signal_changing_parameter_indices, int),
         ),
         combine_arrays(carrier_arrays, "carrier"),
         combine_arrays(signal_arrays, "signal", signal=True),
@@ -1873,24 +1873,37 @@ def prepare_arrays(
     optimized_parameters = None
 
     # Ensure at least one optimized parameter index exists, using a dummy identity update if needed.
+    # Defaults are gathered from the concrete host copy of `parameters` (same values
+    # as indexing the device array, without compiling eager JAX operations).
+    host_parameters = np.asarray(parameters)
     if len(optimized_parameter_indices) == 0:
-        optimized_parameter_indices = jnp.array([0])
-        optimized_parameters = jnp.array(parameters[0][optimized_parameter_indices])
-        optimized_value_indices = jnp.array([0])
+        optimized_parameter_indices = _host_array([0], int)
+        optimized_parameters = jnp.asarray(host_parameters[0][np.asarray(optimized_parameter_indices)])
+        optimized_value_indices = _host_array([0], int)
 
     # Normalize changing_values to shape (V, R) if provided.
     if changing_values is not None:
-        if len(changing_values.shape) == 1:
-            changing_values = changing_values.reshape(1, -1)
-        signal_changing_values = changing_values.copy()
+        try:
+            host_values = np.array(changing_values)
+        except Exception:  # e.g. abstract values: keep the original device operations
+            host_values = None
+        if host_values is not None:
+            if host_values.ndim == 1:
+                host_values = host_values.reshape(1, -1)
+            changing_values = jnp.asarray(host_values)
+            signal_changing_values = jnp.asarray(host_values.copy())
+        else:
+            if len(changing_values.shape) == 1:
+                changing_values = changing_values.reshape(1, -1)
+            signal_changing_values = changing_values.copy()
 
     if len(carrier_changing_parameter_indices) != 0 and len(signal_changing_parameter_indices) != 0:
         raise ValueError("This combination of changing component-parameter pairs is not supported yet.")
 
     # Carrier changing defaults.
     if len(carrier_changing_parameter_indices) == 0:
-        carrier_changing_parameter_indices = jnp.array([0])
-        carrier_changing_values = jnp.array([parameters[0][carrier_changing_parameter_indices]])
+        carrier_changing_parameter_indices = _host_array([0], int)
+        carrier_changing_values = jnp.asarray(host_parameters[0][np.asarray(carrier_changing_parameter_indices)][None, :])
     else:
         carrier_changing_values = changing_values
         if carrier_changing_values.shape[0] != len(carrier_changing_parameter_indices):
@@ -1905,8 +1918,8 @@ def prepare_arrays(
 
     # Signal changing defaults.
     if len(signal_changing_parameter_indices) == 0:
-        signal_changing_parameter_indices = jnp.array([0])
-        signal_changing_values = jnp.array([parameters[0][signal_changing_parameter_indices]])
+        signal_changing_parameter_indices = _host_array([0], int)
+        signal_changing_values = jnp.asarray(host_parameters[0][np.asarray(signal_changing_parameter_indices)][None, :])
 
     return (
         optimized_parameters,

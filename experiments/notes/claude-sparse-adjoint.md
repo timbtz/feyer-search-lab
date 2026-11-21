@@ -153,3 +153,16 @@
 - Numerics: forward outputs bitwise identical to candidate 4 (job 3151c9a9 arrays); gradient max
   rel 2.8e-10, relL2 2.8e-12 (JAX-transposed summation order). Cross-setup vs pristine unchanged
   from candidate 4; gradient vs candidate 4 worst 4.4e-11 (dev), <= 5.6e-13 elsewhere.
+- SHA `7b1431ac4a7c9c30b06782d0931c5f0565273fd0`. Screen `4be290b18878466e8bee4e61e2febdd9`,
+  full `19304daff7d44eeba99c9e10e8c6cd46` (results below when complete).
+
+## Candidate 7 — candidate 6 + host-side build conversions
+- Build profile: 32 eager JAX dispatch compilations (~6-9 ms each) in `build`/`prepare_arrays`
+  (`jnp.array(..., dtype=...)` copies of host data; jnp indexing of the built parameter row for
+  the dummy carrier/signal changing defaults: 11 compiles at one site).
+- Change (build.py): host NumPy + `jnp.asarray` (device transfer, no compile) with identical
+  values, dtypes and array types; user `changing_values` falls back to the original device ops
+  if it cannot be converted to a concrete host array.
+- Dev (CPU 100): build 0.30 -> ~0.06 s (harness, all setups 0.013-0.061 s); no eager compiles
+  remain in differometor's build path. Dev first run 7.13 s.
+- Numerics: dev arrays and all 8 harness setups bitwise identical to candidate 6, gradients included.
