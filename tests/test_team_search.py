@@ -142,14 +142,18 @@ class TeamSearchTests(unittest.TestCase):
             mode='serial', reason='All lanes and jobs drained', receipt='drained.json'), now=200)
         repeated, _ = apply(self.state, 'record', 'coordinator', dict(observation=obs))
         self.assertEqual(repeated, self.state)  # retry cannot relabel earlier evidence
-        for suffix, start in [('late', 150), ('missing', None), ('fresh', 201)]:
+        for suffix, start in [('late', 150), ('missing', None), ('no-finish', 201), ('reversed', 203), ('fresh', 201)]:
             row = observation(CHILD, suffix, 25)
             if start is not None:
                 row['job']['started_at'] = start
-                row['evidence'] = normalize_job(row['job'])
+            if suffix != 'no-finish':
+                row['job']['finished_at'] = 202
+            row['evidence'] = normalize_job(row['job'])
             self.state, _ = apply(self.state, 'record', 'coordinator', dict(observation=row))
         self.assertEqual(self.state['observations']['amd-a:late']['comparison_context']['mode'], 'unverified_timing')
         self.assertEqual(self.state['observations']['amd-a:missing']['comparison_context']['mode'], 'unverified_timing')
+        self.assertEqual(self.state['observations']['amd-a:no-finish']['comparison_context']['mode'], 'unverified_timing')
+        self.assertEqual(self.state['observations']['amd-a:reversed']['comparison_context']['mode'], 'unverified_timing')
         self.assertEqual(self.state['observations']['amd-a:fresh']['comparison_context']['mode'], 'serial')
 
     def test_regime_requires_coordinator_receipt_and_reason(self):

@@ -92,7 +92,8 @@ team comparison-regime --mode serial --receipt DRAINED_RECEIPT_URL \
 ```
 
 Only freshly started jobs whose trusted `started_at` is at or after this transition
-can enter serial comparison samples. Missing timestamps and late arrivals from
+and whose `finished_at` is at or after their start can enter serial comparison
+samples. Missing/reversed timestamps and late arrivals from
 the previous epoch are `unverified_timing` and remain excluded. Preserve queue
 `started_at`/`finished_at` in exported job JSON. A new context label cannot turn an
 old concurrent measurement into quiet evidence.

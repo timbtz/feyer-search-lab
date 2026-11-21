@@ -255,9 +255,11 @@ def apply(state, command, actor, data, now=None):
         if regime:
             mode = regime['mode']
             started = observation['job'].get('started_at')
+            finished = observation['job'].get('finished_at')
             # Switching back to serial must not admit late arrivals from the
             # overlapping epoch. Only a new, timestamped job can confirm timing.
-            if mode == 'serial' and (not finite_positive(started) or started < regime['changed_at']):
+            if mode == 'serial' and (not finite_positive(started) or not finite_positive(finished)
+                                     or finished < started or started < regime['changed_at']):
                 mode = 'unverified_timing'
             observation['comparison_context'] = dict(mode=mode, epoch=regime['epoch'],
                                                      receipt=regime['receipt'])
