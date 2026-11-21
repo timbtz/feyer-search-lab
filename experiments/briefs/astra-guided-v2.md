@@ -30,7 +30,7 @@ implementation and hypotheses remain your responsibility. You may inspect source
 and recorded evidence for exact peer revisions but must not edit other agents'
 worktrees, branch histories, notes or runtime files. The separate independent
 Astra session is not a collaborator in this window; do not read its developing
-work or send it guidance.
+work or send it guidance. Completed, publicly recorded full-evaluation facts from that independent session may be consumed one-way through the shared feed; they are evidence only and do not authorize access to its ongoing private work or any guidance back to it.
 
 Work only in your assigned worktree. Edit differometor/** and your own notes under
 experiments/notes/**. The supervisor owns commits, publication, exact-SHA evaluation
