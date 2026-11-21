@@ -21,6 +21,7 @@ import jax
 from functools import partial
 from time import time
 import jax.numpy as jnp
+import numpy as np
 from jax import lax, vmap, jit
 
 from differometor.setups import Setup
@@ -394,13 +395,45 @@ def simulate(
     # Carrier values that scale signal connector entries, shape (CV, M).
     carrier_entries = carrier[:, signal_carrier_indices.flatten()]
 
+    chunk_size = FREQUENCY_CHUNK_SIZE
+    count = parameters.shape[0]
+    # Guarded noise reuse: the builder adds the static key "noise_row_reuse" only when
+    # no noise-function input index (incl. padding) is a real carrier/signal changing
+    # index, so every expanded row yields identical noise inputs. The noise matrix is
+    # then built once (same components, same base, same scatter) and broadcast across
+    # rows; solves and the noise contraction are unchanged. The in-loop-solve scope
+    # always uses the per-row fallback.
+    reuse_noise = (
+        NOISE_ROW_REUSE
+        and component_groups is not None
+        and "noise_row_reuse" in component_groups
+        and not (chunk_size is not None and count > chunk_size and carrier.shape[0] == 1
+                 and FREQUENCY_LOOP_SCOPE == "signal_noise")
+    )
+    shared_noise_matrix = None
+    if reuse_noise:
+        shared_noise_matrix = update(
+            parameters[0],
+            noise_matrix,
+            noise_function_input_indices,
+            noise_output_indices,
+            noise_system_matrix_indices,
+            noise_function_indices,
+            component_groups["noise"],
+        )
+
+    def broadcast_noise(assembled_noise):
+        if shared_noise_matrix is None:
+            return assembled_noise
+        return jnp.broadcast_to(shared_noise_matrix, (count, *shared_noise_matrix.shape))
+
     def assemble(parameters, carrier_entries):
         return _assemble_signal_and_noise(
             parameters,
             carrier_entries,
             carrier.shape[1],
             signal_matrix,
-            noise_matrix,
+            None if reuse_noise else noise_matrix,
             signal_function_input_indices,
             signal_function_indices,
             signal_output_indices,
@@ -413,11 +446,10 @@ def simulate(
             component_groups,
         )
 
-    chunk_size = FREQUENCY_CHUNK_SIZE
-    count = parameters.shape[0]
     if chunk_size is None or carrier.shape[0] != 1 or count <= chunk_size:
         # Full frequency vmap (original layout), also used for carrier sweeps.
         assembled_signal, assembled_noise = assemble(parameters, carrier_entries)
+        assembled_noise = broadcast_noise(assembled_noise)
         signal, noise = _solve_signal_and_noise(assembled_signal, assembled_noise, base_carrier_selections)
     else:
         # Bounded frequency blocks. Frequency-shared, parameter-dependent inputs are
@@ -435,6 +467,7 @@ def simulate(
         if FREQUENCY_LOOP_SCOPE == "solve":
             # Assembly stays full-vmap; only solves and noise contraction loop.
             assembled_signal, assembled_noise = assemble(parameters, carrier_entries)
+            assembled_noise = broadcast_noise(assembled_noise)
 
             def block_solve(blocks):
                 block_signal_matrix, block_noise_matrix, block_selections = blocks
@@ -469,11 +502,14 @@ def simulate(
 
             def block_assemble(blocks):
                 block_parameters, block_entries = blocks
-                return assemble(block_parameters, block_entries)
+                block_signal_matrix, block_noise_matrix = assemble(block_parameters, block_entries)
+                if reuse_noise:
+                    return (block_signal_matrix,)
+                return block_signal_matrix, block_noise_matrix
 
-            assembled_signal, assembled_noise = _map_row_chunks(
-                block_assemble, (parameters, row_carrier_entries), chunk_size
-            )
+            assembled = _map_row_chunks(block_assemble, (parameters, row_carrier_entries), chunk_size)
+            assembled_signal = assembled[0]
+            assembled_noise = broadcast_noise(assembled[1] if len(assembled) > 1 else None)
             signal, noise = _solve_signal_and_noise(assembled_signal, assembled_noise, base_carrier_selections)
         else:
             raise ValueError(f"Unknown FREQUENCY_LOOP_SCOPE {FREQUENCY_LOOP_SCOPE!r}")
@@ -495,6 +531,10 @@ FREQUENCY_CHUNK_SIZE: int | None = 1
 # Loop scope when chunking: "signal_noise" (assembly + solves), "solve" (solves only)
 # or "assemble" (assembly only; solves stay full-vmap).
 FREQUENCY_LOOP_SCOPE: str = "assemble"
+# Build the noise source matrix once and broadcast it across signal rows when the
+# builder proved (host-side, before dummy filling) that no noise input index is a
+# real changing index. False always uses the per-row noise assembly.
+NOISE_ROW_REUSE: bool = True
 
 
 def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):
@@ -595,6 +635,9 @@ def _assemble_signal_and_noise(
     )
 
     # Update noise source matrix (may depend on current parameters).
+    # None: the caller builds one shared noise matrix (guarded row reuse).
+    if noise_matrix is None:
+        return signal_matrix, None
     noise_matrix = vmap(update, in_axes=(0, None, None, None, None, None, None))(
         parameters,
         noise_matrix,
@@ -724,6 +767,17 @@ def run_build_step(
         )
 
     simulation_arrays = {arg_names[i]: array for i, array in enumerate(all_arrays)}
+    # Predicate S: real (pre-dummy) carrier/signal changing indices are disjoint from
+    # every noise-function input index, including padding and grouped indices. Then all
+    # expanded rows share bitwise-identical noise inputs. Key presence is static.
+    real_changing = {int(i) for i in np.asarray(arrays_to_prepare[2]).ravel()}
+    real_changing |= {int(i) for i in np.asarray(arrays_to_prepare[3]).ravel()}
+    noise_inputs = {int(i) for i in np.asarray(noise_arrays[0]).ravel()}
+    for indices in component_groups.get("noise", {}).get("parameter_indices", {}).values():
+        noise_inputs |= {int(i) for i in np.asarray(indices).ravel()}
+    if real_changing.isdisjoint(noise_inputs):
+        component_groups["noise_row_reuse"] = ()
+
     simulation_arrays["component_groups"] = component_groups
 
     if timeit:
