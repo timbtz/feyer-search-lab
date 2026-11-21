@@ -394,38 +394,34 @@ def simulate(
     # Carrier values that scale signal connector entries, shape (CV, M).
     carrier_entries = carrier[:, signal_carrier_indices.flatten()]
 
-    def signal_and_noise(parameters, carrier_entries, carrier_selections):
-        """Signal and noise for a block of signal-sweep rows; returns (B, SN), (D, B)."""
-        return _signal_and_noise(
-            parameters,
-            carrier_entries,
-            carrier.shape[1],
-            carrier_selections,
-            signal_matrix,
-            noise_matrix,
-            signal_function_input_indices,
-            signal_function_indices,
-            signal_output_indices,
-            signal_matrix_indices,
-            signal_carrier_placing_indices,
-            noise_function_input_indices,
-            noise_function_indices,
-            noise_output_indices,
-            noise_system_matrix_indices,
-            component_groups,
-        )
+    # Matrix assembly stays frequency-batched (full vmap) in every layout.
+    signal_matrix, noise_matrix = _assemble_signal_and_noise(
+        parameters,
+        carrier_entries,
+        carrier.shape[1],
+        signal_matrix,
+        noise_matrix,
+        signal_function_input_indices,
+        signal_function_indices,
+        signal_output_indices,
+        signal_matrix_indices,
+        signal_carrier_placing_indices,
+        noise_function_input_indices,
+        noise_function_indices,
+        noise_output_indices,
+        noise_system_matrix_indices,
+        component_groups,
+    )
 
     chunk_size = FREQUENCY_CHUNK_SIZE
     count = parameters.shape[0]
     if chunk_size is None or carrier.shape[0] != 1 or count <= chunk_size:
         # Full frequency vmap (original layout), also used for carrier sweeps.
-        signal, noise = signal_and_noise(parameters, carrier_entries, base_carrier_selections)
+        signal, noise = _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections)
     else:
-        # Broadcast frequency-shared, parameter-dependent inputs outside the loop and
-        # feed them per row. Their cotangents are then stacked per frequency and summed
-        # by one reduction (the broadcast transpose), as in the vmapped layout, instead
-        # of being accumulated sequentially inside the reverse loop.
-        row_carrier_entries = jnp.broadcast_to(carrier_entries, (count, carrier_entries.shape[1]))
+        # Only the dense solves and noise contraction run in bounded frequency blocks.
+        # Detector selections are broadcast outside the loop and fed per row so their
+        # cotangents are summed by one broadcast-transpose reduction.
         row_carrier_selections = jnp.moveaxis(
             jnp.broadcast_to(
                 base_carrier_selections,
@@ -435,13 +431,15 @@ def simulate(
             0,
         )
 
-        def block_signal_and_noise(blocks):
-            block_parameters, block_entries, block_selections = blocks
-            return signal_and_noise(block_parameters, block_entries, jnp.moveaxis(block_selections, 0, 1))
+        def block_solve(blocks):
+            block_signal_matrix, block_noise_matrix, block_selections = blocks
+            return _solve_signal_and_noise(
+                block_signal_matrix, block_noise_matrix, jnp.moveaxis(block_selections, 0, 1)
+            )
 
         signal, noise = _map_frequency_chunks(
-            block_signal_and_noise,
-            (parameters, row_carrier_entries, row_carrier_selections),
+            block_solve,
+            (signal_matrix, noise_matrix, row_carrier_selections),
             chunk_size,
         )
 
@@ -453,7 +451,7 @@ def simulate(
 # evaluates bounded blocks of that many frequencies sequentially with `lax.map`;
 # a final partial block is padded by repeating the last frequency row and the
 # padded results are discarded. Read at trace time; not a traced argument.
-FREQUENCY_CHUNK_SIZE: int | None = 2
+FREQUENCY_CHUNK_SIZE: int | None = 1
 
 
 def _map_frequency_chunks(function, row_arrays: tuple, chunk_size: int):
@@ -476,11 +474,10 @@ def _map_frequency_chunks(function, row_arrays: tuple, chunk_size: int):
     return signal, noise
 
 
-def _signal_and_noise(
+def _assemble_signal_and_noise(
     parameters,
     carrier_entries,
     carrier_size,
-    base_carrier_selections,
     signal_matrix,
     noise_matrix,
     signal_function_input_indices,
@@ -494,10 +491,10 @@ def _signal_and_noise(
     noise_system_matrix_indices,
     component_groups,
 ):
-    """Assemble and solve the signal and quantum-noise systems for B signal rows.
+    """Assemble the signal and quantum-noise systems for B signal rows.
 
-    `parameters` has shape (B, P). Returns the signal solution (B, SN) and the
-    unsqueezed noise amplitude spectral density (D, B).
+    `parameters` has shape (B, P). Returns the conjugation-adjusted augmented signal
+    matrices (B, SN, SN + 1) and the noise source matrices (B, NN, NN).
     """
     signal_matrix = vmap(update, in_axes=(0, None, None, None, None, None, None))(
         parameters,
@@ -527,7 +524,7 @@ def _signal_and_noise(
     )
 
     # Apply conjugation rules to enforce upper and lower sideband symmetry.
-    rows =jnp.arange(signal_matrix.shape[1])[:, None]
+    rows = jnp.arange(signal_matrix.shape[1])[:, None]
     columns = jnp.arange(signal_matrix.shape[2])[None, :]
     # The lower-sideband row blocks are adjacent; include the augmented RHS.
     # Their union and the mechanical-to-upper block are disjoint.
@@ -538,6 +535,26 @@ def _signal_and_noise(
         conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix
     )
 
+    # Update noise source matrix (may depend on current parameters).
+    noise_matrix = vmap(update, in_axes=(0, None, None, None, None, None, None))(
+        parameters,
+        noise_matrix,
+        noise_function_input_indices,
+        noise_output_indices,
+        noise_system_matrix_indices,
+        noise_function_indices,
+        None if component_groups is None else component_groups["noise"],
+    )
+    return signal_matrix, noise_matrix
+
+
+def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections):
+    """Solve the signal and quantum-noise systems for B assembled signal rows.
+
+    `signal_matrix` (B, SN, SN + 1), `noise_matrix` (B, NN, NN) and detector
+    selections (D, 1 or B, SN). Returns the signal solution (B, SN) and the
+    unsqueezed noise amplitude spectral density (D, B).
+    """
     signal = vmap(solve)(signal_matrix[:, :, :-1], signal_matrix[:, :, -1])
 
     # --------------------
@@ -552,17 +569,6 @@ def _signal_and_noise(
         (carrier_selections.shape[0], transposed_conjugated_signal_matrix.shape[0], carrier_selections.shape[2]),
     )
     noise_weights = vmap(vmap(solve), in_axes=(None, 0))(transposed_conjugated_signal_matrix, carrier_selections)
-
-    # Update noise source matrix (may depend on current parameters).
-    noise_matrix = vmap(update, in_axes=(0, None, None, None, None, None, None))(
-        parameters,
-        noise_matrix,
-        noise_function_input_indices,
-        noise_output_indices,
-        noise_system_matrix_indices,
-        noise_function_indices,
-        None if component_groups is None else component_groups["noise"],
-    )
 
     def matmul_single_batch(matrix_batch: jnp.ndarray, vector_batch: jnp.ndarray) -> jnp.ndarray:
         """

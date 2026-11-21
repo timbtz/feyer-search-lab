@@ -134,4 +134,30 @@ between A and A^H is introduced.
 - If strict still fails at the same magnitude, batching granularity per se changes reverse
   rounding; then record that the operator is only official-check-qualified at tested values, or
   test whether the residual difference lies in the parameter-cotangent reduction.
+- SHA `47cd6495a53a3d47001ac7ac35f913657f122b30`.
+- Screen `4eaadb7b96b54f4ba9747960ed1d4020` (request `574f94c911cd4db2a778d9d557a22181`): first-run
+  23.571780 s; compile/lower 12.309; forward compile 8.796; forward exec 9.275; gradient compile
+  2.092; gradient exec 0.838; RSS 7462844 KiB.
+- Full `c3c8d3d9922d4954963ac745d4747961` (request `85ef771439094ad799418a164f34743f`): **official
+  PASS, strict FAIL**. First-run 23.677237 s; build 0.851; forward lower 0.870 / compile 8.941;
+  forward exec 9.275; gradient lower 0.198 / compile 2.106; gradient exec 0.852; compile/lower
+  total 12.393; warm median 10.528 s (forward 9.680, gradient 0.840); RSS 7467436 KiB; wall 83.15 s.
+- Comparison: physical outputs exact; gradient **bit-identical to candidate 2** (index 161
+  −29.61289475536929, rel L2 9.182443624982953e-10). **Hypothesis rejected**: degenerate batch
+  size is not the cause; the gradient drift is k-independent and tied to the loop structure.
+  k=2 is also slower than k=1 (+1.6 s compile, +0.2 s forward, +0.15 s gradient).
+
+### Candidate 4 — k=1, loop only around solves (assembly stays full-vmap)
+- Change vs candidate 3: `_signal_and_noise` split into `_assemble_signal_and_noise` (signal
+  `update`, carrier connector scaling, conjugation `where`, noise `update`; always full vmap at
+  top level) and `_solve_signal_and_noise` (signal solve, explicit A^H, noise-weight solve,
+  noise-source einsum, covariance solve, noise ASD) which is the only part run by `lax.map`,
+  scanning over rows of the assembled signal matrices, noise matrices and broadcast detector
+  selections. `FREQUENCY_CHUNK_SIZE = 1`.
+- Diagnostic hypothesis: if the drift comes from component-function/assembly reverse code compiled
+  inside the loop body (different fusion/FMA contraction or scatter-transpose lowering), strict
+  passes now. If strict still fails identically, the drift lies in the solve/transpose path in the
+  loop. Timing: assembly's ~0.9 GB intermediates return, so some of candidate 1's forward/RSS gain
+  is expected to be lost; the solve-side copies (astype, A^H transpose, LU workspaces) remain
+  per-frequency.
 - SHA / runs: pending.
