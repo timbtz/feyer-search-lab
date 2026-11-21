@@ -55,6 +55,49 @@
   - The noise-parameter gradient coordinates change summation order (rows are accumulated sequentially), as in candidate 1 of noise-reuse (passed at 1.6e-8).
 - **Fallback:** `NOISE_REUSE_MODE="broadcast"`, which is the parent.
 
+### Results: candidate SHA `b879706b1590bba8dee303c2d82ddbd1493eb48f` — **REJECTED (strict FAIL)**
+
+**Screen** (`00e53390c7674cb7a06120f83631761d`): first run 21.943 s. Provisional.
+
+**Full** (`a6981b9d7ffb4cc4b1bb52bee69cc3e6`): official PASS, **strict FAIL**.
+
+| Phase | Seconds | vs parent |
+| --- | --- | --- |
+| Complete first run | 22.130 | −0.24 |
+| Forward compile | 7.934 | +0.30 |
+| Forward execute | 8.208 | −0.40 |
+| Gradient compile | 1.977 | — |
+| Gradient execute | 1.380 | −0.09 |
+
+- Warm median: 10.111 s (forward 8.548 s, gradient 1.369 s).
+- Total job wall time: 84.9 s.
+- Peak RSS: 7.24 GB, against the parent's 8.13 GB (−0.9 GB, as predicted).
+
+**Strict comparison:**
+- Carrier, signal and powers: bitwise identical.
+- Noise: max normalized error 1.2e-5, relative L2 error 2.5e-13. So the per-row unbatched dot is **not** bitwise equal to the batched dot; the hypothesis was wrong.
+- Sensitivity: 1.2e-5.
+- **Gradient fails at index 161:** normalized error 6.85 (absolute 2.07e-5 against a tolerance of 3.0e-6; reference −29.61289).
+
+**Decision:** reject. Reverted to `NOISE_REUSE_MODE="broadcast"`. The timing gain (−0.24 s, single run) is within noise.
+
+**Lesson:** gradient index 161 amplifies any rounding change in the forward noise (≈1e-13 relative → normalized 7). Any change on the noise path must keep the forward arithmetic bitwise.
+
+## Candidate 2: `NOISE_FACTOR_REUSE="direct_implicit"`
+
+### Hypothesis
+- **Target:** forward execute and gradient execute. Parent: job `ab12c14c`, forward 8.609 s and gradient 1.475 s.
+- **Mechanism:** in "direct" mode, the `A^H` noise-weight solve is `jnp.linalg.solve(explicit A^H)`. Its `custom_linear_solve` matvec closes over the transposed copy, so the copy (101×751×751 complex, 0.9 GB) is kept as an AD residual next to `A` itself. The new mode:
+  - Factors the **same explicit `A^H`** with `lax.linalg.lu`, so LAPACK gets an identical input and returns identical pivots.
+  - Solves with `lu_solve` trans=0 for the solve and trans=1 for the transpose solve, which is the same structure as `jnp.linalg.solve`.
+  - Uses a matvec `x -> einsum("bji,bj", conj(A), x)` that reads `A`, which the direct solves already keep as a residual.
+- **Expected:**
+  - Forward outputs bitwise identical: same LU input, and the same lu_solve route that `"direct"` already showed to be bitwise for `A`.
+  - The gradient's `A` cotangent from this solve has elementwise-identical products; only the order of accumulation with the other two solve contributions may differ.
+  - Lower peak RSS (up to about 0.9 GB) and slightly lower forward/gradient execute.
+  - Ceiling: well under 0.5 s; this has not been measured.
+- **Risk:** gradient index 161 if the accumulation order changes rounding. Fallback is `NOISE_FACTOR_REUSE="direct"` (the parent).
+
 ### Results
 - Candidate SHA: pending (supervisor).
 - Screen and full: pending.

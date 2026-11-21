@@ -547,13 +547,17 @@ NOISE_ROW_REUSE: bool = True
 # "shared" (variant B; unbatched einsum "ij,dbj->dbi", may round differently;
 # e525ee5 strict gradient margin 0.949) or "rowmap" (lax.map of per-row
 # (NN,NN)x(NN,D) products against the single noise matrix; no (B,NN,NN) broadcast,
-# intended to keep the per-row product of "broadcast"; profile-guided candidate 1).
-NOISE_REUSE_MODE: str = "rowmap"
+# intended to keep the per-row product of "broadcast"; profile-guided candidate 1
+# b879706 FAILED strict: noise normalized 1.2e-5, gradient index 161 normalized 6.85).
+NOISE_REUSE_MODE: str = "broadcast"
 # Signal-matrix LU reuse: "off" (three jnp.linalg.solve calls), "direct" (one LU of
 # A shared by the signal and covariance solves; separate LU of A^H for noise
 # weights) or "all" (A's LU also for A^H; candidate 3 bb9a183, 18.65 s but FAILED
 # strict gradient at indices 33/161/180, max normalized error 14.7).
-NOISE_FACTOR_REUSE: str = "direct"
+# "direct_implicit" is "direct" with the A^H solve as its own custom_linear_solve:
+# the LU of the explicit A^H (identical LAPACK input) but a matvec that reads A
+# itself (x -> conj(A)^T x), so the transposed copy is not kept as an AD residual.
+NOISE_FACTOR_REUSE: str = "direct_implicit"
 
 
 def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):
@@ -682,7 +686,7 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
         (carrier_selections.shape[0], signal_matrix.shape[0], carrier_selections.shape[2]),
     )
 
-    if NOISE_FACTOR_REUSE not in ("off", "direct", "all"):
+    if NOISE_FACTOR_REUSE not in ("off", "direct", "direct_implicit", "all"):
         raise ValueError(f"Unknown NOISE_FACTOR_REUSE {NOISE_FACTOR_REUSE!r}")
     if NOISE_FACTOR_REUSE != "off":
         # One LU per signal row, shared by the signal solve, the adjoint noise-weight
@@ -718,6 +722,24 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
         if NOISE_FACTOR_REUSE == "all":
             # Failed strict gradient (candidate 3, bb9a183): A^H via A's LU drifts.
             noise_weights = vmap(adjoint_solve)(carrier_selections)
+        elif NOISE_FACTOR_REUSE == "direct_implicit":
+            # Separate LU of the explicit A^H exactly as jnp.linalg.solve factors it
+            # (same input, same pivots), solved with lu_solve(trans=0) as in
+            # jnp.linalg.solve. The differentiable matvec reads A (already a residual
+            # of the direct solves) instead of capturing the transposed copy.
+            adjoint_system = jnp.transpose(jnp.conjugate(system), (0, 2, 1))
+            adjoint_lu, adjoint_pivots, _ = jax.lax.linalg.lu(lax.stop_gradient(adjoint_system))
+            adjoint_factors = (adjoint_lu, adjoint_pivots)
+
+            def explicit_adjoint_solve(rhs):
+                return lax.custom_linear_solve(
+                    lambda x: jnp.einsum("bji,bj->bi", jnp.conjugate(system), x),
+                    rhs.astype(jnp.complex128),
+                    solve=lambda _, x: jax.scipy.linalg.lu_solve(adjoint_factors, x, trans=0),
+                    transpose_solve=lambda _, x: jax.scipy.linalg.lu_solve(adjoint_factors, x, trans=1),
+                )
+
+            noise_weights = vmap(explicit_adjoint_solve)(carrier_selections)
         else:
             # "direct": keep the original separate LU of A^H for the noise weights.
             transposed_conjugated_signal_matrix = jnp.transpose(jnp.conjugate(signal_matrix[:, :, :-1]), (0, 2, 1))
