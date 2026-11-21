@@ -1,0 +1,90 @@
+{
+  "name": "claude-setup-audit",
+  "status": "publishing",
+  "agent_provider": "claude",
+  "agent_model": "claude-opus-5-5",
+  "branch": "explore/claude-setup-audit",
+  "direction": "setup-and-matrix-assembly-guidance",
+  "kind": "guidance",
+  "worktree": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/claude-setup-audit",
+  "runtime_root": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/server-agents",
+  "runtime_commit": "6a1ac0e9276913f4ee564d4806d0e9701ec1e46c",
+  "runner_path": "/Users/t.betz/Documents/Feyer challenge/.lab/scripts/claude_guidance_once.py",
+  "runner_sha256": "ee0e38f8cda20054f553fe7c1e016cd043bcb6990808bc6de951cb1295284889",
+  "brief_path": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/claude-setup-audit/experiments/briefs/claude-setup-audit.md",
+  "brief_sha256": "5c1b07aef183ddc58ae907639189f07ce41530c4f1f905f59ef6d730019e79f2",
+  "base_commit": "1e552d675c3795265be8af1ac23ffb61f90f30b1",
+  "scaffold_commit": "5f4d4f0afbdf78f735e950f4a85f4ea3a7d98a74",
+  "invocation_started_at": 1795283239.545374,
+  "invocation_deadline_at": 1795284439.545374,
+  "max_turns": 1,
+  "thread_id": "2d000df0-57f8-472c-bf84-2ceb7a769b7c",
+  "evaluation_submitted": false,
+  "updated_at": 1795283402.0660858,
+  "model_completed_at": 1795283405.070925,
+  "response": {
+    "summary": "Source-only audit of setup and matrix assembly; nothing was run or measured. The only edit is experiments/notes/claude-setup-audit.md. The note proposes one new future-round operator: build the quantum-noise matrix once per evaluation instead of once per frequency. Today simulate.py:392-399 runs the noise update over all 101 signal-frequency rows. That produces 101 identical (751,751) complex matrices, about 0.91 GB by shape arithmetic, plus a cotangent of the same size. Every noise input (vacuum: F; loss; squeezer db/angle, from build.py:788-825, 1017-1026, 1389-1398) is independent of frequency. A host-side check in run_build_step would record the result in the static shape of a new trailing `noise_parameter_rows` argument (default None keeps the current path). simulate would then build the noise matrix from one row and use a single einsum. The dense base matrix, scatter semantics and solves stay unchanged, and no entry is assumed structurally zero. The note also covers trade-offs, compatibility risks, the required full validation and saved-gradient checks, and two ideas considered but not prioritized: a NumPy version of the per-edge eager JAX call at build.py:1288, where the ceiling is below build-time noise, and splitting signal entries by frequency dependence, which overlaps Codex's component-grouping and scatter work.",
+    "hypothesis": "If no noise-function input index overlaps the real changing indices, the 101 per-frequency noise matrices are bitwise identical. Building one (751,751) matrix and contracting it with all frequencies' weights should remove about 0.9 GB of forward buffers and the matching reverse cotangent, plus 100/101 of the noise component evaluations. Peak RSS and some forward/reverse execution time should fall, with little change in compile time. This is unmeasured. The time gain is probably small, likely under 1 s, because the dense LU solves dominate.",
+    "ready_for_evaluation": false,
+    "stop": true,
+    "notes": "No benchmarks, shell, Git or SSH were run, and no simulator code was changed. All sizes come from earlier measured dimensions (N=751, C=286, 101 frequencies, D=1) and shape arithmetic; no timing claim is made.\nMain risks:\n(1) Summation order changes for the optimized squeezer db/angle gradient coordinates, so strict comparison at rtol=1e-7 may fail, as it did for candidate 2.\n(2) The overlap test must use the real changing indices from before prepare_arrays fills in dummies, and fall back on any overlap. Otherwise it either always falls back or, for a squeezer-db sweep, gives wrong physics.\n(3) The coordinator should sequence this with Codex's assembly-scatter work if that work touches the noise update.\nA later candidate needs: the unchanged official full benchmark; strict saved-array comparison against seed8 with pointwise errors on the db/angle coordinates and the loss; an HLO check that the c128[101,751,751] noise buffer is gone, plus repeated fresh-process RSS and timing runs; and fallback checks outside the benchmark (squeezer-db sweep, carrier sweep with R>1).\nThe operator has not been registered or launched, and no AMD job was submitted."
+  },
+  "candidate_sha": "6badd95046752ccb603151f60031cbcf5148e82c",
+  "changed_paths": [
+    "experiments/notes/claude-setup-audit.md"
+  ],
+  "validation": "not_evaluated",
+  "usage": {
+    "input_tokens": 24,
+    "cache_creation_input_tokens": 96699,
+    "cache_read_input_tokens": 612316,
+    "output_tokens": 15812,
+    "output_tokens_details": {
+      "thinking_tokens": 8832
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 96699,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1204,
+        "cache_read_input_tokens": 91042,
+        "cache_creation_input_tokens": 5657,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 5657
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-opus-5-5": {
+      "inputTokens": 24,
+      "outputTokens": 15812,
+      "cacheReadInputTokens": 612316,
+      "cacheCreationInputTokens": 96699,
+      "webSearchRequests": 0,
+      "costUSD": 1.2123912000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 8832,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 96699,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "reported_total_cost_usd": 1.2123912000000001
+}
