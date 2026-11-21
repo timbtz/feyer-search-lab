@@ -43914,6 +43914,56 @@
           }
         }
       }
+    },
+    {
+      "seq": 16,
+      "at": 1795294465.441623,
+      "actor": "timbtz",
+      "command": "research",
+      "data": {
+        "schema": "feyer-research-record-v1",
+        "record_id": "feedback-d7b6a8d21679261ffe41d2dab3e3b508de1ecded9255e7baf446972026c32e18",
+        "executor": {
+          "kind": "supervisor",
+          "id": "claude-noise-reuse"
+        },
+        "kind": "explore",
+        "status": "completed",
+        "candidate_sha": "f3139c71ae2a5c9de2b015aad7db1a730fac0e1e",
+        "parents": [
+          "d09dc1d08fb046d08b3b699685d8ff780d611e87"
+        ],
+        "target_phases": [],
+        "hypothesis": "The parent's k=1 assembly loop runs the noise components and a dense 751x751 noise scatter in each of its 101 iterations. When none of the noise inputs is a real changing index, every row's noise inputs are bitwise identical. Building the noise matrix once and broadcasting it should keep forward outputs bitwise identical. The expected gradient change is only the order of the reduction over the noise-matrix cotangent (mainly db/angle). The loop body becomes smaller. Expected first-run gain is small (under 1 s), not measured. Memory may not fall because the broadcast einsum operand may still be stored at full size for the gradient pass.",
+        "change_summary": "Candidate 1 (variant A, guarded noise reuse) on parent d09dc1d. Not executed: this session cannot run code, so it has not been imported or traced. Changes, all in differometor/simulate.py: (1) run_build_step checks that the real carrier/signal changing indices (before the dummy fill) share no index with any noise input index, including padding and grouped indices. If none overlap, it adds the static key component_groups['noise_row_reuse'] = (). (2) When that key is present, NOISE_ROW_REUSE=True and the scope is not 'signal_noise', simulate builds the noise matrix once with an unbatched update(parameters[0], ...) and broadcasts it to all rows. The per-frequency assembly lax.map then builds only the signal matrix. Solves and the noise einsum/contraction are unchanged. (3) _assemble_signal_and_noise skips the noise update when noise_matrix is None. Every other case runs the unchanged per-row parent code. Notes file created.",
+        "stopping_reason": null,
+        "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-01.json",
+        "source_digest": "d7b6a8d21679261ffe41d2dab3e3b508de1ecded9255e7baf446972026c32e18",
+        "source_digest_kind": "canonical_json_sha256",
+        "feedback_ref": {
+          "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-01.json",
+          "artifact_digest": "d7b6a8d21679261ffe41d2dab3e3b508de1ecded9255e7baf446972026c32e18",
+          "digest_kind": "canonical_json_sha256"
+        },
+        "session_id": "c3962834-70b7-4d37-bcd1-ac7a66ece4cd",
+        "iteration": null,
+        "checkpoint": null,
+        "next_input": null,
+        "input_receipt": null,
+        "evaluations": [
+          {
+            "job_id": "289867298598498aad72af58cab120c1",
+            "candidate_sha": "f3139c71ae2a5c9de2b015aad7db1a730fac0e1e",
+            "profile": "screen"
+          },
+          {
+            "job_id": "5089ae06eb04473a87bc1207cb411d8c",
+            "candidate_sha": "f3139c71ae2a5c9de2b015aad7db1a730fac0e1e",
+            "profile": "full"
+          }
+        ],
+        "target_evidence": []
+      }
     }
   ],
   "comparison_regime": {
@@ -43922,5 +43972,51 @@
     "receipt": "https://github.com/timbtz/feyer-search-lab/issues/6",
     "changed_at": 1795292600.04386,
     "epoch": 14
+  },
+  "research_records": {
+    "feedback-d7b6a8d21679261ffe41d2dab3e3b508de1ecded9255e7baf446972026c32e18": {
+      "schema": "feyer-research-record-v1",
+      "record_id": "feedback-d7b6a8d21679261ffe41d2dab3e3b508de1ecded9255e7baf446972026c32e18",
+      "executor": {
+        "kind": "supervisor",
+        "id": "claude-noise-reuse"
+      },
+      "kind": "explore",
+      "status": "completed",
+      "candidate_sha": "f3139c71ae2a5c9de2b015aad7db1a730fac0e1e",
+      "parents": [
+        "d09dc1d08fb046d08b3b699685d8ff780d611e87"
+      ],
+      "target_phases": [],
+      "hypothesis": "The parent's k=1 assembly loop runs the noise components and a dense 751x751 noise scatter in each of its 101 iterations. When none of the noise inputs is a real changing index, every row's noise inputs are bitwise identical. Building the noise matrix once and broadcasting it should keep forward outputs bitwise identical. The expected gradient change is only the order of the reduction over the noise-matrix cotangent (mainly db/angle). The loop body becomes smaller. Expected first-run gain is small (under 1 s), not measured. Memory may not fall because the broadcast einsum operand may still be stored at full size for the gradient pass.",
+      "change_summary": "Candidate 1 (variant A, guarded noise reuse) on parent d09dc1d. Not executed: this session cannot run code, so it has not been imported or traced. Changes, all in differometor/simulate.py: (1) run_build_step checks that the real carrier/signal changing indices (before the dummy fill) share no index with any noise input index, including padding and grouped indices. If none overlap, it adds the static key component_groups['noise_row_reuse'] = (). (2) When that key is present, NOISE_ROW_REUSE=True and the scope is not 'signal_noise', simulate builds the noise matrix once with an unbatched update(parameters[0], ...) and broadcasts it to all rows. The per-frequency assembly lax.map then builds only the signal matrix. Solves and the noise einsum/contraction are unchanged. (3) _assemble_signal_and_noise skips the noise update when noise_matrix is None. Every other case runs the unchanged per-row parent code. Notes file created.",
+      "stopping_reason": null,
+      "source_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-01.json",
+      "source_digest": "d7b6a8d21679261ffe41d2dab3e3b508de1ecded9255e7baf446972026c32e18",
+      "source_digest_kind": "canonical_json_sha256",
+      "feedback_ref": {
+        "artifact_ref": "https://github.com/timbtz/feyer-search-lab/blob/e269d98c84a442714e490168f1ef8b648a2fa992/experiments/runs/claude-noise-reuse/candidate-01.json",
+        "artifact_digest": "d7b6a8d21679261ffe41d2dab3e3b508de1ecded9255e7baf446972026c32e18",
+        "digest_kind": "canonical_json_sha256"
+      },
+      "session_id": "c3962834-70b7-4d37-bcd1-ac7a66ece4cd",
+      "iteration": null,
+      "checkpoint": null,
+      "next_input": null,
+      "input_receipt": null,
+      "evaluations": [
+        {
+          "job_id": "289867298598498aad72af58cab120c1",
+          "candidate_sha": "f3139c71ae2a5c9de2b015aad7db1a730fac0e1e",
+          "profile": "screen"
+        },
+        {
+          "job_id": "5089ae06eb04473a87bc1207cb411d8c",
+          "candidate_sha": "f3139c71ae2a5c9de2b015aad7db1a730fac0e1e",
+          "profile": "full"
+        }
+      ],
+      "target_evidence": []
+    }
   }
 }

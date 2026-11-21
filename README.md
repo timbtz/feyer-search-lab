@@ -23,9 +23,19 @@ User authorized expanded CPU capacity. Conservatively exclude new timing imports
 ```mermaid
 graph TD
   c0["4c12600ce07d"]
-  c1["f3139c71ae2a"]
+  c1["d09dc1d08fb0"]
+  c2["f3139c71ae2a"]
+  c1 -->|explore| c2
 ```
 
 Every edge records intended inputs, not proof of speedup.
 
-Recorded jobs: 13. Decisions/events: 15.
+Recorded jobs: 13. Decisions/events: 16.
+
+## External research records
+
+| Executor | Kind | Candidate | Target phases | Recorded status |
+| --- | --- | --- | --- | --- |
+| claude-noise-reuse | explore | f3139c71ae2a | unknown | completed |
+
+These records are evidence, not competing task claims or winner declarations.
