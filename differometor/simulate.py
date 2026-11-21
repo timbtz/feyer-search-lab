@@ -217,12 +217,22 @@ def update(
         parameters, function_input_indices, output_indices, function_indices,
         component_groups,
     )
+    outputs = _couple_carrier_values(outputs, carrier_entries, component_groups)
+    return _scatter_component_values(outputs, matrix, matrix_indices, component_groups)
+
+
+def _couple_carrier_values(outputs, carrier_entries, component_groups):
     # Keep the selected component values available to the carrier-product
     # transpose without including that coupling in checkpoint recomputation.
     if carrier_entries is not None:
         positions = component_groups["carrier_output_positions"]
         scaled_outputs = -outputs[positions] * carrier_entries
         outputs = outputs.at[positions].set(scaled_outputs, unique_indices=True)
+    return outputs
+
+
+def _scatter_component_values(outputs, matrix, matrix_indices, component_groups):
+    """Write replacement values with the same destination and duplicate semantics."""
     if component_groups is not None and "flat_matrix_indices" in component_groups:
         # Builder-proven unique, in-bounds offsets avoid tracing the generic
         # two-coordinate indexing path. Update order and component values stay
@@ -585,22 +595,53 @@ def simulate(
             # Assembly runs in the loop; solves and noise contraction stay full-vmap.
             row_carrier_entries = jnp.broadcast_to(carrier_entries, (count, carrier_entries.shape[1]))
 
-            def block_assemble(blocks):
-                block_parameters, block_entries = blocks
-                block_signal_matrix, block_noise_matrix = assemble(block_parameters, block_entries)
-                if reuse_noise:
-                    return (block_signal_matrix,)
-                return block_signal_matrix, block_noise_matrix
-
-            # Component values checkpoint internally; dense assembly and solves
-            # remain outside recomputation. The official JIT stages are unchanged.
-            assembled = _map_row_chunks(
-                block_assemble,
-                (parameters, row_carrier_entries),
-                chunk_size,
+            signal_groups = None if component_groups is None else component_groups["signal"]
+            sparse_loop_output = (
+                reuse_noise
+                and signal_groups is not None
+                and "flat_matrix_indices" in signal_groups
+                and "carrier_output_positions" in signal_groups
+                and signal_output_indices[0].size < signal_matrix.size
             )
-            assembled_signal = assembled[0]
-            assembled_noise = broadcast_noise(assembled[1] if len(assembled) > 1 else None)
+            if sparse_loop_output:
+                # Unique destinations and complete carrier mappings let the loop
+                # return just replacement values. Keep their evaluation/scaling
+                # order, then assemble and conjugate the full batch outside it.
+                def block_values(blocks):
+                    block_parameters, block_entries = blocks
+                    outputs = vmap(_component_values, in_axes=(0, None, None, None, None))(
+                        block_parameters, signal_function_input_indices,
+                        signal_output_indices, signal_function_indices, signal_groups,
+                    )
+                    outputs = vmap(_couple_carrier_values, in_axes=(0, 0, None))(
+                        outputs, block_entries, signal_groups,
+                    )
+                    return (outputs,)
+
+                values, = _map_row_chunks(
+                    block_values, (parameters, row_carrier_entries), chunk_size,
+                )
+                assembled_signal = vmap(_scatter_component_values, in_axes=(0, None, None, None))(
+                    values, signal_matrix, signal_matrix_indices, signal_groups,
+                )
+                assembled_signal = _conjugate_signal_matrix(assembled_signal, carrier.shape[1])
+                assembled_noise = broadcast_noise(None)
+            else:
+                # Preserve generic/duplicate-index and per-frequency noise paths.
+                def block_assemble(blocks):
+                    block_parameters, block_entries = blocks
+                    block_signal_matrix, block_noise_matrix = assemble(block_parameters, block_entries)
+                    if reuse_noise:
+                        return (block_signal_matrix,)
+                    return block_signal_matrix, block_noise_matrix
+
+                assembled = _map_row_chunks(
+                    block_assemble,
+                    (parameters, row_carrier_entries),
+                    chunk_size,
+                )
+                assembled_signal = assembled[0]
+                assembled_noise = broadcast_noise(assembled[1] if len(assembled) > 1 else None)
             signal, noise = _solve_signal_and_noise(assembled_signal, assembled_noise, base_carrier_selections)
         else:
             raise ValueError(f"Unknown FREQUENCY_LOOP_SCOPE {FREQUENCY_LOOP_SCOPE!r}")
@@ -674,6 +715,22 @@ def _map_frequency_chunks(function, row_arrays: tuple, chunk_size: int):
     return signal, noise
 
 
+def _conjugate_signal_matrix(signal_matrix, carrier_size):
+    # Apply conjugation rules to enforce upper and lower sideband symmetry.
+    rows = jnp.arange(signal_matrix.shape[1])[:, None]
+    columns = jnp.arange(signal_matrix.shape[2])[None, :]
+    # The lower-sideband row blocks are adjacent; include the augmented RHS.
+    # Their union and the mechanical-to-upper block are disjoint.
+    conjugate_entries = (
+        (rows >= carrier_size) & (rows < 2 * carrier_size) & (columns >= carrier_size)
+    ) | ((rows >= 2 * carrier_size) & (columns < carrier_size))
+    signal_matrix = jnp.where(
+        conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix
+    )
+
+    return signal_matrix
+
+
 def _assemble_signal_and_noise(
     parameters,
     carrier_entries,
@@ -731,17 +788,7 @@ def _assemble_signal_and_noise(
             unique_indices=unique_carrier_placing_indices,
         )
 
-    # Apply conjugation rules to enforce upper and lower sideband symmetry.
-    rows = jnp.arange(signal_matrix.shape[1])[:, None]
-    columns = jnp.arange(signal_matrix.shape[2])[None, :]
-    # The lower-sideband row blocks are adjacent; include the augmented RHS.
-    # Their union and the mechanical-to-upper block are disjoint.
-    conjugate_entries = (
-        (rows >= carrier_size) & (rows < 2 * carrier_size) & (columns >= carrier_size)
-    ) | ((rows >= 2 * carrier_size) & (columns < carrier_size))
-    signal_matrix = jnp.where(
-        conjugate_entries, jnp.conjugate(signal_matrix), signal_matrix
-    )
+    signal_matrix = _conjugate_signal_matrix(signal_matrix, carrier_size)
 
     # Update noise source matrix (may depend on current parameters).
     # None: the caller builds one shared noise matrix (guarded row reuse).

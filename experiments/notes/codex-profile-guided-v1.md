@@ -521,3 +521,62 @@ Mechanism: the carrier-product transpose needs selected component values. With m
 Syntax and whitespace pass. A standard-library AST check independently inlined the checkpoint helper in both parent and candidate; the complete resulting module ASTs are identical. This verifies unchanged arithmetic and ordering while isolating the boundary change, not JAX numerical correctness or performance. No simulator or benchmark run locally, no new test infrastructure, package change, Git writes, SSH or agents. Physical setup, all 101 frequencies/193 variables, double precision, three JIT stages and full output/gradient requirements remain unchanged.
 
 Next: supervisor screen and full/all strict saved checks if eligible; compare to exact parent 211f65a5f18d7b68deacc021e0d9eab874bd9df7 and reject slower totals or numerical failures even if a compile phase improves. Fixed session deadline **2026-11-21 21:09:24.088367 UTC**, session `codex-profile-guided-v1`, thread `01a1ffba-57ec-7191-8ba9-c6163633a3b3`; no candidate cap.
+
+
+## Candidate 9 measured feedback — retained
+
+SHA **7d1ccc59cef3d7436870bb0e6c941dbde4c30770**, exact parent candidate 8 **211f65a5f18d7b68deacc021e0d9eab874bd9df7**. Screen **7bfe34a8ab02485cbf05596393569dc5** passed cheap checks: first 20.502868744 s, compilation/lowering 9.143759195 s, job wall 21.431025008 s, peak RSS 7,736,180 KiB. Screen remains provisional.
+
+Full **7e6ce3c3bf5148af93351918fda06e22**, request 9c6379a060bf4ffc96a2584c0168b2c4: official, strict, resource, source, workload and precision checks pass in the unchanged full cohort/environment. Local report and every saved comparison inspected. First run **20.057717625 s**, **-0.966473900 s** vs exact parent's full 6c6d3774738c4ed4b2bda1b9982c5072. Combined lowering/compilation **8.818415347 s**, -0.992654039 s. Gradient compilation fell 0.965958262 s, consistent with the prediction. Forward execution increased 0.029266907 s; native sub-operation attribution remains unknown.
+
+Warm median **10.762214443 s**, +0.556052115 s vs parent (samples 10.713388273, 10.762214443, 10.842295449). Job wall **86.067681324 s**; RSS **7,801,664 KiB**, sampled peak 7,989,952,512 bytes. These are separate evidence from first-run total. Retain candidate 9 for its lower complete first-run observation, without claiming repeat-confirmed superiority or warm improvement.
+
+| Phase | Candidate 9 seconds | Delta vs candidate 8 |
+| --- | ---: | ---: |
+| imports | 0.291449912 | -0.004750183 |
+| initialize | 0.002965234 | +0.000048716 |
+| load | 0.001515402 | +0.000090148 |
+| build | 0.823499076 | -0.021965671 |
+| forward_lower | 0.688361499 | -0.001826717 |
+| forward_compile | 3.314519804 | -0.007260846 |
+| forward | 8.600478031 | +0.029266907 |
+| sensitivity_lower | 0.078105381 | +0.003758030 |
+| sensitivity_compile | 0.381511295 | -0.004353974 |
+| sensitivity | 0.000898300 | -0.000040373 |
+| gradient_lower | 0.297260407 | -0.017012270 |
+| gradient_compile | 4.058656961 | -0.965958262 |
+| gradient | 1.518030949 | +0.023554744 |
+| host_transfer | 0.000465374 | -0.000024149 |
+
+Saved last-warm comparisons at unchanged rtol=1e-7 and scale_atol=1e-12:
+
+| Output | Absolute error | Relative L2 error | Normalized error | Failures |
+| --- | ---: | ---: | ---: | ---: |
+| carrier | 0 | 0 | 0 | 0 |
+| signal | 0 | 0 | 0 | 0 |
+| noise | 0 | 0 | 0 | 0 |
+| sensitivity | 0 | 0 | 0 | 0 |
+| powers | 0 | 0 | 0 | 0 |
+| gradient | 5.0931703299284e-10 | 7.57652928017493e-15 | 6.03955088249533e-07 | 0 |
+| parameters | 0 | 0 | 0 | 0 |
+| frequencies | 0 | 0 | 0 | 0 |
+
+All finite; all failing-index/detail lists empty. Parameters/frequencies satisfy exact-required checks. All physical outputs exactly match the reference. Gradient shape 193, norm 70517.10686388829; official finite-difference spot check passes. Log-sensitivity error 5.374104176780747e-6; reported loss 9.793036291535532e-8. Prior failures/rejections preserved above and in history.
+
+## Candidate 10 — sparse signal values as frequency-loop outputs
+
+Exact retained parent **7d1ccc59cef3d7436870bb0e6c941dbde4c30770**; candidate SHA/run IDs pending supervisor. Coordinator requested this distinct loop-output experiment after narrowed checkpointing; static index/pytree work remains separately owned.
+
+Measured ranking, parent full **7e6ce3c3bf5148af93351918fda06e22**: forward **8.600478031 s (42.88%)**, gradient compilation **4.058656961 s (20.23%)**, forward compilation **3.314519804 s (16.52%)**, gradient execution **1.518030949 s (7.57%)**. Combined lowering/compilation 8.818415347 s (43.97%). No solve/kernel costs are inferred from these phase totals.
+
+Structural count established from the public JSON and build instruction definitions without executing the simulator: 48 mirrors x 8 sideband updates + 6 beamsplitters x 16 + 48 mirror masses x 13 + 6 beamsplitter masses x 25 + 71 spaces x 4 propagation + 71 space-targeted signals x (4 modulation + 1 RHS) = **1,893 updates per frequency**, versus **751 x 752 = 564,752 complex entries** in each dense augmented matrix. All 71 signal targets are edges; all 54 mass targets are the listed 48 mirrors/6 beamsplitters. This is a source-derived count, not operator profiling. The implementation also checks update-vector size < matrix size at trace time; it has no fixture-specific constant.
+
+Duplicate semantics: the builder normalizes negative coordinates and proves uniqueness/in-bounds before adding flat_matrix_indices. carrier_output_positions additionally requires unique carrier destinations, unique component destinations, and every carrier destination mapped to a component update. Only with those existing proofs AND guarded shared-noise reuse does the sparse-output branch run. Duplicate destinations, missing mappings/metadata, or per-frequency noise use the original dense-loop assembly. No new uniqueness promise or zero pruning is introduced. Repeated component-output selections remain permitted.
+
+One attributable change: the assembly frequency loop emits the component replacement vector after the existing checkpointed component calculation and unchanged carrier multiplication. After the loop, vmap broadcasts the base matrix into the same unique flat scatter; unchanged dense sideband conjugation follows. Dense full-vmap signal/noise solves, independent adjoint pivoting and all numerical controls remain fixed. Three small helpers extract existing carrier scaling, scatter and conjugation verbatim for reuse; no component formula or physical update is omitted. All frequencies and variables remain dynamic.
+
+Hypothesis: reducing the scan output from a dense matrix to its replacement vector may simplify the loop transpose and compilation, and reduce dense loop output/residual traffic. Primary prediction is lower forward/gradient compilation; forward execution may also change. Tentative total opportunity **0–1.5 s**, unmeasured, not a promised speedup. Full dense batched matrices still exist outside the loop; memory is not predicted to fall by the roughly 298x output-size ratio. Batched scatter/conjugation can increase temporary storage or compilation and reverse summation order can change rounding. Any slower total or strict numerical failure rejects this candidate regardless of an improved phase.
+
+Validation: all simulator modules parse; whitespace check passes. AST helper inlining exactly reconstructs parent update and _assemble_signal_and_noise, and all other pre-existing functions except simulate are unchanged. Sixty deterministic standard-library complex cases verify row/chunk assembly movement bitwise, including empty/reordered updates, carrier subsets, conjugation boundaries, augmented RHS and padded final chunks. These do not establish JAX differentiation or full physical correctness. No local simulator/benchmark, environment change, Git write, SSH or agents.
+
+Next: supervisor screen then full/all saved output and gradient checks if eligible; compare complete total with exact parent above. Preserve this trial even if rejected; fallback is candidate 9. Fixed deadline **2026-11-21 21:09:24.088367 UTC**, session codex-profile-guided-v1, thread 01a1ffba-57ec-7191-8ba9-c6163633a3b3; no candidate cap. Other-team timing reports have unspecified boundaries and are not evidence for this candidate.
