@@ -1,0 +1,132 @@
+{
+  "previous_campaign": "layout-window-v2",
+  "outcome": {
+    "status": "budget_exhausted",
+    "search_and_calibration_jobs": 26,
+    "repeat_reservations": 12,
+    "observed_at": 1795296070.47907
+  },
+  "search_coverage": [
+    {
+      "campaign": "layout-numerical-v2",
+      "manifest_digest": "131c6e7c3117b1bbf860e967014c77c548fdfa4108a6457a72672f3e4051e835",
+      "tried": 4,
+      "legal": 4,
+      "unseen": [],
+      "eligible_full_configurations": 4,
+      "stop": {
+        "status": "combine",
+        "observed_at": 1795293105.3522592
+      },
+      "interpretation": "Frozen menu coverage only; neither budget nor menu exhaustion proves a local optimum."
+    },
+    {
+      "campaign": "layout-numerical-lane1",
+      "manifest_digest": "3a21e9a9edd5c05ca3364820521a0c0feec14fb029fe98e00b05a2cfa6902bb2",
+      "tried": 9,
+      "legal": 9,
+      "unseen": [],
+      "eligible_full_configurations": 9,
+      "stop": {
+        "status": "budget_exhausted",
+        "observed_at": 1795294597.107336
+      },
+      "interpretation": "Frozen menu coverage only; neither budget nor menu exhaustion proves a local optimum."
+    }
+  ],
+  "requests": [
+    {
+      "sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+      "request_id": "2c18ff3f3a7347389216c7a614f70fc2",
+      "job_id": "455f97ede73945a3a0846744efef1519",
+      "status": "valid",
+      "reserved_at": 1795294600.1950772
+    },
+    {
+      "sha": "e0a1dc69f4951c100fefbc9fc08a23c3c12058dc",
+      "request_id": "2945286c5c584305b5fb4c4d60a84adc",
+      "job_id": "5b7a1e35ecbe432c9abe1c228f6da420",
+      "status": "valid",
+      "reserved_at": 1795294981.679627
+    },
+    {
+      "sha": "003a9a7e040aa630afcdf0d5ccfd800c0c3ff326",
+      "request_id": "dc3bd7eec01b4550bf4432887d8d14df",
+      "job_id": "7eb5a9b337484acd87d0268bd900ad7e",
+      "status": "valid",
+      "reserved_at": 1795295084.05584
+    },
+    {
+      "sha": "161927b5028ae24b01f25919d44d239ed7df5c32",
+      "request_id": "62ffed0c04084e95add19f047c71db30",
+      "job_id": "32d25c4a9b3f42e5b3ee8a48ebdce8c9",
+      "status": "valid",
+      "reserved_at": 1795295185.455824
+    },
+    {
+      "sha": "3a2073ad5add8770eab0d37b55ad67cea71b448b",
+      "request_id": "8eb0fa0e14b046b0ad132193a5bd5470",
+      "job_id": "2135302becc443d1a5b847ef5d24c22b",
+      "status": "valid",
+      "reserved_at": 1795295282.6218581
+    },
+    {
+      "sha": "42d3a675e25187fd63387a4b13cf79469936668d",
+      "request_id": "5649b6ed978a4a9a9c626d6ba9ced5e9",
+      "job_id": "8ee20c3e0de14570abe8cb95a92020cd",
+      "status": "valid",
+      "reserved_at": 1795295378.996095
+    },
+    {
+      "sha": "96474bdd4d83bb02c163640f63fae1c4bd7a21d4",
+      "request_id": "7d2914afebf841579fc86ca684b77e16",
+      "job_id": "d1700a572d0d4efead3f35dee32eb835",
+      "status": "valid",
+      "reserved_at": 1795295473.724514
+    },
+    {
+      "sha": "e0a1dc69f4951c100fefbc9fc08a23c3c12058dc",
+      "request_id": "8f0d4c51e76c4dca9f8b703247088adf",
+      "job_id": "a11523d4599a40fea6ebf235577d1903",
+      "status": "valid",
+      "reserved_at": 1795295576.939775
+    },
+    {
+      "sha": "003a9a7e040aa630afcdf0d5ccfd800c0c3ff326",
+      "request_id": "6a06df4e8224448d9fc39558d6608c80",
+      "job_id": "1accbf88000d46fcabe78fc00e62b266",
+      "status": "valid",
+      "reserved_at": 1795295675.2953222
+    },
+    {
+      "sha": "161927b5028ae24b01f25919d44d239ed7df5c32",
+      "request_id": "251db3f9ac7d4da5b764fe492c9c3b12",
+      "job_id": "b6b37c984a944ba4b6c6c1a2e7588b7a",
+      "status": "valid",
+      "reserved_at": 1795295776.2415009
+    },
+    {
+      "sha": "3a2073ad5add8770eab0d37b55ad67cea71b448b",
+      "request_id": "d5f05e9728f64dc889e9d15832eef5f7",
+      "job_id": "7eee1e1221ef4fef8037acbf5f0d0792",
+      "status": "valid",
+      "reserved_at": 1795295874.519996
+    },
+    {
+      "sha": "42d3a675e25187fd63387a4b13cf79469936668d",
+      "request_id": "791767072d6147db87a345a00612d909",
+      "job_id": "7f09fe19ee5d4295a1ce81f3652638fb",
+      "status": "valid",
+      "reserved_at": 1795295972.92116
+    },
+    {
+      "sha": "3a2073ad5add8770eab0d37b55ad67cea71b448b",
+      "request_id": null,
+      "job_id": null,
+      "status": "planned"
+    }
+  ],
+  "deadline_unix": 1795296029.2574458,
+  "global_reserved_jobs": 38,
+  "interpretation": "Menus fully covered; repeat continuation stopped at deadline. Unused budget expired, not transferred."
+}
