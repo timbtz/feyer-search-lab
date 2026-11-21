@@ -1,6 +1,7 @@
 """Read-only host/lane observation for a concurrent timing epoch."""
 import argparse
 import json
+import math
 import os
 from pathlib import Path
 import sqlite3
@@ -51,10 +52,38 @@ def sample(epoch):
             'notes': 'RSS sums can double-count shared pages. Concurrent timings are exploratory.'}
 
 
+def positive_duration(value):
+    try:
+        seconds = float(value)
+    except (TypeError, ValueError):
+        raise argparse.ArgumentTypeError('Duration must be finite and positive')
+    if isinstance(value, bool) or not math.isfinite(seconds) or seconds <= 0:
+        raise argparse.ArgumentTypeError('Duration must be finite and positive')
+    return seconds
+
+
+def lane_stopped_in_epoch(lane, epoch):
+    """An old stop receipt must not stop observation of a restarted worker."""
+    state = Path(lane['root']) / 'state'
+    try:
+        startup = json.loads((state / 'lane-startup.json').read_text())
+        stopped = json.loads((state / 'lane-stopped.json').read_text())
+        pid = lane['worker_pid']
+        times = [epoch['started_at'], startup['started_at'], stopped['at']]
+        if any(isinstance(t, bool) or not isinstance(t, (int, float)) or not math.isfinite(t)
+               for t in times):
+            return False
+        return (isinstance(pid, int) and not isinstance(pid, bool) and pid > 0
+                and startup['pid'] == stopped['pid'] == pid
+                and times[2] >= times[1] >= times[0])
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--epoch', required=True, type=Path)
-    parser.add_argument('--max-seconds', type=float, default=7200)
+    parser.add_argument('--max-seconds', type=positive_duration, default=7200)
     parser.add_argument('--once', action='store_true')
     args = parser.parse_args()
     epoch = json.loads(args.epoch.read_text())
@@ -74,7 +103,7 @@ def main():
             output.write(json.dumps(current, allow_nan=False) + '\n'); output.flush()
             write_json(root / 'latest.json', current)
             previous = current
-            if all((Path(lane['root']) / 'state/lane-stopped.json').exists() for lane in epoch['lanes'][1:]):
+            if all(lane_stopped_in_epoch(lane, epoch) for lane in epoch['lanes'][1:]):
                 break
             time.sleep(2)
     write_json(root / 'monitor.json', {'pid': os.getpid(), 'stopped_at': time.time(), 'status': 'complete'})
