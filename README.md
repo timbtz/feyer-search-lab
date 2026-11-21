@@ -92,32 +92,33 @@ graph TD
   c67["aa4d230f4af7"]
   c68["aa7c3f93b89f"]
   c69["aac9904cb4dd"]
-  c70["ae180410c437"]
-  c71["b1ef5d3a6a62"]
-  c72["b68b6a18328b"]
-  c73["b879706b1590"]
-  c74["b8a877cb209a"]
-  c75["bb9a183fd64f"]
-  c76["bec798863aad"]
-  c77["c1233f6b8eaf"]
-  c78["c33dafe112ea"]
-  c79["c4c7260e9db2"]
-  c80["c99bd28b0ba6"]
-  c81["cb502e8a5a15"]
-  c82["cefa4ada921b"]
-  c83["d09dc1d08fb0"]
-  c84["d28804741cce"]
-  c85["d7f257ab82f0"]
-  c86["d947905c9b73"]
-  c87["e0a1dc69f495"]
-  c88["e2fd659e6f42"]
-  c89["e525ee5ee4ef"]
-  c90["e63f627129ed"]
-  c91["e82b74c1d274"]
-  c92["eca3eda479a2"]
-  c93["f3139c71ae2a"]
-  c94["f5f2b5bda7b6"]
-  c95["fbcfaa3a889e"]
+  c70["ac49ee4dcc23"]
+  c71["ae180410c437"]
+  c72["b1ef5d3a6a62"]
+  c73["b68b6a18328b"]
+  c74["b879706b1590"]
+  c75["b8a877cb209a"]
+  c76["bb9a183fd64f"]
+  c77["bec798863aad"]
+  c78["c1233f6b8eaf"]
+  c79["c33dafe112ea"]
+  c80["c4c7260e9db2"]
+  c81["c99bd28b0ba6"]
+  c82["cb502e8a5a15"]
+  c83["cefa4ada921b"]
+  c84["d09dc1d08fb0"]
+  c85["d28804741cce"]
+  c86["d7f257ab82f0"]
+  c87["d947905c9b73"]
+  c88["e0a1dc69f495"]
+  c89["e2fd659e6f42"]
+  c90["e525ee5ee4ef"]
+  c91["e63f627129ed"]
+  c92["e82b74c1d274"]
+  c93["eca3eda479a2"]
+  c94["f3139c71ae2a"]
+  c95["f5f2b5bda7b6"]
+  c96["fbcfaa3a889e"]
   c2 -->|refine| c35
   c4 -->|explore| c62
   c5 -->|explore| c23
@@ -131,21 +132,21 @@ graph TD
   c9 -->|explore| c42
   c9 -->|explore| c47
   c9 -->|explore| c65
-  c9 -->|explore| c74
-  c9 -->|explore| c91
+  c9 -->|explore| c75
+  c9 -->|explore| c92
   c10 -->|explore| c63
   c11 -->|explore| c50
-  c12 -->|explore| c92
-  c13 -->|combine| c87
+  c12 -->|explore| c93
+  c13 -->|combine| c88
   c17 -->|explore| c24
   c18 -->|explore| c34
-  c20 -->|explore| c76
+  c20 -->|explore| c77
   c23 -->|explore| c2
   c23 -->|explore| c44
   c27 -->|explore| c28
-  c28 -->|combine| c87
+  c28 -->|combine| c88
   c29 -->|explore| c12
-  c30 -->|explore| c84
+  c30 -->|explore| c85
   c32 -->|explore| c55
   c34 -->|explore| c54
   c36 -->|combine| c13
@@ -159,53 +160,53 @@ graph TD
   c47 -->|explore| c52
   c47 -->|explore| c67
   c47 -->|explore| c68
-  c47 -->|explore| c71
-  c47 -->|explore| c83
+  c47 -->|explore| c72
+  c47 -->|explore| c84
   c48 -->|explore| c30
   c49 -->|explore| c58
   c50 -->|explore| c29
-  c50 -->|explore| c86
-  c51 -->|explore| c82
+  c50 -->|explore| c87
+  c51 -->|explore| c83
   c54 -->|explore| c64
   c55 -->|explore| c21
   c56 -->|explore| c32
   c57 -->|refine| c59
   c58 -->|explore| c18
-  c59 -->|refine| c94
-  c60 -->|diagnose| c88
+  c59 -->|refine| c95
+  c60 -->|diagnose| c89
   c61 -->|explore| c4
-  c61 -->|explore| c73
-  c62 -->|explore| c85
+  c61 -->|explore| c74
+  c62 -->|explore| c86
   c63 -->|explore| c11
   c64 -->|explore| c17
   c66 -->|explore| c43
   c66 -->|explore| c51
-  c69 -->|explore| c70
-  c70 -->|explore| c40
-  c73 -->|explore| c48
-  c76 -->|explore| c80
-  c77 -->|explore| c10
-  c80 -->|explore| c39
-  c83 -->|explore| c0
-  c83 -->|explore| c22
-  c83 -->|explore| c27
-  c83 -->|explore| c36
-  c83 -->|explore| c61
-  c83 -->|explore| c75
-  c83 -->|explore| c89
-  c83 -->|explore| c93
-  c84 -->|explore| c66
-  c85 -->|explore| c90
-  c86 -->|explore| c20
-  c88 -->|diagnose| c81
-  c90 -->|explore| c77
-  c93 -->|combine| c13
-  c94 -->|refine| c45
+  c69 -->|explore| c71
+  c71 -->|explore| c40
+  c74 -->|explore| c48
+  c77 -->|explore| c81
+  c78 -->|explore| c10
+  c81 -->|explore| c39
+  c84 -->|explore| c0
+  c84 -->|explore| c22
+  c84 -->|explore| c27
+  c84 -->|explore| c36
+  c84 -->|explore| c61
+  c84 -->|explore| c76
+  c84 -->|explore| c90
+  c84 -->|explore| c94
+  c85 -->|explore| c66
+  c86 -->|explore| c91
+  c87 -->|explore| c20
+  c89 -->|diagnose| c82
+  c91 -->|explore| c78
+  c94 -->|combine| c13
+  c95 -->|refine| c45
 ```
 
 Every edge records intended inputs, not proof of speedup.
 
-Recorded jobs: 14. Decisions/events: 129.
+Recorded jobs: 14. Decisions/events: 136.
 
 ## External research records
 
@@ -324,5 +325,12 @@ Recorded jobs: 14. Decisions/events: 129.
 | host_compatibility | diagnose | unknown | gradient | current |
 | verification_constraints | diagnose | unknown | unknown | current |
 | numerical_audit | diagnose | unknown | forward, gradient | current |
+| independent-followup-review | diagnose | cb502e8a5a15 | unknown | evaluated |
+| independent-followup-review | diagnose | cb502e8a5a15 | unknown | evaluated |
+| independent-followup-review | diagnose | aac9904cb4dd | unknown | evaluated |
+| independent-followup-review | diagnose | ac49ee4dcc23 | unknown | evaluated |
+| independent-followup-review | diagnose | unknown | unknown | evaluated |
+| independent-followup-review | diagnose | unknown | unknown | evaluated |
+| independent-followup-review | diagnose | unknown | unknown | evaluated |
 
 These records are evidence, not competing task claims or winner declarations.
