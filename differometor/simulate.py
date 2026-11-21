@@ -82,19 +82,6 @@ def solve_with_factors(matrix, factors, right_hand_side):
     )
 
 
-def solve_batch(matrices, right_hand_sides):
-    """Map dense solves while retaining batched arithmetic around the solves."""
-    return lax.map(lambda inputs: solve(*inputs), (matrices, right_hand_sides))
-
-
-def solve_factored_batch(matrices, factors, right_hand_sides):
-    """Map identical per-frequency equations with their saved LU factors."""
-    return lax.map(
-        lambda inputs: solve_with_factors(*inputs),
-        (matrices, factors, right_hand_sides),
-    )
-
-
 def update(
     parameters: jnp.ndarray,
     matrix: jnp.ndarray,
@@ -376,11 +363,6 @@ def simulate(
     )
 
     signal_system = signal_matrix[:, :, :-1]
-    signal_factors = lax.map(lu_factor, lax.stop_gradient(signal_system))
-    signal = solve_factored_batch(
-        signal_system, signal_factors, signal_matrix[:, :, -1]
-    )
-
     # --------------------
     # Quantum noise solve
     # --------------------
@@ -418,14 +400,6 @@ def simulate(
         carrier_selections,
         (carrier_selections.shape[0], signal_system.shape[0], carrier_selections.shape[2]),
     )
-    # Factor the adjoint independently to retain the original pivoting and
-    # rounding for this sensitive optical system. Only identical systems share
-    # factors; an algebraically equivalent adjoint solve can alter gradients.
-    adjoint_system = jnp.transpose(jnp.conjugate(signal_system), (0, 2, 1))
-    noise_weights = vmap(solve_batch, in_axes=(None, 0))(
-        adjoint_system, carrier_selections
-    )
-
     # Update noise source matrix (may depend on current parameters).
     noise_matrix = vmap(update, in_axes=(0, None, None, None, None, None))(
         parameters,
@@ -436,35 +410,33 @@ def simulate(
         noise_function_indices,
     )
 
-    def matmul_single_batch(matrix_batch: jnp.ndarray, vector_batch: jnp.ndarray) -> jnp.ndarray:
-        """
-        Multiply a batch of matrices with a batch of vectors.
+    def frequency_solve(inputs):
+        system, right_hand_side, sources_matrix, selection_rows = inputs
+        factors = lu_factor(lax.stop_gradient(system))
+        signal_row = solve_with_factors(system, factors, right_hand_side)
+        # Keep independent adjoint factorization for reference-consistent
+        # pivoting, while sharing ordinary-system factors within this step.
+        weights = vmap(solve, in_axes=(None, 0))(
+            jnp.conjugate(system.T), selection_rows
+        )
+        sources = vmap(lambda vector: sources_matrix @ vector)(weights)
+        covariances = vmap(solve_with_factors, in_axes=(None, None, 0))(
+            system, factors, sources
+        )
+        temporary_sum = jnp.sum(
+            jnp.real(covariances * jnp.conjugate(selection_rows)), axis=1
+        )
+        noise_row = jnp.sqrt(2 * temporary_sum * UNIT_VACUUM * H_PLANCK * F0 * 0.25)
+        return signal_row, noise_row
 
-        Parameters
-        ----------
-        matrix_batch : jnp.ndarray
-            Shape (B, N, N).
-        vector_batch : jnp.ndarray
-            Shape (B, N).
-
-        Returns
-        -------
-        product : jnp.ndarray
-            Shape (B, N).
-        """
-        return jnp.einsum("bij,bj->bi", matrix_batch, vector_batch)
-
-    # Project noise sources into the system and propagate through the signal matrix.
-    noise_sources = vmap(matmul_single_batch, in_axes=(None, 0))(noise_matrix, noise_weights)
-    covariances = vmap(solve_factored_batch, in_axes=(None, None, 0))(
-        signal_system, signal_factors, noise_sources
+    # Component evaluation and matrix assembly stay batched. Only the coupled
+    # dense equations and noise projection share a per-frequency workspace.
+    signal, noise = lax.map(
+        frequency_solve,
+        (signal_system, signal_matrix[:, :, -1], noise_matrix,
+         carrier_selections.transpose(1, 0, 2)),
     )
-
-    # Convert propagated covariances into amplitude spectral density.
-    temporary_sum = jnp.sum(jnp.real(covariances * jnp.conjugate(carrier_selections)), axis=2)
-    noise = jnp.sqrt(2 * temporary_sum * UNIT_VACUUM * H_PLANCK * F0 * 0.25)
-
-    return carrier.T, signal.T, noise.squeeze()
+    return carrier.T, signal.T, noise.T.squeeze()
 
 
 def run_build_step(

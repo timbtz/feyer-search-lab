@@ -257,3 +257,36 @@ validated first-run result. No parameter-specific correction is used.
 Local AST parsing and git diff --check passed. Reviewed the diff against this
 session's own candidate 3: only mapped dense helpers and four call sites differ.
 Full benchmark and strict comparison await supervisor evaluation.
+
+### Candidate 7 evaluator outcome: validated, no first-run benefit
+
+SHA `3c3eec1f39b619ce238db253473780a3169ee208`. Screen
+`8c9f352012f245b88e953677e734e273`: 27.190019 s, limited checks passed.
+Full `a2a1388bef10419eaf9dc9bfad56afed`: official and strict regression passed.
+First run 27.456715 s, warm median 14.142182 s, job wall 110.811650 s,
+peak RSS 12,685,576 KiB. Forward lower/compile/execute
+0.815812 / 8.153261 / 10.966627 s; gradient lower/compile/execute
+0.225823 / 2.647212 / 3.163671 s. All physical outputs and inputs were exact;
+strict gradient max absolute error 2.6020852139652106e-18, relative L2
+3.69040600052152e-23. Official max log sensitivity error
+5.374104176780747e-6, spot-check AD 7.616169103001766e-5 and finite differences
+unchanged from candidate 1, both passed. Mapping dense operations separately
+restored strict agreement but did not retain the broader map's speed or memory
+benefit. Candidate 3 still has the lowest validated recorded first-run time.
+
+## Candidate 8: coupled dense equations mapped after batched assembly
+
+Keep candidate 7's batched component updates, carrier coupling, conjugation,
+and detector selection construction. Combine signal solve, independent adjoint
+solve, noise matrix-vector projection, covariance solve, and final noise
+projection in one frequency map. Matrix inputs are assembled outside the map;
+all component functions and their differentiation remain batched.
+
+Hypothesis (unmeasured): sharing the dense per-frequency working set will retain
+some of candidate 5's runtime/memory benefit while batched assembly preserves
+strict gradients. This separates component derivative scheduling from the
+coupled numerical solve scheduling. No physical changes, caching, altered
+precision, or changes to benchmark stages/checks are introduced.
+
+Local AST and diff checks passed. Full numerical validation pending; no local
+benchmark was run.
