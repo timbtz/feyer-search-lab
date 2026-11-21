@@ -30,18 +30,58 @@ The time gain is expected but not measured, and probably small (well under 1 s).
 - **Strict gradient rounding** (db/angle coordinates especially; see audit F4). If strict comparison fails, I will not loosen tolerances: I will set `NOISE_ROW_REUSE=False` or look for another approach.
 - The residual for the broadcast operand of the `bij` einsum may still be materialized as `(101,751,751)`, so memory may not fall.
 
-### Results
-- Candidate SHA: (supervisor fills in) — screen: pending — full: pending.
+### Results: candidate SHA `f3139c71ae2a5c9de2b015aad7db1a730fac0e1e`
 
-## Proposed knob (draft, not admitted)
+**Screen** (`289867298598498aad72af58cab120c1`): first run 23.360 s, peak RSS 9.93 GB. Provisional.
+
+**Full** (`5089ae06eb04473a87bc1207cb411d8c`): **official PASS, strict PASS** (verdict "validated").
+
+| Phase | Seconds |
+| --- | --- |
+| Complete first run | 23.320 |
+| Imports | 0.298 |
+| Build | 0.820 |
+| Forward lower | 0.812 |
+| Forward compile | 7.680 |
+| Forward execute (incl. AD residuals) | 9.221 |
+| Sensitivity lower + compile | 0.434 |
+| Gradient lower | 0.175 |
+| Gradient compile | 1.963 |
+| Gradient execute | 1.912 |
+
+- Warm runs: median 11.872 s (11.388–11.872 s; forward median 9.810 s, gradient 1.887 s).
+- Total job wall time: 92.9 s.
+- Peak RSS (GNU time): 9.93 GB.
+
+**Strict comparison:**
+- Carrier, signal, noise, sensitivity and powers: max absolute error **0.0**, so the forward outputs are bitwise identical.
+- Gradient: max absolute error 4.5e-13, max normalized error 1.64e-8 (limit 1), relative L2 error 6.6e-18.
+
+**Interpretation:** −0.52 s against the parent's single full run (23.840 s). This is *not* a paired repeat, and run-to-run noise is about ±0.3 s (candidate 6 ran 23.558 s), so the gain is unconfirmed. The parent's RSS was not given in the brief, so I make no memory claim.
+
+## Candidate 2: variant B (shared unbatched noise contraction)
+- **Hypothesis:** feed the single `(NN,NN)` noise matrix straight into `einsum("ij,dbj->dbi", N, noise_weights)` instead of the broadcast `bij,bj`. This removes the possible `(101,751,751)` broadcast residual and turns 101 GEMVs into one GEMM.
+  - Expected: lower RSS (up to about 0.9 GB) and a little less forward time. Not measured.
+  - Risk: forward noise and every gradient coordinate can round differently (audit F4).
+- **Change:** new module knob `NOISE_REUSE_MODE` (`"shared"` | `"broadcast"`). In `_solve_signal_and_noise`, a 2-D noise matrix selects the unbatched einsum. The `solve` scope always uses the broadcast form, because its loop slices noise rows.
+- **Fallback:** if strict fails, set `NOISE_REUSE_MODE="broadcast"`, which is the validated candidate 1 behaviour.
+
+### Results
+- Candidate SHA: (supervisor fills in). Screen/full: pending.
+
+## Proposed knobs (draft, not admitted)
 ```json
 {
-  "candidate_sha": "TBD",
+  "best_validated_sha": "f3139c71ae2a5c9de2b015aad7db1a730fac0e1e",
   "file": "differometor/simulate.py",
+  "symbols": ["NOISE_ROW_REUSE", "NOISE_REUSE_MODE", "run_build_step (Predicate S -> component_groups['noise_row_reuse'])", "_assemble_signal_and_noise", "_solve_signal_and_noise"],
   "knobs": [
     {"symbol": "NOISE_ROW_REUSE", "legal": [true, false], "safe_default": false,
-     "conditions": "effective only when run_build_step set component_groups['noise_row_reuse'] (Predicate S) and FREQUENCY_LOOP_SCOPE != 'signal_noise' on the chunked path",
-     "invalid": "none; guard failure falls back automatically"}
+     "conditions": "effective only when run_build_step set component_groups['noise_row_reuse'] (Predicate S) and the chunked path is not FREQUENCY_LOOP_SCOPE='signal_noise'",
+     "invalid": "none; guard failure falls back automatically"},
+    {"symbol": "NOISE_REUSE_MODE", "legal": ["broadcast", "shared"], "safe_default": "broadcast",
+     "conditions": "only read when NOISE_ROW_REUSE is effective; scope 'solve' always uses broadcast",
+     "invalid": "'shared' is unvalidated until candidate 2 passes strict"}
   ]
 }
 ```

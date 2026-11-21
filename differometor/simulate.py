@@ -422,9 +422,12 @@ def simulate(
             component_groups["noise"],
         )
 
-    def broadcast_noise(assembled_noise):
+    def broadcast_noise(assembled_noise, allow_shared=True):
         if shared_noise_matrix is None:
             return assembled_noise
+        if allow_shared and NOISE_REUSE_MODE == "shared":
+            # Unbatched (NN, NN): _solve_signal_and_noise contracts it with one einsum.
+            return shared_noise_matrix
         return jnp.broadcast_to(shared_noise_matrix, (count, *shared_noise_matrix.shape))
 
     def assemble(parameters, carrier_entries):
@@ -467,7 +470,8 @@ def simulate(
         if FREQUENCY_LOOP_SCOPE == "solve":
             # Assembly stays full-vmap; only solves and noise contraction loop.
             assembled_signal, assembled_noise = assemble(parameters, carrier_entries)
-            assembled_noise = broadcast_noise(assembled_noise)
+            # Row-sliced by the loop, so always the broadcast form.
+            assembled_noise = broadcast_noise(assembled_noise, allow_shared=False)
 
             def block_solve(blocks):
                 block_signal_matrix, block_noise_matrix, block_selections = blocks
@@ -535,6 +539,11 @@ FREQUENCY_LOOP_SCOPE: str = "assemble"
 # builder proved (host-side, before dummy filling) that no noise input index is a
 # real changing index. False always uses the per-row noise assembly.
 NOISE_ROW_REUSE: bool = True
+# How the reused noise matrix enters the contraction when NOISE_ROW_REUSE applies:
+# "broadcast" (variant A; broadcast to (B, NN, NN), unchanged batched einsum;
+# candidate f3139c7 passed official + strict with bitwise forward outputs) or
+# "shared" (variant B; unbatched einsum "ij,dbj->dbi", may round differently).
+NOISE_REUSE_MODE: str = "shared"
 
 
 def _map_row_chunks(function, row_arrays: tuple, chunk_size: int):
@@ -691,7 +700,11 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
         return jnp.einsum("bij,bj->bi", matrix_batch, vector_batch)
 
     # Project noise sources into the system and propagate through the signal matrix.
-    noise_sources = vmap(matmul_single_batch, in_axes=(None, 0))(noise_matrix, noise_weights)
+    if noise_matrix.ndim == 2:
+        # Guarded shared noise matrix (NN, NN): one contraction over all detectors/rows.
+        noise_sources = jnp.einsum("ij,dbj->dbi", noise_matrix, noise_weights)
+    else:
+        noise_sources = vmap(matmul_single_batch, in_axes=(None, 0))(noise_matrix, noise_weights)
     covariances = vmap(vmap(solve), in_axes=(None, 0))(signal_matrix[:, :, :-1], noise_sources)
 
     # Convert propagated covariances into amplitude spectral density.
