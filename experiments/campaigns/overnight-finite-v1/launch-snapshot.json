@@ -1,0 +1,8 @@
+{
+  "completed_screen_count": 2,
+  "first_request_id": "d8c933313c0e4915bd5ee6a91d5220cb",
+  "job_count": 3,
+  "observed_at": 1795337952.523753,
+  "source": "Local persistent controller state; snapshot, not continuous liveness claim.",
+  "status": "screening"
+}

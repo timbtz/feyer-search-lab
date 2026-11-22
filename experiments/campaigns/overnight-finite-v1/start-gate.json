@@ -1,0 +1,11 @@
+{
+  "ready": true,
+  "deadline_unix": 1795339664.0,
+  "seed_sha": "3b107d69d9d083f7aaa5f11b952f0098ed0ba528",
+  "seed_receipt_path": "/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/overnight-20261122/evidence/requests/fbe23beea6e049ccbb5e971232a00955/receipt.json",
+  "source_review_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/repair-local-source-review-metadata.json",
+  "seed_receipt_sha256": "8dae32fc404e202ec6eb60330482879a37c3c58d4fdd0689e6f4c32aca901504",
+  "source_review_sha256": "86eb8e841a043927f2eb24f0381f9d578a26c51f1adf26ee08510204c88c195f",
+  "scope": "Admission to provisional numerical tuning only; not automatic submission promotion",
+  "prior_confirmation": "20/20 complete"
+}
