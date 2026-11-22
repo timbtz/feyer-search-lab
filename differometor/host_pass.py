@@ -60,6 +60,17 @@ class SystemPlan:
         self.system = sparse_system
         # (function_index, (R, S) parameter indices, slots that carry derivatives)
         self.groups = tuple((int(f), np.asarray(i, dtype=np.int64), tuple(int(s) for s in d)) for f, i, d in groups)
+        # Identical index rows read identical inputs at every parameter point,
+        # including sweep rows and parameters currently equal to zero. Evaluate
+        # them once, then restore the original row order before any contraction
+        # or scatter. Numerical equality of distinct parameters is never used.
+        self.evaluation_groups = []
+        for _, indices, _ in self.groups:
+            unique, inverse = np.unique(indices, axis=0, return_inverse=True)
+            self.evaluation_groups.append(
+                (unique, inverse) if unique.shape[0] < indices.shape[0] else (indices, None)
+            )
+        self.evaluation_groups = tuple(self.evaluation_groups)
         self.offsets = np.cumsum([0] + [indices.shape[0] for _, indices, _ in self.groups])
         self.total_rows = int(self.offsets[-1])
         self.flat_selection = (np.asarray(selected_rows, dtype=np.int64) * 4
@@ -86,7 +97,10 @@ class SystemPlan:
 
     def values(self, rows, base):
         """Structural values (B, nnz_total) after the ordered update writes."""
-        blocks = [evaluate_function(f, rows[:, indices]) for f, indices, _ in self.groups]
+        blocks = []
+        for (f, _, _), (indices, inverse) in zip(self.groups, self.evaluation_groups):
+            block = evaluate_function(f, rows[:, indices])
+            blocks.append(block if inverse is None else block[:, inverse])
         outputs = np.concatenate(blocks, axis=1).reshape(rows.shape[0], -1)[:, self.flat_selection]
         values = np.repeat(np.asarray(base, dtype=np.complex128)[None, :], rows.shape[0], axis=0)
         values[:, self.writes[self.last]] = outputs[:, self.last]
@@ -106,10 +120,13 @@ class SystemPlan:
             np.add.at(flat, (batch, self.last_selection[None, :]), last_bar)
         flat = flat.reshape(count, self.total_rows, 4)
         rows_bar = np.zeros(rows.shape, dtype=np.complex128)
-        for (function_index, indices, slots), start, stop in zip(self.groups, self.offsets[:-1], self.offsets[1:]):
+        for (function_index, indices, slots), (evaluation_indices, inverse), start, stop in zip(
+                self.groups, self.evaluation_groups, self.offsets[:-1], self.offsets[1:]):
             if not slots:
                 continue
-            _, linear, antilinear = function_jacobian(function_index, slots, rows[:, indices], with_outputs=False)
+            _, linear, antilinear = function_jacobian(function_index, slots, rows[:, evaluation_indices], with_outputs=False)
+            if inverse is not None:
+                linear, antilinear = linear[:, inverse], antilinear[:, inverse]
             output_bar = flat[:, start:stop, :, None]                       # (B, R, 4, 1)
             inputs_bar = np.sum(linear * output_bar, axis=2) + np.conj(np.sum(antilinear * output_bar, axis=2))
             for position, slot in enumerate(slots):

@@ -958,3 +958,146 @@ Candidate 1 is not intended to touch any of them.
   candidate 13's pending paired confirmation separate. If this narrower layout does
   not show a stable gain, close derivative-storage tuning until profiling or paired
   evidence supplies a stronger reason to revisit it. Retain admitted candidate 7.
+
+
+## Candidate 16 feedback and derivative-storage handoff (2026-11-22 03:18 UTC)
+
+- SHA 3033fcc29482f5d0bca96c6e53c87c48f17f5cfd; request
+  1199c6ddb84c4b249c86748688755312, grid-1/2/3 and aligo-1/2/3. Six official
+  passes; confirmed_improvement=false. No independent source review supplied.
+- Large complete first runs [0.8291760943830013, 0.8071782477200031,
+  0.8021924458444118] s; median 0.8071782477200031, range
+  [0.8021924458444118, 0.8291760943830013]. Forward
+  [180.059340, 183.386384, 182.026068] ms; reverse
+  [89.901935, 87.664612, 88.213574] ms; build
+  [73.609309, 73.837614, 69.967989] ms. Unpaired median deltas from admitted
+  candidate 7: total +5.600564 ms, forward +0.862981 ms, reverse +2.856150 ms.
+- Official aLIGO complete first runs [0.5447305403649807, 0.5469193495810032,
+  0.546897329390049] s; median 0.546897329390049, range
+  [0.5447305403649807, 0.5469193495810032]. Forward
+  [32.754388, 32.664398, 34.995005] ms; reverse
+  [14.879223, 15.341669, 14.720855] ms; build
+  [38.889872, 38.384017, 37.408777] ms. Unpaired median deltas from admitted
+  candidate 7: total -1.657827 ms, forward -0.135762 ms, reverse +0.495071 ms.
+  No causal speedup claim from these separate cohorts, and no combined score.
+- Sampled process-group peak RSS maxima: large 728645632 B, aLIGO 302936064 B,
+  extra generalization 839630848 B. No infrastructure failure or memory-budget
+  exceedance. CPU2, library threads1, no persistent cache. Other-host contention
+  not excluded. Selection reasons: missing source review, large gain below threshold,
+  overlapping first-run ranges. This is support evidence, not a ranking cohort.
+- Inspected stored receipt's complete array-comparison summaries: carrier, signal,
+  noise, powers, sensitivity, loss and gradients pass versus initial seed for all
+  six official runs and 14 extra cases. Official archives unchanged from candidate 7
+  (grid 112c0407..., aLIGO 9c1ce936..., full hashes above). This is receipt inspection,
+  not a fresh local inspection of remote raw arrays. Pristine comparisons still fail:
+  grid 131 signal entries, gradients 33/161/180 and loss; official aLIGO loss; extra
+  random1/3 log sensitivity errors 2.036099068405406e-4 / 5.8100919558157216e-5
+  and other previously recorded mismatches. Six grid FD coordinates remain open.
+  No tolerance change, numerical certification or JVP/Hessian support claim.
+- Decision: reject candidate 16. Contiguous full Jacobian planes alone did not improve
+  the measured reverse phase. Close derivative-storage tuning now: candidates 12,
+  13 and 16 all lack a repeat-supported complete-run gain. Candidate 13 remains
+  promising only at the phase level, not promoted. Direct group assembly (14) and
+  CSC-index copying (15) also failed to establish gains; do not stack them.
+- Restored host.py to admitted candidate 7. Read-only git diff confirms ALL simulator
+  files now exactly match ee4fea28c04d482566be16e916b609d7c6a99e5e. The restoration
+  is a working-file change, with failed commits preserved. No new performance
+  candidate is being submitted; no redundant dual evaluation of this restoration
+  is requested. Supervisor may record the restoration normally without history reset.
+
+Concrete next action for the coordinator, before another numerical variant:
+
+1. Obtain five paired fresh complete dual runs of preserved candidate 13
+   2117c2e8293722508055852ad7f614ed8959bb12 versus admitted candidate 7
+   ee4fea28c04d482566be16e916b609d7c6a99e5e, using the same fixed evaluator policy.
+   Candidate 13's receipt dc07a2130411485ca7088fdcb2f5981c showed large reverse
+   median 70.279835 ms, but complete range [0.7850758061, 0.8103161100] s overlapped
+   the parent's [0.7944249958, 0.8224838302] s. Its aLIGO median was 0.5450098384 s.
+   Keep numerical comparisons and independent exact-SHA source review mandatory.
+   If paired complete timing does not support it, retire it without more layout tuning.
+2. Independently collect the first forward and first backward callback profiles of
+   admitted candidate 7 under the fixed CPU/thread policy. The existing opt-in context
+   experiments/notes/overnight-numerics-profile.py is ready for a coordinator-owned
+   diagnostic driver; it launches no workload. Inspect self and cumulative costs of
+   _factor, _solve, _Products.apply, SystemPlan.values/backward, function_jacobian,
+   and scatter operations. Keep instrumented timings separate from official totals.
+   Do not sum nested cumulative times. No such profile has yet been supplied here.
+3. Choose a genuinely different mechanism only from that breakdown. Structural
+   reuse of component rows across sweep axes is an unexplored possibility, but needs
+   an explicit dependency proof including changing zero-valued parameters and reverse
+   contributions; no implementation or performance claim for it is made in this handoff.
+
+This stop closes the present derivative-storage hypothesis, not the authorized
+campaign. Deadline remains 2026-11-22 09:27:44 UTC. Source is the strongest admitted
+parent; all failed trials, diagnostics and numerical caveats remain available.
+
+## Candidate 17 — exact-index component-row reuse (2026-11-22)
+
+Supervisor requested a concrete new experiment after the candidate-16 stop
+handoff. This changes the mechanism from derivative storage to structural reuse
+within a component function group. Candidate SHA and job IDs are pending the
+supervisor; nothing in this section is an official timing result.
+
+Provenance: current committed HEAD is candidate 16,
+3033fcc29482f5d0bca96c6e53c87c48f17f5cfd. Its unsuccessful timing outcome and
+request 1199c6ddb84c4b249c86748688755312 are recorded above. The preserved
+host.py restoration removes candidate 16's Jacobian-layout experiment. Relative
+to admitted candidate 7, ee4fea28c04d482566be16e916b609d7c6a99e5e, the sole
+simulator delta for candidate 17 is SystemPlan in host_pass.py. No candidate-13
+pullback, residual-allocation trial or other-lane change is added.
+
+Evidence and mechanism:
+
+- build.py's _group_component_indices groups by function ID without deduplicating
+  input rows. Repeated vacuum-source instructions use the same padded parameter
+  index row (build.py around line 866), establishing a real source of duplicate
+  work. The multiplicity and cost in either official setup have not been measured.
+- Each SystemPlan now computes unique full parameter-index rows within each
+  function group. Repeated rows evaluate the same function on identical inputs
+  for every batch and every parameter point. This equality does not depend on
+  physical values, on a zero at the current point, or on fixture identity.
+- Primal results and both Wirtinger Jacobians are expanded to the original row
+  order before the existing writes, contractions and slot-ordered np.add.at.
+  Every output and derivative contribution remains present; cotangents are not
+  aggregated ahead of multiplication. The no-duplicate path keeps original
+  indices and avoids the expansion. All numeric evaluation remains inside the
+  forward/backward calls, with no additional numeric state cache.
+- Hypothesis: fewer repeated component calculations can lower forward/reverse
+  execution. Static uniqueness analysis adds build cost, and inverse gathers add
+  execution allocations for duplicated groups. Small or cheap duplicate groups
+  may lose overall. This is deliberately a provisional complete-cost experiment,
+  not a claim that the synthetic work reduction yields an official speedup.
+
+Local validation (no workloads or timing):
+
+- overnight-numerics-row-reuse-check.py passed 120 forward/backward comparisons
+  against admitted candidate 7: all 19 component functions, batch sizes 1/3/9,
+  duplicate and unique index rows, empty/full/reordered derivative slots,
+  repeated writes/reads, negative output selections, real/complex inputs,
+  zeros, ones and subsequent changed values using the same plan. Finite results
+  match bitwise including signed zero; nonfinite result locations also match.
+- In its duplicate-heavy synthetic case, counted component rows fell 171 to 57
+  and differentiated rows 684 to 228. These are work counts, not milliseconds.
+- Existing assembly diagnostic passed another 37 comparisons, including groups
+  whose writes are overwritten. Its no-duplicate synthetic allocation peak was
+  395112 bytes for both implementations. git diff --check passed.
+- Checks use AST-extracted actual host/component functions with local NumPy;
+  local JAX is unavailable. They do not establish callback/JIT compatibility or
+  full optical correctness. No independent review has occurred for this delta.
+
+Decision: submit candidate 17 for both unchanged exact-SHA official benchmarks
+and all saved-output/gradient/generalization comparisons. Record build, forward,
+reverse and complete totals separately for grid and aLIGO; retain memory and
+contention notes. Request independent source review and paired fresh-process
+confirmation against candidate 7 if promising. A source-derived duplicate-row
+count in coordinator diagnostics would help interpret a null result. If the
+planning/gather cost outweighs reuse, retire this mechanism rather than claiming
+an operation-count win. Candidate 13's separate paired-evidence request remains
+pending and is not evidence for candidate 17.
+
+Inherited strict disagreements remain unresolved: grid signal entries and
+33/161/180 gradients; uifo_rand1/rand3 log-sensitivity discrepancies about
+2.04e-4/5.81e-5; grid finite-difference coordinates 54/59/63/136/161/163.
+Prior aLIGO 29/29 extra coordinate checks and official passes do not erase them.
+The host custom VJP still lacks forward-mode JVP/Hessian support. Deadline stays
+2026-11-22 09:27:44 UTC.
