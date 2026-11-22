@@ -26,6 +26,25 @@ class GradientSanityTests(unittest.TestCase):
         r = check_coordinate(lambda p: float('nan'), np.array([1.]), 0, 1., .01)
         self.assertNotEqual(r['status'], 'passed')
 
+    def test_extended_solver_transpose_conventions(self):
+        from types import SimpleNamespace
+        from lab.solver_precision_probe import extended_solve
+        rng = np.random.default_rng(7)
+        matrix = rng.normal(size=(5, 5)) + 1j * rng.normal(size=(5, 5)) + 8 * np.eye(5)
+        rows, cols = np.indices(matrix.shape)
+        products = SimpleNamespace(rows=rows.ravel(), cols=cols.ravel())
+        class Factor:
+            def solve(self, rhs, trans):
+                a = matrix if trans == 'N' else matrix.T if trans == 'T' else matrix.conj().T
+                return np.linalg.solve(a, rhs)
+        for shape in [(5,), (5, 2)]:
+            rhs = rng.normal(size=shape) + 1j * rng.normal(size=shape)
+            for trans in ('N', 'T', 'H'):
+                expected = Factor().solve(rhs, trans)
+                actual, info = extended_solve(products, matrix.ravel(), Factor(), rhs, trans, expected)
+                np.testing.assert_allclose(actual, expected, rtol=1e-13, atol=1e-13)
+                self.assertLessEqual(info['extended_componentwise_residual'], info['before_componentwise_residual'])
+
 
 if __name__ == '__main__':
     unittest.main()
