@@ -1,0 +1,22 @@
+{
+  "parent": "86f26be624002fcb33c22f9a64259af16e73356c",
+  "host_pass_sha256": "93a1a67783b0acfb949dee3528c70c017b85a81197e7fb8c716ea96a9b11d9fc",
+  "reproduction": {
+    "parent": [[2.0, 3.0], [2.0, 3.0]],
+    "candidate": [[0.0, 0.0], [2.0, 3.0]]
+  },
+  "expansion": {
+    "cases": 84,
+    "unique_destination_bitwise_cases": 36,
+    "finite_difference_coordinates": 1428,
+    "maximum_finite_difference_absolute_error": 1.8415846625430277e-10
+  },
+  "callbacks": {
+    "cases": 16,
+    "finite_difference_coordinates": 80,
+    "parent_overwritten_nonzero_blocks": 16,
+    "maximum_scaled_finite_difference_error": 6.306499250222758e-08,
+    "scope": "Separate carrier/signal sweeps, four modulation functions, matched/cleared forward assembly state"
+  },
+  "limitations": "Small source-derived NumPy/SuperLU inspections; no JAX tracing, full optical benchmark, official timing or independent review. Source inspection shows repeated changing pairs are appended without deduplication, but no full run_build_step duplicate-pair test ran locally."
+}

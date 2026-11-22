@@ -252,10 +252,29 @@ def build_host_plan(simulation_arrays, structure, component_groups):
                     ParameterLayout.from_arrays(simulation_arrays))
 
 
+def _sweep_last_writes(indices, width):
+    """Positions of final writes to repeated columns, or None for unique columns.
+
+    Normalize negative indices for alias detection only; actual indexing keeps
+    NumPy's bounds checks. This depends on destinations, never parameter values.
+    """
+    if indices.size < 2:
+        return None
+    columns = np.where(indices < 0, indices + width, indices)
+    _, reverse_first = np.unique(columns[::-1], return_index=True)
+    if reverse_first.size == indices.size:
+        return None
+    return np.sort(indices.size - 1 - reverse_first)
+
+
 def _expand(array, indices, values):
     """NumPy replica of `simulate.expand_parameters`."""
     count = values.shape[1]
     tiled = np.tile(array, (count, 1))
+    # Make overwrite order explicit, including when a column is listed twice.
+    last = _sweep_last_writes(indices, array.shape[1])
+    if last is not None:
+        indices, values = indices[last], values[last]
     tiled[np.repeat(np.arange(count), indices.size), np.tile(indices, count)] = values.T.reshape(-1)
     return tiled
 
@@ -264,6 +283,12 @@ def _expand_backward(array_rows, indices, values, tiled_bar):
     count = values.shape[1]
     rows, columns = np.repeat(np.arange(count), indices.size), np.tile(indices, count)
     values_bar = tiled_bar[rows, columns].reshape(count, indices.size).T
+    last = _sweep_last_writes(indices, tiled_bar.shape[1])
+    if last is not None:
+        # Earlier writes do not affect the output; their cotangents are zero.
+        overwritten = np.ones(indices.size, dtype=bool)
+        overwritten[last] = False
+        values_bar[overwritten] = 0
     tiled_bar = tiled_bar.copy()
     tiled_bar[rows, columns] = 0
     return tiled_bar.reshape(count, array_rows, tiled_bar.shape[1]).sum(axis=0), values_bar

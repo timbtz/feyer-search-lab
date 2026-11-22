@@ -4997,3 +4997,113 @@ retained after validation, the next performance work still requires the
 prepared coordinator callback profile; this turn supplies no new evidence to
 reopen retired solver/product/allocation variants. Keep candidate and parent
 results separate and preserve failed trials.
+
+## Trial49 feedback: correctness repair passes official checks, no timing gain
+
+Candidate86f26be624002fcb33c22f9a64259af16e73356c, request
+b2170921a3fc473db388f4a88307de69, jobs grid-1/2/3 and aligo-1/2/3.
+The working simulator hashes match the evaluated revision. All six official
+runs passed; no infrastructure failure was reported. Source review is still
+null, confirmed_improvement is false and admitted7 remains selected.
+
+Large fresh complete samples:0.859366884455,0.829172782600,0.818575320765
+seconds; median0.829172782600, range[0.818575320765,0.859366884455].
+Official aLIGO:0.550404354930,0.549222743139,0.555803444237 seconds;
+median0.550404354930, range[0.549222743139,0.555803444237]. Versus immediate
+parent48, complete medians change by+5.548/-0.850ms (large/aLIGO); versus
+original35, +9.889/+0.676ms. The ranges overlap and these are unpaired support
+cohorts with unknown external contention. There is no stable improvement.
+
+Phase medians large/aLIGO: build72.724/38.797ms, forward179.326/32.467ms,
+reverse107.233/18.846ms. Relative to parent48, build+0.297/+0.285ms,
+forward-4.794/-0.349ms and reverse+0.007/-0.106ms. Import medians also change
+by+3.525/-2.065ms. These measurements do not isolate the cost of the new index
+copies. Phase medians must not be added to infer median total time.
+Sampled peak RSS bytes: large595849216/513564672/496148480; aLIGO282624000/
+315531264/295403520; generalization780935168. No reported budget breach.
+
+All six official archive hashes and complete seed/pristine comparison records
+are identical to parent48 and original35. Both generalization comparison case
+lists also match those parents:14/14 seed passes and4/14 pristine passes.
+The generalization container hash is6026538327c7d4dcc0600a91e1a63d21db031f0b429d8f5af02d3701ecc64370;
+raw members are unavailable locally, so no member-byte identity claim follows
+from the equal comparison records. The inherited pristine signal, loss and
+gradient disagreements, rand1/rand3 log-sensitivity differences and six unresolved
+grid finite-difference coordinates remain open. Public PASS is separate from
+these findings and from independent source review.
+
+Full computed feedback and source verification are in
+`overnight-numerics-pattern-snapshot-feedback.json`. No simulator changes or
+redundant synthetic reruns are needed after this feedback. Retain49 as the
+bounded, reproduced coordinate-ownership repair pending review; do not promote
+it as a performance result or revert to the unsafe roundoff guards of admitted7.
+Trials47–49 establish small identity/ownership repairs, not a successful speed
+mechanism. Close this hypothesis rather than extend it into indiscriminate
+copying or resubmit unchanged source. This does not end the authorized campaign.
+
+Next concrete performance diagnostic remains coordinator-owned: use the existing
+collect_host_profiles context from `overnight-numerics-profile.py` on exact49,
+with synchronized first forward/backward calls and separate records for later
+calls, outside official timing. Return component/Jacobian/scatter/solve self
+times and call counts. Together with independent review of47–49 and the optional
+JAX A/B/A identity check, this is the missing evidence needed to choose a new
+mechanism. No callback profile or optional JAX identity result has yet arrived.
+
+## Trial50: correct overwritten sweep cotangents
+
+Parent86f26be624002fcb33c22f9a64259af16e73356c (trial49). Candidate SHA and
+benchmark/job identifiers pending. This is a distinct reverse-rule repair;
+no retired allocation/solver tuning or further snapshot expansion is included.
+The requested callback performance profile has still not been returned.
+
+Source inspection found build.py appends a parameter index for every changing
+pair, without deduplicating repeated pairs. _expand assigns sweep values to
+destinations, but _expand_backward previously gathered the output cotangent
+for every write, including ones overwritten by later values. A tiny example
+with parameter row[1,2,3], indices[1,1], values[[4,5],[6,7]] produces
+[[1,6,3],[1,7,3]]. With output cotangents[[0,2,0],[0,3,0]], parent returns
+sweep cotangents[[2,3],[2,3]]. Finite differences give zero for the first row;
+the correct pullback is[[0,0],[2,3]]. This changes an erroneous derivative,
+not a physical design variable or a numerical tolerance.
+
+Implementation: _sweep_last_writes finds final positions for repeated
+destinations. It normalizes negative indices only to detect aliases; actual
+indexing retains bounds checks. _expand explicitly selects those final writes,
+and _expand_backward zeros cotangents for overwritten writes. Unique-column
+operations retain their previous array arithmetic. The single-destination path
+returns from the helper immediately; multiple-destination paths pay for unique
+index discovery. No speedup is expected, and that overhead must count in both
+official runs. The decision depends only on indices, never current coefficients
+or parameter values. Final writes retain their derivative even when zero-valued.
+
+Local `overnight-numerics-sweep-overwrite-check.py` tests84 expansion cases with
+base row counts1/3, sweep counts0/1/4, real/complex inputs, empty/unique/repeated
+destinations and positive/negative aliases. All forward values match both a
+sequential-write oracle and the parent byte-for-byte. The36 unique-destination
+pullbacks also match the parent byte-for-byte. All1428 real/imaginary directional
+finite differences pass (rtol1e-8, atol1e-8); maximum absolute error
+1.8415846625430277e-10. Input arrays remain unchanged and invalid destinations
+still raise. Several base rows exercise the existing transpose-of-tile behavior,
+not a claim of support for simultaneous carrier and signal sweeps.
+
+`overnight-numerics-sweep-overwrite-callback-check.py` additionally exercises
+16 small actual host_forward/host_backward cases with separate carrier or signal
+sweeps, two detectors, four source/modulation functions and matched/cleared
+assembly state. All80 real sweep-coordinate finite differences pass at
+rtol2e-6, atol1e-9. Maximum error scaled by max(abs(expected),1e-8) is
+6.306499250222758e-08. The parent has a nonzero overwritten-cotangent block in
+all16 cases; the candidate zeros each one. Forward arrays, surviving sweep
+cotangents and all other returned cotangents match the parent. These tests load
+the actual NumPy/SuperLU kernels from source; they do not exercise JAX tracing or
+the complete optical builder. A full run_build_step duplicate-pair test remains
+for the coordinator, distinct from the source-level reachability inspection.
+
+Evidence: `overnight-numerics-sweep-overwrite-result.json`, host_pass.py SHA256
+93a1a67783b0acfb949dee3528c70c017b85a81197e7fb8c716ea96a9b11d9fc.
+Request both unchanged official benchmarks, saved-output/gradient comparisons,
+generalization and independent review on the exact submitted SHA. Existing
+pristine discrepancies and unresolved grid finite differences remain; this
+synthetic repair does not resolve or explain them. Do not promote a timing gain
+from this change. If the coordinator can run the prepared callback profiler,
+use that new evidence to select a performance mechanism instead of extending
+correctness repairs into an unmeasured tuning family.
