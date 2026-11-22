@@ -44,3 +44,11 @@ python3 -m lab.overnight_publish retry --worktree CONTROL_WORKTREE \
 ```
 
 Retries preserve UUID and commit; no force push or history reset is used. A pending rejected push blocks later publication until repaired. The coordinator owns GitHub issue updates and may link the stable `CURRENT_BEST.md`; this module does not send messages or edit issues.
+
+## Selection-v2: overlapping timing ranges stay provisional
+
+For future promotions, `overnight-selection-v2` additionally requires the candidate's **largest** observed complete large-benchmark first-run time to be strictly below the incumbent's **smallest**, in the same comparison cohort. A few-millisecond median reduction is insufficient when incumbent samples already vary by tens of milliseconds. The existing minimum-gain, aLIGO regression, spread, numerical and source-review gates remain in force. Missing incumbent range evidence fails closed.
+
+This is a deliberately conservative observed-range heuristic, not a confidence interval, a statistical guarantee, or an organizer judging rule. Passing it does not prove universal speedup. An overlapping candidate remains published as provisional with reason `large_first_run_ranges_overlap_requires_paired_evidence`; its source and measurements are retained. Further controlled paired measurements and review may justify a later decision, but merely accumulating more overlapping samples does not waive this gate. No extra evaluations are automatically launched by the publisher.
+
+The known seed's initial fresh calibration remains eligible, and older admission receipts are not rewritten. New records identify policy-v2 explicitly; existing runs and deployed runtimes are untouched until the coordinator adopts the new publisher.
