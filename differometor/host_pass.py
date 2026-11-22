@@ -80,6 +80,9 @@ class SystemPlan:
         self._key = _digest(
             np.asarray([f for f, _, _ in self.groups], dtype=np.int64),
             *[indices for _, indices, _ in self.groups],
+            # Flattened slots alone lose group boundaries: ((0,), (1,)) and
+            # ((0, 1), ()) otherwise hash identically despite different VJPs.
+            np.asarray([len(d) for _, _, d in self.groups], dtype=np.int64),
             np.asarray([s for _, _, d in self.groups for s in d] + [-1], dtype=np.int64),
             self.flat_selection, writes,
         ) + sparse_system._key
