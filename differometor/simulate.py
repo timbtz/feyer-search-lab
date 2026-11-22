@@ -18,7 +18,7 @@ Conventions used throughout:
 """
 
 import jax
-from functools import partial
+from functools import partial, update_wrapper
 from time import time
 import jax.numpy as jnp
 import numpy as np
@@ -65,7 +65,33 @@ def solve(matrix: jnp.ndarray, right_hand_side: jnp.ndarray) -> jnp.ndarray:
     return jnp.linalg.solve(matrix, right_hand_side)
 
 
-@jit
+class _DeferredJit:
+    """Construct an optional component path's JIT wrapper on its first use.
+
+    No tracing or compilation happens here. Calls and JIT-specific attributes
+    (such as lower and clear_cache) delegate to the ordinary JAX wrapper. The
+    default host pass never needs these three component-level JIT wrappers.
+    """
+
+    def __init__(self, function, **options):
+        self._function = function
+        self._options = options
+        self._compiled = None
+        update_wrapper(self, function)
+
+    def _get(self):
+        if self._compiled is None:
+            self._compiled = jit(self._function, **self._options)
+        return self._compiled
+
+    def __call__(self, *args, **kwargs):
+        return self._get()(*args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._get(), name)
+
+
+@_DeferredJit
 def _evaluate_component(function_and_inputs):
     """Keep recomputation within the selected component's reverse branch."""
     function_index, function_inputs = function_and_inputs
@@ -73,7 +99,7 @@ def _evaluate_component(function_and_inputs):
     return lax.switch(function_index, branches, function_inputs)
 
 
-@partial(jit, static_argnums=(0,), inline=True)
+@partial(_DeferredJit, static_argnums=(0,), inline=True)
 def _evaluate_component_group(function_index, function_inputs):
     """Vectorize one component type without batching a dynamic branch selector."""
     return vmap(FUNCTIONS[function_index])(function_inputs)
@@ -97,7 +123,7 @@ class _ParameterSlots:
         return jnp.stack(self.values)[index]
 
 
-@partial(jit, static_argnums=(0, 1), inline=True)
+@partial(_DeferredJit, static_argnums=(0, 1), inline=True)
 def _evaluate_component_group_slots(function_index, differentiable, function_inputs):
     """Like `_evaluate_component_group`, with constant input slots gradient-stopped.
 
@@ -1307,27 +1333,6 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
     return signal, noise
 
 
-def _differentiable_slots(indices, differentiable_indices, membership):
-    """Classify input columns from parameter indices, never parameter values.
-
-    The build-local table avoids Python scalar conversion for ordinary integer
-    indices. Keep the original conversion rules for other dtypes or indices
-    outside the table; no negative-index wrapping is introduced here.
-    """
-    if (
-        membership is not None
-        and indices.dtype.kind in "iu"
-        and (not indices.size or (indices.min() >= 0 and indices.max() < membership.size))
-    ):
-        active = np.any(membership[indices], axis=0)
-        return {slot: () for slot, present in enumerate(active) if present}
-    return {
-        slot: ()
-        for slot in range(indices.shape[1])
-        if any(int(i) in differentiable_indices for i in indices[:, slot])
-    }
-
-
 def run_build_step(
     setup: Setup,
     changing_pairs: list | None = None,
@@ -1414,12 +1419,6 @@ def run_build_step(
     differentiable_indices |= {
         int(i) for i in np.asarray(simulation_arrays["indices_to_link"]).ravel()
     }
-    parameter_count = simulation_arrays["parameters"].shape[-1]
-    membership = None
-    if all(0 <= index < parameter_count for index in differentiable_indices):
-        membership = np.zeros(parameter_count, dtype=bool)
-        for index in differentiable_indices:
-            membership[index] = True
     for name in ("carrier", "signal", "noise"):
         group = component_groups.get(name)
         if not isinstance(group, dict) or "parameter_indices" not in group:
@@ -1429,9 +1428,11 @@ def run_build_step(
             indices = np.asarray(indices)
             if indices.ndim != 2:
                 continue
-            diff_slots[function_index] = _differentiable_slots(
-                indices, differentiable_indices, membership
-            )
+            diff_slots[function_index] = {
+                slot: ()
+                for slot in range(indices.shape[1])
+                if any(int(i) in differentiable_indices for i in indices[:, slot])
+            }
         group["diff_slots"] = diff_slots
 
     simulation_arrays["component_groups"] = component_groups

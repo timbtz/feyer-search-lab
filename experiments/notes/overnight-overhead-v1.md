@@ -3803,3 +3803,114 @@
   agents, public-file or fixture edits performed. Next decision follows this
   focused result; do not combine with preserved30 or extend table optimization
   to numerical calculations. Supervisor profiling remains pending.
+
+### Candidate41 feedback — retire direct membership table
+
+- Exact SHA a1cb6f912cbe267d615991128b77da31a0ddafa6; evaluation
+  20b52b95ff214d82808f955f9b80dfa2, jobs grid-1/2/3 and aligo-1/2/3.
+  Receipt: experiments/runs/overnight-20261122/overnight-overhead-v1/20b52b95ff214d82808f955f9b80dfa2.json.
+  Publication7452ff3e7a41e25f3500e82bcb0206918dad9f76. All six official
+  runs passed, no infrastructure failures, source_review=null,
+  confirmed_improvement=false, ranking_eligible=false.
+- Large samples seconds0.8250922355800867,0.8051353041082621,
+  0.7990043312311172; median0.8051353041082621,
+  range0.7990043312311172–0.8250922355800867 (relative3.2402%).
+  Official aLIGO samples0.5422784816473722,0.550800858065486,
+  0.5447757169604301; median0.5447757169604301,
+  range0.5422784816473722–0.550800858065486 (relative1.5644%).
+  Compared with recorded ee4fea2 medians: large+3.558 ms, aLIGO-3.779 ms.
+  Unpaired cohorts and overlapping ranges do not establish a causal gain.
+  Selection rejected insufficient large gain, overlap and missing review.
+- Phase medians ms, large/aLIGO: imports265.046/265.654,
+  initialize3.539/3.557, load1.465/0.214, build73.889/38.107;
+  forward lower19.557/19.114, compile33.086/33.462, execute180.000/32.636;
+  sensitivity lower25.601/26.121, compile39.932/41.108, execute0.894/0.475;
+  gradient lower16.910/16.526, compile53.233/53.076, execute86.510/14.585;
+  transfer0.186/0.147. Build samples large72.688,74.241,73.889 ms;
+  aLIGO37.727,38.107,38.155 ms. Relative to unpaired39's build medians,
+  +1.227/+0.098 ms; relative to noisy failed40, -1.025/-2.647 ms.
+  Neither comparison establishes a classification speedup. No matched-parent
+  phase delta is available, and table construction was included in build.
+- Sampled peak RSS bytes large515133440,600944640,514498560;
+  aLIGO293027840,315371520,294776832; generalization1022529536.
+  No sampled budget exceedance. EPYC9334 CPU2, one logical CPU and library
+  threads one, x64, existing flags, no persistent cache. Other-host contention
+  not excluded; no paired fresh-parent cohort supplied.
+- Every saved carrier/signal/noise/power/sensitivity/loss/gradient array passes
+  initial-seed tolerances in all six official runs and14 generalization cases.
+  Official archive hashes match40. Generalization archive
+  f5ee2b4557739cbcbca624c88bd9883817ff99eef3f3a5d627ad96d7c87fa6f6;
+  its self-comparison is not bitwise equivalence to seed. Initial-seed maximum
+  absolute gradient differences remain5.686350050382316e-6 large and
+  3.637978807091713e-11 aLIGO. Pristine comparisons still fail for inherited
+  grid signal/loss/gradients and official aLIGO loss. uifo_rand1/3 logarithmic
+  sensitivity errors remain2.036099068405406e-4 and5.8100919558157216e-5.
+  No new seed-relative regression reported; these findings are not a universal
+  correctness certificate. The focused NumPy diagnostic has no supplied
+  execution result; only its6265 shim comparisons were executed locally.
+- Decision: retire41 and restore simulate.py to reviewed ee4fea2. All ten
+  simulator modules match that parent; syntax and whitespace checks pass.
+  Preserve41's exact commit and diagnostic. Do not extend this mechanism into
+  additional membership variants without measured classification cost.
+  Recent39/40/41 all lack confirmed gains; no combination is justified.
+- Next experiment should be attribution, using the already prepared supervisor-
+  owned overnight-overhead-profile.py on actual large, official aLIGO and a
+  third setup. Request per-function build and trace costs before more tiny
+  builder variants. Candidate30 remains separately preserved for its focused
+  diagnostic, independent source review and matched-parent confirmation, not
+  another unpaired candidate-only run. No profiling results have arrived.
+- Inherited gradients33/161/180 and grid finite-difference coordinates
+  54/59/63/136/161/163 remain open; prior extra aLIGO29/29 is bounded evidence.
+  Whole-pass custom VJP still lacks JVP/Hessians. No benchmarks, installs,
+  commits, agents, fixture edits or policy changes performed. This stop ends
+  candidate41's hypothesis, not the authorized campaign or its09:27:44 UTC deadline.
+
+### Candidate42 — defer optional component JIT wrapper construction
+
+- New isolated import mechanism on reviewed ee4fea28c04d482566be16e916b609d7c6a99e5e;
+  candidate SHA and jobs pending supervisor. Candidate41 stays retired. Only
+  simulate.py differs from reviewed parent. No new solver/adjoint/readout math.
+- Source inspection: importing simulate eagerly constructs three JAX JIT wrapper
+  objects for _evaluate_component, _evaluate_component_group and
+  _evaluate_component_group_slots. The default whole-host path calls none of
+  these helpers. Their decorators do setup at import even when unused. No other
+  removable import dependency established; required JAX/NumPy imports remain.
+  A proposed explicit signal-detector transpose was rejected before editing:
+  candidate9 supplied no stable graph/phase benefit to justify that derivative
+  complexity. No further builder membership variant follows41.
+- _DeferredJit stores the original function/options and constructs the ordinary
+  JAX wrapper on first call or JIT-specific attribute access. It delegates calls,
+  lower, clear_cache and other attributes to that wrapper. update_wrapper retains
+  original metadata and __wrapped__ for signature inspection. All three original
+  function bodies and static_argnums/inline options are unchanged. This stores
+  the same ordinary in-process JIT callable previously made at import; it adds
+  no result cache, persistent cache, preload or hidden timed work. Every first
+  use, tracing and compilation stays inside the caller's evaluation.
+- Cost hypothesis only: avoid three unused JIT constructions in imports. Latest
+  evaluated41 imports medians265.046 ms large/265.654 ms official aLIGO; build
+  medians73.889/38.107 ms and total medians0.805135304/0.544775717 s. The cost of
+  these three constructions is NOT measured or claimed to explain those totals.
+  Alternative component paths pay construction on first use plus a small Python
+  delegation cost. This tradeoff and possible negligible savings require tests.
+- Local diagnostic overnight-overhead-deferred-jit-check.py --structural-only:
+  nine recording-JIT cases pass (call/lower/clear_cache as first access, forwarded
+  options, repeated use without reconstruction, metadata/signature preservation,
+  missing-attribute errors). Actual AST declarations of all three helpers execute
+  with zero JIT constructions. This is API/control-flow evidence, NOT real JAX
+  validation. Default additionally defines eight small real/complex JAX cases
+  for call/lower+compile/vmap/JVP/VJP including signed zeros and static options;
+  that portion is UNEXECUTED locally because dependencies unavailable.
+- Supervisor request: run focused JAX diagnostic and small optical alternative-
+  path checks with HOST_PASS=False (both HOST_COMPONENTS settings) to exercise
+  deferred creation; compare outputs/gradients to exact ee4fea2 on those paths.
+  Then both unchanged official benchmarks, all saved physical arrays/gradients,
+  fourteen generalization cases and independent source review on the same SHA.
+  If promising obtain matched interleaved parent/candidate fresh runs, with
+  separate import/total medians, ranges, memory and overlap. Reject if the
+  construction savings do not yield meaningful stable complete gains. No
+  promised millisecond saving; no combination with30 or any retired candidate.
+- Inherited pristine signal/loss/gradient33/161/180 differences and uifo_rand1/3
+  sensitivity discrepancies remain unresolved, as do grid FD54/59/63/136/161/163.
+  Prior extra aLIGO29/29 is bounded. The whole-pass custom VJP still lacks JVP/
+  Hessians; the synthetic wrapper test does not change that claim. No benchmark,
+  install, commit, agent, shared environment or protected-file change performed.
