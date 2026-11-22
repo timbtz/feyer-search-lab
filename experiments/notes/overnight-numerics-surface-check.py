@@ -18,7 +18,7 @@ PARENT = "ee4fea28c04d482566be16e916b609d7c6a99e5e"
 def load(source):
     host = ast.parse((ROOT / "differometor/host.py").read_text())
     names = {"Dual", "Stack", "_Slots", "_holomorphic", "_conjugate", "_radians",
-             "_value_only", "_columns", "evaluate_function", "function_jacobian"}
+             "_value_only", "_columns", "evaluate_function", "function_jacobian", "function_pullback"}
     nodes = [node for node in host.body
              if isinstance(node, (ast.ClassDef, ast.FunctionDef)) and node.name in names
              or isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "_SHIM"

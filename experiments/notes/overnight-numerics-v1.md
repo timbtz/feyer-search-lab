@@ -500,3 +500,114 @@ Candidate 1 is not intended to touch any of them.
 - Existing strict signal/gradient findings (33,161,180), rand1/rand3 sensitivity disagreements,
   six unresolved grid finite-difference coordinates and lack of whole-pass JVP/Hessian support
   remain explicitly unresolved. Candidate 7 remains strongest admitted until new evidence.
+
+## Candidate 11 feedback and profiling handoff
+
+- Candidate SHA `36be9bb71fb28d795acd689173d14a4851720ec4`; evaluation
+  `9a02513386664f23b99efe5c95b8f882`. Both full official workloads pass all three fresh
+  runs: grid-1/2/3 and aligo-1/2/3. No source review or paired parent runs accompanied feedback.
+- Large samples 0.8293322213, 0.7968566921, 0.7953469604 s; median 0.7968566921,
+  range 0.7953469604–0.8293322213 s. aLIGO samples 0.5493552908, 0.5450734869,
+  0.5419835243 s; median 0.5450734869, range 0.5419835243–0.5493552908 s.
+  Neither setup is combined into a score. Admission explicitly unconfirmed: overlapping large
+  ranges and missing source review. The large median alone does not establish a stable gain.
+- Large forward 182.627/178.738/178.500 ms; reverse 87.544/88.669/83.250 ms.
+  Relative to restored-parent request d12a7226, unpaired median phase deltas are forward
+  -5.704 ms, reverse +1.755 ms, imports -1.924 ms, build +0.974 ms. aLIGO forward
+  33.261/32.475/32.704 ms and reverse 15.304/14.232/14.149 ms; corresponding unpaired
+  median deltas +0.268 and +0.012 ms. These descriptive differences are not causal evidence.
+  The component-operation reduction did not produce a clear reverse-phase improvement.
+- All official saved-array archives match candidate 7 hashes. Seed comparisons pass every
+  physical array and gradient, both official setups and all 14 generalization cases. Seed
+  gradient differences remain large max 5.686350050382316e-6 / relL2 8.181451454702114e-11,
+  aLIGO max 3.637978807091713e-11 / relL2 1.294943745154708e-15. Pristine mismatch counts
+  and random-case log sensitivity errors are unchanged. Extra generalization is therefore
+  seed-compatible but not pristine-passing. Raw archives remain remote; per-array reports and
+  official hashes were inspected, not newly recomputed here. Generalization hashes include timing
+  metadata and cannot establish physical byte-identity. Six grid FD coordinates remain unresolved.
+- Peak sampled RSS large 533561344 B, aLIGO 294830080 B, generalization 954093568 B.
+  CPU2, one library thread, no persistent cache; external contention not excluded. No infrastructure
+  failure reported. Source review is null and universal correctness is not claimed.
+- Decision: stop this source-level coefficient refinement pending attribution. Keep candidate 11
+  as a preserved experimental revision, not a promoted parent. Restored components.py to admitted
+  candidate 7 without resetting history; all production files again match ee4fea2. No new simulator
+  candidate is proposed by this handoff, and another identical restoration benchmark is unnecessary.
+- Added `experiments/notes/overnight-numerics-profile.py`: an opt-in diagnostic context for the
+  supervisor's synchronized diagnostic driver. It wraps only host_forward/host_backward, profiles
+  each invocation using cProfile inside its calling thread, records callback ordinal, function
+  counts/self/cumulative times and success, and restores both functions on exit. No workload is
+  defined or launched by this helper. It changes no validation, numerical inputs or returned outputs.
+  Instrumentation overhead and pre-imports make resulting times ineligible for official comparison.
+- Tested helper with small fake entry points: exact return-object identity, separate invocation
+  ordinals, JSON serialization, exception propagation and restoration all pass. No optical run.
+  Coordinator should load the helper and surround its existing diagnostic execution with
+  `collect_host_profiles()`, synchronize all JAX outputs before leaving, and serialize the records.
+  Use the fixed evaluator environment/resource policy. This has not been exercised under JAX
+  locally (JAX is unavailable); verify callback coverage before interpreting results.
+- Specific requested evidence before another implementation variant:
+  (1) On admitted ee4fea2 and experimental 36be9bb, get first-forward/first-backward profiles;
+      attribute _assemble, _factor, _solve, _Products.apply, SystemPlan.values/backward,
+      function_jacobian and NumPy reductions/scatters. Do not add cumulative times of nested
+      functions. Keep profiled diagnostics separate from unchanged official results.
+  (2) Independent source review and at least five paired/interleaved fresh full dual runs for
+      36be9bb versus ee4fea2 (or the byte-identical restored cb04c3c), retaining every sample.
+      Prior candidate 9's paired-review request remains open; do not combine it with 11 by default.
+  (3) Requested small JAX dense-component VJP check remains pending; host synthetic equivalence
+      is established but is not blanket evidence for a modified JAX reverse accumulation graph.
+- This stops the current hypothesis only. Session overnight-numerics-v1 and absolute deadline
+  2026-11-22 09:27:44 UTC remain unchanged. Strongest admitted simulator remains candidate 7;
+  all existing strict numerical and whole-pass JVP/Hessian limitations stay visible.
+
+## Candidate 12: stream component Jacobian contraction into input cotangents
+
+- Supervisor resumed after the profiling handoff and explicitly requested a concrete next
+  implementation. No new evaluation or profile was supplied; candidate 11 feedback above remains
+  the latest official evidence. Preserved edits from turn 15 are retained (restoration and profiler).
+- Scientific parent is admitted candidate 7 `ee4fea28c04d482566be16e916b609d7c6a99e5e`.
+  Components.py is restored exactly to that parent; the unconfirmed surface change from candidate
+  11 is not combined. Candidate 12 SHA and dual job identifiers pending supervisor.
+- New production delta: host.function_pullback evaluates the existing scalar-seeded Dual for
+  each requested input slot, materializes its four linear/antilinear output derivatives, multiplies
+  by output cotangents, reduces those four outputs and writes that input cotangent immediately.
+  Two four-output buffers are reused within this one function invocation. SystemPlan.backward
+  calls it instead of materializing both full Jacobians and their broadcast products. The input
+  cotangent scatter retains the original slot order and np.add.at, including duplicate indices.
+- This is a derivative-contraction storage change, not a new symbolic derivative evaluator,
+  residual-product refinement variant or new factor-reuse claim. The derivative formulas, component
+  call count, physical inputs, all slots and four-output contributions, conjugation convention,
+  forward values, solve/refinement routines and JAX wrappers are unchanged from admitted source.
+  Zero derivative entries still multiply their cotangents; no zero-valued numerical entry is pruned.
+  Both holomorphic and antilinear terms are retained for every slot. function_jacobian itself stays
+  unchanged for its other callers and serves as the synthetic oracle.
+- Source-derived storage: parent keeps two arrays of 4*B*R*S complex entries before contraction,
+  plus product/reduction temporaries. Candidate keeps two arrays of 4*B*R and the B*R*S result,
+  plus per-slot component arithmetic and reduction temporaries. No scratch survives the call.
+  Target is the ~85 ms large reverse phase. Extra per-slot NumPy reduction dispatch could offset
+  the memory savings, particularly for small groups; no execution speedup is claimed.
+- `overnight-numerics-pullback-check.py` uses AST-extracted source and the existing NumPy-only
+  component loader. NumPy 2.5.5 matches the evaluator version, although local OS/CPU differ.
+  3,078 comparisons cover all 19 functions, scalar/vector/batched inputs, real and complex inputs,
+  each of seven parameters set to zero in turn, six slot menus including empty/single/all/reordered,
+  and reversed-stride complex output cotangents. The unchanged full-Jacobian contraction is the
+  oracle. All finite result entries match bit-for-bit; nonfinite entries compare equal. The exact
+  four-output reduction matches in these tests, not a universal cross-platform arithmetic proof.
+- Four SystemPlan integration cases (one/five batch rows, unique/duplicate writes and output
+  selections) compare full assembled values, parameter cotangents and base cotangents against
+  admitted-parent SystemPlan. Parameter indices repeat across components and slots. Both ordinary
+  and NaN/infinite cotangents were exercised. All finite entries match bit-for-bit; nonfinite entries
+  compare equal. This tests scatter/overwrite semantics in addition to the local contraction.
+- Small synthetic allocation inspection (7 batches * 31 surface rows, all seven input slots,
+  fully materialized input cotangent): tracemalloc peak parent 415352 B, candidate 155152 B.
+  This includes component arithmetic in both paths. It is local allocation evidence only, not
+  official process RSS, a timing benchmark, or a promise of the same ratio on optical setups.
+  No official workload, dependency installation or timing run was launched locally.
+- Submit the complete implementation for both unchanged official benchmarks on the same new SHA,
+  all saved physical arrays/gradients and 14 generalization cases versus admitted parent and seed,
+  plus independent source review. Preserve pristine strict failures separately. If promising,
+  request at least five paired/interleaved fresh dual runs versus admitted parent with phase,
+  RSS and overlap records. The diagnostic profile context is still available to attribute
+  function_pullback versus previous function_jacobian costs separately from official timings.
+- All inherited strict numerical issues remain open: signal and gradients 33/161/180, random1/3
+  dense-reference sensitivity disagreements, six grid finite-difference coordinates, and first-order
+  whole-pass custom-VJP compatibility limits. No changes to tolerances, fixtures, frequencies,
+  variable counts, arithmetic precision, compiler options or the three JIT stages.

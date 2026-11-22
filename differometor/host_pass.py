@@ -32,7 +32,7 @@ import jax.numpy as jnp
 import numpy as np
 
 from differometor.components import UNIT_VACUUM, H_PLANCK, F0
-from differometor.host import evaluate_function, function_jacobian
+from differometor.host import evaluate_function, function_pullback
 from differometor.sparse import _scipy, REFINEMENT_STEPS, REFINEMENT_TOLERANCE
 
 _NOISE_SCALE = 2 * UNIT_VACUUM * H_PLANCK * F0 * 0.25
@@ -109,9 +109,7 @@ class SystemPlan:
         for (function_index, indices, slots), start, stop in zip(self.groups, self.offsets[:-1], self.offsets[1:]):
             if not slots:
                 continue
-            _, linear, antilinear = function_jacobian(function_index, slots, rows[:, indices], with_outputs=False)
-            output_bar = flat[:, start:stop, :, None]                       # (B, R, 4, 1)
-            inputs_bar = np.sum(linear * output_bar, axis=2) + np.conj(np.sum(antilinear * output_bar, axis=2))
+            inputs_bar = function_pullback(function_index, slots, rows[:, indices], flat[:, start:stop])
             for position, slot in enumerate(slots):
                 np.add.at(rows_bar, (batch, indices[None, :, slot]), inputs_bar[:, :, position])
         return rows_bar, base_bar.sum(axis=0)
