@@ -2517,3 +2517,165 @@ separate grid/aLIGO samples, medians, ranges, phase/RSS/overlap evidence. Retire
 this allocation variant if gains are below noise; do not combine it with other
 unconfirmed trials. Existing pristine disagreements, six unresolved grid FD
 coordinates and first-order reverse-only transform limits remain unchanged.
+
+
+### Candidate29 feedback and retirement (2026-11-22)
+
+Exact candidate45cd39d4e2d00d34ec9fb233cc7aba67f2fc4e86;
+request45844d011e5a4664b5b508ab1d8de0d3, grid-1/2/3 and aligo-1/2/3.
+All six unchanged official runs passed. Confirmed improvement=false; independent
+source review=null. The runner's promotion_ready flag is true, but the selection
+receipt rejects promotion for missing review, insufficient gain and overlapping
+large ranges. No infrastructure failure or memory-budget exceedance was reported.
+
+Complete fresh-process grid samples in seconds:
+[0.8354148138314486, 0.7940657176077366, 0.8060999065637589];
+median0.8060999065637589, range0.7940657176077366–0.8354148138314486.
+Official aLIGO samples separately:
+[0.5460673924535513, 0.5478089991956949, 0.5594915952533484];
+median0.5478089991956949, range0.5460673924535513–0.5594915952533484.
+Relative ranges5.130% and2.451%, respectively. These are support measurements,
+not an organizer ranking score or a paired quiet cohort; contention not excluded.
+Against admitted7's earlier medians, grid is4.522223ms slower and aLIGO0.746157ms
+faster. Neither difference establishes a stable improvement.
+
+Grid median forward184.913263ms, reverse84.186221ms, build73.242808ms,
+imports266.931552ms. Corresponding deltas from admitted7 are +3.750176,
+-1.171203, -0.751272 and +1.330938ms (unpaired descriptive differences).
+aLIGO median forward33.147972ms, reverse14.778912ms, build40.017767ms,
+imports265.836217ms; deltas +0.257822, +0.394760, +2.055222 and +2.327409ms.
+Sampled peak RSS maxima: grid581050368 bytes, aLIGO294432768 bytes;
+generalization865243136 bytes. No speedup is established by the synthetic
+606248-byte allocation reduction or the small unpaired reverse delta.
+
+Inspected every saved-array comparison record supplied by the evaluator, not
+remote NPZ payloads unavailable in this worktree. All six official archive hashes
+and complete initial-seed/pristine comparison records equal candidate27's
+corresponding setup records. Both official initial-seed checks pass, with zero
+log-sensitivity error. Gradient differences are not bitwise zero versus seed:
+grid maxabs5.686350050382316e-6 / relativeL2 8.181451454702114e-11;
+aLIGO maxabs3.637978807091713e-11 / relativeL2 1.294943745154708e-15.
+All14 generalization cases pass against initial seed, with zero log-sensitivity
+error; every initial-seed and pristine per-case record equals27's record exactly.
+The candidate-self archive check is not independent evidence. Pristine mismatches
+remain: grid131 signal entries,3 gradients and scalar loss; official aLIGO loss;
+random-topology sensitivity/gradient disagreements and other signal entries.
+The six unresolved grid finite-difference coordinates54,59,63,136,161,163 remain;
+prior additional aLIGO29/29 checks and first-order-only transform limits remain.
+
+The new initial-seed loss and Voyager signal failures from28 disappeared after
+removing its native sparse products. This is evidence of restoration, not an
+explanation or certification of28's changed accumulation. Its actual-matrix
+precision investigation remains pending and its implementation remains excluded.
+
+Decision: retire29. Copy/allocation variants24,27 and29 reduced local allocations
+without a repeat-supported complete-run improvement; do not continue blind
+in-place-buffer variants or combine them. Restored only owned host_pass.py to
+admitted7, leaving every failed revision in history. All production files now
+match ee4fea28c04d482566be16e916b609d7c6a99e5e exactly. Historical synthetic
+helpers remain tied to their recorded revisions; the29 ownership helper is not
+a test of the restored parent. No new simulator candidate is submitted.
+
+Concrete next measurement for the coordinator: use the existing supervisor-only
+collect_host_profiles context in overnight-numerics-profile.py on admitted7,
+in a separate diagnostic execution under the same CPU/thread policy. Return
+first-forward and first-backward call counts and self/cumulative times for both
+unchanged full workloads, especially _factor/gstrf, SuperLU.solve, _Products.apply,
+SystemPlan.values/backward, function_jacobian and _expand_backward. Keep profiler
+overhead and subsequent callbacks separate from official timings. No such profile
+has been supplied despite earlier requests. Select a genuinely distinct mechanism
+from those results before another optimization submission. The second independent
+pending action is the recorded28 product-diagnostics capture on its exact failing
+matrices. Both helpers are already implemented; neither runs a workload itself.
+This stops the unproductive allocation hypothesis, not the authorized campaign.
+
+### Candidate30: stage the existing Dual formulas as static NumPy programs
+
+Supervisor resumed after29 retirement and explicitly requested a concrete next
+experiment. No callback profile or28 actual-matrix diagnostics accompanied the
+request. Source starts from restored admitted7;29 ownership changes and28 native
+products remain excluded. Candidate SHA and both official job IDs pending.
+This submission includes29's documented source restoration, preserving its commit.
+
+Distinct mechanism: the parent function_jacobian calls the original component
+function once for every differentiated slot, using Dual(v,a,b). Each pass repeats
+primal formulas and many identical derivative subexpressions. Candidate18 shared
+primal work through a runtime direction dictionary, without a confirmed complete
+run gain. Candidate30 instead stages the unchanged existing Dual implementation
+with symbolic column objects, interns identical ordered operation nodes, and emits
+a straight-line Python function calling the same NumPy ufuncs and Python arithmetic
+operators. There is no runtime Dual graph traversal or direction dictionary.
+No parent Dual rule or component formula is edited. No new optical formulas,
+hand-coded derivatives, coefficient pruning or physical variable tuning appear.
+
+New differometor/host_program.py builds a graph from HOST_FUNCTIONS and the
+supplied slot layout, using symbolic inputs rather than numerical probes. Keys
+include the callable, slot tuple, number of input columns and the Dual/_Slots
+types. Function/slot structure is generic across setups, frequencies and shapes;
+no fixture identity or known workload dimensions are inspected. Cache bound128
+stores only generated code, scalar constants from component/Dual source and
+operation callables. It stores no physical input arrays, numerical component
+values, matrices, factors or outputs. It is process-local and writes nothing to
+disk. Every numerical call executes the program on fresh supplied columns.
+All initial graph construction and Python compilation happen in the first
+function_jacobian call and therefore remain inside complete first-run accounting.
+No JAX/XLA settings, persistent compilation cache or three-stage boundary changes.
+
+Interning requires the same operation and ordered operand identities; operands
+are never commuted, reassociated or algebraically simplified. Scalar types and
+signed zeros are retained in constant keys. All zero derivative multiplication,
+division and nonfinite propagation remain. Expression arithmetic defers to Dual
+reflected operators just as an ndarray does. NumPy ufunc identity is preserved;
+operator calls remain operator calls. The generated source contains fixed
+identifiers and integer indices only, while constants/functions are bound directly
+in its namespace. Physical input text is never compiled. The existing complex128
+Jacobian buffers retain their shape and layout; each independent destination is
+written as its value becomes available. Temporaries are released after their last
+arithmetic use. All structural derivative slots remain, including repeated and
+negative slots, and zero-valued physical parameters are differentiated normally.
+
+Numerical validation: experiments/notes/overnight-numerics-program-check.py loads
+actual source kernels through AST without unavailable local JAX, reusing the
+preserved comprehensive Dual checker.4104 component/Jacobian/contraction checks,
+8 SystemPlan pullbacks,133 extreme/nonfinite cases, and912 extra checks pass.
+Extra cases exercise empty batches, changing input-column counts, repeated and
+negative seed slots, strided inputs, fresh changed numerical values after cache
+hits, and with_outputs=False. Finite outputs match parent bitwise; nonfinite
+outputs match elementwise including NaN positions. Independent central finite
+differences in both complex directions at two step sizes pass1596 checks,
+maximum scaled error1.7286649972079704e-9 (existing bound2e-7). These are local
+synthetic checks, not either optical benchmark or a universal physics certificate.
+
+Established operation redundancy with actual runtime ufunc counting on a
+seven-slot surface Jacobian: parent sqrt27/cos30/exp21/sin22/arcsin14 (114 total),
+candidate sqrt4/cos3/exp3/sin3/arcsin2 (15 total). This includes derivative slopes.
+The previous shim-level counter reports zero for generated calls because it no
+longer observes runtime execution; that metric is explicitly discarded in the
+new checker. Test-only wrappers count generated NumPy callables directly and
+restore them afterwards; production code contains no counters or test switches.
+No elapsed-time benchmark was run locally and these counts do not establish speed.
+
+First implementation retained every graph temporary until returning, with a
+synthetic warm allocation peak2292536 bytes versus parent531448 bytes. The final
+implementation releases intermediates after their last use, reducing the warm
+peak to543304 bytes in that same17x23-row surface probe. Cold peak2538365 bytes
+includes graph construction and code compilation and is larger than the parent;
+this is an explicit first-run cost/risk, not excluded from the proposed evaluation.
+The measured phase target is admitted7's85.357ms large reverse execution, with
+14.384ms aLIGO reverse as the transfer constraint. The fraction attributable to
+this interpreter remains unprofiled; net first-run gain is unknown. Compilation
+cost may outweigh saved arithmetic, particularly for small setups.
+
+Request the supervisor's unchanged full101-frequency grid193-variable and
+101-frequency aLIGO29-variable evaluations on the same new SHA. Compare every
+saved output/gradient with admitted7 and initial seed, keeping pristine failures
+separate, plus all14 varied frequency/parameter/modulation cases. Review the new
+program generator independently for exact operation semantics, fresh input use,
+cache contents and included compilation costs. If it passes and appears promising,
+request paired repeated fresh-process candidate/parent runs under matching policy,
+including each sample, separate medians/ranges, phase changes, RSS and overlap.
+Do not promote based on operation counts, synthetic agreement, a warm-only gain,
+a single run or candidate-self comparisons. No combination with prior unconfirmed
+trials. If first-run staging dominates, reject this implementation rather than
+moving compilation outside the timer. Existing pristine disagreements,28's open
+new failures, six grid FD questions and whole-pass JVP/Hessian limitation remain.

@@ -208,20 +208,20 @@ def function_jacobian(function_index, slots, inputs, with_outputs=True):
 
     `with_outputs=False` skips the (unused) primal evaluation and returns None
     for the outputs; the Jacobian blocks are computed identically.
+    The existing Dual formulas are staged as a NumPy arithmetic program per
+    function/slot layout. Identical operation nodes share work, but no arithmetic
+    is reassociated or removed based on the supplied parameter values.
     """
     inputs, columns = _columns(inputs)
     shape = inputs.shape[:-1]
     outputs = evaluate_function(function_index, inputs) if with_outputs else None
     linear = np.zeros(shape + (4, len(slots)), dtype=np.complex128)
     antilinear = np.zeros(shape + (4, len(slots)), dtype=np.complex128)
-    for position, slot in enumerate(slots):
-        seeded = list(columns)
-        seeded[slot] = Dual(columns[slot], 1.0, 0.0)
-        stack = HOST_FUNCTIONS[function_index](_Slots(seeded))
-        for column, item in enumerate(stack.items):
-            if isinstance(item, Dual):
-                linear[..., column, position] = np.broadcast_to(item.a, shape)
-                antilinear[..., column, position] = np.broadcast_to(item.b, shape)
+    if len(slots):
+        from differometor.host_program import jacobian_program
+
+        program = jacobian_program(HOST_FUNCTIONS[function_index], tuple(slots), len(columns), Dual, _Slots)
+        program(columns, linear, antilinear)
     return outputs, linear, antilinear
 
 

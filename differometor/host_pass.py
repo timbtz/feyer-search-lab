@@ -251,20 +251,11 @@ def _expand(array, indices, values):
     return tiled
 
 
-def _expand_backward(array_rows, indices, values, tiled_bar, *, consume=False):
-    """Pull back expansion; optionally consume a private, dead row cotangent.
-
-    Gather the sweep cotangents before clearing their destinations. The caller
-    may transfer ownership with consume=True when no later operation needs the
-    original row cotangent. The default preserves the supplied array. Retain the
-    original C-order copy for noncontiguous, Fortran-order or read-only inputs,
-    since layout can affect NumPy's summation order.
-    """
+def _expand_backward(array_rows, indices, values, tiled_bar):
     count = values.shape[1]
     rows, columns = np.repeat(np.arange(count), indices.size), np.tile(indices, count)
     values_bar = tiled_bar[rows, columns].reshape(count, indices.size).T
-    if not consume or not tiled_bar.flags.c_contiguous or not tiled_bar.flags.writeable:
-        tiled_bar = tiled_bar.copy()
+    tiled_bar = tiled_bar.copy()
     tiled_bar[rows, columns] = 0
     return tiled_bar.reshape(count, array_rows, tiled_bar.shape[1]).sum(axis=0), values_bar
 
@@ -649,13 +640,11 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
     signal_rows_bar, signal_base_bar = plan.signal.backward(state["signal_rows"], raw_bar)
     noise_rows_bar, noise_base_bar = plan.noise.backward(state["noise_rows"], noise_values_bar)
     signal_rows_bar[: noise_rows_bar.shape[0]] += noise_rows_bar
-    # SystemPlan.backward allocated this row cotangent; it is dead after the
-    # expansion pullback, so clearing sweep destinations needs no full copy.
     carrier_rows_bar, signal_values_bar_in = _expand_backward(
-        state["carrier_rows"].shape[0], plan.signal_changing, signal_values, signal_rows_bar, consume=True)
+        state["carrier_rows"].shape[0], plan.signal_changing, signal_values, signal_rows_bar)
     component_bar, carrier_base_bar = plan.carrier.backward(state["carrier_rows"], carrier_values_bar)
     parameters_bar, carrier_values_bar_in = _expand_backward(
-        parameters.shape[0], plan.carrier_changing, carrier_values, carrier_rows_bar + component_bar, consume=True)
+        parameters.shape[0], plan.carrier_changing, carrier_values, carrier_rows_bar + component_bar)
     return (parameters_bar.astype(parameters.dtype), _cast_bar(carrier_values_bar_in, carrier_values.dtype),
             _cast_bar(signal_values_bar_in, signal_values.dtype), carrier_base_bar, signal_base_bar,
             noise_base_bar, selection_vectors_bar.astype(np.complex128))
