@@ -152,6 +152,11 @@ def _np_space_entry(frequency, length, refractive_index):
 # ---------------------------------------------------------------------
 
 LINKING_FUNCTIONS = []
+
+
+def _identity_link(value):
+    """Builder placeholder for a setup with no parameter links."""
+    return value
 """
 Global registry of parameter-linking functions.
 
@@ -1490,7 +1495,7 @@ def build(setup: Setup):
     if len(linked_indices) == 0:
         linked_indices = [0]
         indices_to_link = [0]
-        LINKING_FUNCTIONS.append(lambda x: x)
+        LINKING_FUNCTIONS.append(_identity_link)
         linking_function_indices = [0]
 
     return (

@@ -26,6 +26,7 @@ from jax import lax, vmap, jit
 
 from differometor.setups import Setup
 from differometor.build import build, pairs_to_arrays, prepare_arrays, LINKING_FUNCTIONS
+from differometor.build import _identity_link
 from differometor.components import FUNCTIONS, UNIT_VACUUM, H_PLANCK, F0
 from differometor import components as _components
 from differometor.sparse import SparseStructure, SparseSystem, sparse_solve
@@ -421,17 +422,8 @@ def simulate(
         row = parameters.reshape(parameters.shape[1:])
         row = _static_set(row, layout.optimized_parameter_indices,
                           _static_take(optimized_parameters, layout.optimized_value_indices))
-        inputs_to_link = _static_take(row, layout.linked_indices)
-        outputs_to_link = vmap(lambda i, x: lax.switch(i, LINKING_FUNCTIONS, x))(
-            linking_function_indices, inputs_to_link
-        )
-        row = _static_set(row, layout.indices_to_link, outputs_to_link)
-        # An empty phase layout has no values or derivative contributions. Avoid
-        # tracing its empty gather, exponential and scatter into the host boundary.
-        if layout.qhd_parameter_indices.size == 0 and layout.qhd_placing_indices.size == 0:
-            qhd_phase_values = None
-        else:
-            qhd_phase_values = jnp.exp(1j * jnp.radians(_static_take(row, layout.qhd_parameter_indices)))
+        row = _static_link(row, layout, linking_function_indices)
+        qhd_phase_values = jnp.exp(1j * jnp.radians(_static_take(row, layout.qhd_parameter_indices)))
         return _simulate_host_pass(
             host_plan,
             row.reshape(1, -1),
@@ -969,6 +961,24 @@ HOST_PASS: bool = True
 STATIC_PARAMETER_LAYOUT: bool = True
 
 
+def _static_link(row, layout, function_indices):
+    """Apply links, omitting proven identity writes back to the same positions.
+
+    Every registered branch must be the builder's exact identity function, so
+    even dynamic (or clamped) branch indices select identity. Any custom branch
+    keeps the original linking path; no inference is made from current values.
+    """
+    if (LINKING_FUNCTIONS
+            and all(function is _identity_link for function in LINKING_FUNCTIONS)
+            and function_indices.shape == layout.linked_indices.shape
+            and np.issubdtype(function_indices.dtype, np.integer)
+            and np.array_equal(layout.linked_indices, layout.indices_to_link)):
+        return row
+    inputs = _static_take(row, layout.linked_indices)
+    outputs = vmap(lambda i, x: lax.switch(i, LINKING_FUNCTIONS, x))(function_indices, inputs)
+    return _static_set(row, layout.indices_to_link, outputs)
+
+
 def _static_take(values, indices):
     """values[indices] for a 1-D array and concrete nonnegative in-bounds indices."""
     return lax.gather(
@@ -1006,24 +1016,19 @@ def _simulate_host_pass(
     noise_selection_vectors,
     qhd_placing_indices,
 ):
-    """`_simulate_sparse` evaluated on the host behind one custom VJP.
-
-    Internal callers may pass None for phase values only for an empty built phase
-    layout. Nonempty layouts retain the differentiable phase multiplication.
-    """
+    """`_simulate_sparse` evaluated on the host behind one custom VJP."""
     structure = plan.structure
-    if qhd_phase_values is not None:
-        noise_selection_vectors = lax.scatter_mul(
-            noise_selection_vectors,
-            qhd_placing_indices.reshape(-1, 3),
-            qhd_phase_values,
-            lax.ScatterDimensionNumbers(
-                update_window_dims=(),
-                inserted_window_dims=(0, 1, 2),
-                scatter_dims_to_operand_dims=(0, 1, 2),
-            ),
-            unique_indices=True,
-        )
+    noise_selection_vectors = lax.scatter_mul(
+        noise_selection_vectors,
+        qhd_placing_indices.reshape(-1, 3),
+        qhd_phase_values,
+        lax.ScatterDimensionNumbers(
+            update_window_dims=(),
+            inserted_window_dims=(0, 1, 2),
+            scatter_dims_to_operand_dims=(0, 1, 2),
+        ),
+        unique_indices=True,
+    )
     carrier, signal, noise = _host_pass.host_pass(
         plan,
         parameters.astype(jnp.complex128),

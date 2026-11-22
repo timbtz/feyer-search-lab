@@ -1145,3 +1145,120 @@
   Next decision: if empty-phase removal offers no stable reduction, retire this isolated
   mechanism; inspect actual lowered primitive evidence or import/build profiles before
   further implementation changes. Deadline remains09:27:44 UTC, epoch1795339664.0.
+
+### Candidate15 feedback — preserve exact source for confirmation (03:24 UTC)
+
+- Evaluated SHA **2e50e7cffc8c7feb5ae53dc770e26cbb45250ab8**; request
+  **b699b389623a46c98a1e34c803ca18d8**, jobs grid-1/2/3 and aligo-1/2/3 under that
+  request. Both unchanged official benchmarks passed in all three fresh processes.
+  No confirmed improvement or source review: admission reasons are requires_source_review
+  and large_first_run_ranges_overlap_requires_paired_evidence. ee4fea2 remains admitted best.
+- Large complete first-run seconds: **0.8227882608771324, 0.7784748841077089,
+  0.7853874359279871**; median **0.7853874359279871**, range
+  **0.7784748841077089–0.8227882608771324**. Against the old unmatched ee4fea2 median,
+  observed difference16.190 ms (2.020%); not a confirmed gain. Keep the slower first
+  sample: its imports296.661 ms exceed the other two265.328/264.786 ms, but imports
+  are part of the required total and cannot be excluded or normalized away.
+- Official101-frequency aLIGO seconds: **0.5328888855874538, 0.5305512081831694,
+  0.5279352385550737**; median **0.5305512081831694**, range
+  **0.5279352385550737–0.5328888855874538**. Difference from old unmatched parent
+  median18.004 ms (3.282%); separate transfer evidence, never a combined score.
+- Phase medians in milliseconds, large / aLIGO:
+
+  | phase | large | aLIGO |
+  | --- | ---: | ---: |
+  | imports | 265.328 | 262.744 |
+  | build | 73.325 | 37.717 |
+  | forward_lower | 14.091 | 13.617 |
+  | forward_compile | 30.738 | 30.869 |
+  | forward | 182.602 | 32.423 |
+  | sensitivity_lower | 25.595 | 26.115 |
+  | sensitivity_compile | 39.758 | 41.184 |
+  | gradient_lower | 12.989 | 13.046 |
+  | gradient_compile | 51.117 | 52.595 |
+  | gradient | 84.548 | 14.675 |
+
+- Compared with candidate14's separate cohort, forward lowering is about5.808/5.785 ms
+  lower and gradient lowering3.712/3.596 ms lower (large/aLIGO). Forward compilation
+  falls2.817/2.478 ms; gradient compilation falls0.626 ms large and rises0.279 ms aLIGO.
+  These repeated phase observations support this mechanism more clearly than the previous
+  slice/allocation trials, but they are not paired measurements against ee4fea2. Do not
+  attribute execution/import fluctuations to this change. No lowered-IR diagnostic supplied.
+- All saved official array categories and all14 generalization cases pass initial-seed
+  tolerances. Official archives match recent candidates; gradient maximum seed differences
+  remain5.686350050e-6 large and3.637978807e-11 aLIGO. Generalization archive is
+  **4cda4a02afc191bc87b2e7534024496a464c73d34a73a715c1a217f9d52e0171**; differs from
+  candidate14's archive. All supplied initial-seed checks pass, but no direct parent archive
+  comparison is supplied, so no bitwise-equality or universal correctness assertion.
+  Pristine disagreements persist: grid signal/gradients33,161,180/loss; custom uifo_rand1/3
+  log-sensitivity errors~2.04e-4/~5.81e-5 and associated gradients. Grid FD54,59,63,136,161,
+  163 remain unresolved; prior aLIGO FD29/29 confirmed. Whole-pass JVP/Hessians unsupported.
+- Sampled peak RSS bytes: large **622108672, 545058816, 504066048**; aLIGO
+  **282267648, 294612992, 290766848**; generalization **813125632**. No budget exceedance
+  or infrastructure failure. CPU2, one logical CPU, library threads1, double precision,
+  package flags and no persistent cache unchanged. Other-host contention not excluded.
+- Decision: retain candidate15 UNMODIFIED for confirmation, not promotion. Do not stack
+  another speculative boundary edit onto it. This changes the next task from implementation
+  variants to evaluating the existing focused hypothesis. All failed trials remain in history.
+- Supervisor request: independently review the exact ee4fea2-to-2e50e7c delta; run the
+  prepared empty-phase synthetic check, including nonempty zero-phase derivatives, and
+  compare every parent/candidate physical array and gradient directly. If review permits,
+  run five interleaved fresh-process repetitions per revision per official setup for
+  **ee4fea28c04d482566be16e916b609d7c6a99e5e** and
+  **2e50e7cffc8c7feb5ae53dc770e26cbb45250ab8** with matching resource policy. Return
+  every sample, phase breakdown and overlap information. Existing three samples alone
+  do not resolve the overlapping large ranges. This is a repeat request for the exact
+  candidate, not a new simulator submission or an instruction to relax admission policy.
+- Synthetic runtime remains unreported; local source checks only. No simulator edits,
+  benchmarks, commits, network calls or agent spawning in this feedback turn. Deadline
+  remains09:27:44 UTC. ready_for_evaluation=true requests confirmation of the EXISTING
+  candidate SHA; no new simulator SHA is needed for this experiment.
+
+### Candidate16 — isolate exact identity-link elimination
+
+- The supervisor returned the same candidate15 receipt and requested an evaluable simulator
+  change instead of another repeat-only handoff. No additional timing or source review has
+  arrived. Candidate15 remains a promising, unconfirmed experiment preserved at
+  **2e50e7cffc8c7feb5ae53dc770e26cbb45250ab8**; its paired-confirmation request remains open.
+- Source baseline for this distinct isolated trial is reviewed
+  **ee4fea28c04d482566be16e916b609d7c6a99e5e**. Restored its simulate.py content before
+  applying this change; no reset, commit or lost history. Candidate15's phase shortcut is
+  NOT included. No callback-transpose variant, slice update or solver change is included.
+- Builder placeholder becomes a named exact `_identity_link` instead of an anonymous
+  identity lambda. The existing dummy branch index remains unchanged. In the static-layout
+  path, `_static_link` bypasses gather/switch/scatter only if every registered branch is
+  this exact function object, the source and destination arrays are identical, and the
+  dynamic function-index array has the expected shape and integer dtype. Any custom branch,
+  even unused, or different destinations retains the original linking operations.
+- This deliberately conservative condition does not freeze dynamic branch-index VALUES:
+  all possible branches, including lax.switch's clamped choices, are identical. No function
+  is inferred to be identity from its name, bytecode or current numerical output. No
+  phase/optical parameter is suppressed because it currently equals zero. Existing layout
+  bounds/unique-destination checks remain in force; global function-registry mutation has
+  the same trace/retrace limitations as the original lax.switch branch list.
+- Distinction from candidate11: that trial specialized homogeneous branch dispatch but kept
+  the parameter gather/scatter. Candidate16 removes that entire provable identity update.
+  Candidate7 included a broader identity-link shortcut alongside empty phases and callback
+  transposes. Candidate15 isolated phase emptiness and observed about9.4 ms less combined
+  forward/gradient lowering than candidate14 in separate cohorts. Testing identity linking
+  alone can attribute the remaining candidate7 reduction without silently combining trials.
+  Target is forward/gradient trace and compile time; new candidate has no timing evidence.
+  Full first-run cost must count the small Python registry/index checks too.
+- Local validation: AST parsing passed; four stdlib-only tests execute the actual helper
+  with stand-in operations and verify identity/multiple-identity eligibility, non-self
+  destination fallback, and custom-branch fallback. These are control-flow checks, not JAX
+  numerical validation. Other simulator modules match ee4fea2; only build.py/simulate.py differ.
+- Prepared **experiments/notes/overnight-overhead-identity-check.py** for fixed-environment
+  execution. Twelve synthetic JIT primal/VJP comparisons cover real/complex rows, signed
+  real zero, current zero values, dynamic/clamped branch indices, repeated registered exact
+  identities, non-self destination permutations, custom linear branches and an anonymous
+  identity function that must keep the generic path. Runtime UNEXECUTED locally (no JAX).
+- Candidate SHA/job IDs pending. Request both unchanged full official benchmarks, direct
+  parent and initial-seed array/gradient comparisons, all14 generalization cases, the
+  synthetic check and independent source review. Measure candidate16 alone; do not merge
+  with candidate15 without separate review and exact combined re-evaluation. If no meaningful
+  effect appears, retire this isolated mechanism and prefer the existing candidate15
+  confirmation/import-build attribution tasks over further speculative indexing changes.
+- All inherited pristine-reference discrepancies and unresolved finite differences above
+  remain visible. No change to tolerances, three JIT stages, physical workload, compiler
+  settings or first-order-only custom-VJP scope. Deadline09:27:44 UTC unchanged.
