@@ -3995,3 +3995,37 @@
   within noise. Arrays must be identical to ee4fea2.
 - Decision rule: reject if any array differs or if the three lowering phases do not drop versus ee4fea2's recorded
   phase medians. Phase-level medians are the attribution signal here, not the noisy large total.
+
+### Candidate 44 feedback — retired (null result)
+
+- SHA `ffe30c98e7ad8416a059211b471ba7768b5388a6`; request `22240c43cb174d0fabd0ffdefa2f96f1`; publication `7167652`.
+  Hashes confirm only simulate.py differed from ee4fea2. Official 3/3 both setups; arrays equal ee4fea2/c7 archives
+  (large 112c0407…, aLIGO 9c1ce936…); 14 generalization cases pass seed tolerances.
+- Lowering phases unchanged: large forward 19.6/19.6/21.1, sensitivity 25.6/25.4/25.5, gradient 17.8/16.5/16.6 ms
+  (ee4fea2 19.5/25.6/16.9); aLIGO 19.1/19.1/19.3, 26.5/26.2/26.4, 16.6/16.4/16.6. Compile unchanged.
+- Totals: large 0.840081, 0.824077, 0.845525 (median 0.840081); aLIGO 0.548444, 0.546585, 0.622344 (the last has a
+  127.7 ms gradient compile outlier). No gain; MLIR traceback locations are not a measurable lowering cost here.
+- Decision: retired; simulate.py restored to ee4fea2 (worktree now equals the reviewed incumbent).
+
+### Closing handoff (Claude)
+
+- Admitted best remains ee4fea2. Lane's only reproducible gain: candidate 7 (1ea70bf / byte-exact replay 39b7575),
+  ~26 ms lower+compile and ~27–31 ms aLIGO first-run in two cohorts; large total unresolved by unpaired cohorts.
+  It needs independent review + interleaved paired runs vs ee4fea2 — a coordinator task, not another submission.
+- Null results this session: c42 deferred JIT wrappers (imports), c44 traceback locations (lowering), c4 build loops.
+  Imports (~265 ms) and build (~73/38 ms) remain unattributed without the requested import-time tree / cProfile.
+- Deadline 09:27:44 UTC unchanged; no further submissions planned from this conversation.
+
+### Submission 45 — third cohort of the exact candidate 7 source (evidence, not a new mechanism)
+
+- Supervisor asked for a concrete next experiment rather than a stop. The highest-information remaining experiment
+  is more samples of the single reproducible lane mechanism. Source re-applied to the byte-exact candidate 7 state;
+  expected hashes build.py 6a7d8b20…, host.py 595ff785…, host_pass.py dd2ff39c…, simulate.py 772b44de… (others =
+  ee4fea2). If any hash differs, treat as a functionally equivalent reconstruction.
+- Prior cohorts of this exact source: large 0.806567/0.779121/0.773867 and 0.817498/0.826861/0.773332;
+  aLIGO 0.517428/0.517229/0.521618 and 0.522847/0.521997/0.517999. ee4fea2: large 0.822484/0.801578/0.794425,
+  aLIGO 0.551624/0.548555/0.544719; candidate 44 (ee4fea2-equivalent arrays and phases) large
+  0.840081/0.824077/0.845525, aLIGO 0.548444/0.546585/0.622344.
+- Purpose: with 9 large and 9 aLIGO samples of this source, plus 6 samples of ee4fea2-equivalent source from this same
+  evening, a rank comparison (or median over pooled cohorts) becomes meaningful for the coordinator. The per-phase
+  signature (forward lower ~11.5 ms, gradient lower ~11.6 ms) doubles as a hash-independent identity check.

@@ -166,6 +166,16 @@ Notes
 """
 
 
+def identity_link(x):
+    """Placeholder linking function used when a setup has no linked parameters.
+
+    A named function (instead of an anonymous lambda) so that `simulate` can
+    recognize, from the builder's static indices, that the placeholder link writes
+    each parameter back onto itself and is therefore exactly a no-op.
+    """
+    return x
+
+
 def set_instructions(
     instructions: dict,
     node: str,
@@ -1490,7 +1500,7 @@ def build(setup: Setup):
     if len(linked_indices) == 0:
         linked_indices = [0]
         indices_to_link = [0]
-        LINKING_FUNCTIONS.append(lambda x: x)
+        LINKING_FUNCTIONS.append(identity_link)
         linking_function_indices = [0]
 
     return (
