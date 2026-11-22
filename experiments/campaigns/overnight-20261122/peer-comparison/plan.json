@@ -1,0 +1,114 @@
+{
+  "schema_version": "feyer-peer-paired-plan-v2",
+  "status": "prepared_not_dispatched",
+  "frozen_before_new_measurements": true,
+  "created_at": 1795337978.083318,
+  "deadline_unix": 1795339664.0,
+  "blocks": 3,
+  "bootstrap_seed": 2026112202,
+  "bootstrap_resamples": 20000,
+  "requests": [
+    {
+      "sequence": 1,
+      "block": 1,
+      "position": 1,
+      "candidate": "peer",
+      "sha": "be4949e104da90968b426e4cbdd5c9c725eb2c12",
+      "request_id": "583362e4f10f47be9b4e123937626e69",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/peer-head-to-head-v2/requests/01-1-peer.json",
+      "request_sha256": "a90c22977e2e094e6c44658868be9dff5680498f58d33ab3abfcfcc67ae540ec",
+      "run_generalization": false
+    },
+    {
+      "sequence": 2,
+      "block": 1,
+      "position": 2,
+      "candidate": "repaired",
+      "sha": "3b107d69d9d083f7aaa5f11b952f0098ed0ba528",
+      "request_id": "c93ce020d0c748668c42b96712d8e27a",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/peer-head-to-head-v2/requests/02-1-repaired.json",
+      "request_sha256": "59cffae735cc1e2210f953aab7dc50ec637d21a02488b7a14e85d752fa7a81bf",
+      "run_generalization": false
+    },
+    {
+      "sequence": 3,
+      "block": 2,
+      "position": 1,
+      "candidate": "repaired",
+      "sha": "3b107d69d9d083f7aaa5f11b952f0098ed0ba528",
+      "request_id": "1b30a23d68414d2ca2a55718292cf7ee",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/peer-head-to-head-v2/requests/03-2-repaired.json",
+      "request_sha256": "47210c1dc3887d3d77e6342284d97fcfdfbc26a3203a7a1ec96754edfde6e8c5",
+      "run_generalization": false
+    },
+    {
+      "sequence": 4,
+      "block": 2,
+      "position": 2,
+      "candidate": "peer",
+      "sha": "be4949e104da90968b426e4cbdd5c9c725eb2c12",
+      "request_id": "8ec3d7863f1048c8a5b365e24e4d8cb9",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/peer-head-to-head-v2/requests/04-2-peer.json",
+      "request_sha256": "b18f7ae71676bfc2de7515cce609612d8ca5fd7a1da80d0f4c5b1df20160d3c0",
+      "run_generalization": false
+    },
+    {
+      "sequence": 5,
+      "block": 3,
+      "position": 1,
+      "candidate": "peer",
+      "sha": "be4949e104da90968b426e4cbdd5c9c725eb2c12",
+      "request_id": "555a9a67df2c4ec9b5a29ba558b22fcb",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/peer-head-to-head-v2/requests/05-3-peer.json",
+      "request_sha256": "b1a29d8f13ccd9884c7c9d05e9300f2de6127b764778ca75730fce0174a1bd1b",
+      "run_generalization": false
+    },
+    {
+      "sequence": 6,
+      "block": 3,
+      "position": 2,
+      "candidate": "repaired",
+      "sha": "3b107d69d9d083f7aaa5f11b952f0098ed0ba528",
+      "request_id": "6f12ddfe55e2454986ec122190e7fb84",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/peer-head-to-head-v2/requests/06-3-repaired.json",
+      "request_sha256": "c843bf47b00c2adf6d4de3c3834fe7fc79b1f5ef6f18ccfab423fefb889f2a8c",
+      "run_generalization": false
+    }
+  ],
+  "candidates": [
+    {
+      "name": "peer",
+      "sha": "be4949e104da90968b426e4cbdd5c9c725eb2c12",
+      "source_repository": "akshat-bhat/Feyer",
+      "import_commit_source": "7615f59ced23a5988e66eddc8408ff823dcd3651",
+      "inspected_peer_head": "7615f59ced23a5988e66eddc8408ff823dcd3651",
+      "simulator_tree": "8bfed50b2e8837aa7ff6215117b1e154b51d61cf"
+    },
+    {
+      "name": "repaired",
+      "sha": "3b107d69d9d083f7aaa5f11b952f0098ed0ba528"
+    }
+  ],
+  "controls": {
+    "cpu": 2,
+    "logical_cpus": 1,
+    "serial": true,
+    "fresh_process_repetitions_per_request": 1,
+    "warm_repeats_inside_each_official_benchmark": 3,
+    "new_checkout_each_request": true,
+    "grid_then_aligo": true,
+    "drop_first_sample": false,
+    "extra_warmups": false,
+    "same_runtime_harness_environment_required": true,
+    "existing_two_lane_locks_required": true,
+    "worker_or_dependency_changes": false
+  },
+  "admission": {
+    "comparison_descriptive_only": true,
+    "promotion_ready": false,
+    "peer_seed_relative_disagreement_is_not_automatic_official_failure": true,
+    "separate_exact_sha_generalization_preflights_required": true
+  },
+  "analysis_scope": "All six requests and twelve official results, per-setup metrics and paired own/peer ratios; never pool distinct SHAs or original hardware reports; three blocks yield weak uncertainty.",
+  "supersedes_plan": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/peer-head-to-head-v1/plan.json"
+}

@@ -30,3 +30,13 @@ Search selection requires at least three fresh runs of each official benchmark, 
 ## New source-review hold
 
 Approximate collinearity/Hermitian shortcuts can amplify discarded residuals through an ill-conditioned inverse. This is an algebraic counterexample, not an observed failure of the two official fixtures. We are restoring explicit adjoint solves before the new finite solver-tuning experiment. [Review evidence](experiments/campaigns/overnight-20261122/final-confirmation/source-review.json).
+
+## Tested conservative candidate and current peer comparison
+
+**Tested conservative candidate: [3b107d69](https://github.com/timbtz/feyer-search-lab/tree/3b107d69d9d083f7aaa5f11b952f0098ed0ba528)**. It restores explicit adjoints, passed six official processes and all 14 seed-relative cases, and received an independent local source review. This is not a new speed promotion or proof of correctness on every unknown setup. The historical fastest record above remains under source-review hold.
+
+The current teammate simulator from `akshat-bhat/Feyer@7615f59` was imported byte-for-byte as `be4949e1`, not reimplemented. On this AMD instance, three balanced cold-checkout pairs gave medians **0.703439 s peer vs 0.855262 s conservative repair** on the large workload; **0.542659 s vs 0.538566 s** on aLIGO. All 12 official checks passed. The peer has separate seed-relative disagreements and generic builder concerns; timings alone do not establish suitability for the judges' unknown topology. [Comparison and evidence](experiments/campaigns/overnight-20261122/peer-comparison/analysis.md).
+
+The six-point SuperLU scheduling sweep found no admissible improvement: all five nondefault settings failed additional regression checks despite official PASS. Follow-up small-supernode and refinement trials are recorded separately. [Finite search](experiments/campaigns/overnight-finite-v1/README.md).
+
+Autonomous Codex/Claude optimization is stopped at the user's request. No new model calls or budget extension are authorized by this record.

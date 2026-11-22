@@ -1,0 +1,82 @@
+{
+  "schema_version": "feyer-peer-semantic-audit-v1",
+  "created_at": "2026-11-22T09:01:07.890471+00:00",
+  "candidate_sha": "be4949e104da90968b426e4cbdd5c9c725eb2c12",
+  "upstream_sha": "7615f59ced23a5988e66eddc8408ff823dcd3651",
+  "simulator_tree": "8bfed50b2e8837aa7ff6215117b1e154b51d61cf",
+  "comparison_sha": "3b107d69d9d083f7aaa5f11b952f0098ed0ba528",
+  "method": "Local read-only source inspection; no external provider call and no numerical benchmark.",
+  "findings": [
+    {
+      "id": "grouped-carrier-updates",
+      "classification": "concrete source-level generalization defect; inherited, not evidence of cheating",
+      "source": "differometor/build.py:1588-1605",
+      "evidence": "The grouped-pair loop collects every parameter but append_information runs after that loop using only its last optimized_component. Earlier group members with carrier update instructions can remain at base values unless separately scheduled.",
+      "repair_comparison": "3b107d69 schedules each member inside the loop.",
+      "observed_optical_failure": false
+    },
+    {
+      "id": "identity-link-registry",
+      "classification": "concrete source-level state/history defect; inherited",
+      "source": "differometor/build.py:1413-1419",
+      "evidence": "No-link setup appends identity to global LINKING_FUNCTIONS but selects index0, not the appended identity index. If a prior setup registered a nonidentity function first, a later no-link setup can apply that function to parameter0.",
+      "repair_comparison": "3b107d69 obtains the actual identity function registry index.",
+      "observed_optical_failure": false
+    },
+    {
+      "id": "carrier-dependency-scheduling",
+      "classification": "source-level generalization risk",
+      "source": "differometor/build.py:1587-1613",
+      "evidence": "Carrier update scheduling follows named optimization/changing components, with no scan for other instructions consuming those changed parameter indices. Hidden setups with dependent/link-driven carrier components need explicit coverage.",
+      "repair_comparison": "3b107d69 additionally schedules unscheduled carrier instructions reading updated parameter indices.",
+      "observed_optical_failure": false
+    },
+    {
+      "id": "solver-options-portability",
+      "classification": "environment-dependent path difference, not automatic numerical failure",
+      "source": "differometor/host.py:666,729-737",
+      "evidence": "Private SuperLU path sets PanelSize=1,Relax=1; public splu fallback leaves these at defaults. Numeric equations unchanged, but timing and floating-point behavior may differ by SciPy/private-extension availability.",
+      "repair_comparison": "3b107d69 default paths match; frozen tuning menu updates both private and public paths together.",
+      "observed_optical_failure": false
+    },
+    {
+      "id": "one-refinement-step",
+      "classification": "numerical robustness validation requirement, not automatic incorrectness",
+      "source": "differometor/host.py:713-717",
+      "evidence": "All sparse solves always apply one correction, without adaptive residual criterion. This may be entirely sufficient for tested setups; fixed one-step count alone does not demonstrate a bug. New ill-conditioned topologies require the actual official and gradient checks.",
+      "repair_comparison": "Our repaired implementation retains its existing up-to-three-step refinement and residual threshold.",
+      "observed_optical_failure": false
+    },
+    {
+      "id": "interpreter-zero-abs",
+      "classification": "unverified edge-case concern",
+      "source": "differometor/host.py:219",
+      "evidence": "Complex abs tangent divides by out=abs(x). At x=0 with an active tangent this expression produces 0/0. Whether a supported optical component exercises this path was not established in this read-only audit.",
+      "repair_comparison": "Not asserted as a differentiator versus our implementation; shared interpreter ancestry requires separate scrutiny.",
+      "observed_optical_failure": false
+    }
+  ],
+  "positive_checks": [
+    {
+      "source": "differometor/sparse.py:160-165,201-205",
+      "finding": "Signal/noise sparse patterns union initial nonzero coordinates with ALL update coordinates, preserving initially zero entries that may change."
+    },
+    {
+      "source": "differometor/host.py:510-513",
+      "finding": "Gradient uses explicit A^-T signal and conjugated A^-1 noise adjoint solves; no approximate collinearity/Hermitian reuse predicate found."
+    },
+    {
+      "source": "differometor/host.py:590-597,794-799",
+      "finding": "Two-entry forward-state cache keyed by evaluation token supports backward factor reuse; evicted state recomputes forward from supplied inputs. Not a disk answer cache or fixture result lookup."
+    },
+    {
+      "source": "differometor/host.py:334-339; sparse.py:250-261",
+      "finding": "Kernel cache stores traced function/shape programs; real-input and supported-primitives guards choose host versus JAX fallback. Not benchmark-name dispatch. Unsupported primitives are checked for both value and tangent support at construction."
+    },
+    {
+      "source": "differometor/** executable-code search",
+      "finding": "No benchmark-name or101/193/751 fixture dispatch, fixture file reading, precomputed answer table, or persistent compilation cache found in reviewed nine files. This is a bounded source audit, not proof of universal correctness."
+    }
+  ],
+  "verdict": "No deliberate fixture specialization identified. Concrete inherited builder generalization defects and portability/edge concerns prevent universal correctness claim. Current benchmark feasibility belongs to parent evaluator; these source findings do not predict its outcome."
+}

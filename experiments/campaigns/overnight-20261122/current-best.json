@@ -36,6 +36,7 @@
       ]
     }
   },
+  "model_worker_policy": "Stopped by user; no automatic model-driven continuation.",
   "policy": {
     "aligo_maximum_ratio": 1.02,
     "large_candidate_maximum_must_be_below_incumbent_minimum": true,
@@ -58,5 +59,14 @@
   },
   "schema_version": "feyer-current-best-v1",
   "seed_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
-  "status": "source_review_hold"
+  "status": "source_review_hold",
+  "tested_conservative_candidate": {
+    "additional_seed_cases_passed": 14,
+    "candidate_sha": "3b107d69d9d083f7aaa5f11b952f0098ed0ba528",
+    "evaluation_id": "fbe23beea6e049ccbb5e971232a00955",
+    "limits": "Inherited pristine-reference discrepancies remain. No universal guarantee for an unknown optical topology.",
+    "official_processes_passed": 6,
+    "source_review": "Independent local whole-delta review; not a headless provider verdict.",
+    "status": "tested_conservative_candidate_not_speed_promotion"
+  }
 }

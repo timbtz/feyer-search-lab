@@ -1,0 +1,11 @@
+{
+  "requested_at": 1795342264.217597,
+  "instruction": "Stop autonomous Codex optimization; numerical tuning and validation only.",
+  "no_new_provider_calls": true,
+  "sessions": [
+    "overnight-overhead-v1",
+    "overnight-numerics-v1"
+  ],
+  "numerical_campaign": "overnight-finite-v1",
+  "numerical_status": "complete; no admissible improvement"
+}
