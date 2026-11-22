@@ -200,7 +200,12 @@ def evaluate_function(function_index, inputs):
     inputs, columns = _columns(inputs)
     stack = HOST_FUNCTIONS[function_index](_Slots(columns))
     shape = inputs.shape[:-1]
-    return np.stack([np.broadcast_to(np.asarray(item, dtype=np.complex128), shape) for item in stack.items], axis=-1)
+    outputs = np.empty(shape + (len(stack.items),), dtype=np.complex128)
+    for column, item in enumerate(stack.items):
+        # Assignment broadcasts into the final destination; an intermediate
+        # broadcast view followed by stacking would copy the same values.
+        outputs[..., column] = np.asarray(item, dtype=np.complex128)
+    return outputs
 
 
 def function_jacobian(function_index, slots, inputs, with_outputs=True):
@@ -220,8 +225,8 @@ def function_jacobian(function_index, slots, inputs, with_outputs=True):
         stack = HOST_FUNCTIONS[function_index](_Slots(seeded))
         for column, item in enumerate(stack.items):
             if isinstance(item, Dual):
-                linear[..., column, position] = np.broadcast_to(item.a, shape)
-                antilinear[..., column, position] = np.broadcast_to(item.b, shape)
+                linear[..., column, position] = item.a
+                antilinear[..., column, position] = item.b
     return outputs, linear, antilinear
 
 

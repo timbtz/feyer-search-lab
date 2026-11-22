@@ -1,0 +1,26 @@
+{
+  "parent_sha": "e5cbeba07943b6c797932263ff9deb721bf3ca89",
+  "candidate_sha": null,
+  "candidate_host_sha256": "511346ae50830ca78d7556178c6ed0bc9da9d72cb3e342ca14d4e7e7ef23093a",
+  "component_check": {
+    "functions": 19,
+    "input_cases": 53,
+    "primal_comparisons": 1007,
+    "jacobian_comparisons": 8056,
+    "finite_entries_bitwise_equal": true,
+    "nonfinite_positions_and_values_equal": true,
+    "zero_amplitude_derivative_preserved": true,
+    "parent_explicit_calls": {"broadcast_to": 204, "stack": 19, "zeros": 38},
+    "candidate_explicit_calls": {"empty": 19, "zeros": 38}
+  },
+  "callback_check": {
+    "callback_cases": 96,
+    "zero_or_nonzero_parameter_derivative_checks": 192,
+    "compared_arrays_per_case": 12,
+    "max_relative_array_difference": 0.0,
+    "finite_arrays_bitwise_equal": true,
+    "fresh_factor_counts": "identical"
+  },
+  "environment": "Local existing venv-topology-smac Python 3.12 / NumPy 2.5.5 / SciPy 1.18.1, actual source kernels loaded by AST; JAX unavailable",
+  "scope": "Small synthetic correctness and explicit call counts only. No timings, official workloads, or performance claim. Exact-SHA dual official evaluation, generalization and independent source review pending."
+}

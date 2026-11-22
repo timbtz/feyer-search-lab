@@ -4459,3 +4459,175 @@ without measurement. No new candidate is submitted; working tree = candidate 35.
 - Handoff: about 2.4 h remain. Without a profile there is no remaining measured lever in this lane.
   Coordinator options: (a) decide between c7 (faster tolerance guards) and c35 (exact guards);
   (b) run the profile listed in the c10 handoff on c35 before any further mechanism.
+
+
+## Provenance correction and completed restoration audit (Codex, 07:03–07:08 UTC)
+
+This section corrects the source attribution and numerical conclusions in the
+preceding Claude handoff; those historical statements are preserved above, but
+must not be used as current evidence. Read-only Git diffs and saved evaluator
+records were available in this turn. No simulator edit or benchmark was needed.
+Reproducible facts are retained in `overnight-numerics-provenance-audit.json`.
+
+- Original35:7a9480332bad29b5aaeacc5a4628481581507e7a,
+  request5f61bfb3e2d441598e8e0733a9dd8cc9. host_pass.py SHA256
+  349b44bf70f009f13aa519e1e1cdb21c0688b7792cf853400f5f862afceb6260;
+  sparse.py6eaa9949440af240b936e35e30726c338f3abba9b0fd4764eec2ce806a9577d0.
+- Trial44:8c0d9da6cbda33cbfdbbbe50d2ed24ea53195945,
+  request04e92247e6f44d4690a2cb334fc79379. host_pass.py7bf210b2... is
+  warm-start source: diff against35 adds WARM_START_RESIDUAL,
+  _near_collinear_coefficient, initial-iterate handling in _solve and its backward
+  call site. It is NOT a restoration or a second cohort of35.
+- Trial45:66310bac45afc00b8f1b07420a710256df8ee909,
+  request93dd5dbeb4c441279280e3f49ebf4dea. host_pass.py3d0c0056... differs
+  from original35 only in _Products. Its official archives e0f2069c... large and
+  1c27f50f... aLIGO MATCH original35, not trial44's warm-start archives.
+- Latest restoration:e5cbeba07943b6c797932263ff9deb721bf3ca89,
+  requestde3724fedfe5438b810a3629c48c7fed. The complete differometor diff
+  against original35 is empty. Both file hashes above and all six official output
+  archive hashes match35. The current clean simulator working tree is this source.
+
+Consequences: the predicted638b7668.../2c3e83c1... archives in the preceding
+handoff were the WRONG target: they belong to44. Their absence does not indicate
+a failed restore. The alleged unexplained roundoff change from trial45 was a
+comparison against the wrong parent. Kernel layout/SIMD/FMA was speculation,
+not an observed cause; retract that attribution. Across all three repetitions of
+each official setup,45 and the restoration also match35's complete saved strict
+comparison records. Both14-case seed/pristine generalization comparison lists
+match35 exactly. This supports no newly reported numerical discrepancy relative
+to35; it is not a universal bit-identity proof for arbitrary inputs. Remote raw
+NPZ files were not reopened locally. Trial44 genuinely changed official gradients
+relative to35 through its changed solver starting iterate; that remains separate.
+
+Further correction: elapsed times alone do not establish how many grid rows the
+exact guard rejected or how many refinement corrections44 took. Statements above
+that the first correction 'must have exceeded' the threshold, or that no cheaper
+safe method exists, were not supported by captured call counts/residuals. Those
+claims are withdrawn pending actual evaluator profiling. Candidate35's exact
+guards repair the documented synthetic tolerance-guard counterexamples; calling
+it universally 'safe' would overstate the evidence. Existing numerical questions
+remain open for35 as well as7.
+
+### Latest restoration cohort (not a new optimization)
+
+All six unchanged official runs passed. Large samples
+0.8909865543246269,0.8198014870285988,0.841612134128809s; median
+0.841612134128809, range[0.8198014870285988,0.8909865543246269],8.458% relative.
+aLIGO samples0.5575983785092831,0.5483500827103853,0.6376766972243786s;
+median0.5575983785092831, range[0.5483500827103853,0.6376766972243786],16.020%.
+Confirmed improvement=false, review=null, ranking_eligible=false. Publication
+752bc9a690a722021f2f361d9ae66e15c5009562 retains admitted7.
+
+Large phase medians ms: imports288.440149, build75.726582, forward176.557265,
+reverse108.708296. aLIGO: imports266.469987, build38.571900,
+forward33.234922, reverse18.783724. Relative to original35's earlier cohort these
+are large +20.886302/+5.792018/-5.090648/+2.284396ms, aLIGO
++1.638545/+0.976916/+0.466004/-0.191847ms respectively. Total medians increased
+22.328170ms large and7.869810ms aLIGO despite identical source and output hashes.
+Large first imports329.300618ms and aLIGO third imports318.653511ms/build55.645099ms
+are retained, not discarded. External contention/overlap status is unknown.
+Sampled RSS bytes: large[519090176,561364992,528359424],
+aLIGO[294477824,305262592,286052352], generalization955568128; no budget breach.
+
+Trial45's complete samples remain large
+[0.8498796317726374,0.807516772300005,0.8109681643545628], median
+0.8109681643545628; aLIGO[0.5498773716390133,0.5525054782629013,
+0.5576117187738419], median0.5525054782629013. Its large forward median172.814619ms
+is3.742646ms below the restoration's176.557265ms. Ranges overlap and cohorts are
+not interleaved; neither a stable gain nor 'all gain is drift' follows. The prior
+pre-registered >=5ms-in-every-sample rule against44 failed, and source review is
+missing.45 remains unpromoted and out of the working tree. The provenance repair
+is not permission to retry the closed product mechanism without new measurement.
+
+Original35/restoration pass14/14 seed generalization cases;4/14 pristine cases.
+Official pristine large still has131 signal,3 gradient and1 loss failures; aLIGO
+has the loss failure. Rand1/rand3 sensitivity log disagreements remain
+0.0002036099068405406 and5.8100919558157216e-5. Gradient coordinates33/161/180,
+six unresolved grid finite-difference coordinates54/59/63/136/161/163 and
+first-order-only whole-pass VJP limitations remain visible. No tolerance changed.
+
+### Handoff and next decision
+
+Keep original35 source exactly as restored in e5cbeba; preserve43/44/45 and all
+failed/unconfirmed history. No new implementation is submitted this turn. Position
+lookup tuning and residual-product variants remain closed until new evidence.
+This stop ends the hypothesis, not the campaign (deadline09:27:44 UTC).
+
+Coordinator's concrete next diagnostic: run the existing
+`overnight-numerics-profile.py` collect_host_profiles context on this exact35
+source in a separate diagnostic evaluation, capturing the first forward/backward
+callbacks' call counts and self/cumulative times. Use the guard-diagnostics hook
+with explicitly identified comparison source to capture actual fallback rows and
+refinement traces; do not infer those from aggregate timing. Preserve raw matrices,
+RHS and residuals for any numerical investigation. Return these artifacts before
+another mechanism in this lane. If45 is reconsidered after profiling, require
+independent source review and paired complete candidate/original35 cohorts for
+both official setups; use5f61bfb/e5cbeba as35 provenance, never04e92247.
+
+## Trial46: broadcast directly into component output destinations (pending)
+
+The coordinator requested a concrete new experiment after the provenance-only
+handoff. This candidate changes only `differometor/host.py` relative to restored35
+e5cbeba07943b6c797932263ff9deb721bf3ca89. Candidate SHA and both benchmark job IDs
+are pending supervisor submission. Host source SHA256:
+511346ae50830ca78d7556178c6ed0bc9da9d72cb3e342ca14d4e7e7ef23093a.
+No other lane is transferred. Position-table, factor-ordering, warm-start and
+residual-product mechanisms remain retired; their histories are preserved.
+
+The observed redundant operation is explicit `np.broadcast_to` immediately
+before assignment into an already-shaped Jacobian destination. NumPy assignment
+performs this broadcast itself. Likewise primal evaluation used four broadcast
+views followed by `np.stack`; the candidate allocates the final output and assigns
+each column directly, preserving the explicit complex128 conversion. Derivative
+zero initialization, scalar formulas, slot order, contraction and scatter order
+are unchanged. No derivative is pruned based on current values. Exact guards,
+fresh factorization and all refinement steps remain unchanged.
+
+Hypothesis: eliminating transient broadcast wrappers and stack bookkeeping
+reduces per-group forward/reverse Python overhead. The latest measured parent
+phases are forward176.557265ms/reverse108.708296ms large and
+forward33.234922ms/reverse18.783724ms aLIGO (medians from request
+de3724fedfe5438b810a3629c48c7fed). The fraction spent in these wrappers is NOT
+profiled; no runtime gain is claimed. This is a small simplification experiment,
+not another component interpreter or solver rewrite. The earlier profile request
+remains useful for any larger follow-up.
+
+Local checks used the existing NumPy/SciPy inspection environment with no JAX,
+through AST extraction of actual parent and candidate kernels, without timing:
+
+- `overnight-numerics-destination-broadcast-check.py`: all19 functions,
+  53 input cases,1007 primal and8056 Jacobian comparisons. Real/complex and
+  complex64 inputs, lists, scalar/batched/empty/strided/Fortran/broadcast layouts,
+  reordered/repeated/empty derivative slots, zero/negative/singular/nonfinite
+  values and both `with_outputs` modes. Finite entries match bitwise, including
+  signed zeros; nonfinite positions and values match. A zero-amplitude source
+  retains its nonzero amplitude derivative.
+- A small synthetic group per function measured204 explicit broadcast calls and
+  19 stack calls in the parent versus zero of each in the candidate, which uses
+  19 final-output allocations. Both retain38 Jacobian zero allocations. These
+  are call counts, not measured time or full-workload allocation counts.
+- `overnight-numerics-destination-broadcast-callback-check.py`:96 actual tiny host
+  forward/backward cases compare all12 returned arrays bitwise. Covers varied
+  frequencies, amplitude/frequency modulation, two detectors, Hermitian and
+  non-Hermitian noise, cache matches/misses/interleaving, and zero/nonzero
+  coefficients with nonzero derivatives. All pass; every fresh forward factors
+  afresh and factor counts match the parent. This tests the change through
+  assembly, solves and pullbacks, without running either official workload.
+
+Results are preserved in `overnight-numerics-destination-broadcast-result.json`.
+No complete runtime, memory or phase deltas exist for this candidate yet.
+Allocation layout may differ for noncontiguous component inputs; local checks
+cover such inputs but do not certify arbitrary downstream numerical behavior.
+
+Decision: submit for both unchanged full official benchmarks and all saved
+output/gradient and generalization comparisons on the same exact SHA. Request
+independent source review before promotion. If preliminary phases warrant it,
+require paired fresh-process candidate/restored35 complete runs on matching
+hardware/policy, with all samples, spread, memory and overlap reported separately
+for large and aLIGO. Reject this small mechanism if it does not yield stable
+evidence; do not infer improvement from synthetic call counts or a noisy median.
+
+Existing pristine-reference signal/loss/gradient disagreements33/161/180,
+rand1/rand3 log-sensitivity deviations, unresolved grid finite-difference
+coordinates54/59/63/136/161/163 and first-order-only whole-pass VJP support remain
+unchanged open questions. No tolerances or physical inputs were changed.

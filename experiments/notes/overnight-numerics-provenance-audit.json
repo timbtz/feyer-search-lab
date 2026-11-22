@@ -1,0 +1,402 @@
+{
+  "scope": "Read-only source and saved-report audit; raw remote arrays not reopened; no benchmarks or performance measurements executed locally",
+  "records": {
+    "35": {
+      "sha": "7a9480332bad29b5aaeacc5a4628481581507e7a",
+      "request_id": "5f61bfb3e2d441598e8e0733a9dd8cc9",
+      "source_sha256": {
+        "differometor/host_pass.py": "349b44bf70f009f13aa519e1e1cdb21c0688b7792cf853400f5f862afceb6260",
+        "differometor/sparse.py": "6eaa9949440af240b936e35e30726c338f3abba9b0fd4764eec2ce806a9577d0"
+      },
+      "setups": {
+        "grid": {
+          "samples_seconds": [
+            0.8614112008363008,
+            0.8178828489035368,
+            0.819283964112401
+          ],
+          "median_seconds": 0.819283964112401,
+          "range_seconds": [
+            0.8178828489035368,
+            0.8614112008363008
+          ],
+          "official_all_passed": true,
+          "array_hashes": [
+            "e0f2069ccab917ac4575f484a6c9b5f0ae2457bb59f736185a52cd309a6c03e2",
+            "e0f2069ccab917ac4575f484a6c9b5f0ae2457bb59f736185a52cd309a6c03e2",
+            "e0f2069ccab917ac4575f484a6c9b5f0ae2457bb59f736185a52cd309a6c03e2"
+          ],
+          "hashes_equal_35": true,
+          "strict_records_equal_35": true,
+          "phase_medians_ms": {
+            "imports": 267.5538472831249,
+            "build": 69.93456371128559,
+            "forward": 181.64791353046894,
+            "gradient": 106.42389953136444
+          },
+          "rss_samples_bytes": [
+            619696128,
+            527048704,
+            483688448
+          ]
+        },
+        "aligo": {
+          "samples_seconds": [
+            0.5483462791889906,
+            0.5497285686433315,
+            0.5533304512500763
+          ],
+          "median_seconds": 0.5497285686433315,
+          "range_seconds": [
+            0.5483462791889906,
+            0.5533304512500763
+          ],
+          "official_all_passed": true,
+          "array_hashes": [
+            "1c27f50feafb3149eb9c2f4b48f767cc4c3ddbc1d64810c332dd5a7a260781f8",
+            "1c27f50feafb3149eb9c2f4b48f767cc4c3ddbc1d64810c332dd5a7a260781f8",
+            "1c27f50feafb3149eb9c2f4b48f767cc4c3ddbc1d64810c332dd5a7a260781f8"
+          ],
+          "hashes_equal_35": true,
+          "strict_records_equal_35": true,
+          "phase_medians_ms": {
+            "imports": 264.83144238591194,
+            "build": 37.594983354210854,
+            "forward": 32.768918201327324,
+            "gradient": 18.975570797920227
+          },
+          "rss_samples_bytes": [
+            294928384,
+            324067328,
+            284827648
+          ]
+        }
+      },
+      "generalization_case_records_equal_35": {
+        "initial_seed": true,
+        "pristine": true
+      },
+      "changed_simulator_paths_vs_35": []
+    },
+    "43": {
+      "sha": "67888dfc37c594aab4cb449702fccbe29499fbfb",
+      "request_id": "b514a46fd24542a29ac6125248f11c2c",
+      "source_sha256": {
+        "differometor/host_pass.py": "349b44bf70f009f13aa519e1e1cdb21c0688b7792cf853400f5f862afceb6260",
+        "differometor/sparse.py": "c2f3c90ac4338756b1d63918ac3949347be20c9421d0b9001f71fae129c15ce6"
+      },
+      "setups": {
+        "grid": {
+          "samples_seconds": [
+            0.8486331403255463,
+            0.8217207994312048,
+            0.816046854481101
+          ],
+          "median_seconds": 0.8217207994312048,
+          "range_seconds": [
+            0.816046854481101,
+            0.8486331403255463
+          ],
+          "official_all_passed": true,
+          "array_hashes": [
+            "e0f2069ccab917ac4575f484a6c9b5f0ae2457bb59f736185a52cd309a6c03e2",
+            "e0f2069ccab917ac4575f484a6c9b5f0ae2457bb59f736185a52cd309a6c03e2",
+            "e0f2069ccab917ac4575f484a6c9b5f0ae2457bb59f736185a52cd309a6c03e2"
+          ],
+          "hashes_equal_35": true,
+          "strict_records_equal_35": true,
+          "phase_medians_ms": {
+            "imports": 270.1962161809206,
+            "build": 73.0796828866005,
+            "forward": 178.437577560544,
+            "gradient": 107.15347528457642
+          },
+          "rss_samples_bytes": [
+            508194816,
+            503648256,
+            510971904
+          ]
+        },
+        "aligo": {
+          "samples_seconds": [
+            0.5554661154747009,
+            0.5489505473524332,
+            0.6050655618309975
+          ],
+          "median_seconds": 0.5554661154747009,
+          "range_seconds": [
+            0.5489505473524332,
+            0.6050655618309975
+          ],
+          "official_all_passed": true,
+          "array_hashes": [
+            "1c27f50feafb3149eb9c2f4b48f767cc4c3ddbc1d64810c332dd5a7a260781f8",
+            "1c27f50feafb3149eb9c2f4b48f767cc4c3ddbc1d64810c332dd5a7a260781f8",
+            "1c27f50feafb3149eb9c2f4b48f767cc4c3ddbc1d64810c332dd5a7a260781f8"
+          ],
+          "hashes_equal_35": true,
+          "strict_records_equal_35": true,
+          "phase_medians_ms": {
+            "imports": 265.7372020184994,
+            "build": 37.918610498309135,
+            "forward": 32.68634155392647,
+            "gradient": 18.7924113124609
+          },
+          "rss_samples_bytes": [
+            281505792,
+            292110336,
+            303448064
+          ]
+        }
+      },
+      "generalization_case_records_equal_35": {
+        "initial_seed": true,
+        "pristine": true
+      },
+      "changed_simulator_paths_vs_35": [
+        "differometor/sparse.py"
+      ]
+    },
+    "44": {
+      "sha": "8c0d9da6cbda33cbfdbbbe50d2ed24ea53195945",
+      "request_id": "04e92247e6f44d4690a2cb334fc79379",
+      "source_sha256": {
+        "differometor/host_pass.py": "7bf210b26e3f2e1adb0b657b4a54c17bd48d314f966920760ef645fc509f5dba",
+        "differometor/sparse.py": "6eaa9949440af240b936e35e30726c338f3abba9b0fd4764eec2ce806a9577d0"
+      },
+      "setups": {
+        "grid": {
+          "samples_seconds": [
+            0.8543570432811975,
+            0.8172628115862608,
+            0.8178106024861336
+          ],
+          "median_seconds": 0.8178106024861336,
+          "range_seconds": [
+            0.8172628115862608,
+            0.8543570432811975
+          ],
+          "official_all_passed": true,
+          "array_hashes": [
+            "638b76680a56cfeaec19e32777d653fef7d64120f0540d373f744051d5636786",
+            "638b76680a56cfeaec19e32777d653fef7d64120f0540d373f744051d5636786",
+            "638b76680a56cfeaec19e32777d653fef7d64120f0540d373f744051d5636786"
+          ],
+          "hashes_equal_35": false,
+          "strict_records_equal_35": false,
+          "phase_medians_ms": {
+            "imports": 266.42111130058765,
+            "build": 72.5750494748354,
+            "forward": 179.55300584435463,
+            "gradient": 104.78867217898369
+          },
+          "rss_samples_bytes": [
+            590548992,
+            549494784,
+            482652160
+          ]
+        },
+        "aligo": {
+          "samples_seconds": [
+            0.5573839396238327,
+            0.5594556778669357,
+            0.6212156396359205
+          ],
+          "median_seconds": 0.5594556778669357,
+          "range_seconds": [
+            0.5573839396238327,
+            0.6212156396359205
+          ],
+          "official_all_passed": true,
+          "array_hashes": [
+            "2c3e83c1b95d16827f230e01e06e8073bea36a3eb9c0ec57684768f92f5e3019",
+            "2c3e83c1b95d16827f230e01e06e8073bea36a3eb9c0ec57684768f92f5e3019",
+            "2c3e83c1b95d16827f230e01e06e8073bea36a3eb9c0ec57684768f92f5e3019"
+          ],
+          "hashes_equal_35": false,
+          "strict_records_equal_35": false,
+          "phase_medians_ms": {
+            "imports": 266.4918191730976,
+            "build": 37.95482963323593,
+            "forward": 32.61751867830753,
+            "gradient": 17.962168902158737
+          },
+          "rss_samples_bytes": [
+            279543808,
+            309747712,
+            281018368
+          ]
+        }
+      },
+      "generalization_case_records_equal_35": {
+        "initial_seed": true,
+        "pristine": true
+      },
+      "changed_simulator_paths_vs_35": [
+        "differometor/host_pass.py"
+      ]
+    },
+    "45": {
+      "sha": "66310bac45afc00b8f1b07420a710256df8ee909",
+      "request_id": "93dd5dbeb4c441279280e3f49ebf4dea",
+      "source_sha256": {
+        "differometor/host_pass.py": "3d0c0056c67a0b2832e5811018de619441ea25156ecda501d24150359bd0987d",
+        "differometor/sparse.py": "6eaa9949440af240b936e35e30726c338f3abba9b0fd4764eec2ce806a9577d0"
+      },
+      "setups": {
+        "grid": {
+          "samples_seconds": [
+            0.8498796317726374,
+            0.807516772300005,
+            0.8109681643545628
+          ],
+          "median_seconds": 0.8109681643545628,
+          "range_seconds": [
+            0.807516772300005,
+            0.8498796317726374
+          ],
+          "official_all_passed": true,
+          "array_hashes": [
+            "e0f2069ccab917ac4575f484a6c9b5f0ae2457bb59f736185a52cd309a6c03e2",
+            "e0f2069ccab917ac4575f484a6c9b5f0ae2457bb59f736185a52cd309a6c03e2",
+            "e0f2069ccab917ac4575f484a6c9b5f0ae2457bb59f736185a52cd309a6c03e2"
+          ],
+          "hashes_equal_35": true,
+          "strict_records_equal_35": true,
+          "phase_medians_ms": {
+            "imports": 265.7449021935463,
+            "build": 74.0723218768835,
+            "forward": 172.81461879611015,
+            "gradient": 105.96863552927971
+          },
+          "rss_samples_bytes": [
+            629325824,
+            509779968,
+            634036224
+          ]
+        },
+        "aligo": {
+          "samples_seconds": [
+            0.5498773716390133,
+            0.5525054782629013,
+            0.5576117187738419
+          ],
+          "median_seconds": 0.5525054782629013,
+          "range_seconds": [
+            0.5498773716390133,
+            0.5576117187738419
+          ],
+          "official_all_passed": true,
+          "array_hashes": [
+            "1c27f50feafb3149eb9c2f4b48f767cc4c3ddbc1d64810c332dd5a7a260781f8",
+            "1c27f50feafb3149eb9c2f4b48f767cc4c3ddbc1d64810c332dd5a7a260781f8",
+            "1c27f50feafb3149eb9c2f4b48f767cc4c3ddbc1d64810c332dd5a7a260781f8"
+          ],
+          "hashes_equal_35": true,
+          "strict_records_equal_35": true,
+          "phase_medians_ms": {
+            "imports": 266.7664308100939,
+            "build": 38.42470794916153,
+            "forward": 30.558444559574127,
+            "gradient": 18.301472067832947
+          },
+          "rss_samples_bytes": [
+            281989120,
+            313262080,
+            305586176
+          ]
+        }
+      },
+      "generalization_case_records_equal_35": {
+        "initial_seed": true,
+        "pristine": true
+      },
+      "changed_simulator_paths_vs_35": [
+        "differometor/host_pass.py"
+      ]
+    },
+    "restore35": {
+      "sha": "e5cbeba07943b6c797932263ff9deb721bf3ca89",
+      "request_id": "de3724fedfe5438b810a3629c48c7fed",
+      "source_sha256": {
+        "differometor/host_pass.py": "349b44bf70f009f13aa519e1e1cdb21c0688b7792cf853400f5f862afceb6260",
+        "differometor/sparse.py": "6eaa9949440af240b936e35e30726c338f3abba9b0fd4764eec2ce806a9577d0"
+      },
+      "setups": {
+        "grid": {
+          "samples_seconds": [
+            0.8909865543246269,
+            0.8198014870285988,
+            0.841612134128809
+          ],
+          "median_seconds": 0.841612134128809,
+          "range_seconds": [
+            0.8198014870285988,
+            0.8909865543246269
+          ],
+          "official_all_passed": true,
+          "array_hashes": [
+            "e0f2069ccab917ac4575f484a6c9b5f0ae2457bb59f736185a52cd309a6c03e2",
+            "e0f2069ccab917ac4575f484a6c9b5f0ae2457bb59f736185a52cd309a6c03e2",
+            "e0f2069ccab917ac4575f484a6c9b5f0ae2457bb59f736185a52cd309a6c03e2"
+          ],
+          "hashes_equal_35": true,
+          "strict_records_equal_35": true,
+          "phase_medians_ms": {
+            "imports": 288.44014927744865,
+            "build": 75.7265817373991,
+            "forward": 176.5572652220726,
+            "gradient": 108.70829597115517
+          },
+          "rss_samples_bytes": [
+            519090176,
+            561364992,
+            528359424
+          ]
+        },
+        "aligo": {
+          "samples_seconds": [
+            0.5575983785092831,
+            0.5483500827103853,
+            0.6376766972243786
+          ],
+          "median_seconds": 0.5575983785092831,
+          "range_seconds": [
+            0.5483500827103853,
+            0.6376766972243786
+          ],
+          "official_all_passed": true,
+          "array_hashes": [
+            "1c27f50feafb3149eb9c2f4b48f767cc4c3ddbc1d64810c332dd5a7a260781f8",
+            "1c27f50feafb3149eb9c2f4b48f767cc4c3ddbc1d64810c332dd5a7a260781f8",
+            "1c27f50feafb3149eb9c2f4b48f767cc4c3ddbc1d64810c332dd5a7a260781f8"
+          ],
+          "hashes_equal_35": true,
+          "strict_records_equal_35": true,
+          "phase_medians_ms": {
+            "imports": 266.4699871093035,
+            "build": 38.57189975678921,
+            "forward": 33.23492221534252,
+            "gradient": 18.783723935484886
+          },
+          "rss_samples_bytes": [
+            294477824,
+            305262592,
+            286052352
+          ]
+        }
+      },
+      "generalization_case_records_equal_35": {
+        "initial_seed": true,
+        "pristine": true
+      },
+      "changed_simulator_paths_vs_35": []
+    }
+  },
+  "conclusions": [
+    "8c0d9da is trial44 warm-start source, not original35",
+    "trial45 official archives and comparison records match original35",
+    "e5cbeba simulator diff versus original35 is empty and official archives match original35",
+    "timing cohorts are not paired; no confirmed improvement or universal correctness claim"
+  ]
+}
