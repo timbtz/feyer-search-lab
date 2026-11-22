@@ -2084,3 +2084,139 @@ fresh-process parent/candidate repetitions, including RSS and overlap records.
 Inherited pristine signal/gradient/loss disagreements, six unresolved grid FD
 coordinates54/59/63/136/161/163, prior aLIGO29/29 confirmation, and absent
 JVP/Hessian support all remain explicit. No tolerances or workload changed.
+
+### Candidate26 result: ordering-reuse hypothesis closed pending diagnostics
+
+SHA ed51e8ed99c1abdc12e2f12065e5acd9b7bd662a; job
+09ed095148424412ba56e990d89eaa94, grid-1/2/3 and aligo-1/2/3.
+All six official runs passed. All14 generalization cases passed initial-seed
+bounds; pristine strict comparisons remain failing. No source review, matched
+parent repetitions or confirmed improvement was supplied. Selection reasons:
+requires_source_review and overlapping large first-run ranges.
+
+Grid complete seconds: [0.824301715940237,0.7941282782703638,
+0.791149789467454], median0.7941282782703638,
+range[0.791149789467454,0.824301715940237].
+aLIGO complete seconds: [0.5497319493442774,0.5464204661548138,
+0.5462490785866976], median0.5464204661548138,
+range[0.5462490785866976,0.5497319493442774].
+Median phase ms / difference from historical admitted7:
+grid forward178.332029/-2.831059, reverse84.928872/-0.428552,
+build72.830860/-1.163220, imports265.383678/-0.216937;
+aLIGO forward33.201344/+0.311194, reverse14.859032/+0.474880,
+build38.130740/+0.168195, imports264.834862/+1.326054.
+Versus25 the forward median increased0.231884ms grid and0.463832ms aLIGO;
+reverse changed-2.469694ms grid and+0.193108ms aLIGO. These unpaired small
+changes do not establish a causal speed improvement. Peak sampled RSS bytes:
+grid623939584,aligo289366016,generalization1004404736. No infrastructure failure
+or memory exceedance; other-host contention remains unexcluded.
+
+Programmatically compared every supplied official strict comparison and output
+archive hash to25: identical. Also compared all14 case records against both
+initial_seed and pristine: identical to25. Thus the layout repair DID NOT remove
+the four newly nonzero sensitivity log errors documented above (rand3 remains
+1.96489065018568e-08 versus initial seed). This rejects the proposed layout repair
+as a resolution on the recorded cases; it does not identify a root cause. No
+new failing counts, but passing a bound does not explain the numerical change.
+Raw remote arrays were not independently available locally; these statements
+refer to the evaluator's complete per-array comparison records. No numerical
+agreement claim is based on the candidate-self audit or generalization ZIP hash.
+
+Decision: retire25/26 from active optimization rather than submit another blind
+permutation variant. Restore production host_pass.py exactly to admitted
+ ee4fea28c04d482566be16e916b609d7c6a99e5e. All production differometor files now
+match that parent; failed evaluated commits and diagnostic scripts remain in
+history. This is a source restoration, not an unevaluated new optimization or
+claim that26 was promoted. No additional official run is requested for identical
+restored source. Three recent submissions24–26 had no confirmed improvement;
+closed contraction/scatter ideas also remain closed.
+
+Concrete supervisor diagnostic request before reopening ordering reuse:
+use committed26 and admitted7 in the fixed evaluator environment, separately
+from timing/promotion runs. For the four affected generalization cases, compare
+the same assembled matrices and RHS at the first differing frequency/solve.
+Record coefficient and RHS equality first; then compare ordinary COLAMD with
+26's preordered NATURAL factors in ORIGINAL coordinates. Report effective column
+permutations, row pivot permutations, factor sparsity, direct N/T/H solution
+errors, each iterative-refinement correction and stopping iteration, and residuals
+accumulated independently in extended precision. Track the first resulting
+signal/noise/gradient discrepancy through readout. Keep every structural zero;
+do not change tolerances or force either answer. This differentiates changed
+factor/pivot behavior from refinement or downstream differences without guessing
+that an observed error is harmless rounding. Factor inspection overhead must not
+be interpreted as production timing. Both25/26 have only bounded local synthetic
+bitwise evidence; the actual affected matrices may expose different behavior.
+
+Next performance experiment, after this closed hypothesis: obtain the previously
+requested host_forward/host_backward callback profile for admitted7, reporting
+factorization, residual products, component evaluation/Jacobians and scatters
+separately. The opt-in helper is experiments/notes/overnight-numerics-profile.py;
+no profile has yet been supplied. Choose the largest measured remaining cost
+before a new implementation. Continue within this numerical lane, without
+combining unconfirmed historical candidates or changing import/JAX wrapper code.
+
+Inherited caveats remain: pristine signal and gradients33/161/180 disagreements,
+rand1/rand3 sensitivity disagreement, grid FD54/59/63/136/161/163 unresolved,
+aLIGO29/29 prior confirmation, first-order reverse-only custom VJP. This handoff
+ends the ordering-reuse hypothesis, not the authorized overnight campaign.
+
+### Candidate27: masked conjugation of private coefficient buffers
+
+Supervisor resumed after the26 handoff and requested a concrete new experiment.
+No new feedback/profile/ordering diagnostic arrived.26's authoritative outcome
+above is unchanged. Start from restored admitted7 source, not25/26. Pending new
+SHA and benchmark jobs. Only production host_pass.py changes; the restoration of
+26 is carried in the working diff and failed history remains intact.
+
+Inspection considered parameter expansion, then identified a larger concrete
+assembly allocation: after raw_signal.copy() and carrier scaling, np.where(mask,
+np.conj(placed),placed) allocates another full complex coefficient buffer for the
+conjugation and a full selected result. Reverse repeats the same operation on
+signal_values_bar, a freshly allocated private zero buffer populated by the
+adjoint loop. Neither unconjugated buffer is needed after this point. The mask is
+boolean structural metadata constructed by SparseSystem.mask; it is independent
+of numerical coefficient values, including coefficients zero at this point.
+
+Hypothesis: remove those two full-buffer temporaries in each direction to reduce
+assembly memory traffic and allocation variance. Forward/reverse historical
+admitted-grid phases are181.163/85.357ms; aLIGO32.890/14.384ms. The share spent on
+these copies is unprofiled, so measured total speedup is NOT claimed. This targets
+sideband assembly ownership, not the closed component-Jacobian contraction or
+column-ordering mechanisms. It includes no changes from those unconfirmed trials.
+
+Implementation: forward performs np.conjugate(placed,out=placed,where=mask), then
+uses placed as final. raw_signal remains independently allocated and unchanged for
+the pullback. Reverse aliases placed_bar to the private signal_values_bar and
+applies the same masked conjugation before the existing raw_bar copy, carrier
+scaling and scatter. All cotangent entries and conjugation conventions remain;
+no sparse entry is removed and no runtime zero is treated as structural zero.
+The original private signal_values_bar has no subsequent unconjugated use. This
+mutation does not touch callback inputs, saved forward outputs or raw_signal.
+Numerical factorization, ordering, residual products, all refinement iterations
+and stopping criteria are exactly the admitted parent. No JAX/import changes.
+
+Retained check: experiments/notes/overnight-numerics-conjugation-check.py extracts
+and executes the actual _assemble function and actual sideband pullback statements
+from parent/current source, with small synthetic component outputs and a stubbed
+carrier solve (no claim of optical-solver validation).150 cases cover1/2/5 carrier
+rows and1/3/13 sweep counts where broadcasting is supported, scalar/all/no/mixed
+and broadcast masks, complex values, signed zeros, NaNs/infinities, repeated
+carrier indices, and reused/per-row noise. Every returned assembly array and
+placed/raw/carrier cotangent matches bitwise. Saved raw_signal is unchanged and
+shares no memory with final signal values. Synthetic17x1024 complex coefficient
+forward step peak traced allocations: parent845608bytes,candidate288152bytes,
+reduction557456bytes, consistent with eliminating two278528-byte buffers. This is
+an allocation inspection, not an official or independent timing benchmark.
+No dependencies, fixtures, physical parameters or tolerance settings changed.
+
+Request both unchanged official benchmarks on the same new SHA, saved full output
+and gradient comparisons against admitted7 and initial seed, all14 existing
+parameter/frequency/modulation generalization cases, and independent source review.
+In particular verify that25/26's newly nonzero seed sensitivity errors disappear
+with their source removal. Do not claim they were fixed or explained by this new
+change. Inspect any new discrepancies before further trials. For a promising
+result request matched repeated fresh-process parent/candidate complete runs,
+separate grid/aLIGO samples/median/range, phase tradeoffs, RSS and overlap records.
+If copy reduction has no stable end-to-end benefit, retire this narrow variant.
+Inherited pristine disagreement, unresolved grid FD coordinates and first-order
+reverse-only compatibility caveats remain as documented above.

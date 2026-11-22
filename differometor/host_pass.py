@@ -323,53 +323,6 @@ def _factor(pattern, values):
                 permc_spec="COLAMD")
 
 
-class _ColumnOrdering:
-    """Reuse one forward call's COLAMD column ordering, never numerical factors."""
-
-    def __init__(self, pattern, first_factor):
-        self.pattern = pattern
-        self.columns = np.argsort(first_factor.perm_c)
-        # CSC columns remain internally sorted. Include every structural entry,
-        # including values that happen to be zero at the first parameter point.
-        counts = np.diff(pattern.indptr)[self.columns]
-        self.indptr = np.concatenate(([0], np.cumsum(counts))).astype(np.intc)
-        self.entries = np.concatenate([
-            np.arange(pattern.indptr[column], pattern.indptr[column + 1])
-            for column in self.columns
-        ])
-        self.indices = pattern.indices[self.entries].astype(np.intc)
-
-    def factor(self, values):
-        gstrf = _superlu_gstrf()
-        if not gstrf:
-            return _factor(self.pattern, values)
-        data = np.ascontiguousarray(values, dtype=np.complex128)[self.entries]
-        options = dict(_SUPERLU_OPTIONS, ColPerm="NATURAL")
-        factor = gstrf(self.pattern.size, data.size, data, self.indices, self.indptr,
-                       csc_construct_func=_construct_csc, ilu=False, options=options)
-        return _PermutedFactor(factor, self.columns)
-
-
-class _PermutedFactor:
-    """Solve with factors of B=A[:, columns] using A's original coordinates."""
-
-    def __init__(self, factor, columns):
-        self.factor, self.columns = factor, columns
-
-    def solve(self, rhs, trans="N"):
-        if trans == "N":
-            permuted = self.factor.solve(rhs, trans=trans)
-            # SuperLU returns multi-RHS solutions in Fortran order. A row gather
-            # would switch them to C order, changing the layout used throughout
-            # refinement. Scatter into an equally laid-out result instead:
-            # B = A[:, columns] implies x[columns] = B^-1 rhs.
-            solution = np.empty_like(permuted)
-            solution[self.columns] = permuted
-            return solution
-        # B^T/H x = rhs[columns] is equivalent to A^T/H x = rhs.
-        return self.factor.solve(rhs[self.columns], trans=trans)
-
-
 class _Products:
     """NumPy sparse products for one static pattern (no scipy.sparse)."""
 
@@ -526,7 +479,10 @@ def _assemble(plan, parameters, carrier_values, signal_values, carrier_base, sig
     placing = structure.signal_placing_positions
     placed = raw_signal.copy()
     placed[:, placing] = -raw_signal[:, placing] * carrier[:, plan.signal_carrier_indices]
-    final = np.where(structure.signal_conjugate, np.conj(placed), placed)
+    # `placed` is private; retain raw_signal for the pullback but avoid two more
+    # full coefficient arrays for conjugation and selection.
+    np.conjugate(placed, out=placed, where=structure.signal_conjugate)
+    final = placed
     noise_rows = signal_rows[:1] if plan.noise_row_reuse else signal_rows
     return dict(carrier_rows=carrier_rows, carrier_values=carrier_vals, carrier_coefficients=carrier_coefficients,
                 carrier_factors=carrier_factors, carrier=carrier, signal_rows=signal_rows, raw_signal=raw_signal, signal_values=final,
@@ -551,12 +507,8 @@ def host_forward(plan, parameters, carrier_values, signal_values, carrier_base, 
     covariances = np.empty((count, detectors, system.size), dtype=np.complex128)
     weights = np.empty((count, detectors, system.size), dtype=np.complex128)
     factors = []
-    ordering = None
     for row in range(count):
-        factor = (_factor(system.pattern, coefficients[row]) if ordering is None
-                  else ordering.factor(coefficients[row]))
-        if ordering is None and count > 1 and _superlu_gstrf():
-            ordering = _ColumnOrdering(system.pattern, factor)
+        factor = _factor(system.pattern, coefficients[row])
         factors.append(factor)
         weight = _solve(products, coefficients[row], factor, selections[row].T, "H")      # A^H w = s
         sources = noise_products.apply(state["noise_values"][0 if plan.noise_row_reuse else row], weight)
@@ -654,7 +606,9 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
             signal_values_bar[row, system.nnz :] = rhs_bar[system.rhs_rows, 0]
 
     # Sideband conjugation, then carrier scaling of signal connectors.
-    placed_bar = np.where(structure.signal_conjugate, np.conj(signal_values_bar), signal_values_bar)
+    # The coefficient cotangent is private and no longer needed unconjugated.
+    placed_bar = signal_values_bar
+    np.conjugate(placed_bar, out=placed_bar, where=structure.signal_conjugate)
     placing = structure.signal_placing_positions
     scale = carrier[:, plan.signal_carrier_indices]
     raw_bar = placed_bar.copy()
