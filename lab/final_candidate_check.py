@@ -14,7 +14,10 @@ def main():
     p.add_argument('--output', required=True, type=Path)
     p.add_argument('--harness', required=True, type=Path)
     p.add_argument('--recheck-from', type=Path)
+    p.add_argument('--precision-only', action='store_true')
     args = p.parse_args()
+    if args.precision_only and not args.recheck_from:
+        raise ValueError('Precision-only diagnostics require the preserved initial checks')
     sha = '53f38d342c3228c052785e8c9d63b6ce9c832dd1'
     args.output.mkdir(parents=True, exist_ok=False)
     python = '/workspace/venv-feyer/bin/python'
@@ -38,10 +41,15 @@ def main():
             tasks.append((f'official-{setup}-{repeat}', [python, '-u', str(VENDOR/entry), '--repo',
                           str(args.tree), '--cpus', '1', '--repeats', '3', '--output',
                           str(args.output/f'official-{setup}-{repeat}.json')]))
+    if args.precision_only:
+        tasks = [(name, command+['--extended-residual', '--only-indices', '54', '59', '63', '136', '161', '163'])
+                 for name, command in tasks if name == 'gradient-grid']
     receipt = {'candidate_sha': sha, 'ranking_eligible': False, 'scope': 'Additional diagnostics and fresh-process official repetitions',
                'started_at': time.time(), 'deadline_unix': time.time()+900,
                'harness_sha256': hashlib.sha256(args.harness.read_bytes()).hexdigest(),
                'official_harness': checked_harness(), 'tasks': [], 'status': 'preparing'}
+    if args.precision_only:
+        receipt['scope'] = 'Six-coordinate precision-assisted primal diagnostic against the unmodified exact candidate AD; no official run or candidate modification'
     atomic_json(args.output/'execution.json', receipt)
     try:
         with reserve(['/workspace/feyer-lab/state', '/workspace/feyer-lab-lane1/state']) as fds:
