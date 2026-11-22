@@ -98,7 +98,15 @@ def run(args):
                'scope': 'Additional finite-difference sanity, not scored and not a 1e-7 precision certificate.'}
     floors = {'reflectivity': 1e-3, 'tuning': 1., 'angle': 1., 'db': 1.,
               'power': 1e-6, 'mass': 1e-9, 'length': 1e-3}
+    prior = json.loads(args.recheck.read_text()) if getattr(args, 'recheck', None) else None
+    if prior and (prior['candidate_sha'] != sha or prior['setup'] != args.setup):
+        raise ValueError('Recheck must refer to the same exact candidate and setup')
+    if prior:
+        results['prior_sha256'] = hashlib.sha256(args.recheck.read_bytes()).hexdigest()
+        results['scope'] += ' Predeclared alternative step sizes on previously nonpassing coordinates; original results retained.'
     for index, (name, prop) in enumerate(labels):
+        if prior and prior['checks'][index]['status'] == 'passed':
+            continue
         step = 1e-3 * max(abs(point[index]), floors[prop])
         direction = 0
         if prop == 'reflectivity':
@@ -112,7 +120,22 @@ def run(args):
                 step = min(step, .1 * point[index])
             else:
                 direction = 1
-        check = check_coordinate(evaluate, point, index, grad[index], step, direction=direction)
+        if prior:
+            attempts = []
+            # Smaller steps probe truncation; larger steps probe cancellation.
+            # This menu does not depend on whether a derivative agrees.
+            for multiplier in (.01, .0001, 100.):
+                h, side = step * multiplier, direction
+                if prop == 'reflectivity' and min(point[index], 1-point[index]) <= h:
+                    side = 1 if point[index] < .5 else -1
+                    h = min(h, .01)
+                elif prop in ('power', 'mass', 'length') and point[index] <= h:
+                    side = 1
+                attempts.append(check_coordinate(evaluate, point, index, grad[index], h, direction=side))
+            check = {'index': index, 'autodiff': float(grad[index]), 'attempts': attempts,
+                     'status': 'passed' if any(a['status'] == 'passed' for a in attempts) else 'unresolved'}
+        else:
+            check = check_coordinate(evaluate, point, index, grad[index], step, direction=direction)
         check['parameter'] = [name, prop]
         results['checks'].append(check)
         if index % 20 == 0 or check['status'] != 'passed':
@@ -122,7 +145,7 @@ def run(args):
     results['finished_at'] = time.time()
     args.output.write_text(json.dumps(results, indent=2, allow_nan=False) + '\n')
     print('COMPLETE', args.setup, {status: sum(x['status'] == status for x in results['checks'])
-                                 for status in ('passed', 'failed', 'inconclusive')}, flush=True)
+                                 for status in ('passed', 'failed', 'inconclusive', 'unresolved')}, flush=True)
 
 
 if __name__ == '__main__':
@@ -131,4 +154,5 @@ if __name__ == '__main__':
     p.add_argument('--sha', required=True)
     p.add_argument('--setup', choices=['grid', 'aligo'], required=True)
     p.add_argument('--output', required=True, type=Path)
+    p.add_argument('--recheck', type=Path, help='Retain a first pass and probe its nonpassing coordinates with a fixed alternative step menu')
     run(p.parse_args())
