@@ -320,3 +320,70 @@ Candidate 1 is not intended to touch any of them.
   strongest admitted revision unless the new exact revision clears all acceptance requirements.
 - Existing strict-reference and finite-difference questions above remain unresolved. First-order
   reverse-only compatibility is unchanged. This submission does not claim a universal certificate.
+
+### Candidate 9 feedback (2026-11-22, Codex continuation)
+
+- SHA `5dde09458eadb2721b44ad2159a63f3a3ea1ffa1`, dual evaluation
+  `87a7fb6f3777432fae00df6e6197f6e4`; grid-1/2/3 and aligo-1/2/3 all official PASS.
+  Large samples: 0.8113777526, 0.7860681415, 0.7801716551 s;
+  median 0.7860681415, range 0.7801716551–0.8113777526 s (3.97%).
+  aLIGO samples: 0.5426084753, 0.5584980734, 0.5419364572 s;
+  median 0.5426084753, range 0.5419364572–0.5584980734 s (3.05%).
+- Forward phase large: 171.31, 169.78, 170.00 ms, versus admitted candidate 7's
+  177.4/181.2/182.9 ms. Gradient 85.45/86.61/84.44 ms is unchanged within observed spread.
+  Large import times 289.91/263.78/263.74 ms; build 72.25/73.74/68.26 ms. The first sample
+  remains included: total ranges overlap. aLIGO forward 32.68/32.38/31.23 ms; gradient
+  14.54/14.59/14.50 ms. Complete medians are 15.51 ms and 5.95 ms below candidate 7,
+  respectively, but source review and paired confirmation are still missing.
+- All six official output archives have the same SHA as candidate 7 (grid `112c040763a3...`,
+  aLIGO `9c1ce936bf40...`), verified against the checked-in exact-revision receipts.
+  Seed comparison passes for every array/gradient and all 14 generalization cases. Seed grid
+  gradient max difference 5.68635e-6 / relL2 8.18145e-11; aLIGO 3.63798e-11 / 1.29494e-15.
+  No newly reported pristine discrepancy: grid 131 signal / 3 gradient / 1 loss mismatches,
+  aLIGO 1 loss mismatch; rand1/rand3 sensitivity log errors remain 2.03610e-4 / 5.81009e-5.
+- Investigated changing generalization archive hashes. The exact evaluator gencheck.py
+  (SHA `a1110a4efe81c370e198085b605fbf7409f6b1de47c968d32c9bda747a7d3094`) is available
+  read-only at `.lab/transfer-audit-20261122/fastest/prior/gencheck.py` outside this worktree.
+  Lines 188 and 203 store JSON timing strings inside each NPZ archive. Therefore archive hash
+  changes alone are not evidence of changed physical outputs. Physical arrays themselves are
+  not downloaded in the local campaign evidence; exact parent-vs-candidate generalization
+  element comparisons excluding `/timings` remain requested. Do not infer exact equality from
+  the artifact self-comparison, nor infer a numerical regression from the full archive hash.
+- Peak sampled RSS: large 530681856 B, aLIGO 306753536 B, generalization 885895168 B.
+  One CPU (2), thread limits one; other-host contention not excluded. Source review null;
+  `confirmed_improvement=false`, reasons source review and overlapping ranges.
+- Decision: retain as promising experimental parent for one narrower allocation refinement.
+  Candidate 7 remains admitted best. Request at least five paired fresh runs of candidate 9
+  and candidate 7, both official workloads, plus independent source review. Two submissions
+  since candidate 7 have no admitted total gain; if the next also lacks repeat-supported gain,
+  stop this allocation mechanism and return to admitted source or obtain the requested profile.
+
+## Candidate 10: solve-local residual scratch reuse (parent candidate 9)
+
+- Candidate SHA and evaluation IDs pending supervisor. Production changes only host_pass.py;
+  no other-lane transfer. This is candidate 9 plus a local workspace for residual products.
+- `_Products.bind(values, trans, rhs_shape)` allocates contribution, reduced-row and result
+  buffers once per `_solve`. Each correction fills contributions with `np.take`, multiplies
+  in place, performs the same `np.add.reduceat` with an output buffer, then assigns present
+  rows into the result. Missing rows remain zero. The result is consumed immediately by
+  `rhs - product(solution)` before the next call overwrites it. All buffers are private to one
+  solve, independent of other evaluations; the static plan retains no numerical scratch.
+- `np.take(..., mode="clip")` avoids its default exception-safety output buffer. This does not
+  alter indexing: the indices are topology coordinates and are in bounds for the factor's
+  solution size. The initial factor solve validates RHS size first. No fixture dispatch,
+  structural zero pruning, changed corrections or tolerance, or different reduction order.
+- Source allocation count: candidate 9 creates gather, product, reduced and result arrays on
+  each residual (four arrays). Candidate 10 prepares three arrays once; take/multiply/reduce
+  write into them. NumPy may allocate internal temporaries for noncontiguous inputs, so this
+  is an explicit-array count, not a measured allocator profile or a guaranteed timing gain.
+  The one-correction case may see little benefit; small-case overhead needs official checking.
+- Synthetic checker extended for repeated products with changed vectors, missing rows and
+  columns, plus ill-conditioned Hilbert systems. 306 product checks and 156 refined solves
+  match committed candidate 7 byte-for-byte. Same correction counts: 111 with one, 33 with
+  two, 12 with all three. The independent dense-product scaled error maximum remains
+  4.3028432462288176e-16. No official workloads or local timings were executed. Diff check passes.
+- Request both official benchmarks on the new exact SHA, complete physical/gradient diagnostics
+  and generalization checks versus candidate 9 and candidate 7, independent review, and paired
+  fresh timing confirmation if promising. If worse than candidate 9, discard only this scratch
+  refinement. Candidate 9 must still earn admission separately; no warm-only or cross-cohort
+  timing claim is promoted. All previously unresolved numerical/transform caveats persist.

@@ -68,10 +68,10 @@ def main():
                 dense = csc_matrix((values, csc.indices, csc.indptr), shape=csc.shape).toarray()
                 factor = splu(csc_matrix((values, csc.indices, csc.indptr), shape=csc.shape))
                 for trans in ("N", "T", "H"):
-                    bound = new.bind(values, trans)
                     operator = dense if trans == "N" else dense.T if trans == "T" else dense.conj().T
                     for columns in (None, 1, 2, 4):
                         shape = (size,) if columns is None else (size, columns)
+                        bound = new.bind(values, trans, shape)
                         rhs = rng.normal(size=shape) + 1j * rng.normal(size=shape)
                         expected = old.apply(values, rhs, trans)
                         actual = bound(rhs)
@@ -81,6 +81,11 @@ def main():
                         max_dense_product_error = max(max_dense_product_error, error)
                         assert error < 2e-15
                         products_checked += 1
+                        # The next residual must use the new input, even though
+                        # its scratch and output buffers are reused within a solve.
+                        second = rhs * (0.25 - 0.125j)
+                        assert bound(second).tobytes() == old.apply(values, second, trans).tobytes()
+                        products_checked += 1
                         f_old, f_new = Factor(factor), Factor(factor)
                         expected = parent["_solve"](old, values, f_old, rhs, trans)
                         actual = candidate["_solve"](new, values, f_new, rhs, trans)
@@ -89,6 +94,38 @@ def main():
                         steps = f_new.calls - 1
                         correction_counts[steps] = correction_counts.get(steps, 0) + 1
                         solves_checked += 1
+    # Nearly singular Hilbert systems exercise the full three-correction path.
+    for size in (8, 12):
+        index = np.arange(size)
+        matrix = (1 / (1 + index[:, None] + index[None, :])).astype(np.complex128)
+        csc = csc_matrix(matrix)
+        pattern = SimpleNamespace(size=size, rows=csc.indices,
+                                  cols=np.repeat(index, np.diff(csc.indptr)))
+        old, new = parent["_Products"](pattern), candidate["_Products"](pattern)
+        factor = splu(csc)
+        for trans in ("N", "T", "H"):
+            for columns in (1, 3):
+                rhs = rng.normal(size=(size, columns)) + 1j * rng.normal(size=(size, columns))
+                f_old, f_new = Factor(factor), Factor(factor)
+                expected = parent["_solve"](old, csc.data, f_old, rhs, trans)
+                actual = candidate["_solve"](new, csc.data, f_new, rhs, trans)
+                assert actual.tobytes() == expected.tobytes()
+                assert f_old.calls == f_new.calls
+                steps = f_new.calls - 1
+                correction_counts[steps] = correction_counts.get(steps, 0) + 1
+                solves_checked += 1
+
+    # Sparse products must leave absent rows/columns zero even on repeated calls.
+    pattern = SimpleNamespace(size=7, rows=np.array([1, 3, 1, 5]), cols=np.array([0, 0, 4, 6]))
+    old, new = parent["_Products"](pattern), candidate["_Products"](pattern)
+    values = np.array([0, 2j, -3, 1 + 4j], dtype=np.complex128)
+    for trans in ("N", "T", "H"):
+        for shape in ((7,), (7, 2)):
+            bound = new.bind(values, trans, shape)
+            for _ in range(3):
+                x = rng.normal(size=shape) + 1j * rng.normal(size=shape)
+                assert bound(x).tobytes() == old.apply(values, x, trans).tobytes()
+                products_checked += 1
     print({"products_bitwise_equal": products_checked, "solves_bitwise_equal": solves_checked,
            "refinement_step_counts_equal": correction_counts,
            "max_scaled_dense_product_error": max_dense_product_error,

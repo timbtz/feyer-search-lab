@@ -334,12 +334,14 @@ class _Products:
         self.row_ids, self.row_starts = np.unique(pattern.rows[self.row_order], return_index=True)
         self.col_ids, self.col_starts = np.unique(pattern.cols, return_index=True)  # CSC order
 
-    def bind(self, values, trans="N"):
+    def bind(self, values, trans, rhs_shape):
         """Prepare numerical coefficients for repeated products within one solve.
 
         The stable row permutation preserves the original reduction order. Only
         topology indices live on this plan; reordered/conjugated coefficients
         belong to this call and are never reused for a later evaluation.
+        Scratch arrays also belong to this solve. The returned product is valid
+        until the next call; `_solve` consumes it immediately in `rhs - product`.
         """
         if trans == "N":
             weights = values[self.row_order]
@@ -348,13 +350,22 @@ class _Products:
             weights = values if trans == "T" else np.conj(values)
             columns, ids, starts = self.rows, self.col_ids, self.col_starts
 
+        vector = len(rhs_shape) == 1
+        width = 1 if vector else rhs_shape[1]
+        contributions = np.empty((columns.size, width), dtype=np.complex128)
+        reduced = np.empty((ids.size, width), dtype=np.complex128)
+        # Rows with no structural entries stay zero throughout the solve.
+        result = np.zeros((self.size, width), dtype=np.complex128)
+
         def apply(x):
             x = np.asarray(x)
-            vector = x.ndim == 1
             x = x[:, None] if vector else x
-            result = np.zeros((self.size, x.shape[1]), dtype=np.complex128)
-            contributions = weights[:, None] * x[columns]
-            result[ids] = np.add.reduceat(contributions, starts, axis=0)
+            # Structural indices are in bounds. `clip` avoids take's extra
+            # exception-safety buffer for `out` in the default `raise` mode.
+            np.take(x, columns, axis=0, out=contributions, mode="clip")
+            np.multiply(weights[:, None], contributions, out=contributions)
+            np.add.reduceat(contributions, starts, axis=0, out=reduced)
+            result[ids] = reduced
             return result[:, 0] if vector else result
 
         return apply
@@ -451,7 +462,7 @@ def _solve(products, values, factor, rhs, trans):
     solution = factor.solve(rhs, trans=trans)
     # Coefficients are invariant throughout this solve's refinement iterations.
     # Prepare their row ordering or conjugation once, retaining every correction.
-    product = products.bind(values, trans) if REFINEMENT_STEPS else None
+    product = products.bind(values, trans, rhs.shape) if REFINEMENT_STEPS else None
     for _ in range(REFINEMENT_STEPS):
         correction = factor.solve(np.ascontiguousarray(rhs - product(solution)), trans=trans)
         solution = solution + correction
