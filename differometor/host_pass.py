@@ -314,26 +314,12 @@ def _superlu_gstrf():
 
 def _factor(pattern, values):
     data = np.ascontiguousarray(values, dtype=np.complex128)
-    indices, indptr = pattern.indices, pattern.indptr
-    # SuperLU needs the current numerical matrix, not explicit zero entries.
-    # Compact only this factorization input; the original pattern and values
-    # remain intact for residual refinement and every coefficient cotangent.
-    # Recompute the mask on every call so a parameter crossing zero is retained
-    # on its next evaluation. Nonfinite entries are never removed.
-    keep = data != 0
-    if not np.all(keep):
-        prefix = np.empty(data.size + 1, dtype=np.int64)
-        prefix[0] = 0
-        np.cumsum(keep, out=prefix[1:])
-        data = data[keep]
-        indices = indices[keep]
-        indptr = prefix[indptr]
     gstrf = _superlu_gstrf()
     if gstrf:
-        return gstrf(pattern.size, data.size, data, indices.astype(np.intc), indptr.astype(np.intc),
+        return gstrf(pattern.size, data.size, data, pattern.indices.astype(np.intc), pattern.indptr.astype(np.intc),
                      csc_construct_func=_construct_csc, ilu=False, options=dict(_SUPERLU_OPTIONS))
     splu, csc_matrix = _scipy()
-    return splu(csc_matrix((data, indices, indptr), shape=(pattern.size, pattern.size)),
+    return splu(csc_matrix((data, pattern.indices, pattern.indptr), shape=(pattern.size, pattern.size)),
                 permc_spec="COLAMD")
 
 

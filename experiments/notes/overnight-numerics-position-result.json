@@ -1,0 +1,27 @@
+{
+  "parent": "7a9480332bad29b5aaeacc5a4628481581507e7a",
+  "source_sha256": "a1d48b9522646fc1f3557c20040bbc78e7f09aeea4f2815b6d070ad6bb9e7a65",
+  "counts": {
+    "structures": 224,
+    "query_pairs": 2816,
+    "zero_structure_entries": 2241,
+    "matched_exceptions": 1441,
+    "gathered_value_vectors": 672
+  },
+  "storage": [
+    {
+      "size": 67,
+      "structural_entries": 134,
+      "parent_lookup_bytes": 36448,
+      "candidate_lookup_bytes": 1072
+    },
+    {
+      "size": 257,
+      "structural_entries": 514,
+      "parent_lookup_bytes": 530448,
+      "candidate_lookup_bytes": 4112
+    }
+  ],
+  "result": "all coordinate, digest, exception and value comparisons passed",
+  "scope": "synthetic structural inspection; no JAX, optical workload or timings"
+}

@@ -4072,3 +4072,164 @@ uifo_rand1/rand3 sensitivity discrepancies, six unresolved grid FD coordinates,
 and first-order-only whole-pass VJP limitation remain visible. Retired39/40
 failures and source history are preserved. No promotion is requested without
 exact-SHA dual-official, generalization, repeated timing and independent review.
+
+## Trial41 feedback — rejected; restore35 (2026-11-22 06:32 UTC)
+
+Exact candidate ccb928b213b60f4ab9b38dd6c0bd6f778755dfc4, request
+24df9f5c0a2c45999c81e4bed3bf6786; jobs grid-1/2/3 and aligo-1/2/3.
+All six unchanged official runs passed, but strict seed comparisons newly fail
+both official scalar losses. Generalization against seed falls from35's14/14
+to12/14: dev loss1 and Voyager signal341 failures. Against pristine, Voyager
+signal failures increase395->399; other failure counts remain as35,4/14 cases
+pass. Thus this is a numerical regression under the stated comparisons, with no
+confirmed timing gain. No infrastructure failure, independent review or promotion.
+Publication dc7a6765d6b5605b98d9b9a74b7d25407d9035b6 retained admitted7.
+
+Complete fresh-process seconds:
+large [0.8560647871345282,0.8268344607204199,0.82173085026443],
+median0.8268344607204199, range0.82173085026443–0.8560647871345282;
+aLIGO [0.5510199498385191,0.5505140796303749,0.5494114328175783],
+median0.5505140796303749, range0.5494114328175783–0.5510199498385191.
+Versus recorded35 medians: +7.550497ms large,+0.785511ms aLIGO.
+These unpaired cohorts do not establish causal timing deltas. All samples retained,
+including large first import290.839868ms. CPU2, one logical CPU/library threads1;
+external host contention/overlap unknown. No combined score or organizer ranking
+claim. Sampled process-group peak RSS bytes: large[648843264,629030912,524562432],
+aLIGO[279220224,292667392,326893568], generalization1036668928. Peak sampling
+limitations apply; no memory gain established.
+
+Phase medians(ms), delta versus35 in parentheses:
+large imports269.071247(+1.517400), build73.697649(+3.763085),
+forward180.403020(-1.244893), reverse108.410213(+1.986314);
+aLIGO imports263.659084(-1.172358), build37.921039(+0.326056),
+forward34.243125(+1.474207), reverse18.783744(-0.191826).
+The target forward phase has no meaningful repeat-supported improvement and
+small-case transfer forward is slower in the recorded cohort.
+
+Inspected all six full receipt comparison dictionaries and all14 generalization
+case records against both references, compared with35 request
+5f61bfb3e2d441598e8e0733a9dd8cc9. Within each official setup, the three output
+hashes and complete strict dictionaries are identical. They differ from35:
+large354c8fb227be4ed99368d0e3672c6dc865afe8ccf24adeafcee8372f2379e3ed;
+aLIGOc5c2e32eeef5f7fbedc08bde656850c47e9de3c69e10eeb3c89c16c4f828b05e.
+Generalization archivefe74dbd0914f8dbee4ab4e57157813a81f846b21317e0b73ce16cfe3be6929df.
+Raw remote NPZ arrays are not locally available; no claim to have independently
+recomputed their failures. The artifacts self-comparison is not accuracy evidence.
+
+Against initial seed, every official array except loss passes. Large log sensitivity
+error6.387068651747541e-10, gradient max abs6.79299992043525e-5 and relative L2
+1.1285428179045667e-9; aLIGO log7.105427357601002e-15, gradient max abs
+1.148873707279563e-8 and relative L2 3.473770719042042e-13. Seed-generalization
+all14 gradients pass, but losses/signals above fail. Seed log errors include
+uifo_rand1 7.698730541960686e-11, rand2 2.3518964553659316e-11,
+rand3 2.419129074837656e-8, Voyager2.4158453015843406e-13. These small aggregate
+metrics do not override the elementwise failures. Pristine large131 signal/3
+gradient/1 loss failures remain, gradient max0.005262876758933999 and relative L2
+8.867586482888465e-8. Pristine aLIGO loss1 remains, gradient max8.85318877408281e-6
+and relative L2 2.7303174553874346e-10. Pristine sensitivity-log disagreements for
+rand1/rand3 remain0.00020360995893398126/5.811269165079125e-5. Their correctness
+is unresolved, not dismissed as rounding.
+
+Investigation: relative to35, the sole simulator change is compaction of the
+current factor input. The original assembled matrices, residual products and
+full-pattern derivatives were unchanged. Prior synthetic checks directly observed
+changed column permutations, factor entries and some refinement counts, so
+changed sparse ordering/arithmetic is a supported mechanism for the numerical
+deltas. It is NOT evidence that the new optical discrepancies are harmless or
+that either result is more accurate. Optical factor/RHS captures and independent
+high-precision residual/solution comparisons would be needed to decide that.
+The tiny tests failed to predict these full-workload regressions; retain this
+limit in any future proposal using them.
+
+Decision: retire41's exact-zero compaction and restore all differometor source
+exactly to35 7a9480332bad29b5aaeacc5a4628481581507e7a. Preserve41's commit,
+synthetic scripts/results and failed evaluation history. Historical41 tests
+must load41 source to reproduce candidate-specific checks. Do not add a fixture
+fallback or relax tolerances. No further factor-order/panel/zero-compaction tuning
+without new evidence. Parent35's exact guards remain, and it is a provisional
+numerical parent rather than an admitted timing winner. Admitted7 remains the
+reviewed timing reference.
+
+Next investigation: coordinator capture the first differing Voyager signal-system
+coefficients/RHS plus35/41 permutations, factors and refinement traces, and the
+literal official loss values/differences. Compare the exact rounded matrices
+independently at extended precision; the prepared callback profiles should also
+establish which operation is worth optimizing. Do not run another unprofiled
+factor variant merely because official PASS holds. Existing pristine discrepancies,
+six grid finite-difference coordinates and first-order-only custom VJP limitation
+remain open. No independent benchmark was started. Stop this hypothesis only;
+the campaign deadline remains09:27:44 UTC.
+
+## Trial42: sparse structural position lookup (prepared, not evaluated)
+
+Parent provenance: numerical parent35
+`7a9480332bad29b5aaeacc5a4628481581507e7a`. Trial41 remains committed at
+`ccb928b213b60f4ab9b38dd6c0bd6f778755dfc4`; its zero compaction is removed in
+this working tree. A full simulator diff against35 contains only the
+`SparseSystem` index representation change described below. No other-lane
+transfer or factor/solver option is added. Candidate SHA and both official job
+identifiers: pending supervisor commit/evaluation.
+
+Search-direction change: end factor-order/panel/zero-compaction tuning after its
+unconfirmed results and new numerical discrepancies. The initial RHS-layout
+inspection did not establish a useful copy to remove in the main combined solve;
+trial33 already found no complete-run gain from RHS packing. A singleton sparse
+product idea was also not implemented: squeezed-noise structural rows can have
+multiple entries even when the present coefficient is zero. Instead, inspect a
+distinct build-time structure cost, without changing arithmetic or solver paths.
+
+Source finding: `SparseSystem.__init__` allocates and retains an int64 array with
+the entire dense base-matrix shape solely for mapping coordinates to sparse
+positions. Repository search finds only the constructor and `positions()` using
+that private array. The coefficient coordinates are already sorted in CSC order,
+followed by the augmented RHS column. Therefore `column * size + row` is a sorted,
+unique key for every stored structural entry. Trial42 stores those keys and uses
+`searchsorted` with exact membership checks. Negative indices are normalized
+after explicit bounds checks; mismatched index shapes retain `IndexError`, absent
+structural entries retain `ValueError`, and returned indices retain int64 dtype.
+Duplicate query/write order is preserved. The structural mask still includes
+every write and extra position independently of its numerical coefficient.
+No numerical matrix, factor, answer or derivative is cached or omitted.
+
+Hypothesis: avoiding this dense integer allocation/fill and retained table may
+reduce setup cost and memory as optical topology grows. Parent35's observed
+build medians were69.934564ms large and37.594983ms aLIGO; this is only a portion of
+those phases, not a measured attribution of their time. Binary searches and
+bounds checks add work, so a net complete-run improvement is unknown. The dense
+base matrix and Boolean structural mask still exist; this change does NOT make
+the entire build linear in structural entries. Execution, component derivatives,
+factor inputs, refinement decisions, exact guards and JAX boundaries are35's.
+
+Small synthetic inspection: `overnight-numerics-position-check.py` extracts the
+actual sparse classes through AST without JAX and compares them against35 and an
+independent dense coordinate-marker oracle. Result file
+`overnight-numerics-position-result.json`, source SHA256
+`a1d48b9522646fc1f3557c20040bbc78e7f09aeea4f2815b6d070ad6bb9e7a65`.
+224 structures (sizes0/1/2/3/8/17/33, square/augmented, empty/diagonal/random/dense)
+and2816 query pairs passed;1441 exception classes matched. This includes negative
+coordinates, duplicate writes, broadcasts, empty queries, out-of-bounds and absent
+positions, and2241 zero-valued structural entries. All stored coordinates, CSC
+arrays, write positions, uniqueness flags, structural digests and672 gathered
+value vectors after coefficient changes matched bitwise. An additional nonfinite
+base case preserved its coordinate map. The first test run exposed an
+IndexError-versus-ValueError difference for incompatible index shapes; production
+code was repaired and the complete inspection rerun successfully.
+
+Measured array-storage counts only: a synthetic67-row,134-entry augmented system
+used36448 parent lookup bytes versus1072 candidate bytes;257 rows/514 entries used
+530448 versus4112. These exclude other build arrays and transient arrays; they are
+not process RSS or runtime estimates. No independent benchmark or elapsed timing
+was run. Local inspection Python has NumPy but no JAX; trace/compile/optical
+gradient behavior requires the evaluator. Syntax parsing and `git diff --check`
+passed. Public fixtures and benchmark code remain unchanged.
+
+Request: both unchanged official benchmarks on the same new SHA, saved complete
+output/gradient comparisons against35 and seed/pristine, all14 generalization
+cases, and independent source review. If numerically unchanged and promising,
+obtain paired fresh-process candidate/35 runs with each sample, median/range,
+build and execution phase deltas, peak RSS and overlap status separately for
+large and aLIGO. Trial42 has no official outcomes, phase deltas or promotion claim
+yet. Retain admitted7 as the reviewed timing reference and35 as provisional
+numerical parent. Existing pristine discrepancies, six unresolved grid finite
+differences and first-order-only custom VJP limitations remain open. Actual
+35/41 Voyager factor/RHS and35/34 adjoint captures are still outstanding.
