@@ -1,0 +1,21 @@
+{
+  "parent": "253a1362a6890685b10602608a5f39f58c9292b1",
+  "sparse_sha256": "5bae0f5cb5afd7bda5028d0a4897691e2b930d3c93cbb62fc9180c4f3c51cb83",
+  "reproduction": {
+    "parent": {
+      "key_unchanged": true,
+      "residual": 0.125,
+      "solution_change": 0.041666666666666685
+    },
+    "candidate": {
+      "key_unchanged": true,
+      "residual": 0.0,
+      "solution_change": 0.0
+    }
+  },
+  "mutation_cases": 24,
+  "refined_solve_comparisons": 432,
+  "maximum_normwise_backward_error": 1.7210247099383344e-16,
+  "total_coordinate_copy_bytes_across_cases": 8448,
+  "scope": "Synthetic source-derived kernels; no JAX or official workload; no timing claim"
+}

@@ -4886,3 +4886,114 @@ against47 on matching resources if a performance claim is considered. Keep all
 inherited pristine-reference/finite-difference disagreements visible. The next
 performance experiment still needs callback profiling evidence; no retired
 solver/product/allocation family is reopened by this repair.
+
+
+## Trial48 feedback: retain as bounded correctness repair
+
+Candidate253a1362a6890685b10602608a5f39f58c9292b1, request
+e27c7d9d934145ab98a6c2bd197b0e1c, jobs grid-1/2/3 and aligo-1/2/3.
+Local simulator file hashes match the evaluated source. All six official runs
+passed. Large complete fresh samples:0.865760210901,0.823624927551,
+0.815794566646 seconds; median0.823624927551, range[0.815794566646,
+0.865760210901]. Official aLIGO:0.551254818216,0.551843732595,
+0.547910081223; median0.551254818216, range[0.547910081223,0.551843732595].
+The supervisor did not confirm improvement or return independent source review;
+admitted7 remains selected. No promotion is claimed.
+
+All six official archive hashes and complete seed/pristine comparison records
+match both parent47 (ed2c9d27, request9b0859f4689c4bfaa61fb97fb373b25a) and
+original35 (7a948033, request5f61bfb3e2d441598e8e0733a9dd8cc9). Generalization
+case records likewise match both, with14/14 seed passes and4/14 pristine passes.
+The generalization archive container hash differs; raw members are unavailable
+locally, so member byte identity is not asserted. Existing pristine signal,
+loss and gradient disagreements, rand1/rand3 sensitivity errors and unresolved
+grid finite-difference coordinates remain. No new discrepancy is reported.
+
+Phase medians large/aLIGO: build72.427/38.511ms, forward184.120/32.816ms,
+reverse107.226/18.952ms. Versus parent47 these change by -4.053/+0.003ms,
++5.722/-0.209ms and -3.148/-0.517ms respectively. Complete medians decreased
+48.839/29.524ms, but large import median alone decreased48.986ms. The source
+change does not target imports. Against original35, complete medians instead
+increased4.341/1.526ms, build+2.492/+0.916ms, forward+2.472/+0.047ms and
+reverse+0.802/-0.023ms. These unpaired cohorts cannot attribute cost or benefit
+to the new copies; phase medians do not add to median totals. No samples are
+discarded and external contention remains unknown.
+
+Sampled RSS bytes: large519880704/565121024/534208512; aLIGO281542656/
+295198720/333197312; generalization913965056. No infrastructure failure or
+memory-budget breach was reported. Full audited samples, phase deltas, source
+verification and comparison outcomes are saved in
+`overnight-numerics-plan-snapshot-feedback.json`.
+
+Decision: retain the small reproduced SystemPlan ownership repair on this branch,
+pending independent review, without treating it as a performance improvement.
+No simulator edits or repeated tests were needed in this feedback turn. Request
+review of253a1362 versus ed2c9d27 alongside trial47's key repair. Keep original35
+as the recorded numerical comparison parent; do not silently restore the unsafe
+roundoff guards from admitted7. The prepared callback profiler remains the next
+performance diagnostic: run collect_host_profiles around a synchronized
+coordinator diagnostic on exact253a1362, preserving first forward/backward
+records separately and reporting component/Jacobian/scatter/solve self times and
+call counts. Profiling must be separate from official timing. Neither that
+profile nor trial47's optional JAX A/B/A result has been supplied. Stop this
+hypothesis here rather than resubmit an unchanged simulator or reopen retired
+allocation/solver variants without new evidence. This is not the campaign end.
+
+## Trial49: keep sparse coordinates consistent with factorization indices
+
+Parent253a1362a6890685b10602608a5f39f58c9292b1 (trial48), candidate SHA and
+official job identifiers pending supervisor feedback. No other lane is imported.
+The initial two-axis sweep inspection found that build.py explicitly rejects
+simultaneous carrier and signal sweeps, while expand_parameters documents a
+single input row. That unsupported case is not used to justify a partial repair.
+
+A separate, reproduced numerical consistency defect exists in SparsePattern:
+rows/cols previously alias int64 caller arrays, whereas CSC indices/indptr and
+the pattern digest are constructed once. After caller mutation, a new _Products
+can therefore describe a different matrix from _factor, and an existing product
+plan can combine changed gathers with old reduction metadata. The parent
+three-by-three example uses rows[0,1,1,2,2], cols[0,0,1,1,2], coefficients
+[2,.25,3,.5,4], rhs[1,1,1]. Changing caller rows[1] from1 to2 leaves the plan hash
+and LU matrix unchanged, but the refined solution changes by0.041666666666666685
+and its residual against the factored matrix reaches0.125. This is measured
+arithmetic inconsistency, not a timing argument or a rounding attribution.
+
+Implementation: SparsePattern takes private int64 copies of both coordinate
+arrays and marks those copies read-only, documenting that topology changes
+require a new pattern. Hash bytes, ordering validation, LU options, numerical
+values and refinement remain unchanged. This is limited ownership protection;
+it does not make every field of SparsePattern or HostPlan immutable. No normal
+run_build_step caller mutation has been demonstrated. The defect is reachable
+through the supported SparsePattern constructor with concrete caller arrays.
+
+`overnight-numerics-pattern-snapshot-check.py` extracts the actual SparsePattern,
+_Products, _factor and _solve source for small local checks (no JAX installed).
+The reproduction's candidate residual and solution change are both zero.
+24 cases vary size3/5/9, int32/int64, contiguous/strided caller buffers and
+regular/row-scaled matrices with1e16 scaling range. After changing both caller
+coordinate arrays to a different valid triangular pattern, all432 refined
+solve comparisons are finite and byte-identical to unmutated parent results.
+These cover N/T/H, vector and1/3-column right-hand sides, with product plans
+constructed before and after mutation. Maximum normwise residual over the
+cases is1.7210247099383344e-16. Regular cases additionally agree with independent
+NumPy dense solves at rtol1e-13, atol1e-14. This is not a forward-error certificate
+for arbitrary ill-conditioned systems. Rebuilt patterns match fresh parent
+CSC indices/digests, and empty/single-entry, read-only caller inputs and
+unsorted-coordinate rejection checks pass. The recorded8448 copied bytes are
+the sum across synthetic cases, not an official memory measurement.
+
+Result file: `overnight-numerics-pattern-snapshot-result.json`, sparse.py SHA256
+5bae0f5cb5afd7bda5028d0a4897691e2b930d3c93cbb62fc9180c4f3c51cb83.
+No benchmarks were launched. No new JAX callback/generalization result is
+asserted. All inherited pristine signal/gradient/loss disagreements, rand1/
+rand3 sensitivity errors and unresolved finite-difference coordinates remain.
+
+Decision: submit this focused correctness repair, not a performance candidate
+or a repeated allocation-tuning proposal. Request independent source review,
+both unchanged official benchmarks on the supervisor's exact candidate SHA,
+and the existing generalization/strict comparisons. Count the two new index
+copies in build time and memory; there is no expected execution speedup. If
+retained after validation, the next performance work still requires the
+prepared coordinator callback profile; this turn supplies no new evidence to
+reopen retired solver/product/allocation variants. Keep candidate and parent
+results separate and preserve failed trials.

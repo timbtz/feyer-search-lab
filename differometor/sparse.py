@@ -44,15 +44,20 @@ class SparsePattern:
     """Static CSC structure of a square sparse matrix.
 
     `rows` and `cols` list the structural nonzeros in CSC order (sorted by column,
-    then row). Value vectors passed to `sparse_solve` use this order.
+    then row). Value vectors passed to `sparse_solve` use this order. Coordinates
+    are snapshotted at construction; build a new pattern for a changed topology.
     """
 
     def __init__(self, rows, cols, size):
-        rows = np.asarray(rows, dtype=np.int64)
-        cols = np.asarray(cols, dtype=np.int64)
+        # The LU indices, product plans and hash must describe the same matrix
+        # even if the caller later reuses its coordinate buffers for another one.
+        rows = np.array(rows, dtype=np.int64, copy=True)
+        cols = np.array(cols, dtype=np.int64, copy=True)
         order = np.lexsort((rows, cols))
         if np.any(order != np.arange(order.size)):
             raise ValueError("SparsePattern entries must already be in CSC order")
+        rows.flags.writeable = False
+        cols.flags.writeable = False
         self.rows = rows
         self.cols = cols
         self.size = int(size)
