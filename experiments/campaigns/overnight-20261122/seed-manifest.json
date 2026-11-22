@@ -1,0 +1,124 @@
+{
+  "schema_version": "feyer-overnight-seed-v1",
+  "campaign_id": "overnight-20261122",
+  "deadline_utc": "2026-11-22T09:27:44Z",
+  "authorization": "New user-authorized eight-hour campaign; Claude first then Codex, no extension of historical sessions.",
+  "recommended_seed_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+  "selection_reason": "Strongest inspected exact-SHA repeated dual-official evidence, not a claim of universal correctness or global fastest.",
+  "source_sha256": {
+    "differometor/__init__.py": "e5582c422dfd05925b461015f30261f044f212d2e20b2c69d3ae280f7ede9eaa",
+    "differometor/build.py": "2decccba1eb5c953f51ace8514c08fe47b334b613154afd3cd4b8ff021df2d86",
+    "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+    "differometor/host.py": "4557fa5996fe61c87f015cb51e574623f20a0e69f4d734c5557a6924d7eb9c20",
+    "differometor/host_pass.py": "f332edd1ccc833bbf1d8609aca09517e5ba5dee082e7af9ef2cc551bc4f5143e",
+    "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+    "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+    "differometor/simulate.py": "aad9fdefae97d7508faab7ab63e3f2ae468ef42829d686dd8049dfb13fc4b2bc",
+    "differometor/sparse.py": "e3a9420eda52ab937c14376843d45c3ee241750cf7402c447c69875136db1137",
+    "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+  },
+  "official_harness_revision": "83f8d2f40fc75218a1d8ec7908cc0bf1c8f99a75",
+  "official_evidence": {
+    "grid": {
+      "status": "three_official_passes",
+      "median_seconds": 0.9869915377348661,
+      "min_seconds": 0.9864342752844095,
+      "max_seconds": 0.9973438009619713,
+      "reports": [
+        {
+          "path": "experiments/audits/2026-11-22-fastest/official/grid-1.json",
+          "sha256": "01d4b509e608be4883d08b1b4e8334a7d36352f4f73ce3d3b72119e903ab7ae0",
+          "complete_first_run_seconds": 0.9973438009619713
+        },
+        {
+          "path": "experiments/audits/2026-11-22-fastest/official/grid-2.json",
+          "sha256": "d32b26045192724e325bf019907a03598fc8b4600709da0c35676291f50ea01a",
+          "complete_first_run_seconds": 0.9869915377348661
+        },
+        {
+          "path": "experiments/audits/2026-11-22-fastest/official/grid-3.json",
+          "sha256": "5730d0ed6c21f20d83bc023d0061ee5927a851b08f93061f05f3f202d8954889",
+          "complete_first_run_seconds": 0.9864342752844095
+        }
+      ]
+    },
+    "aligo": {
+      "status": "three_official_passes",
+      "median_seconds": 0.6260263714939356,
+      "min_seconds": 0.6233954820781946,
+      "max_seconds": 0.6327169891446829,
+      "reports": [
+        {
+          "path": "experiments/audits/2026-11-22-fastest/official/aligo-1.json",
+          "sha256": "2fa04251f956bc5ac6a2bc561001443df3824bedf1c5b51c054dc9e2be5f25c0",
+          "complete_first_run_seconds": 0.6260263714939356
+        },
+        {
+          "path": "experiments/audits/2026-11-22-fastest/official/aligo-2.json",
+          "sha256": "8c40d556cb67370097a120ed457e99ed03ef23c7c583ec24f5d9df19554e7954",
+          "complete_first_run_seconds": 0.6327169891446829
+        },
+        {
+          "path": "experiments/audits/2026-11-22-fastest/official/aligo-3.json",
+          "sha256": "27ff577397e217243450338b023623078744a91129076549b45d2bbb856980e6",
+          "complete_first_run_seconds": 0.6233954820781946
+        }
+      ]
+    }
+  },
+  "timing_caveat": "Support audit, ranking_eligible=false; CPU2 and threads1, other-host contention not excluded. Recalibrate current cohort.",
+  "extra_validation_status": "needs_review",
+  "extra_validation_notes": [
+    "Strict signal and gradient mismatches at indices33,161,180 remain visible.",
+    "Custom uifo_rand1/uifo_rand3 exceed dense sensitivity agreement bound; precision diagnostics support candidate accuracy but do not certify every case.",
+    "Grid finite-difference coordinates54,59,63,136,161,163 unresolved; extra aLIGO29/29 confirmed.",
+    "Whole-pass custom VJP lacks JVP/Hessian support."
+  ],
+  "alternatives": [
+    {
+      "sha": "e2fd659e6f426289c526f79ae758bed4182879a9",
+      "job_id": "fd0afab1916546eea718f9bfeb261947",
+      "official_large_pass": true,
+      "strict_pass": false,
+      "large_seconds": 0.7818893473595381,
+      "dual_official_exact_sha_verified": false,
+      "note": "Imported teammate source; 100-frequency aLIGO exploratory timing excludes imports and is not official transfer benchmark."
+    },
+    {
+      "sha": "cb502e8a5a15689e6f41971bd4a611cf6612283f",
+      "job_id": "3ba62410a34149ad97036427beb0d355",
+      "official_large_pass": true,
+      "strict_pass": false,
+      "large_seconds": 0.782173153012991,
+      "dual_official_exact_sha_verified": false,
+      "note": "Host interpreter derivative convention repairs."
+    },
+    {
+      "sha": "3de2520e04b40737868e05cd255a2c3b37c83d13",
+      "dual_official_exact_sha_verified": false,
+      "note": "Compatibility fixture repair after cb502e8, not a verified timing promotion."
+    }
+  ],
+  "lanes": [
+    {
+      "id": "overhead",
+      "brief": "experiments/briefs/overnight-20261122-overhead.md",
+      "targets": [
+        "imports",
+        "build",
+        "trace_lower_and_compile"
+      ]
+    },
+    {
+      "id": "numerics",
+      "brief": "experiments/briefs/overnight-20261122-numerics.md",
+      "targets": [
+        "forward",
+        "gradient",
+        "assembly"
+      ]
+    }
+  ],
+  "promotion_policy": "Both unchanged official benchmarks on same SHA; investigate numerical failures without loosening requirements; repeated stable complete-first-run gains on matching cohort. Large target and aLIGO reported separately, no invented averaged score.",
+  "stagnation_policy": "After three consecutive evaluated submissions without meaningful repeat-supported improvement, preserve failed trials and pivot to conservative refinement of strongest compatible verified parent or distinct in-lane mechanism; no deadline extension."
+}
