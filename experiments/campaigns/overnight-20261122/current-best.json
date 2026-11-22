@@ -6,18 +6,34 @@
     "Grid finite-difference coordinates54,59,63,136,161,163 unresolved; extra aLIGO29/29 confirmed.",
     "Whole-pass custom VJP lacks JVP/Hessian support.",
     "Support audit, ranking_eligible=false; CPU2 and threads1, other-host contention not excluded. Recalibrate current cohort.",
-    "Historical seed evidence is retained; current-cohort fresh dual calibration is pending."
+    "grid pristine-reference disagreements remain; see complete candidate receipt.",
+    "aligo pristine-reference disagreements remain; see complete candidate receipt.",
+    "Generalization pristine-reference disagreements remain; see complete candidate receipt."
   ],
+  "cohort_digest": "0543092279d0368390fe9a039823f591cb0f163f58ff89849ecb07fd22f4647e",
+  "evaluation_id": "411b23262c7b481391a712264743b0e5",
   "metrics": {
     "aligo": {
-      "max_seconds": 0.6327169891446829,
-      "median_seconds": 0.6260263714939356,
-      "min_seconds": 0.6233954820781946
+      "max_seconds": 0.6279544606804848,
+      "median_seconds": 0.6275725718587637,
+      "min_seconds": 0.6232085265219212,
+      "relative_range": 0.007562367081319314,
+      "samples_seconds": [
+        0.6275725718587637,
+        0.6232085265219212,
+        0.6279544606804848
+      ]
     },
     "grid": {
-      "max_seconds": 0.9973438009619713,
-      "median_seconds": 0.9869915377348661,
-      "min_seconds": 0.9864342752844095
+      "max_seconds": 1.005881380289793,
+      "median_seconds": 0.9808701425790787,
+      "min_seconds": 0.9760635625571012,
+      "relative_range": 0.03039935302168485,
+      "samples_seconds": [
+        1.005881380289793,
+        0.9760635625571012,
+        0.9808701425790787
+      ]
     }
   },
   "policy": {
@@ -29,9 +45,9 @@
     "scope": "Team search-selection heuristic, not organizer judging policy.",
     "version": "overnight-selection-v1"
   },
+  "record_path": "experiments/campaigns/overnight-20261122/candidates/411b23262c7b481391a712264743b0e5/record.json",
   "repository_url": "https://github.com/timbtz/feyer-search-lab",
   "schema_version": "feyer-current-best-v1",
-  "seed_manifest_sha256": "d6026eb2ef1255d4545472a13ef67c8ad5e5f9c0384f9e789c4077c2cc6d0535",
   "seed_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
-  "status": "seed_pending_fresh_calibration"
+  "status": "admitted_campaign_best"
 }
