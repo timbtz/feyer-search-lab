@@ -479,7 +479,7 @@ def parameter_linking(
             linked_names.append(new_parameter[0])
 
 
-def build(setup: Setup):
+def build(setup: Setup, *, _host_matrices: bool = False):
     """
     Build carrier, signal, and noise matrices plus update instructions from a setup graph.
 
@@ -498,7 +498,9 @@ def build(setup: Setup):
     matrices_tuple:
         `(parameters, carrier_matrix, signal_matrix, noise_matrix, noise_selection_vectors,
           qhd_parameter_indices, qhd_placing_indices, linked_indices, linking_function_indices, indices_to_link)`
-        as `jax.numpy` arrays.
+        as `jax.numpy` arrays. The internal `_host_matrices` option retains only
+        the three base matrices as NumPy arrays for structural planning; callers
+        using that option must convert them before exposing simulation inputs.
     metadata_tuple:
         `(detector_indices, mirror_indices, beamsplitter_indices, isolator_indices, port_to_index)`
         where the first four entries are integer arrays and `port_to_index` maps string keys of the form
@@ -1497,9 +1499,9 @@ def build(setup: Setup):
         (carrier_instructions, signal_instructions, noise_instructions, signal_components, parameter_names),
         (
             _host_array([parameters], complex),
-            jnp.asarray(np.asarray(carrier_matrix)),
-            jnp.asarray(np.asarray(signal_matrix)),
-            _host_array(noise_matrix, complex),
+            np.asarray(carrier_matrix) if _host_matrices else jnp.asarray(np.asarray(carrier_matrix)),
+            np.asarray(signal_matrix) if _host_matrices else jnp.asarray(np.asarray(signal_matrix)),
+            np.asarray(noise_matrix, dtype=np.complex128) if _host_matrices else _host_array(noise_matrix, complex),
             _host_array(noise_selection_vectors, complex),
             _host_array(qhd_parameter_indices, int),
             _host_array(qhd_placing_indices, int),

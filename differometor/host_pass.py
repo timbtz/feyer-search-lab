@@ -48,10 +48,8 @@ def _digest(*arrays):
     for array in arrays:
         array = np.ascontiguousarray(array)
         digest.update(str(array.dtype).encode())
-        # hashlib reads contiguous buffers directly. Keep the dtype/shape/data
-        # byte stream unchanged without allocating temporary bytes objects.
-        digest.update(np.asarray(array.shape, dtype=np.int64))
-        digest.update(array)
+        digest.update(np.asarray(array.shape, dtype=np.int64).tobytes())
+        digest.update(array.tobytes())
     return digest.hexdigest()
 
 

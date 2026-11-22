@@ -1354,7 +1354,7 @@ def run_build_step(
     """
     start = time()
 
-    instructions, matrices, metadata = build(setup)
+    instructions, matrices, metadata = build(setup, _host_matrices=SPARSE_SOLVES)
     component_groups = {}
     arrays_to_prepare, carrier_arrays, signal_arrays, noise_arrays = pairs_to_arrays(
         *instructions, optimization_pairs, changing_pairs, component_groups=component_groups,
@@ -1417,6 +1417,12 @@ def run_build_step(
             host_plan = _host_pass.build_host_plan(simulation_arrays, sparse_structure, component_groups)
             if host_plan is not None:
                 simulation_arrays["host_plan"] = host_plan
+
+        # Structural planning consumes these dense matrices on the host. Transfer
+        # each once, after planning (including unsupported-layout fallbacks), so
+        # callers still receive the same JAX arrays within the build timer.
+        for name in ("carrier_matrix", "signal_matrix", "noise_matrix"):
+            simulation_arrays[name] = jnp.asarray(simulation_arrays[name])
 
     if timeit:
         for array in simulation_arrays.values():

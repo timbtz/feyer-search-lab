@@ -3566,3 +3566,124 @@
   first-order reverse only. All inputs, outputs, gradients, double precision and
   three JIT stages remain. No agents, commits, installs, independent benchmarks,
   shared launch edits or evaluator modifications. Deadline09:27:44 UTC unchanged.
+
+### Candidate39 feedback — retired; reviewed parent restored
+
+- Evaluated SHA e399df6159c1c31fe7ed84de1e5a1431b5430df5;
+  dual-official request fc6f986e60cc40e3a114ac196a7526d7,
+  jobs grid-1/2/3 and aligo-1/2/3. Receipt:
+  experiments/runs/overnight-20261122/overnight-overhead-v1/fc6f986e60cc40e3a114ac196a7526d7.json.
+  All six official runs passed. confirmed_improvement=false; independent source
+  review absent. No infrastructure failure reported.
+- Large fresh-process samples seconds:0.8280799649655819,0.7976755034178495,
+  0.8050274346023798; median0.8050274346023798, range0.7976755034178495–
+  0.8280799649655819 (relative3.7768%). Official aLIGO samples:
+  0.5408260840922594,0.5439506433904171,0.5464863888919353;
+  median0.5439506433904171, range0.5408260840922594–0.5464863888919353
+  (relative1.0406%). Against reviewed ee4fea2's recorded medians, large+3.450 ms
+  and aLIGO-4.605 ms. These are unpaired cohorts with overlapping large ranges;
+  they do not establish a complete first-run improvement or hashing attribution.
+- Phase medians ms (large / aLIGO): imports267.570/263.917;
+  initialize3.573/3.535; load1.510/0.209; build72.662/38.009;
+  forward lower19.595/19.132, compile33.038/33.487, execute178.047/32.576;
+  sensitivity lower25.575/26.235, compile39.697/41.382, execute0.874/0.462;
+  gradient lower16.555/16.789, compile52.044/53.076, execute88.474/14.344;
+  transfer0.192/0.149. Build samples large68.988,73.219,72.662 ms and
+  aLIGO37.934,38.009,38.403 ms. Relative to different candidate38, build medians
+  -2.505/+0.048 ms; this is not a matched-parent phase delta.
+- Sampled peak RSS bytes: large518320128,528207872,482545664;
+  aLIGO282660864,295460864,315334656; generalization858533888.
+  No sampled budget exceedance. EPYC9334 CPU2, one logical CPU, library threads
+  one, x64, existing flags and no persistent cache. Other-host contention is
+  unknown; ranking_eligible=false. No matching fresh parent cohort supplied.
+- All saved output and gradient comparisons pass initial-seed tolerances for
+  six official runs and fourteen generalization cases. Official array archives
+  equal candidate38's. Generalization archive:
+  4cf36d1e2828dcbf2d0e8e0009b3043b1d5515247973d987e8ac84025c3a2bee.
+  Archive self-comparison does not establish bitwise seed equality. Pristine
+  strict failures persist: grid signal/loss/gradient, aLIGO loss and additional
+  generalization signal/gradient disagreements, including uifo_rand1/3 sensitivity
+  log errors2.036099068405406e-4 and5.8100919558157216e-5. No new seed-relative
+  failure reported. The focused NumPy diagnostic remains unexecuted locally;
+  no supervisor diagnostic result supplied. Local180 buffer checks are narrower.
+- Decision: retire39; restore host_pass.py to reviewed
+  ee4fea28c04d482566be16e916b609d7c6a99e5e. All ten simulator modules verified
+  byte-identical to that parent and syntax passed. Preserve candidate39's commit,
+  diagnostic and evidence. This restoration is not a new optimization proposal.
+  Do not extend hashing changes to runtime reuse or combine unsuccessful trials.
+- Next experiment: supervisor profiling with the preserved
+  experiments/notes/overnight-overhead-profile.py on actual large, official aLIGO
+  and a third setup to attribute builder/device-conversion and tracing costs.
+  No profiling result has arrived. Candidate30 remains a separate compilation
+  lead requiring its focused diagnostic, independent review and interleaved
+  fresh-parent confirmation; another candidate-only replay is not confirmation.
+- Inherited gradients33/161/180 and grid FD54/59/63/136/161/163 remain unresolved;
+  prior additional aLIGO29/29 is bounded evidence. Whole-pass custom VJP still
+  lacks JVP/Hessian support. No workload, tolerance or JIT-stage changes.
+  No commits, installations, agents or benchmarks launched by this managed agent.
+  Stop ends candidate39's hypothesis, not the campaign. Deadline09:27:44 UTC.
+
+### Candidate40 — defer only the three dense base-matrix transfers
+
+- Supervisor requested a concrete next experiment after39's retirement.
+  Source parent ee4fea28c04d482566be16e916b609d7c6a99e5e; candidate SHA and
+  benchmark identifiers pending supervisor. Candidate39 remains retired, with
+  host_pass.py restored to the parent. Only build.py and simulate.py now differ
+  from that reviewed simulator source; eight other modules match byte-for-byte.
+- Narrow refinement of the earlier rejected host-first builder trial8, explicitly
+  not a new claim that broad host-first construction works. Trial8 changed four
+  producers, every array leaf and final batched device_put/reconstruction, and
+  did not improve complete timing. Trial18's group-only host conversion also
+  failed to establish a gain. Here only carrier_matrix, signal_matrix and
+  noise_matrix stay NumPy until structural planning finishes. All other array
+  construction, metadata, parameter preparation and final transfer methods stay
+  as in reviewed ee4fea2. No batched device_put, pytree reconstruction or flags.
+- Identified redundant boundary: build converts these already-NumPy matrices to
+  JAX, then _build_sparse_structure converts all three back to NumPy. SparseSystem
+  reads base values to form a fresh boolean mask; it does not mutate the base.
+  Delaying the three device conversions removes those intermediate JAX-to-NumPy
+  reads and keeps the same final three jnp.asarray conversions. The separate
+  host plan does not retain the base matrices. Every evaluation still assembles
+  and factors its current matrices with unchanged solver and derivative math.
+- build's default remains unchanged; private keyword _host_matrices=False is
+  enabled only by run_build_step when SPARSE_SOLVES is true. The conversion loop
+  executes after structural planning even if sparse structure or host-plan
+  construction returns None. Dense mode takes the original eager path. Returned
+  simulation matrices are JAX arrays in all paths. Conversion remains before
+  the timed build return, and caller synchronization remains unchanged.
+- Target phase: build, last observed39 median72.662 ms large /38.009 ms official
+  aLIGO. No attribution of this cost to matrix round trips has been measured.
+  Current expected gain is unmeasured and could be negligible on CPU, where
+  conversion may share storage. Changes in transfer order may alter allocator
+  behavior; complete timings and sampled RSS must decide whether it helps.
+  Do not infer savings from the full build time or from local stub checks.
+- Local diagnostic experiments/notes/overnight-overhead-base-transfer-check.py
+  --structural-only passed468 actual return-expression checks (12 row counts,
+  13 column counts, three matrices) using stdlib stubs: default one device
+  conversion, private branch zero, final conversion equal. AST also verifies
+  final transfer is outside the successful-plan guard. Syntax and whitespace
+  checks passed. These checks do not exercise NumPy/JAX numerical behavior.
+- Default diagnostic is UNEXECUTED locally (NumPy/JAX unavailable). It compares
+  complete built inputs byte-for-byte and static plan keys against the original
+  eager-conversion order on a small synthetic cavity: three tunings, three
+  modulation modes, host/sparse-only/unsupported-layout/dense paths,36 cases.
+  It uses three synthetic frequencies only for this additional diagnostic;
+  both official workloads remain unchanged. Its fallback stubs are confined to
+  the diagnostic and restored afterward; no simulator fallback math is altered.
+- Request supervisor execution of the diagnostic, both unchanged official full
+  benchmarks and all saved outputs/gradients, fourteen generalization cases,
+  and independent source review. If target build evidence is promising, require
+  interleaved repeated fresh ee4fea2/candidate complete runs on the same policy.
+  Report large and aLIGO separately, samples/median/range, phases, RSS and job
+  overlap. No performance or correctness result for candidate40 exists yet.
+- If this narrow trial also lacks a stable build and total benefit, retire it;
+  do not extend host-first conversions to further array categories. The pending
+  supervisor profile remains the next route for measured phase attribution.
+  Candidate30's preserved compilation lead remains separate, not combined here.
+- Preserve inherited pristine signal/loss/gradient mismatches (including grid
+  gradients33/161/180 and uifo_rand1/3 sensitivity disagreements), unresolved
+  grid FD54/59/63/136/161/163 and bounded prior aLIGO29/29 evidence. Whole-pass
+  custom VJP remains first-order reverse only, without JVP/Hessian support.
+  No workload, dtype, physical inputs, outputs, gradients, tolerance or JIT-stage
+  changes. No benchmarks, commits, installs, agents, shared-launch or evaluator
+  modifications made by this agent. Deadline09:27:44 UTC unchanged.
