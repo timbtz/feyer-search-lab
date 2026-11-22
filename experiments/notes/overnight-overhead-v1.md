@@ -2522,3 +2522,111 @@
   gradients33/161/180, uifo_rand1/3 sensitivity discrepancies, unresolved grid
   FD54/59/63/136/161/163 and first-order-only host VJP remain explicit open questions.
   Absolute deadline2026-11-22 09:27:44 UTC remains unchanged.
+
+### Candidate30 feedback — freeze for confirmation, not promotion
+
+- Exact simulator candidate7baa78dd15196b74b6f6e6fdb2bfbac07cfb8f72;
+  evaluation d2b5d7f493674c4bb905a3e019d2d488, jobs grid-1/2/3 and aligo-1/2/3.
+  Receipt: experiments/runs/overnight-20261122/overnight-overhead-v1/
+  d2b5d7f493674c4bb905a3e019d2d488.json. All six official runs passed.
+- Large complete fresh-process seconds: 0.8237706832587719, 0.7947273701429367,
+  0.7867102511227131; median0.7947273701429367, range0.7867102511227131–
+  0.8237706832587719. Official aLIGO: 0.5331904906779528, 0.5345235411077738,
+  0.5374267045408487; median0.5345235411077738, range0.5331904906779528–
+  0.5374267045408487. Relative ranges4.6633% and0.7925%, respectively.
+- Phase medians in ms (large/aLIGO): imports265.177/263.154,
+  initialize3.527/3.559, load1.520/0.210, build72.466/38.092;
+  forward lower19.486/18.981, compile32.869/32.882, execute181.827/33.976;
+  sensitivity lower25.545/26.312, compile39.689/41.707, execute0.875/0.498;
+  gradient lower16.376/15.902, compile48.943/44.267, execute86.071/14.066;
+  host transfer0.193/0.149. Separately computed phase medians need not sum to
+  the median complete first run.
+- Gradient compile samples in ms: large49.662/48.943/48.795,
+  aLIGO44.267/43.993/44.379. Compared with parent-like28's phase medians,
+  gradient compilation is lower by4.181/8.883 ms. This supports the proposed
+  mechanism provisionally;28 is a different unpaired revision, not a controlled
+  parent comparison. Imports/build changes are not attributable to this patch.
+  Historical admitted ee4fea2 total medians exceed30's by6.850/14.032 ms,
+  but large ranges overlap. confirmed_improvement=false; publication explicitly
+  requires source review and paired evidence. No claim of a stable gain.
+- Sampled process-group peak RSS bytes: large502157312/504774656/523550720;
+  aLIGO312762368/333729792/281370624; generalization903008256. No budget
+  exceedance. CPU2, one logical CPU, library threads1, EPYC9334, x64,
+  no persistent compilation cache and unchanged package flags. External overlap
+  was not excluded; no claim that it explains a particular sample.
+- All14 generalization cases pass initial-seed regression tolerances, as do
+  official saved arrays. This is not bitwise seed equality: official maximum
+  absolute gradient differences are5.686350050382316e-6 large and
+  3.637978807091713e-11 aLIGO. Generalization archive SHA256:
+  d2a8221ede427a0cf610d90dcf55b394b3e4dee8867756811a675b578a918b3f.
+  The receipt's archive self-comparison is not independent seed validation.
+  Pristine signal/gradient/loss disagreements remain; strict_passed=false.
+  Inherited gradients33/161/180, uifo_rand1/3 sensitivity discrepancies and
+  grid FD54/59/63/136/161/163 remain unresolved. Whole-pass VJP still supports
+  only first-order reverse mode. These findings are separate from official passes.
+- Decision: preserve30's exact simulator unchanged pending confirmation; do not
+  combine it with27,15 or another lane. Source inspection confirms the only delta
+  against reviewed ee4fea28c04d482566be16e916b609d7c6a99e5e is _static_take.
+  The prepared54-case static-slice JIT/VJP diagnostic remains UNEXECUTED locally
+  and has no supplied supervisor result; request it before independent review.
+- Concrete next experiment for supervisor: interleave five fresh complete runs
+  per revision per official setup, comparing exact7baa78dd15196b74b6f6e6fdb2bfbac07cfb8f72
+  with exactee4fea28c04d482566be16e916b609d7c6a99e5e under the same resource policy.
+  Preserve every sample and report separate medians/ranges, phase deltas, RSS,
+  environment and known overlap. Obtain independent source review on30's exact
+  delta; both official benchmarks and generalization already have this SHA's
+  initial results, but confirmation remains missing. No new implementation is
+  submitted with this note, and no candidate-only repeat should replace the
+  matched comparison. If confirmation fails, retire this read-selection mechanism
+  and return to reviewed parent plus the pending supervisor profiling experiment.
+
+### Candidate31 — direct CSC order validation during setup
+
+- Supervisor resumed after30's confirmation handoff and requested a concrete new
+  experiment. Preserve30 at7baa78dd15196b74b6f6e6fdb2bfbac07cfb8f72 with its results
+  and pending review/paired-confirmation request. Restore simulate.py to reviewed
+  ee4fea28c04d482566be16e916b609d7c6a99e5e for this isolated experiment. This is not
+  a combination or a conclusion that30 failed correctness. Candidate31 SHA and both
+  benchmark/job identifiers are pending supervisor submission.
+- Distinct observed operation: SparsePattern.__init__ invokes np.lexsort on concrete
+  rows/columns only to assert that the resulting permutation is identity. It never
+  uses that permutation to reorder a matrix. For equal-shape one-dimensional integer
+  vectors, replace sorting and permutation allocation with adjacent comparisons:
+  columns must not decrease; within equal columns, rows must not decrease. Equal
+  coordinate pairs remain accepted (stable lexsort also keeps their input order).
+  No subtraction avoids overflow at int64 extremes. Other dimensions/shapes retain
+  the original lexsort behavior. CSC arrays, hashes, gathers, matrix values, solver,
+  refinement and derivatives are unchanged.
+- Hypothesis targets setup only: direct order validation removes three coordinate
+  sorts for a standard carrier/signal/noise structure and their permutation/arange
+  allocations. It may reduce setup allocation/validation costs; no gain is measured.
+  NumPy lexsort can be efficient on already-ordered vectors, and comparison temporaries
+  may erase this small saving. Prior28 removed a redundant unique call without a
+  stable benefit;31 changes a different validation algorithm, not unique caching or
+  an extension of that implementation. This conservative refinement should be retired
+  if insignificant, not followed by repeated sorting microvariants without profiling.
+- Current cost context (30, unpaired and different source): build medians72.466 ms
+  large /38.092 ms aLIGO; imports265.177/263.154 ms. Compilation and execution are
+  not targeted. No31 phase deltas, memory observations or timing samples yet exist.
+- Local checks: all simulator files and the new diagnostic compile as Python;
+  nine modules other than sparse.py are byte-identical to reviewed parent. Exhaustive
+  standard-library mathematical comparison checked7381 coordinate sequences with
+  entries drawn from {-1,0,1} pairs and lengths0–4, including duplicates. This verifies
+  order logic, not execution of NumPy or a physical workload.
+- Prepared experiments/notes/overnight-overhead-csc-order-check.py (UNEXECUTED locally,
+  NumPy unavailable). Extracts the actual SparsePattern class and substitutes the
+  original validation block for a reference. Compares913 small constructions:
+  random/sorted/reversed, empty/singleton/duplicate, int64 extrema, and malformed
+  dimensions/shapes. Checks exceptions and successful rows/cols/indices/indptr,
+  sizes, keys and hashes. No fixtures, solver invocations or timing loop.
+- Request this diagnostic, both unchanged complete official workloads, all saved
+  outputs/gradients and seed/pristine generalization on the same new SHA. Independent
+  source review and matching fresh parent/candidate confirmations remain necessary
+  before any promotion. No benchmark settings/workload changes or work outside timers.
+  Report each sample, separate medians/ranges, phase tradeoffs, RSS and known overlap.
+- Inherited strict pristine disagreements remain open: signal, loss, gradients33/161/180,
+  uifo_rand1/3 sensitivity, unresolved grid FD54/59/63/136/161/163. First-order reverse
+  custom-VJP scope unchanged. Prior official passes do not resolve these questions.
+  Next decision: inspect31's build phase and full costs; if no credible benefit,
+  retain reviewed parent and obtain the already-prepared supervisor profiling evidence.
+  Absolute deadline2026-11-22 09:27:44 UTC unchanged.
