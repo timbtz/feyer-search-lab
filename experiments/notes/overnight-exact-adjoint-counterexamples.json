@@ -1,0 +1,30 @@
+{
+  "scope": "Algebraic guard counterexamples, not an observed optical Setup failure.",
+  "old_tolerance": 1.7763568394002505e-15,
+  "collinearity": {
+    "old_guard_accepts": true,
+    "discarded_cotangent": 1e-16,
+    "explicit_solution": [
+      1.0,
+      10000.0
+    ],
+    "approximate_reuse": [
+      1.0,
+      0.0
+    ],
+    "max_error": 10000.0
+  },
+  "hermitian": {
+    "old_guard_accepts": true,
+    "operator_asymmetry": 1e-16,
+    "explicit_solution": [
+      10000.0,
+      1.0
+    ],
+    "approximate_reuse": [
+      0.0,
+      1.0
+    ],
+    "max_error": 10000.0
+  }
+}
