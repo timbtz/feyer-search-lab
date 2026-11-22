@@ -1,0 +1,53 @@
+{
+  "parent": "7a9480332bad29b5aaeacc5a4628481581507e7a",
+  "source_sha256": "c2f3c90ac4338756b1d63918ac3949347be20c9421d0b9001f71fae129c15ce6",
+  "counts": {
+    "structures": 224,
+    "query_pairs": 2816,
+    "zero_structure_entries": 2241,
+    "matched_exceptions": 1441,
+    "gathered_value_vectors": 672
+  },
+  "storage": [
+    {
+      "size": 67,
+      "structural_entries": 134,
+      "parent_lookup_bytes": 36448,
+      "candidate_lookup_bytes": 18224
+    },
+    {
+      "size": 257,
+      "structural_entries": 514,
+      "parent_lookup_bytes": 530448,
+      "candidate_lookup_bytes": 265224
+    }
+  ],
+  "boundary_checks": [
+    {
+      "entry_count": 0,
+      "dtype": "int32"
+    },
+    {
+      "entry_count": 1,
+      "dtype": "int32"
+    },
+    {
+      "entry_count": 2147483646,
+      "dtype": "int32"
+    },
+    {
+      "entry_count": 2147483647,
+      "dtype": "int32"
+    },
+    {
+      "entry_count": 2147483648,
+      "dtype": "int64"
+    },
+    {
+      "entry_count": 9223372036854775807,
+      "dtype": "int64"
+    }
+  ],
+  "result": "all coordinate, digest, exception and value comparisons passed",
+  "scope": "synthetic structural inspection; no JAX, optical workload or timings"
+}

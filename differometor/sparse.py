@@ -215,13 +215,13 @@ class SparseSystem:
         # Prepare the gather operand once while building, rather than tracing
         # general advanced-index normalization/packing at every JAX boundary.
         self.base_coordinates = np.stack((all_rows, all_cols), axis=1)
-        # CSC coefficients followed by the augmented column are already sorted
-        # by (column, row). Keep one key per structural entry instead of an
-        # N-by-N integer lookup table. Zero-valued write/extra entries remain in
-        # this index, just as they remain in the full structural pattern.
-        self._position_keys = all_cols * size + all_rows
-        self._matrix_shape = base_matrix.shape
-        self.write_positions = self.positions(write_rows, write_cols)
+        # The private table stores only -1 and structural entry offsets. Use a
+        # narrower integer when every offset fits; public indices stay int64.
+        position_dtype = np.int32 if all_rows.size <= np.iinfo(np.int32).max else np.int64
+        position = np.full(base_matrix.shape, -1, dtype=position_dtype)
+        position[all_rows, all_cols] = np.arange(all_rows.size)
+        self._position = position
+        self.write_positions = position[write_rows, write_cols].astype(np.int64, copy=False)
         self.unique_writes = bool(np.unique(self.write_positions).size == self.write_positions.size)
         digest = hashlib.sha256()
         for array in (np.int64(size), np.int64(augmented), all_rows, all_cols, self.write_positions):
@@ -229,25 +229,10 @@ class SparseSystem:
         self._key = digest.hexdigest()
 
     def positions(self, rows, cols):
-        rows = np.asarray(rows, dtype=np.int64).ravel()
-        cols = np.asarray(cols, dtype=np.int64).ravel()
-        try:
-            rows, cols = np.broadcast_arrays(rows, cols)
-        except ValueError as error:
-            raise IndexError("System matrix index arrays cannot be broadcast together") from error
-        # Preserve NumPy's negative-index semantics, including -1 for the RHS.
-        height, width = self._matrix_shape
-        if (np.any(rows < -height) or np.any(rows >= height)
-                or np.any(cols < -width) or np.any(cols >= width)):
-            raise IndexError("System matrix index out of bounds")
-        rows = np.where(rows < 0, rows + height, rows)
-        cols = np.where(cols < 0, cols + width, cols)
-        keys = cols * height + rows
-        positions = np.searchsorted(self._position_keys, keys).astype(np.int64, copy=False)
-        if (np.any(positions == self._position_keys.size)
-                or np.any(self._position_keys[positions] != keys)):
+        positions = self._position[np.asarray(rows, dtype=np.int64).ravel(), np.asarray(cols, dtype=np.int64).ravel()]
+        if np.any(positions < 0):
             raise ValueError("Requested positions outside the sparse pattern")
-        return positions
+        return positions.astype(np.int64, copy=False)
 
     def mask(self, predicate):
         """Static boolean mask over pattern entries from predicate(rows, cols)."""

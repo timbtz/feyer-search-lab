@@ -4233,3 +4233,89 @@ yet. Retain admitted7 as the reviewed timing reference and35 as provisional
 numerical parent. Existing pristine discrepancies, six unresolved grid finite
 differences and first-order-only custom VJP limitations remain open. Actual
 35/41 Voyager factor/RHS and35/34 adjoint captures are still outstanding.
+
+
+### Trial42 evaluated: no confirmed gain; replace the lookup mechanism
+
+SHA `8e2df9853e42f11a858e4312f2c0feef43fc2c1b`, dual request
+`faed10d53fc44ad1914e5c597c450fa2` (grid-1/2/3 and aligo-1/2/3).
+All six official runs pass. Confirmed improvement=false; independent source
+review=null. Runner promotion_ready=true does not supply the missing review or
+a stable timing gain. Publication4368680891dc0a5d0af163a5cffc17a47d2f9a51 retains7.
+
+Large samples:0.8550016265362501,0.8573320712894201,0.8259206265211105s;
+median0.8550016265362501, range[0.8259206265211105,0.8573320712894201].
+aLIGO samples:0.5548947993665934,0.6121964529156685,0.550902608782053s;
+median0.5548947993665934, range[0.550902608782053,0.6121964529156685].
+Relative ranges3.674% large and11.046% aLIGO. No samples removed. Compared with
+35's earlier cohort, totals increased35.717662ms and5.166231ms respectively.
+These are unpaired comparisons, not causal estimates or organizer scores.
+
+Phase medians ms (delta vs35): large build73.145473(+3.210910),
+forward186.995292(+5.347379), reverse107.335698(+0.911798),
+imports267.055072(-0.498775), forward compile33.978464(+0.202958).
+aLIGO build38.079772(+0.484789), forward32.847347(+0.078429),
+reverse18.939657(-0.035914), imports267.445596(+2.614154),
+forward compile33.560921(+0.139672). Second large forward202.447226ms and compile
+45.860108ms, and second aLIGO forward43.801429ms/compile48.224740ms illustrate
+variation beyond the changed build code. External contention is not excluded;
+job overlap status is unknown. This does not establish that searchsorted caused
+the observed slowdown, but offers no reason to promote its added complexity.
+
+Sampled RSS bytes: large[609316864,621649920,541175808],
+aLIGO[324050944,288993280,305885184], generalization838057984. No budget breach.
+Sampling cannot establish the small expected memory saving against variable
+process peaks; local array nbytes were not process-memory evidence.
+
+Inspected all six saved JSON per-array comparison records and both lists of14
+seed/pristine generalization records against35: identical in every comparison.
+All three large archive hashes equal35's e0f2069c..., and all three aLIGO hashes
+equal35's1c27f50f.... All14 generalization cases pass seed tolerances;4/14 pass
+pristine. Seed gradient maximum differences remain5.219937156653032e-5 large
+and8.803908713161945e-10 aLIGO. Pristine large131 signal/3 gradient/1 loss failures,
+aLIGO official loss failure, rand1/rand3 logarithmic errors
+0.0002036099068405406/5.8100919558157216e-5 and the other inherited findings are
+unchanged. Remote raw NPZ files were not reopened locally. Self-comparison of the
+generalization archive is not independent evidence. No new numerical failure
+was reported, and no existing discrepancy was resolved by42.
+
+Decision: retire42's sorted-key/searchsorted implementation; preserve its commit,
+checks and results. Return to35's direct dense coordinate indexing for one narrower
+refinement,43 below. Do not combine42 with another execution optimization.
+
+## Trial43: retain direct lookup, narrow private position-table integers
+
+Prepared, not evaluated; new SHA and official jobs pending. Relative to numerical
+parent35, only sparse.py changes: choose int32 for the private dense position
+table when the structural-entry count fits its signed range, otherwise int64.
+The table contains only sentinel-1 and offsets0..nnz_total-1. Convert write_positions
+and positions() results to int64, preserving public dtype and structural digests.
+All NumPy direct-indexing semantics remain;42's searches, bounds normalization and
+exception translation are removed. The decision uses integer representability,
+not topology identity or numerical parameter values. Structural zeros and their
+derivative destinations remain present. All numerical execution and exact guards
+are35's; no physical precision, factor ordering or refinement policy changes.
+
+Hypothesis: halve the dense lookup allocation/fill/retained bytes for eligible
+systems without42's binary searches. This trades small index-result casts for less
+dense memory traffic. It may be too small to improve complete-run timing. This is
+a single narrower structural refinement, not a confirmed build or memory-RSS win.
+
+`overnight-numerics-position-width-check.py` and its result JSON preserve the
+inspection.224 structures,2816 query pairs,1441 matching exception classes,
+2241 zero-valued structural entries and672 changed-coefficient value vectors
+match35 bitwise for coordinates, index outputs, pattern arrays and digests.
+The actual dtype-selection expression was checked at0,1,int32max-1,int32max,
+int32max+1,int64max; sentinel and highest-offset conversions remain exact. The
+large-range checks inspect representability without allocating enormous matrices.
+Synthetic67-row lookup bytes36448->18224;257-row530448->265224. These are array
+storage counts, not benchmark timing/RSS measurements. Source SHA256
+c2f3c90ac4338756b1d63918ac3949347be20c9421d0b9001f71fae129c15ce6.
+
+Request both unchanged full official benchmarks, all outputs/gradients,14-case
+generalization and independent review on43's exact SHA. Compare with35 and admitted7
+separately. Only pursue paired fresh-process confirmation if there is a plausible
+complete-run gain. If43 also offers no improvement, close position-table tuning
+until actual build profiling supplies stronger evidence. Existing optical numerical
+questions and missing coordinator captures remain unchanged. No independent
+benchmarks, imports cleanup, evaluator edits or new dependencies were used.
