@@ -97,40 +97,26 @@ class SystemPlan:
         if self.sweep_partition is not None:
             self._key += _digest(np.int64(parameter_count), sweep_indices)
 
-    def values(self, rows, base, repeated_rows=0):
-        """Structural values (B, nnz_total) after the ordered update writes.
-
-        `repeated_rows` is the original block length when the caller tiled its
-        parameter rows and changed only this plan's sweep indices. Components
-        excluding those indices may be evaluated on that block and replicated.
-        This is a within-call structural reuse, with no retained numeric values.
-        """
-        reuse = (self.sweep_partition is not None and rows.shape[1] == self.parameter_count
-                 and 0 < repeated_rows < rows.shape[0] and rows.shape[0] % repeated_rows == 0)
-        if not reuse:
-            blocks = [evaluate_function(f, rows[:, indices]) for f, indices, _ in self.groups]
-        else:
-            blocks = []
-            repeats = rows.shape[0] // repeated_rows
-            for (f, indices, _), (independent, dependent) in zip(self.groups, self.sweep_partition):
-                if not independent.size:
-                    block = evaluate_function(f, rows[:, indices])
-                elif not dependent.size:
-                    block = np.tile(evaluate_function(f, rows[:repeated_rows, indices]), (repeats, 1, 1))
-                else:
-                    block = np.empty((rows.shape[0], indices.shape[0], 4), dtype=np.complex128)
-                    block[:, dependent] = evaluate_function(f, rows[:, indices[dependent]])
-                    block[:, independent] = np.tile(
-                        evaluate_function(f, rows[:repeated_rows, indices[independent]]), (repeats, 1, 1))
-                blocks.append(block)
+    def values(self, rows, base):
+        """Structural values (B, nnz_total) after the ordered update writes."""
+        blocks = [evaluate_function(f, rows[:, indices]) for f, indices, _ in self.groups]
         outputs = np.concatenate(blocks, axis=1).reshape(rows.shape[0], -1)[:, self.flat_selection]
         values = np.repeat(np.asarray(base, dtype=np.complex128)[None, :], rows.shape[0], axis=0)
         values[:, self.writes[self.last]] = outputs[:, self.last]
         return values
 
-    def backward(self, rows, values_bar):
-        """Cotangents of the parameter rows (B, P) and the base values (nnz_total,)."""
+    def backward(self, rows, values_bar, repeated_rows=0):
+        """Cotangents of parameter rows (B, P) and base values (nnz_total,).
+
+        For rows tiled from a block of `repeated_rows` and changed only at this
+        plan's sweep indices, component Jacobians excluding those indices repeat.
+        Evaluate those Jacobians on the original block, then replicate them
+        before the unchanged per-row contraction and parameter scatter. This
+        retains distinct cotangents and every derivative, including at zeros.
+        """
         count = rows.shape[0]
+        reuse = (self.sweep_partition is not None and rows.shape[1] == self.parameter_count
+                 and 0 < repeated_rows < count and count % repeated_rows == 0)
         batch = np.arange(count)[:, None]
         last_bar = values_bar[:, self.last_positions]
         base_bar = values_bar.copy()
@@ -142,10 +128,26 @@ class SystemPlan:
             np.add.at(flat, (batch, self.last_selection[None, :]), last_bar)
         flat = flat.reshape(count, self.total_rows, 4)
         rows_bar = np.zeros(rows.shape, dtype=np.complex128)
-        for (function_index, indices, slots), start, stop in zip(self.groups, self.offsets[:-1], self.offsets[1:]):
+        for group_index, ((function_index, indices, slots), start, stop) in enumerate(
+                zip(self.groups, self.offsets[:-1], self.offsets[1:])):
             if not slots:
                 continue
-            _, linear, antilinear = function_jacobian(function_index, slots, rows[:, indices], with_outputs=False)
+            independent, dependent = self.sweep_partition[group_index] if reuse else ((), ())
+            if not len(independent):
+                _, linear, antilinear = function_jacobian(function_index, slots, rows[:, indices], with_outputs=False)
+            else:
+                _, small_j, small_k = function_jacobian(
+                    function_index, slots, rows[:repeated_rows, indices[independent]], with_outputs=False)
+                repeats = (count // repeated_rows, 1, 1, 1)
+                if not len(dependent):
+                    linear, antilinear = np.tile(small_j, repeats), np.tile(small_k, repeats)
+                else:
+                    shape = (count, indices.shape[0], 4, len(slots))
+                    linear, antilinear = np.empty(shape, dtype=np.complex128), np.empty(shape, dtype=np.complex128)
+                    _, linear[:, dependent], antilinear[:, dependent] = function_jacobian(
+                        function_index, slots, rows[:, indices[dependent]], with_outputs=False)
+                    linear[:, independent] = np.tile(small_j, repeats)
+                    antilinear[:, independent] = np.tile(small_k, repeats)
             output_bar = flat[:, start:stop, :, None]                       # (B, R, 4, 1)
             inputs_bar = np.sum(linear * output_bar, axis=2) + np.conj(np.sum(antilinear * output_bar, axis=2))
             for position, slot in enumerate(slots):
@@ -515,7 +517,7 @@ def _assemble(plan, parameters, carrier_values, signal_values, carrier_base, sig
         carrier_factors.append(factor)
         carrier[row] = _solve(carrier_products, carrier_coefficients[row], factor, carrier_rhs[row], "N")
     signal_rows = _expand(carrier_rows, plan.signal_changing, signal_values)
-    raw_signal = plan.signal.values(signal_rows, signal_base, repeated_rows=carrier_rows.shape[0])
+    raw_signal = plan.signal.values(signal_rows, signal_base)
     placing = structure.signal_placing_positions
     placed = raw_signal.copy()
     placed[:, placing] = -raw_signal[:, placing] * carrier[:, plan.signal_carrier_indices]
@@ -677,7 +679,8 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
             carrier_values_bar[row, carrier_system.nnz :] = rhs_bar[carrier_system.rhs_rows]
 
     # Component functions and parameter expansion.
-    signal_rows_bar, signal_base_bar = plan.signal.backward(state["signal_rows"], raw_bar)
+    signal_rows_bar, signal_base_bar = plan.signal.backward(
+        state["signal_rows"], raw_bar, repeated_rows=state["carrier_rows"].shape[0])
     noise_rows_bar, noise_base_bar = plan.noise.backward(state["noise_rows"], noise_values_bar)
     signal_rows_bar[: noise_rows_bar.shape[0]] += noise_rows_bar
     carrier_rows_bar, signal_values_bar_in = _expand_backward(

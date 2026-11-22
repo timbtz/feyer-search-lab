@@ -1443,3 +1443,93 @@ For promising results obtain paired fresh-process complete runs against admitted
 candidate 7, including phase/memory/overlap evidence. Keep all inherited numerical
 findings explicit. Do not combine pending derivative/residual candidates. If
 splitting overhead erases this saving, reject it rather than infer a warm gain.
+
+## Candidate 20 feedback: forward reuse not established
+
+Exact SHA 9ebf922193244d29ef9be1f8b126765d06873ca5, request
+6164d6189e504fe88aa2ea64b274cd81, jobs grid-1/2/3 and aligo-1/2/3. All six
+unchanged official runs pass. Complete fresh-process seconds:
+
+- Grid [0.8735452610999346, 0.8006555959582329, 0.7933855932205915]; median
+  0.8006555959582329, range [0.7933855932205915, 0.8735452610999346].
+- aLIGO [0.5486961435526609, 0.550493536517024, 0.6647725906223059]; median
+  0.550493536517024, range [0.5486961435526609, 0.6647725906223059].
+
+Phase samples in ms: grid forward [192.554573, 186.639916, 177.407047], reverse
+[88.942500, 84.881224, 84.554538], build [93.592238, 69.272416, 74.030554],
+imports [293.179242, 263.995320, 264.748184]; aLIGO forward [32.893861,
+33.608083, 32.125410], reverse [14.403755, 15.227593, 14.347833], build
+[39.100345, 43.285580, 37.470493], imports [268.023575, 266.712012, 263.800686].
+aLIGO gradient compilation [53.267438, 53.214891, 176.677136] accounts for much
+of its slow third sample; no sample is removed and its cause is not established.
+Relative to admitted candidate 7's historical medians: grid complete -0.922088 ms,
+forward +5.476829 ms, reverse -0.476200 ms; aLIGO complete +1.938380 ms, forward
++0.003711 ms, reverse +0.019603 ms. These unpaired observations show no established
+forward or complete improvement.
+
+Max sampled process-group RSS bytes: grid 593416192, aLIGO 305176576,
+generalization 855490560. Fixed CPU2 / one logical CPU / library threads1 / no
+persistent cache. No infrastructure failures or memory-budget exceedances;
+external contention is not excluded. Grid relative range 10.011754%, aLIGO
+21.085887%. Admission rejects both timing stability checks, missing source
+review, below-threshold large gain and overlapping large ranges. confirmed=false,
+review=null, ranking_eligible=false. Do not describe this as an admitted gain.
+
+Programmatically compared every official per-array strict record and every
+initial-seed/pristine generalization case record against candidate 19: unchanged.
+Both official archive hashes remain the same as 19, seed comparisons pass and
+seed generalization passes 14/14. Raw remote NPZ files were not reopened. Pristine
+grid still has 131 signal/3 gradient/1 loss mismatches, aLIGO 1 loss mismatch;
+rand1/rand3 log sensitivity errors remain about 2.04e-4 and 5.81e-5. Seed gradient
+max absolute differences remain 5.686350050382316e-6 grid and 3.637978807091713e-11
+aLIGO. Six grid FD coordinates 54/59/63/136/161/163 and broader JVP/Hessian
+compatibility remain unresolved. Generalization self-comparison is not used as
+independent validation.
+
+Decision: remove forward reuse for the next trial, retaining 20 in branch history.
+Its structural partition enables a distinct phase test below. Do not add another
+forward-assembly variant without attribution showing material cost there.
+
+## Candidate 21: sweep-independent Jacobians, original forward assembly
+
+Candidate SHA and official job IDs pending supervisor commit/evaluation. Production
+source equals admitted ee4fea28 except host_pass.py. Forward SystemPlan.values
+and its `_assemble` call are restored exactly to that parent. Shared-primal
+candidates 18/19 and all other pending execution variants are absent.
+
+Hypothesis: the admitted reverse phase (~85.36 ms grid, ~14.38 ms aLIGO) repeats
+component derivative arithmetic for identical input blocks. Each active slot in
+function_jacobian executes the component's Dual rules anew. The topology-derived
+partition from 20 can limit that repeated calculation to the original block,
+while preserving all per-row cotangents. This is a second structural-sweep trial,
+not promotion of 20's unsuccessful forward change.
+
+Implementation: signal SystemPlan.backward accepts the original carrier-row
+block length, provided only by host_backward after the same parameter expansion.
+It evaluates sweep-independent components' J/K blocks once per original row and
+tiles those Jacobians back to full shape. Dependent components retain every row.
+The subsequent multiply, reduction, conjugation and parameter scatter are exactly
+the admitted operations in the same order. No cotangents are summed early, no
+zero derivative entries are pruned, and nothing numerical survives this call.
+Changing all indices keeps the ordinary path. Plan identity includes sweep
+indices and parameter width; negative aliases are normalized structurally.
+
+`overnight-numerics-sweep-jacobian-check.py` passes the existing 37 assembly checks
+plus 240 repeated-block forward/backward comparisons across all 19 component
+functions, multiple original block lengths, repetition counts, empty/partial/full
+sweeps, negative index aliases, repeated destinations, real/complex/zero/nonfinite
+inputs. Finite results are bitwise equal including signed zero, nonfinite results
+array-equal. Synthetic Jacobian-row evaluations decrease 798 -> 342. These are
+small AST-extracted NumPy inspections, not optical benchmarks or timing evidence.
+`git diff --check` passes. No additional numerical accuracy claim is made.
+
+Request both unchanged exact-SHA official benchmarks, full output/gradient and
+14-case generalization comparisons, and independent review. If promising, request
+paired fresh-process complete runs against admitted candidate 7. For attribution,
+please additionally report each signal group's independent/dependent row counts
+from `host_plan.signal.sweep_partition` and callback profiling in a separate
+untimed diagnostic job. Official timing must include plan construction. No plan
+multiplicity for either official setup is currently claimed. Preserve all inherited
+strict disagreements, phase samples, memory and contention evidence. If there is
+no meaningful saving, retire structural sweep reuse rather than combine it with
+unconfirmed derivative/storage candidates.
