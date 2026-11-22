@@ -679,3 +679,118 @@ Candidate 1 is not intended to touch any of them.
   every sample, phases, RSS and overlap conditions recorded. If this contraction direction
   remains unhelpful, return to admitted parent and obtain the already requested callback
   profile before expanding the mechanism. No performance promotion on synthetic evidence.
+
+
+## Candidate 13 feedback: freeze source for paired confirmation
+
+- Exact simulator SHA `2117c2e8293722508055852ad7f614ed8959bb12`, request
+  `dc07a2130411485ca7088fdcb2f5981c`; grid-1/2/3 and aligo-1/2/3 all official PASS.
+  Large complete fresh samples [0.8103161100298166, 0.785075806081295,
+  0.7955721952021122] s; median 0.7955721952021122, range
+  0.785075806081295–0.8103161100298166. Official aLIGO samples
+  [0.5411639176309109, 0.5458533503115177, 0.5450098384171724] s;
+  median 0.5450098384171724, range 0.5411639176309109–0.5458533503115177.
+- Large forward 178.749/178.000/178.626 ms, reverse 70.280/72.020/70.066 ms.
+  aLIGO forward 32.703/32.923/32.698 ms, reverse 13.755/13.826/13.655 ms.
+  Unpaired large reverse median is 12.437 ms lower than candidate 12 and 15.078 ms
+  lower than admitted candidate 7; aLIGO reverse median is 0.520 ms below candidate 12
+  and 0.629 ms below candidate 7. Complete large median is only 6.005 ms below
+  candidate 7: import median rose 6.981 ms while unchanged forward median fell
+  2.537 ms. These are descriptive phase deltas, not causal paired evidence.
+- Maximum sampled group RSS large 540340224 B, aLIGO 291217408 B,
+  generalization 817172480 B. No infrastructure error or memory exceedance reported;
+  CPU 2/logical CPU one/library threads one, no persistent compilation cache.
+  External contention not excluded; sampled peaks do not certify actual peak memory.
+- Official archive hashes still equal those listed for candidate 12. Inspected all
+  per-array checks: seed comparisons pass carrier, signal, noise, powers, sensitivity,
+  loss and gradient in both official workloads and all 14 generalization cases.
+  Pristine failures remain unchanged, including grid signal/gradient/loss, aLIGO loss,
+  and random1/3 log sensitivity disagreements 2.036099e-4 and 5.810092e-5.
+  Existing six unresolved grid finite-difference coordinates are not resolved by this
+  result. Generalization NPZ hash includes timing metadata; no new claim of bytewise
+  equality to initial seed, or independent local inspection of remote raw arrays.
+- Outcome: confirmed_improvement=false; promotion reasons are requires_source_review
+  and overlapping large first-run ranges. ranking_eligible=false. The admitted parent
+  remains candidate 7. Candidate 13 is promising phase evidence, not a shared winner.
+- No candidate 14 or simulator edit in this turn. All ten local simulator file SHA-256s
+  verified equal to this exact candidate 13 receipt. Stop refining this mechanism until
+  paired evidence is obtained; preserve candidates 11–13 and other trials in history.
+  Candidate 13 stays frozen for confirmation rather than accumulating new changes.
+- Added own-note diagnostic `overnight-numerics-pullback-fd.py`: real scalar linear
+  objectives of all 19 component outputs, three nonsingular random real/complex points
+  per function, all seven input slots in real and imaginary directions, both central
+  difference steps 1e-5 and 5e-6 required to pass. Cotangents normalize by primal output
+  scale. 1596 direction/step checks pass fixed scaled-error bound 2e-7; maximum error
+  3.7198357667473056e-9 (susceptibility). Oracle uses primal component evaluations,
+  no Dual derivative or Jacobian. This supplements shared-code equivalence checks;
+  it is not full-system/ill-conditioned validation or universal physics certification.
+- Coordinator action requested: independent source review of the full candidate 13
+  delta versus ee4fea2, and at least five paired/interleaved fresh complete dual runs
+  of exact 2117c2e versus exact ee4fea2 on the same CPU/environment/resource policy.
+  Retain every sample and recorded overlap status, phases and sampled RSS; compare
+  large and official aLIGO separately. A notes-only supervisor commit must not be
+  described as a new optimization. Additional unchanged candidate runs are useful
+  confirmation, but without interleaved parent runs do not resolve the paired request.
+  If paired results reject the gain, restore admitted source and move to a genuinely
+  different mechanism after callback profiling; do not keep tuning contraction layout.
+  Absolute deadline remains 2026-11-22 09:27:44 UTC; campaign continues via supervisor.
+
+
+## Candidate 14: direct component-group assembly, on admitted parent
+
+- Supervisor explicitly requested a new evaluable simulator change after the frozen-source
+  confirmation handoff. No new evaluation, paired cohort or independent review was provided;
+  candidate 13 receipt dc07a213 and its pending confirmation request remain as recorded above.
+  Candidate 13 is preserved at 2117c2e8293722508055852ad7f614ed8959bb12, without promotion.
+- Change direction: return production host.py and host_pass.py to admitted candidate 7
+  ee4fea28c04d482566be16e916b609d7c6a99e5e, then apply only this forward assembly variant.
+  This is a working-file restoration, not a history reset. The streamed Jacobian contraction
+  and its output-plane layout (12/13) are not included. Candidate 11's component formula
+  variant and 9/10's residual allocation variants are also absent. Pending confirmation of
+  those preserved revisions can proceed independently through the supervisor.
+- Concrete redundant operation: SystemPlan.values previously retained all group outputs in
+  a list, copied them into a concatenated (B, total_rows, 4) array, gathered all selected
+  outputs, then gathered last-write survivors again to assign the final structural values.
+  Only surviving write destinations determine the final matrix vector. The existing plan
+  already calculates which writes survive; no inference from current numerical values is used.
+- Implementation: partition surviving write destinations and their selected output offsets by
+  component group once during SystemPlan construction. NumPy-style negative output indices
+  are normalized before partitioning. During each assembly, repeat the base vector as before,
+  evaluate each full group, and gather its surviving entries directly into final destinations.
+  No list of all blocks, concatenated output array or gather of overwritten writes remains.
+  All groups are still evaluated even if every destination from that group is overwritten.
+  Duplicate output reads and last-write semantics are retained; destinations of surviving
+  writes are distinct for the builder's structural indices. Every evaluation uses fresh
+  numerical inputs and freshly evaluated outputs. The plan stores indices only.
+- Only host_pass.py differs from admitted source. Backward formulas/scatters, component
+  functions, precision, factorization and iterative refinement are exactly admitted source.
+  The plan key already includes all groups, selectors and destinations from which group_writes
+  is deterministically derived; no additional numerical cache or cache-key assumption added.
+- Hypothesis: reduce temporary memory traffic during the measured ~178–183 ms large forward
+  phase. The fraction spent in assembly is still unprofiled; this is not a claim assembly
+  dominates that phase. Extra static partitioning costs build time and per-group destinations
+  cost memory. Both must be included in the complete first-run evaluator result. No tuning menu
+  or dynamic threshold is introduced, and no workload identity or known shape is recognized.
+- Small local AST/NumPy 2.5.5 inspection: overnight-numerics-assembly-check.py passed 37
+  forward/backward comparisons against admitted-parent SystemPlan. Covers all 19 component
+  functions, variable group sizes, one/three/seven batch rows, repeated input indices,
+  duplicate destinations and output selections, negative output indices, real/complex and
+  all-zero input rows. Finite results match bit-for-bit; nonfinite results compare equal.
+  A separate counted case confirms a wholly overwritten group still executes, alongside
+  a repeated output read and cross-group destination overwrites. Backward is unchanged but
+  tested to check that new plan metadata does not interfere with it.
+- Synthetic allocation inspection with 19 groups * 17 rows * 7 batch rows and 800 writes:
+  fully materialized matrix values in both paths, tracemalloc peak parent 395112 B,
+  candidate 154304 B. This is allocation evidence, not timing or official process RSS.
+  No optical benchmark was run locally. The earlier pullback/FD scripts and results refer
+  to preserved candidate 13; they are historical diagnostics, not checks of this restored host.
+- Candidate 14 SHA and both benchmark/job identifiers pending supervisor. Request both full
+  unchanged official workloads on the exact same new SHA, all saved outputs/gradients and
+  the generalization suite versus admitted source/initial seed, independent source review,
+  and paired fresh-process confirmations if promising. Compare against admitted candidate 7,
+  not candidate 13, to isolate this hypothesis. Record build/forward/reverse phase tradeoffs,
+  all samples and ranges, memory and overlapping jobs. Keep the previously requested paired
+  review of frozen candidate 13 separate; do not automatically combine these variants.
+- All existing pristine signal/gradient/loss discrepancies, random1/3 sensitivity errors,
+  six unresolved grid finite-difference coordinates, and whole-pass JVP/Hessian limitations
+  remain open. No tolerance, fixture, workload, compiler policy or JIT-stage changes.

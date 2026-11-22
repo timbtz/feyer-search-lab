@@ -32,7 +32,7 @@ import jax.numpy as jnp
 import numpy as np
 
 from differometor.components import UNIT_VACUUM, H_PLANCK, F0
-from differometor.host import evaluate_function, function_pullback
+from differometor.host import evaluate_function, function_jacobian
 from differometor.sparse import _scipy, REFINEMENT_STEPS, REFINEMENT_TOLERANCE
 
 _NOISE_SCALE = 2 * UNIT_VACUUM * H_PLANCK * F0 * 0.25
@@ -77,6 +77,15 @@ class SystemPlan:
         self.last_positions = writes[last]
         self.last_selection = self.flat_selection[last]
         self.last_selection_unique = bool(np.unique(self.last_selection).size == self.last_selection.size)
+        # Route each surviving matrix write to its component group once. The
+        # destinations are unique after last-write selection, even when several
+        # destinations read the same component output. Normalize NumPy negative
+        # flat indices before partitioning them among groups.
+        selected = np.arange(self.total_rows * 4)[self.last_selection]
+        self.group_writes = []
+        for start, stop in zip(self.offsets[:-1], self.offsets[1:]):
+            mask = (selected >= 4 * start) & (selected < 4 * stop)
+            self.group_writes.append((self.last_positions[mask], selected[mask] - 4 * start))
         self._key = _digest(
             np.asarray([f for f, _, _ in self.groups], dtype=np.int64),
             *[indices for _, indices, _ in self.groups],
@@ -86,10 +95,12 @@ class SystemPlan:
 
     def values(self, rows, base):
         """Structural values (B, nnz_total) after the ordered update writes."""
-        blocks = [evaluate_function(f, rows[:, indices]) for f, indices, _ in self.groups]
-        outputs = np.concatenate(blocks, axis=1).reshape(rows.shape[0], -1)[:, self.flat_selection]
         values = np.repeat(np.asarray(base, dtype=np.complex128)[None, :], rows.shape[0], axis=0)
-        values[:, self.writes[self.last]] = outputs[:, self.last]
+        for (function_index, indices, _), (destinations, selection) in zip(self.groups, self.group_writes):
+            # Evaluate every group, including groups whose writes were all
+            # overwritten. Only storage and routing change; formulas do not.
+            block = evaluate_function(function_index, rows[:, indices])
+            values[:, destinations] = block.reshape(rows.shape[0], indices.shape[0] * 4)[:, selection]
         return values
 
     def backward(self, rows, values_bar):
@@ -109,7 +120,9 @@ class SystemPlan:
         for (function_index, indices, slots), start, stop in zip(self.groups, self.offsets[:-1], self.offsets[1:]):
             if not slots:
                 continue
-            inputs_bar = function_pullback(function_index, slots, rows[:, indices], flat[:, start:stop])
+            _, linear, antilinear = function_jacobian(function_index, slots, rows[:, indices], with_outputs=False)
+            output_bar = flat[:, start:stop, :, None]                       # (B, R, 4, 1)
+            inputs_bar = np.sum(linear * output_bar, axis=2) + np.conj(np.sum(antilinear * output_bar, axis=2))
             for position, slot in enumerate(slots):
                 np.add.at(rows_bar, (batch, indices[None, :, slot]), inputs_bar[:, :, position])
         return rows_bar, base_bar.sum(axis=0)

@@ -225,38 +225,6 @@ def function_jacobian(function_index, slots, inputs, with_outputs=True):
     return outputs, linear, antilinear
 
 
-def function_pullback(function_index, slots, inputs, output_bar):
-    """Contract component Wirtinger derivatives one input slot at a time.
-
-    Uses the same scalar-seeded Dual evaluations as function_jacobian, but
-    retains only two four-output derivative buffers rather than two complete
-    Jacobians. Structural zeros are still multiplied by their cotangents, so
-    zero parameters and nonfinite inputs keep the original derivative behavior.
-    """
-    inputs, columns = _columns(inputs)
-    shape = inputs.shape[:-1]
-    output_bar = np.moveaxis(np.asarray(output_bar, dtype=np.complex128), -1, 0)
-    result = np.empty(shape + (len(slots),), dtype=np.complex128)
-    # Each output derivative spans contiguous component rows. Reduce the four
-    # output planes after multiplication, retaining every output contribution.
-    linear = np.empty((4,) + shape, dtype=np.complex128)
-    antilinear = np.empty_like(linear)
-    for position, slot in enumerate(slots):
-        linear.fill(0)
-        antilinear.fill(0)
-        seeded = list(columns)
-        seeded[slot] = Dual(columns[slot], 1.0, 0.0)
-        stack = HOST_FUNCTIONS[function_index](_Slots(seeded))
-        for column, item in enumerate(stack.items):
-            if isinstance(item, Dual):
-                linear[column] = np.broadcast_to(item.a, shape)
-                antilinear[column] = np.broadcast_to(item.b, shape)
-        np.multiply(linear, output_bar, out=linear)
-        np.multiply(antilinear, output_bar, out=antilinear)
-        result[..., position] = np.sum(linear, axis=0) + np.conj(np.sum(antilinear, axis=0))
-    return result
-
-
 _ANTILINEAR = {}
 
 
