@@ -71,6 +71,12 @@ class SystemPlan:
         last[writes.size - 1 - first_in_reverse] = True
         self.writes, self.last = writes, last
         self.written = np.unique(writes)
+        # Only the last write to a position receives a cotangent (the others are
+        # exactly zero). When those last writes read distinct component outputs,
+        # the cotangent scatter is a plain assignment instead of `np.add.at`.
+        self.last_positions = writes[last]
+        self.last_selection = self.flat_selection[last]
+        self.last_selection_unique = bool(np.unique(self.last_selection).size == self.last_selection.size)
         self._key = _digest(
             np.asarray([f for f, _, _ in self.groups], dtype=np.int64),
             *[indices for _, indices, _ in self.groups],
@@ -90,18 +96,20 @@ class SystemPlan:
         """Cotangents of the parameter rows (B, P) and the base values (nnz_total,)."""
         count = rows.shape[0]
         batch = np.arange(count)[:, None]
-        outputs_bar = np.zeros((count, self.writes.size), dtype=np.complex128)
-        outputs_bar[:, self.last] = values_bar[:, self.writes[self.last]]
+        last_bar = values_bar[:, self.last_positions]
         base_bar = values_bar.copy()
         base_bar[:, self.written] = 0
         flat = np.zeros((count, self.total_rows * 4), dtype=np.complex128)
-        np.add.at(flat, (batch, self.flat_selection[None, :]), outputs_bar)
+        if self.last_selection_unique:
+            flat[:, self.last_selection] = last_bar
+        else:
+            np.add.at(flat, (batch, self.last_selection[None, :]), last_bar)
         flat = flat.reshape(count, self.total_rows, 4)
         rows_bar = np.zeros(rows.shape, dtype=np.complex128)
         for (function_index, indices, slots), start, stop in zip(self.groups, self.offsets[:-1], self.offsets[1:]):
             if not slots:
                 continue
-            _, linear, antilinear = function_jacobian(function_index, slots, rows[:, indices])
+            _, linear, antilinear = function_jacobian(function_index, slots, rows[:, indices], with_outputs=False)
             output_bar = flat[:, start:stop, :, None]                       # (B, R, 4, 1)
             inputs_bar = np.sum(linear * output_bar, axis=2) + np.conj(np.sum(antilinear * output_bar, axis=2))
             for position, slot in enumerate(slots):
@@ -290,14 +298,24 @@ def _solve(products, values, factor, rhs, trans):
     return solution
 
 
-# Signal-system factorizations of the latest forward evaluation, consumed by its
-# backward evaluation (same coefficients, verified by digest) and then dropped.
-# Each forward factors afresh, so repeated evaluations never reuse a factorization.
-_FACTORS = {}
+# Assembly state of the latest forward evaluation (component values, carrier
+# factorizations and solution, signal-system factorizations), consumed once by
+# its backward evaluation when the backward receives byte-identical assembly
+# inputs (verified by digest of the small input arrays; all assembled values and
+# factored coefficients are deterministic functions of them), then dropped. A
+# mismatch, or a backward without a preceding forward, reassembles and refactors.
+# Each forward assembles and factors afresh; nothing is reused across evaluations.
+_ASSEMBLY = {}
 
 
-def _digest_values(pattern, values):
-    return pattern, hashlib.blake2b(np.ascontiguousarray(values).tobytes(), digest_size=20).digest()
+def _assembly_key(plan, *inputs):
+    digest = hashlib.blake2b(digest_size=20)
+    for array in inputs:
+        array = np.ascontiguousarray(array)
+        digest.update(str(array.dtype).encode())
+        digest.update(np.asarray(array.shape, dtype=np.int64).tobytes())
+        digest.update(array.tobytes())
+    return plan._key, digest.digest()
 
 
 def _selections(plan, carrier, selection_vectors):
@@ -318,8 +336,10 @@ def _assemble(plan, parameters, carrier_values, signal_values, carrier_base, sig
     carrier_coefficients, carrier_rhs = _split(structure.carrier, carrier_vals)
     carrier = np.empty((carrier_rows.shape[0], structure.carrier.size), dtype=np.complex128)
     carrier_products = _products(structure.carrier.pattern)
+    carrier_factors = []
     for row in range(carrier_rows.shape[0]):
         factor = _factor(structure.carrier.pattern, carrier_coefficients[row])
+        carrier_factors.append(factor)
         carrier[row] = _solve(carrier_products, carrier_coefficients[row], factor, carrier_rhs[row], "N")
     signal_rows = _expand(carrier_rows, plan.signal_changing, signal_values)
     raw_signal = plan.signal.values(signal_rows, signal_base)
@@ -329,14 +349,17 @@ def _assemble(plan, parameters, carrier_values, signal_values, carrier_base, sig
     final = np.where(structure.signal_conjugate, np.conj(placed), placed)
     noise_rows = signal_rows[:1] if plan.noise_row_reuse else signal_rows
     return dict(carrier_rows=carrier_rows, carrier_values=carrier_vals, carrier_coefficients=carrier_coefficients,
-                carrier=carrier, signal_rows=signal_rows, raw_signal=raw_signal, signal_values=final,
+                carrier_factors=carrier_factors, carrier=carrier, signal_rows=signal_rows, raw_signal=raw_signal, signal_values=final,
                 noise_rows=noise_rows, noise_values=plan.noise.values(noise_rows, noise_base))
 
 
 def host_forward(plan, parameters, carrier_values, signal_values, carrier_base, signal_base, noise_base,
                  selection_vectors):
-    state = _assemble(plan, np.asarray(parameters), np.asarray(carrier_values), np.asarray(signal_values),
-                      np.asarray(carrier_base), np.asarray(signal_base), np.asarray(noise_base))
+    assembly_inputs = (np.asarray(parameters), np.asarray(carrier_values), np.asarray(signal_values),
+                       np.asarray(carrier_base), np.asarray(signal_base), np.asarray(noise_base))
+    state = _assemble(plan, *assembly_inputs)
+    _ASSEMBLY.clear()
+    _ASSEMBLY[_assembly_key(plan, *assembly_inputs)] = state
     structure = plan.structure
     system = structure.signal
     coefficients, rhs = _split(system, state["signal_values"])
@@ -355,9 +378,10 @@ def host_forward(plan, parameters, carrier_values, signal_values, carrier_base, 
         sources = noise_products.apply(state["noise_values"][0 if plan.noise_row_reuse else row], weight)
         solution = _solve(products, coefficients[row], factor, np.concatenate([rhs[row][:, None], sources], axis=1), "N")
         signal[row], covariances[row], weights[row] = solution[:, 0], solution[:, 1:].T, weight.T
-    _FACTORS.clear()
-    _FACTORS[_digest_values(system.pattern, coefficients)] = factors
-    noise = _noise_amplitude(np.sum(np.real(covariances * np.conj(selections)), axis=2)).T     # (D, Bs)
+    # Consumed by the matching backward together with the rest of the state:
+    # these coefficients are a deterministic function of the digested inputs.
+    state["signal_factors"] = factors
+    noise =_noise_amplitude(np.sum(np.real(covariances * np.conj(selections)), axis=2)).T     # (D, Bs)
     return state["carrier"], signal, noise, covariances, weights
 
 
@@ -382,8 +406,12 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
     signal_values, selection_vectors = np.asarray(signal_values), np.asarray(selection_vectors)
     carrier, signal, noise = np.asarray(carrier), np.asarray(signal), np.asarray(noise)
     covariances, weights = np.asarray(covariances), np.asarray(weights)
-    state = _assemble(plan, parameters, carrier_values, signal_values, np.asarray(carrier_base),
-                      np.asarray(signal_base), np.asarray(noise_base))
+    assembly_inputs = (parameters, carrier_values, signal_values, np.asarray(carrier_base),
+                       np.asarray(signal_base), np.asarray(noise_base))
+    state = _ASSEMBLY.pop(_assembly_key(plan, *assembly_inputs), None)
+    _ASSEMBLY.clear()
+    if state is None:
+        state = _assemble(plan, *assembly_inputs)
     structure = plan.structure
     system, noise_system, carrier_system = structure.signal, structure.noise, structure.carrier
     coefficients, _ = _split(system, state["signal_values"])
@@ -399,8 +427,7 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
     noise_values_bar = np.zeros(state["noise_values"].shape, dtype=np.complex128)
     pattern, noise_pattern = system.pattern, noise_system.pattern
     products, noise_products = _products(pattern), _products(noise_pattern)
-    factors = _FACTORS.pop(_digest_values(pattern, coefficients), None)
-    _FACTORS.clear()
+    factors = state.get("signal_factors")
     signal_bar = np.asarray(signal_bar)
     for row in range(count):
         factor = factors[row] if factors is not None else _factor(pattern, coefficients[row])
@@ -448,7 +475,7 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
     carrier_pattern = carrier_system.pattern
     carrier_products = _products(carrier_pattern)
     for row in range(carrier.shape[0]):
-        factor = _factor(carrier_pattern, state["carrier_coefficients"][row])
+        factor = state["carrier_factors"][row]
         rhs_bar = _solve(carrier_products, state["carrier_coefficients"][row], factor, carrier_total_bar[row], "T")
         carrier_values_bar[row, : carrier_system.nnz] = -rhs_bar[carrier_pattern.rows] * carrier[row][carrier_pattern.cols]
         if carrier_system.augmented:

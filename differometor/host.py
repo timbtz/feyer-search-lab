@@ -203,11 +203,15 @@ def evaluate_function(function_index, inputs):
     return np.stack([np.broadcast_to(np.asarray(item, dtype=np.complex128), shape) for item in stack.items], axis=-1)
 
 
-def function_jacobian(function_index, slots, inputs):
-    """Outputs (..., 4) and Wirtinger blocks J, K (..., 4, len(slots)) on the host."""
+def function_jacobian(function_index, slots, inputs, with_outputs=True):
+    """Outputs (..., 4) and Wirtinger blocks J, K (..., 4, len(slots)) on the host.
+
+    `with_outputs=False` skips the (unused) primal evaluation and returns None
+    for the outputs; the Jacobian blocks are computed identically.
+    """
     inputs, columns = _columns(inputs)
     shape = inputs.shape[:-1]
-    outputs = evaluate_function(function_index, inputs)
+    outputs = evaluate_function(function_index, inputs) if with_outputs else None
     linear = np.zeros(shape + (4, len(slots)), dtype=np.complex128)
     antilinear = np.zeros(shape + (4, len(slots)), dtype=np.complex128)
     for position, slot in enumerate(slots):
