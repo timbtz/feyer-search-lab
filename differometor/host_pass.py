@@ -495,7 +495,7 @@ def host_forward(plan, parameters, carrier_values, signal_values, carrier_base, 
     _ASSEMBLY[_assembly_key(plan, *assembly_inputs)] = state
     structure = plan.structure
     system = structure.signal
-    coefficients, rhs = _split(system, state["signal_values"])
+    coefficients = state["signal_values"][:, : system.nnz]
     _, selected = _selections(plan, state["carrier"], np.asarray(selection_vectors))
     count, detectors = coefficients.shape[0], selected.shape[0]
     selections = np.moveaxis(np.broadcast_to(selected, (detectors, count, system.size)), 0, 1)
@@ -503,13 +503,21 @@ def host_forward(plan, parameters, carrier_values, signal_values, carrier_base, 
     signal = np.empty((count, system.size), dtype=np.complex128)
     covariances = np.empty((count, detectors, system.size), dtype=np.complex128)
     weights = np.empty((count, detectors, system.size), dtype=np.complex128)
+    # Materialize the augmented RHS only where it is consumed. The first
+    # column holds the signal source, the others hold the noise sources.
+    # _solve does not mutate its RHS; every column is filled for each row.
+    combined_rhs = np.empty((system.size, 1 + detectors), dtype=np.complex128)
     factors = []
     for row in range(count):
         factor = _factor(system.pattern, coefficients[row])
         factors.append(factor)
         weight = _solve(products, coefficients[row], factor, selections[row].T, "H")      # A^H w = s
         sources = noise_products.apply(state["noise_values"][0 if plan.noise_row_reuse else row], weight)
-        solution = _solve(products, coefficients[row], factor, np.concatenate([rhs[row][:, None], sources], axis=1), "N")
+        combined_rhs[:, 0] = 0
+        if system.augmented:
+            combined_rhs[system.rhs_rows, 0] = state["signal_values"][row, system.nnz :]
+        combined_rhs[:, 1:] = sources
+        solution = _solve(products, coefficients[row], factor, combined_rhs, "N")
         signal[row], covariances[row], weights[row] = solution[:, 0], solution[:, 1:].T, weight.T
     # Consumed by the matching backward together with the rest of the state:
     # these coefficients are a deterministic function of the digested inputs.
@@ -547,7 +555,7 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
         state = _assemble(plan, *assembly_inputs)
     structure = plan.structure
     system, noise_system, carrier_system = structure.signal, structure.noise, structure.carrier
-    coefficients, _ = _split(system, state["signal_values"])
+    coefficients = state["signal_values"][:, : system.nnz]
     tiled, selected = _selections(plan, carrier, selection_vectors)
     count, detectors, size = coefficients.shape[0], selected.shape[0], system.size
     selections = np.moveaxis(np.broadcast_to(selected, (detectors, count, size)), 0, 1)

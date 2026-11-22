@@ -2886,3 +2886,127 @@ This is the third arithmetic-program implementation trial (30/31/32). If32 also
 has no repeat-supported improvement, retire further interpreter variants and
 return to admitted7 for a distinct mechanism; do not stack another tiny dispatch
 variant or claim31's overlapping timing ranges were confirmation.
+
+## Candidate32 feedback and retirement of arithmetic-program variants
+
+SHA c8cd23baa84a14017b5d11e0297056b9d9580b6e, request
+05ebd8de4c4a4b97bfb38febd3000d5e, grid-1/2/3 and aligo-1/2/3.
+All six official runs passed. confirmed_improvement=false, source_review=null;
+selection reasons are missing independent review and overlapping large ranges.
+No matched parent repeats were returned. No infrastructure/memory failure.
+
+Large complete fresh-process seconds:
+[0.8347152415663004, 0.7874145731329918, 0.7879157122224569];
+median0.7879157122224569, range0.7874145731329918–0.8347152415663004,
+relative range6.003%. Official aLIGO seconds:
+[0.5519249495118856, 0.5487538296729326, 0.5459981542080641];
+median0.5487538296729326, range0.5459981542080641–0.5519249495118856,
+relative range1.080%. Keep every sample, including grid-1 imports295.975ms.
+External contention remains unexcluded; these are unpaired support observations.
+Relative to admitted7's earlier medians, large is13.661971ms lower and aLIGO
+0.198673ms higher. The large maximum exceeds admitted7's minimum794.425ms.
+No combined score or confirmed gain is inferred.
+
+Large median phases ms: imports264.279258, build73.976772, forward178.928969,
+reverse79.211289. Relative to admitted7: -1.321356/-0.017308/-2.234118/
+-6.146135ms respectively. aLIGO medians264.634872/37.868606/34.012673/
+16.313627; deltas +1.126064/-0.093939/+1.122523/+1.929475ms.
+Versus31, the target reverse median changed +0.187574ms large and -0.149081ms
+ aLIGO: the generator reduction did not produce a clear target-phase win.
+Sampled maximum RSS: large598085632, aLIGO315387904,
+generalization1067003904 bytes. Sampled RSS is not a strict peak bound.
+
+Read and compared every returned official hash/strict record and all14 seed and
+pristine generalization case records against31: all are unchanged. Official
+archives match31; all14 seed cases pass with zero log-sensitivity error. This is
+not bitwise agreement with the seed: official gradient maxabs differences remain
+5.686350050382316e-6 large and3.637978807091713e-11 aLIGO. Raw remote NPZs were
+not reopened locally. Inherited pristine grid signal131/gradient3/loss1 and
+ aLIGO loss1 failures remain; random-topology sensitivity differences remain
+about2.04e-4 and5.81e-5. The unresolved six grid finite-difference coordinates,
+prior aLIGO29/29 checks and lack of JVP/Hessian support remain separate findings.
+The earlier native-product28 failures remain unresolved and are not reintroduced.
+
+Decision follows the recorded third-trial rule: retire further arithmetic-program
+variants30/31/32 without claiming they are numerically invalid or disproven speedups.
+Their dual-official passes and provisional timing improvements remain preserved
+in their exact commits, notes and receipts; none has paired confirmation/review.
+Return the active simulator to admitted7's reviewed implementation by restoring
+host.py and removing host_program.py. A read-only diff of all differometor/**
+against ee4fea28c04d482566be16e916b609d7c6a99e5e is empty. No history reset, no
+commit, no benchmark and no other-lane source change. Historical program-check
+and dispatch-check scripts target the preserved30–32 sources; run them on those
+revisions, not on the restored parent lacking host_program.py.
+
+Next direction: obtain the already prepared opt-in callback profile on admitted7
+(overnight-numerics-profile.py, separately from official timings) to distinguish
+component/Jacobian time, sparse product/refinement time, factorization and scatter.
+Use that evidence to choose a distinct mechanism, rather than a fourth interpreter
+or another unpaired tiny allocation variant. The provisional31/32 benefit can
+still be resolved by coordinator-run exact-SHA paired repeats and independent
+source review without further source edits. Existing actual-matrix diagnostic
+requests for28 remain open. This handoff ends the interpreter hypothesis only;
+the campaign deadline remains2026-11-22 09:27:44 UTC.
+
+## Candidate33: materialize signal right-hand sides at the solve boundary
+
+The supervisor requested a concrete next experiment after the retirement handoff.
+No callback profile or paired confirmation accompanied that request. This is a
+narrow conservative refinement on admitted7, not another interpreter, ordering,
+or sparse accumulation variant. Scientific parent:
+ee4fea28c04d482566be16e916b609d7c6a99e5e. Candidate SHA and both official job IDs
+are pending supervisor commit/evaluation. The only simulator delta from that
+parent is14 lines in host_pass.py. The host.py restoration and host_program.py
+deletion relative to branch HEAD retire32; all earlier commits remain preserved.
+
+Source-established redundancy: host_forward calls _split to allocate a dense
+(frequency_rows, system_size) signal RHS, then copies each row into a newly
+concatenated signal/noise RHS for _solve. host_backward calls _split and discards
+the same dense RHS entirely. None of those arrays is an AD output or residual.
+The new forward creates one C-contiguous (system_size,1+detectors) buffer locally,
+clears its signal column, scatters the current row's augmented entries and fills
+all noise columns before each solve. The backward takes the coefficient slice
+directly. This removes two B*N complex arrays per forward/backward pair and
+replaces B concatenate allocations with one N*(D+1) buffer. Carrier _split,
+all source entries, factors, products, refinement arithmetic and stopping rules
+are unchanged. The buffer is not retained or reused across forward evaluations.
+
+Target is allocation/copy work inside forward execution (historical admitted
+median181.163ms grid/32.890ms aLIGO), plus the unused reverse RHS allocation.
+The fraction of either measured phase attributable to this work is unknown.
+This might save too little to distinguish from first-run noise; operation-count
+evidence is not a timing claim. No new numerical or architecture parameter is
+introduced. Requests for callback profiling remain useful and outstanding.
+
+Local synthetic inspection: existing NumPy/SciPy venv, AST-extracted actual
+forward/backward/product/solve functions, no JAX import or optical benchmark.
+Run experiments/notes/overnight-numerics-rhs-check.py with python -B.
+
+-72 forward and72 backward pairs match admitted7 bit-for-bit for every returned
+ array. Cases vary1/3/9 rows,1/2/4 detectors, augmented/unaugmented matrices,
+ noise-row reuse, explicit structural zeros, permuted RHS destinations and
+ diagonal scaling spanning1e10. Same-topology reevaluations change both matrix
+ coefficients and source values, including zero-to-nonzero sources.
+-All1008 refined solve RHS and results match bit-for-bit. Both versions make
+ 2016 factor.solve calls and384 fresh factorizations. RHS immutability and
+ nonaliasing solve outputs are asserted. The production solver is unchanged.
+-The source-extracted _split counter measures144 redundant dense RHS arrays,
+ totaling69888 bytes across these small checks, reduced to zero for the signal
+ path. This measures eliminated materializations, not peak RSS or elapsed time.
+-The component pullback stand-in only isolates orchestration and preserves
+ base cotangents; these checks do not validate optical differentiation, JAX
+ callback integration or modulation physics. Full evaluator checks remain
+ mandatory. git diff --check passes.
+
+Request both unchanged official benchmarks on the new exact SHA, all saved
+physical outputs and gradients, all14 generalization cases (including modulation),
+and independent source review. If promising, obtain paired fresh-process complete
+runs against admitted7 on matching CPU/environment, retaining every sample and
+reporting phase, RSS and overlap evidence separately for grid and aLIGO. Reject
+this refinement if no stable gain is established; do not infer benefit from its
+allocation counts or combine it with an unconfirmed historical candidate.
+
+Inherited pristine signal/gradient33,161,180 and random-case disagreements remain
+unresolved, as do grid finite-difference54,59,63,136,161,163; prior aLIGO checks
+confirmed29/29. Whole-pass custom VJP remains first-order reverse-only. No official
+outcome, phase delta, memory improvement or correctness certificate exists for33.
