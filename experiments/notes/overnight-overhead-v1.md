@@ -2974,3 +2974,126 @@
   separate matched-parent confirmation remain pending. Do not repeat this mapping
   mechanism after three unsuccessful evaluated variants. Deadline unchanged:
   2026-11-22 09:27:44 UTC. No benchmarks, commits, installs or agents launched here.
+
+### Candidate34 feedback — retire full-row source-map gather
+
+- SHA cc288e51f081992190bea3480cbdff9f59ac6856; evaluation
+  5e4f4623c76f49c498c06be1a4af223b, jobs grid-1/2/3 and aligo-1/2/3.
+  Receipt: experiments/runs/overnight-20261122/overnight-overhead-v1/5e4f4623c76f49c498c06be1a4af223b.json.
+  Publisher475378429d50cf2099e40a8defcc42b1b58c3e33. Official3/3 each;
+  confirmed_improvement=false, no independent source review. Selection rejected
+  missing review, insufficient large gain and overlapping first-run ranges.
+- Large fresh complete samples [0.834713775664568,0.8167882431298494,
+  0.7990507762879133] s: median0.8167882431298494, range
+  0.7990507762879133–0.834713775664568 (relative4.3662%).
+  Official aLIGO samples [0.5458212047815323,0.5465039424598217,
+  0.5490178875625134] s: median0.5465039424598217, range
+  0.5458212047815323–0.5490178875625134 (relative0.5849%). Historical reviewed
+  ee4fea2 median deltas+15.211 ms large/-2.051 ms aLIGO; unpaired, not causal.
+- Phase medians ms, large/aLIGO: imports277.044/265.900, init3.647/3.596,
+  load1.499/0.212, build73.531/39.786, forward lower19.536/19.936,
+  forward compile27.964/28.953, forward execute184.465/33.153,
+  sensitivity lower25.416/26.443, compile41.303/41.519, execute0.919/0.470,
+  gradient lower17.238/16.398, compile56.427/55.050, execute85.649/14.565,
+  host transfer0.198/0.147. Versus33, forward compile-5.204/-4.912 ms,
+  gradient compile+2.781/+0.454 ms, build+0.924/+1.438 ms. The forward
+  compile signal is useful evidence, but total benefit is not established and
+  these unpaired phase deltas do not prove attribution. Import variance is not
+  a demonstrated consequence of the row-source mechanism.
+- Sampled peak process-group RSS bytes: large638914560/550719488/514240512;
+  aLIGO283086848/295243776/295440384; generalization776028160. No budget exceedance.
+  Fixed EPYC9334 CPU2, one logical CPU and library threads1, x64, no persistent
+  cache, unchanged package flags. External contention not excluded; no slow sample
+  discarded or attributed to overlap. ranking_eligible=false.
+- All official saved arrays/gradients pass initial-seed tolerances; archives remain
+  large112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5 and
+  aLIGO9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195.
+  This does not imply bitwise seed equality: gradient maximum absolute differences
+  remain5.686350050382316e-6 and3.637978807091713e-11 respectively. All14 additional
+  cases pass seed-relative checks; generalization archive
+  2a67dbff99c2a0b4f7869e286eb7ccb137d4024140efa11a132ceb5fc5e8f6f2.
+  Pristine comparisons retain the inherited disagreements. No newly introduced
+  seed-relative discrepancy is reported. Focused96 primal/VJP and six guard checks
+  remain unexecuted locally; no supervisor diagnostic result was supplied.
+- Decision: retire34 and restore host_pass.py/simulate.py to reviewed ee4fea2;
+  all ten simulator modules verified byte-identical and syntactically valid.
+  Preserve the evaluated revision, diagnostic and evidence. Do not extend source-map
+  variants to linking or add a new custom derivative on this unconfirmed evidence.
+  This restoration is not a new optimization candidate or history reset.
+- Next concrete investigation remains supervisor import/build/trace profiling with
+  experiments/notes/overnight-overhead-profile.py --trace-forward on reviewed
+  ee4fea2, using actual caller inputs for large, official aLIGO and a third setup.
+  Attribute costs before another boundary variant. Candidate30's separate source
+  review and interleaved matched-parent confirmation request remains pending.
+- Inherited pristine signal/loss/gradient findings including33/161/180,
+  uifo_rand1/3 sensitivity discrepancies, unresolved grid FD54/59/63/136/161/163
+  and first-order reverse-only whole-pass custom VJP remain explicit. Additional
+  aLIGO29/29 checks do not certify general accuracy. Stop ends34's hypothesis,
+  not the authorized campaign; deadline stays2026-11-22 09:27:44 UTC.
+
+
+### Candidate35 — remove only full identity parameter gathers before AD
+
+- Supervisor resumed after34 retirement and requested a concrete experiment.
+  Current branch HEAD a8b5e887e1b1463958c9e6956ba4a217cfb3c548; retain the pending
+  removal of34's source-map implementation. Scientific parent is reviewed
+  ee4fea28c04d482566be16e916b609d7c6a99e5e. Only _static_take differs from that
+  parent; nine other simulator modules match it exactly. New candidate SHA and
+  official job identifiers are pending supervisor submission. No history reset.
+- Narrow candidate30's provisional compilation signal to full identity reads.
+  If the actual concrete index vector equals the complete nonempty ascending
+  index range of a 1-D input, return jnp.asarray(values). For traced/JAX inputs
+  this is an identity before differentiation, with no gather or scatter transpose.
+  The conversion preserves the old helper's JAX-array result for eager NumPy inputs.
+  Empty, partial, repeated, reversed and nonconsecutive selections retain the
+  original gather. No slicing variant, source-map insertion or empty-phase change
+  is combined. No derivative rule is hand-written.
+- Generic source evidence: pairs_to_arrays enumerates optimization_pairs and appends
+  the enumeration index for each found parameter. When each supplied optimization
+  pair maps to one parameter and covers the supplied input vector, its value-index
+  selection is a full identity. Shared or missing mappings are checked from the
+  actual indices and keep gather semantics unless genuinely identity. This does
+  not inspect a fixture, shape constant, current parameter value or benchmark.
+  Current zero entries keep their derivatives. Index checks run during tracing
+  and their cost is counted; nothing is cached or moved outside the timer.
+- Measured motivation, not35 results: candidate30 (7baa78dd15196b74b6f6e6fdb2bfbac07cfb8f72,
+  evaluation d2b5d7f493674c4bb905a3e019d2d488) had gradient compile medians
+  48.943/44.267 ms large/aLIGO, versus parent-like28's53.124/53.150 ms.
+  Its forward lower19.486/18.981 ms and gradient lower16.376/15.902 ms still
+  contain transformation overhead. Complete medians0.794727370/0.534523541 s
+  were unconfirmed, with overlapping large ranges and no independent review.
+  This narrower experiment tests whether eliminating the identity before AD
+  retains that signal with simpler generated code; partial slices may instead
+  have caused the signal, or the compiler may already eliminate identity work.
+  Extra index comparison/allocation can offset any benefit. No35 timings exist.
+- Local validation: 2837 standard-library stub checks exercise the actual helper's
+  control flow over small index products, including duplicate/reversed/partial/
+  empty cases and invalid input rank. Four complete identity cases use the new
+  path; all others keep gather. These are structural checks, not NumPy/JAX
+  execution. The initial stub's gather signature omitted a positional argument;
+  corrected the stub and reran successfully, with no simulator change required.
+  Python syntax and whitespace checks pass. Replacing this helper's AST with
+  the parent's restores simulate.py's complete parent AST.
+- Prepared experiments/notes/overnight-overhead-identity-gather-check.py:
+  54 tiny real/complex JIT primal/VJP cases (selected current zeros, primal sign
+  bits, duplicate-index cotangent accumulation), six forward/transpose trace
+  checks and six eager NumPy input/result-type checks. UNEXECUTED locally:
+  NumPy/JAX are unavailable; no dependency installation or benchmark launched.
+  Trace checks test elimination of gather/scatter-add, not compilation speed.
+- Request this focused diagnostic, both unchanged full official benchmarks and
+  all14 additional generalization cases on the exact supervisor-committed SHA.
+  Inspect all output/gradient arrays against seed and pristine separately.
+  Independent source review and matched interleaved fresh-process parent/candidate
+  confirmation remain required before promotion. Report each sample, separate
+  large/aLIGO medians/ranges, phase tradeoffs, sampled RSS and known overlap.
+  Candidate30's independent pending confirmation is not replaced by this experiment.
+- Decision after feedback: if identity-only elimination has no stable phase and
+  complete-first-run benefit, retire it and do not extend to more partial-slice
+  variants. Next evidence remains supervisor profiling on reviewed parent using
+  overnight-overhead-profile.py --trace-forward, not another source-map rewrite.
+- Inherited pristine signal/loss/gradient findings including33/161/180,
+  uifo_rand1/3 sensitivity discrepancies, unresolved grid FD54/59/63/136/161/163
+  and first-order reverse-only host custom VJP remain open. Prior aLIGO29/29
+  checks are bounded evidence. No solver/refinement/adjoint formula, compiler
+  flag, official stage, workload or tolerance changes. Deadline remains
+  2026-11-22 09:27:44 UTC. No commits, agents, installs or benchmark launches here.

@@ -419,14 +419,8 @@ def simulate(
         # Same insertion, linking and detector-phase steps as below, indexed with the
         # builder's concrete (nonnegative, in-bounds, unique-destination) indices.
         row = parameters.reshape(parameters.shape[1:])
-        if layout.optimized_row_sources is not None:
-            row = _static_take(
-                jnp.concatenate((row, optimized_parameters.astype(row.dtype))),
-                layout.optimized_row_sources,
-            )
-        else:
-            row = _static_set(row, layout.optimized_parameter_indices,
-                              _static_take(optimized_parameters, layout.optimized_value_indices))
+        row = _static_set(row, layout.optimized_parameter_indices,
+                          _static_take(optimized_parameters, layout.optimized_value_indices))
         inputs_to_link = _static_take(row, layout.linked_indices)
         outputs_to_link = vmap(lambda i, x: lax.switch(i, LINKING_FUNCTIONS, x))(
             linking_function_indices, inputs_to_link
@@ -972,9 +966,17 @@ STATIC_PARAMETER_LAYOUT: bool = True
 
 def _static_take(values, indices):
     """values[indices] for a 1-D array and concrete nonnegative in-bounds indices."""
+    indices = np.asarray(indices, dtype=np.int64)
+    # An ordered selection of the entire vector is the identity, including its
+    # transpose. Eliminate it before AD instead of generating a gather/scatter.
+    # Inspect only indices and shape; zero-valued inputs keep their derivatives.
+    if (values.ndim == 1 and indices.ndim == 1 and indices.size > 0
+            and indices.size == values.shape[0]
+            and np.array_equal(indices, np.arange(indices.size, dtype=np.int64))):
+        return jnp.asarray(values)
     return lax.gather(
         values,
-        np.asarray(indices, dtype=np.int64)[:, None],
+        indices[:, None],
         lax.GatherDimensionNumbers(offset_dims=(), collapsed_slice_dims=(0,), start_index_map=(0,)),
         slice_sizes=(1,),
         mode=lax.GatherScatterMode.PROMISE_IN_BOUNDS,

@@ -136,7 +136,6 @@ class ParameterLayout:
         self.indices_to_link = np.asarray(indices_to_link, dtype=np.int64).ravel()
         self.qhd_parameter_indices = np.asarray(qhd_parameter_indices, dtype=np.int64).ravel()
         self.qhd_placing_indices = np.asarray(qhd_placing_indices, dtype=np.int64).reshape(-1, 3)
-        self.optimized_row_sources = None
         self._key = _digest(np.int64(self.parameter_count), self.optimized_parameter_indices,
                             self.optimized_value_indices, self.linked_indices, self.indices_to_link,
                             self.qhd_parameter_indices, self.qhd_placing_indices)
@@ -174,13 +173,6 @@ class ParameterLayout:
         for indices in (layout.optimized_parameter_indices, layout.indices_to_link):
             if np.unique(indices).size != indices.size:
                 return None
-        if layout.optimized_parameter_indices.size == layout.optimized_value_indices.size:
-            # Select each row entry from either the original row or an optimized
-            # input. Repeated optimized-value indices remain repeated reads, whose
-            # transpose accumulates all their derivative contributions.
-            sources = np.arange(count, dtype=np.int64)
-            sources[layout.optimized_parameter_indices] = count + layout.optimized_value_indices
-            layout.optimized_row_sources = sources
         return layout
 
     def applies(self, parameters, optimized_parameters):
