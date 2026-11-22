@@ -296,3 +296,32 @@
 - Expected numerics: bitwise identical to 5bbb91e (whose arrays equal the seed in every audited case).
 - Needs: both official benchmarks, strict/generalization comparisons, fresh independent source review of the
   combined diff, and preferably paired runs against 5bbb91e.
+
+### Candidate 6 feedback (inspected by Claude): additive vs its parent; incumbent moved again
+
+- Candidate SHA `5aaf391162fee4cb752a6872e74fc854ba1a2cc3`; request `27a46d5a39094e64951b8de6048ca96c`; publication
+  `5d548b2`. Official 3/3 both setups; strict vs seed passed (gradient max abs diff 5.65e-5, rel L2 9.7e-10 large;
+  2.1e-8 / 6.5e-13 aLIGO — rounding from 5bbb91e's exact-identity backward shortcut, not from the boundary ops); all
+  14 generalization cases pass vs seed. Pristine disagreements unchanged.
+- Large 0.855195, 0.835383, 0.824027 s (median 0.835383) vs 5bbb91e median 0.852667: −17.3 ms. aLIGO 0.524702,
+  0.527734, 0.544907 s (median 0.527734) vs 0.555710: −28.0 ms. Phases large: forward lower 11.3, compile 26.9;
+  gradient lower 11.6, compile 46.2; gradient exec 141 ms (5bbb91e's backward saving retained). The boundary
+  mechanism's ~26 ms lower+compile saving carried over unchanged.
+- Not promoted: incumbent became `ee4fea2` (evaluation `e4f7b59d…`, large median 0.801578, aLIGO 0.548555), which
+  adds the collinear-signal-cotangent and Hermitian-noise backward shortcuts. Third evaluated submission in a row
+  without a confirmed promotion, but c5/c6 show the same reproducible ~26 ms phase gain each time; the misses are
+  incumbent movement, not mechanism failure. Coordination note: the boundary-op change touches only callback
+  wrappers/`simulate`/`build.identity_link`, and composes cleanly with backward-math changes.
+
+## Candidate 7: boundary-op removal on the current campaign best ee4fea2 (search-direction note)
+
+- Parents: `ee4fea28c04d482566be16e916b609d7c6a99e5e` (admitted best, approved review, evaluation
+  `e4f7b59d3b094a8e9c6dd41263cab78e`) and `5aaf391` (candidate 6). Candidate SHA pending.
+- Construction: candidate 6 plus ee4fea2's two additional published hunks, applied verbatim: `HERMITIAN_TOLERANCE`,
+  `_transpose_index`, `_collinear_coefficient`, `_is_hermitian`; and in `host_backward` the collinear-signal shortcut
+  and Hermitian-noise adjoint branch. No other change. This is not a new mechanism; it is the conservative way to put
+  the already-validated lane gain on top of the incumbent rather than racing it again.
+- Hypothesis: same ~26 ms lower+compile saving on top of ee4fea2 → large ≈ 0.78 s, aLIGO ≈ 0.52 s; unmeasured.
+  Numerics expected identical to ee4fea2 (boundary changes are exact copies/no-ops).
+- If not promoted for incumbent-movement reasons again, I recommend the coordinator apply this lane's diff to
+  whatever the incumbent is at the time (it is small and disjoint) rather than another chase from this branch.
