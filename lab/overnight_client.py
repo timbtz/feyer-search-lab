@@ -215,6 +215,8 @@ sys.stdout.buffer.write(path.read_bytes())
         derived = dict(receipt)
         derived.update(raw_runner_receipt_sha256=raw_sha, original_evaluation_id=request['request_id'])
         review = self.review(request, state, directory, receipt_path)
+        if (directory / 'source-review-selection.json').exists():
+            derived['source_review_selection'] = json.loads((directory / 'source-review-selection.json').read_text())
         if review is not None:
             derived['source_review'] = review
         else:
@@ -256,6 +258,14 @@ print(json.dumps(result))
         if (not command or request['sha'] == SEED
                 or receipt.get('admission', {}).get('promotion_ready') is not True):
             return None
+        selection_path = directory / 'source-review-selection.json'
+        if selection_path.exists():
+            selection = json.loads(selection_path.read_text())
+        else:
+            selection = self.review_selection(receipt)
+            write_json(selection_path, selection)
+        if selection.get('eligible_except_source_review') is not True:
+            return None
         proposal_parent = request.get('parent_sha')
         if not re.fullmatch(r'[0-9a-f]{40}', str(proposal_parent)):
             raise ValueError('Source review requires exact parent')
@@ -290,6 +300,26 @@ print(json.dumps(result))
             raise ValueError('Review artifact hash mismatch')
         write_json(saved, review)
         return review
+
+    def review_selection(self, receipt):
+        """Spend review tokens only when source review is the sole remaining gate."""
+        from .overnight_publish import BEST, Publisher, assess
+        try:
+            if self.publisher is None:
+                self.publisher = Publisher(self.config['publisher_worktree'], self.evidence)
+            with self.publisher.locked():
+                raw = (self.publisher.worktree / BEST).read_bytes()
+                current = json.loads(raw)
+                decision = assess(receipt, current)
+            reasons = [reason for reason in decision['reasons'] if reason != 'requires_source_review']
+            return {'eligible_except_source_review': not reasons, 'reasons': reasons,
+                    'ignored_gate': 'requires_source_review', 'current_best_sha256': sha256(raw),
+                    'current_best_candidate_sha': current.get('candidate_sha'),
+                    'selection_decision': decision, 'observed_at': self.clock(),
+                    'note': 'Review-cost preflight only; Publisher must assess again before promotion.'}
+        except (OSError, ValueError, TypeError, KeyError, AttributeError, subprocess.SubprocessError) as exc:
+            return {'eligible_except_source_review': False, 'reasons': ['current_best_unavailable_or_invalid'],
+                    'error': str(exc), 'observed_at': self.clock()}
 
     def publish(self, path):
         if self.publisher is None:

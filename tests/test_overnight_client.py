@@ -1,4 +1,5 @@
 import json
+import contextlib
 from pathlib import Path
 import subprocess
 import tempfile
@@ -204,6 +205,7 @@ class ClientTests(unittest.TestCase):
         receipt = directory / 'receipt.json'
         receipt.write_text(json.dumps({**self.receipt, 'admission': {'promotion_ready': True}}))
         self.config['source_review_command'] = '/fake/reviewer'
+        self.client.review_selection = lambda _: {'eligible_except_source_review': True, 'reasons': []}
         original_run = subprocess.run
         calls = []
         def run(args, **kwargs):
@@ -229,6 +231,60 @@ class ClientTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertEqual(len(calls), 1)
         self.assertFalse(first['approved'])
+
+    def selection_fixture(self, seconds):
+        try:
+            from lab.overnight_publish import BEST
+        except ImportError:
+            self.skipTest('Publisher is integrated by the coordinating maintainer')
+        control = self.root / 'selection-control'
+        current = {'status': 'admitted_campaign_best', 'candidate_sha': self.seed,
+                   'cohort_digest': 'f'*64,
+                   'metrics': {setup: {'median_seconds': 1.0, 'min_seconds': .99, 'max_seconds': 1.01}
+                               for setup in ('grid', 'aligo')}}
+        path = control / BEST
+        path.parent.mkdir(parents=True)
+        path.write_text(json.dumps(current))
+        self.publisher.worktree = control
+        self.publisher.locked = lambda: contextlib.nullcontext()
+        receipt = {**self.receipt, 'cohort_digest': 'f'*64,
+                   'admission': {'promotion_ready': True, 'candidate_sha': self.sha, 'comparison_cohort_passed': True},
+                   'generalization': {'case_count': 14, 'all_finite': True, 'inputs_identical': True,
+                                      'seed_comparison_passed': True, 'new_failures': []},
+                   'benchmarks': {setup: {'samples': [
+                       {'seconds': seconds, 'fresh_process': True, 'official_passed': True,
+                        'candidate_sha': self.sha, 'report_sha256': f'{i:064x}'} for i in range(1, 4)]}
+                       for setup in ('grid', 'aligo')}}
+        return path, receipt
+
+    def test_slower_candidate_skips_external_review_with_durable_reason(self):
+        _, receipt = self.selection_fixture(1.1)
+        directory = Path(self.config['evidence_root']) / 'client' / self.request['request_id']
+        directory.mkdir(parents=True)
+        path = directory / 'receipt.json'
+        path.write_text(json.dumps(receipt))
+        self.config['source_review_command'] = '/must/not/run'
+        with patch('lab.overnight_client.subprocess.run', side_effect=AssertionError('Slower candidate must not consume model tokens')):
+            result = self.client.review(self.request, self.terminal, directory, path)
+        self.assertIsNone(result)
+        selection = json.loads((directory / 'source-review-selection.json').read_text())
+        self.assertFalse(selection['eligible_except_source_review'])
+        self.assertTrue(selection['reasons'])
+        self.assertNotIn('requires_source_review', selection['reasons'])
+
+    def test_faster_candidate_is_eligible_for_review_without_invented_approval(self):
+        _, receipt = self.selection_fixture(.9)
+        selection = self.client.review_selection(receipt)
+        self.assertTrue(selection['eligible_except_source_review'], selection)
+        self.assertEqual(selection['selection_decision']['reasons'], ['requires_source_review'])
+        self.assertNotIn('source_review', receipt)
+
+    def test_missing_current_best_skips_review_fail_closed(self):
+        path, receipt = self.selection_fixture(.9)
+        path.unlink()
+        selection = self.client.review_selection(receipt)
+        self.assertFalse(selection['eligible_except_source_review'])
+        self.assertIn('current_best_unavailable_or_invalid', selection['reasons'])
 
     def test_log_collection_skips_source_and_keeps_hashed_small_logs(self):
         remote_root = Path(self.config['remote_root'])
