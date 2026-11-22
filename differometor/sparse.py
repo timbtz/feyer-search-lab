@@ -50,18 +50,8 @@ class SparsePattern:
     def __init__(self, rows, cols, size):
         rows = np.asarray(rows, dtype=np.int64)
         cols = np.asarray(cols, dtype=np.int64)
-        if rows.ndim == cols.ndim == 1 and rows.shape == cols.shape:
-            # Validate CSC order directly. Equal coordinates are allowed, as in
-            # the stable lexsort check; no sorting or permutation is needed.
-            out_of_order = np.any(
-                (cols[1:] < cols[:-1])
-                | ((cols[1:] == cols[:-1]) & (rows[1:] < rows[:-1]))
-            )
-        else:
-            # Preserve the existing handling of non-vector/mismatched inputs.
-            order = np.lexsort((rows, cols))
-            out_of_order = np.any(order != np.arange(order.size))
-        if out_of_order:
+        order = np.lexsort((rows, cols))
+        if np.any(order != np.arange(order.size)):
             raise ValueError("SparsePattern entries must already be in CSC order")
         self.rows = rows
         self.cols = cols

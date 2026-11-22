@@ -2630,3 +2630,110 @@
   Next decision: inspect31's build phase and full costs; if no credible benefit,
   retain reviewed parent and obtain the already-prepared supervisor profiling evidence.
   Absolute deadline2026-11-22 09:27:44 UTC unchanged.
+
+### Candidate31 feedback — retire direct CSC validation experiment
+
+- Exact candidate ee629404f16c652b61313d185f6aca9af0718ec6; evaluation
+  09c51c7c3efd43eb95a9b6ff8662d8cd, jobs grid-1/2/3 and aligo-1/2/3.
+  Receipt experiments/runs/overnight-20261122/overnight-overhead-v1/
+  09c51c7c3efd43eb95a9b6ff8662d8cd.json. Both official benchmarks passed3/3.
+- Large fresh complete seconds:0.8371940702199936,0.8019133750349283,
+  0.7954988665878773; median0.8019133750349283, range0.7954988665878773–
+  0.8371940702199936. Official aLIGO:0.5523254368454218,0.5459437370300293,
+  0.5422520395368338; median0.5459437370300293, range0.5422520395368338–
+  0.5523254368454218. Separate medians, no combined score. Relative ranges5.1995%
+  and1.8451%. No matched-parent confirmation or independent review was supplied.
+- Phase medians ms (large/aLIGO): imports267.611/264.398, initialize3.560/3.557,
+  load1.449/0.207, build73.382/38.267; forward lower19.536/19.249,
+  compile33.102/33.506, execute183.364/32.815; sensitivity lower25.618/26.111,
+  compile41.442/41.650, execute0.906/0.475; gradient lower16.972/16.620,
+  compile53.793/53.634, execute83.981/14.060; transfer0.187/0.153.
+  Against parent-like28, build is lower0.407 ms large and higher0.060 ms aLIGO;
+  this unpaired submillisecond difference does not establish the hypothesized gain.
+  Historical reviewed-parent complete medians differ by+0.336 ms large and
+  -2.611 ms aLIGO; ranges overlap. confirmed_improvement=false; publication reasons:
+  requires_source_review, large_gain_below_selection_threshold,
+  large_first_run_ranges_overlap_requires_paired_evidence.
+- Sampled process-group peak RSS bytes: large608600064/624238592/489033728;
+  aLIGO281276416/315015168/294731776; generalization1003548672. No memory budget
+  exceedance. EPYC9334, CPU2, one logical CPU, library threads1, x64, no persistent
+  cache, unchanged compiler defaults. External contention not excluded; no inference
+  that contention caused any specific sample. ranking_eligible=false.
+- All14 generalization cases and official outputs pass initial-seed regression
+  tolerances. This does not mean bitwise seed equality: official max absolute gradient
+  differences5.686350050382316e-6 large /3.637978807091713e-11 aLIGO. Generalization
+  archive25782157465800949ebd1144a69e0739f7aaf429090450d81f690b0681122cf9.
+  Pristine comparisons still fail; no new numerical failure is reported relative
+  to seed. The913-case focused NumPy diagnostic remains unexecuted locally, and
+  no supervisor result for it was supplied. Official passes are separate evidence.
+- Decision: retire31 and restore sparse.py to reviewed
+  ee4fea28c04d482566be16e916b609d7c6a99e5e. Verified all ten simulator modules
+  byte-identical to that parent and syntactically valid. Preserve31's commit,
+  diagnostic and failed timing evidence. Restoration is not an optimization candidate
+  and does not need a new candidate-only timing submission. Stop this hypothesis,
+  not the authorized campaign. Do not cycle further unique/order-validation variants.
+- Next experiment: supervisor attribution with the existing
+  experiments/notes/overnight-overhead-profile.py --trace-forward on reviewed parent,
+  using actual setup, optimization and sweep arguments. Return import/build/trace call
+  attribution for large, official aLIGO and a third setup before more builder changes.
+  Candidate30's focused diagnostic, independent review and matched-parent confirmation
+  request remains separate and pending; do not combine30 with31 or treat30 as promoted.
+- Inherited strict signal/gradient/loss disagreements, gradients33/161/180,
+  uifo_rand1/3 sensitivity discrepancies, grid FD54/59/63/136/161/163 and
+  first-order-only whole-pass custom VJP remain open. Deadline unchanged:
+  2026-11-22 09:27:44 UTC.
+
+### Candidate32 — empty static parameter reads as empty slices
+
+- Resumed after31 retirement at supervisor request for one concrete experiment.
+  Candidate SHA and benchmark/job IDs pending supervisor commit/evaluation. Working
+  source is reviewed ee4fea28c04d482566be16e916b609d7c6a99e5e plus only the
+  _static_take change in simulate.py. sparse.py's working diff restores31 to that
+  parent; it is not a second optimization. All nine other simulator modules match
+  the reviewed parent byte for byte. Preserve prior failed commits and notes.
+- Hypothesis: a statically empty parameter read can produce its empty result with
+  a slice, avoiding construction of the gather and its scatter transpose during
+  tracing. This targets forward/gradient trace and compilation, not solver work or
+  numerical arithmetic. It is a narrow boundary refinement after unsuccessful
+  builder trials. No benchmark identity, known fixture shape, parameter value or
+  numerical-zero test is used. Current-point zero derivative contributions remain.
+- The fast path requires a nonempty one-dimensional operand and a one-dimensional
+  empty index vector. Keeping the nonempty-operand guard preserves the original
+  gather's slice-size validation for an empty operand. Other inputs retain exactly
+  the original gather and options. Empty slices preserve dtype and have a zero
+  transpose for every operand entry, just like an empty gather. All phase operations,
+  scatters, callbacks, linking functions, physical outputs and three JIT stages stay.
+- This is not candidate30's nonempty contiguous-read optimization, nor candidate15's
+  None phase shortcut or27's skipped phase scatter. None of those changes is combined.
+  Candidate30 remains preserved at7baa78dd15196b74b6f6e6fdb2bfbac07cfb8f72, awaiting
+  its requested diagnostic, independent review and matched-parent confirmations.
+- Cost context only: evaluated31's phase medians ms (large/aLIGO) were forward
+  lower19.536/19.249, compile33.102/33.506; gradient lower16.972/16.620,
+  compile53.793/53.634. Imports267.611/264.398 and build73.382/38.267 are not this
+  proposal's target. These are31's observations, not32 measurements or a matched
+  parent comparison. JAX may already simplify the empty operation; saved tracing
+  work may be negligible. No speedup, phase delta or memory benefit is claimed.
+- Local validation: syntax passes; AST comparison proves the fallback gather is
+  unchanged after substituting normalized indices and the rest of simulate.py is
+  unchanged.49 standard-library stub cases check dispatch across scalar, empty,
+  vector and higher-rank operands/index arrays. These are structural checks, not
+  JAX execution or physical correctness evidence.
+- Prepared experiments/notes/overnight-overhead-empty-gather-check.py, UNEXECUTED
+  locally because NumPy/JAX are unavailable. It extracts the actual helper and checks
+  54 small JIT primal/VJP comparisons against the original gather: real/complex,
+  empty/singleton/full/partial/reversed/repeated/random indices, zeros and sign bits.
+  Four invalid operand/index shape cases compare exception types. No optical fixture,
+  timing loop or official workload is run by this diagnostic.
+- Request the focused diagnostic, both unchanged complete official benchmarks and
+  all saved output/gradient/generalization comparisons on the exact new SHA. Obtain
+  independent source review and matching fresh-process candidate/parent confirmations
+  before promotion. Report separate complete samples, medians/ranges, phase costs,
+  sampled RSS and known job overlap; keep pristine failures distinct from seed checks.
+- Inherited issues remain: pristine signal/gradient/loss disagreements including
+  gradients33/161/180, uifo_rand1/3 sensitivity discrepancies, unresolved grid finite
+  differences54/59/63/136/161/163. Whole-pass custom VJP supports first-order reverse
+  mode only. This structural change does not resolve any of those findings.
+- Next decision: reject32 if no repeat-supported compilation/complete-run gain.
+  Do not accumulate more empty-boundary variants without attribution; use the pending
+  supervisor profile and candidate30 confirmation evidence. Deadline remains
+  2026-11-22 09:27:44 UTC. No benchmarks, installs, commits or agents launched here.
