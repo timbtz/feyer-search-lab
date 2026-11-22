@@ -56,21 +56,14 @@ def _digest(*arrays):
 class SystemPlan:
     """Static component groups, output selection and ordered writes for one system."""
 
-    def __init__(self, sparse_system, groups, selected_rows, selected_columns,
-                 sweep_indices=None, parameter_count=None):
+    def __init__(self, sparse_system, groups, selected_rows, selected_columns):
         self.system = sparse_system
         # (function_index, (R, S) parameter indices, slots that carry derivatives)
         self.groups = tuple((int(f), np.asarray(i, dtype=np.int64), tuple(int(s) for s in d)) for f, i, d in groups)
-        self.parameter_count = parameter_count
-        self.sweep_partition = None
-        if sweep_indices is not None and parameter_count is not None:
-            sweep_indices = np.asarray(sweep_indices, dtype=np.int64).ravel()
-            sweep_indices = np.where(sweep_indices < 0, sweep_indices + parameter_count, sweep_indices)
-            self.sweep_partition = []
-            for _, indices, _ in self.groups:
-                normalized = np.where(indices < 0, indices + parameter_count, indices)
-                independent = ~np.any(np.isin(normalized, sweep_indices), axis=1)
-                self.sweep_partition.append((np.flatnonzero(independent), np.flatnonzero(~independent)))
+        # Slot-major order matches the nested slot/component additions in backward.
+        # Keep duplicates and negative indices: np.add.at handles both as before.
+        self.gradient_destinations = tuple(indices[:, slots].T.reshape(-1)
+                                           for _, indices, slots in self.groups)
         self.offsets = np.cumsum([0] + [indices.shape[0] for _, indices, _ in self.groups])
         self.total_rows = int(self.offsets[-1])
         self.flat_selection = (np.asarray(selected_rows, dtype=np.int64) * 4
@@ -94,8 +87,6 @@ class SystemPlan:
             np.asarray([s for _, _, d in self.groups for s in d] + [-1], dtype=np.int64),
             self.flat_selection, writes,
         ) + sparse_system._key
-        if self.sweep_partition is not None:
-            self._key += _digest(np.int64(parameter_count), sweep_indices)
 
     def values(self, rows, base):
         """Structural values (B, nnz_total) after the ordered update writes."""
@@ -105,18 +96,9 @@ class SystemPlan:
         values[:, self.writes[self.last]] = outputs[:, self.last]
         return values
 
-    def backward(self, rows, values_bar, repeated_rows=0):
-        """Cotangents of parameter rows (B, P) and base values (nnz_total,).
-
-        For rows tiled from a block of `repeated_rows` and changed only at this
-        plan's sweep indices, component Jacobians excluding those indices repeat.
-        Evaluate those Jacobians on the original block, then replicate them
-        before the unchanged per-row contraction and parameter scatter. This
-        retains distinct cotangents and every derivative, including at zeros.
-        """
+    def backward(self, rows, values_bar):
+        """Cotangents of the parameter rows (B, P) and the base values (nnz_total,)."""
         count = rows.shape[0]
-        reuse = (self.sweep_partition is not None and rows.shape[1] == self.parameter_count
-                 and 0 < repeated_rows < count and count % repeated_rows == 0)
         batch = np.arange(count)[:, None]
         last_bar = values_bar[:, self.last_positions]
         base_bar = values_bar.copy()
@@ -128,30 +110,18 @@ class SystemPlan:
             np.add.at(flat, (batch, self.last_selection[None, :]), last_bar)
         flat = flat.reshape(count, self.total_rows, 4)
         rows_bar = np.zeros(rows.shape, dtype=np.complex128)
-        for group_index, ((function_index, indices, slots), start, stop) in enumerate(
-                zip(self.groups, self.offsets[:-1], self.offsets[1:])):
+        for (function_index, indices, slots), start, stop, destinations in zip(
+                self.groups, self.offsets[:-1], self.offsets[1:], self.gradient_destinations):
             if not slots:
                 continue
-            independent, dependent = self.sweep_partition[group_index] if reuse else ((), ())
-            if not len(independent):
-                _, linear, antilinear = function_jacobian(function_index, slots, rows[:, indices], with_outputs=False)
-            else:
-                _, small_j, small_k = function_jacobian(
-                    function_index, slots, rows[:repeated_rows, indices[independent]], with_outputs=False)
-                repeats = (count // repeated_rows, 1, 1, 1)
-                if not len(dependent):
-                    linear, antilinear = np.tile(small_j, repeats), np.tile(small_k, repeats)
-                else:
-                    shape = (count, indices.shape[0], 4, len(slots))
-                    linear, antilinear = np.empty(shape, dtype=np.complex128), np.empty(shape, dtype=np.complex128)
-                    _, linear[:, dependent], antilinear[:, dependent] = function_jacobian(
-                        function_index, slots, rows[:, indices[dependent]], with_outputs=False)
-                    linear[:, independent] = np.tile(small_j, repeats)
-                    antilinear[:, independent] = np.tile(small_k, repeats)
+            _, linear, antilinear = function_jacobian(function_index, slots, rows[:, indices], with_outputs=False)
             output_bar = flat[:, start:stop, :, None]                       # (B, R, 4, 1)
             inputs_bar = np.sum(linear * output_bar, axis=2) + np.conj(np.sum(antilinear * output_bar, axis=2))
-            for position, slot in enumerate(slots):
-                np.add.at(rows_bar, (batch, indices[None, :, slot]), inputs_bar[:, :, position])
+            # One scatter for the group. For each batch row, retain the original
+            # slot-then-component accumulation order, including repeated slots
+            # and parameter aliases. Batch rows have disjoint destinations.
+            contributions = inputs_bar.transpose(0, 2, 1).reshape(count, len(slots) * indices.shape[0])
+            np.add.at(rows_bar, (batch, destinations[None, :]), contributions)
         return rows_bar, base_bar.sum(axis=0)
 
 
@@ -272,11 +242,7 @@ def build_host_plan(simulation_arrays, structure, component_groups):
             groups.append((function_index, indices, sorted(diff_slots.get(function_index, range(indices.shape[1])))))
         output_rows = np.asarray(group["output_rows"])
         output_indices = np.asarray(simulation_arrays[output_key])
-        plans[name] = SystemPlan(
-            getattr(structure, name), groups, output_rows[output_indices[0]], output_indices[1],
-            sweep_indices=(np.asarray(simulation_arrays["signal_changing_parameter_indices"])
-                           if name == "signal" else None),
-            parameter_count=np.asarray(simulation_arrays["parameters"]).shape[1])
+        plans[name] = SystemPlan(getattr(structure, name), groups, output_rows[output_indices[0]], output_indices[1])
     return HostPlan(structure, plans["carrier"], plans["signal"], plans["noise"],
                     np.asarray(simulation_arrays["carrier_changing_parameter_indices"]),
                     np.asarray(simulation_arrays["signal_changing_parameter_indices"]),
@@ -679,8 +645,7 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
             carrier_values_bar[row, carrier_system.nnz :] = rhs_bar[carrier_system.rhs_rows]
 
     # Component functions and parameter expansion.
-    signal_rows_bar, signal_base_bar = plan.signal.backward(
-        state["signal_rows"], raw_bar, repeated_rows=state["carrier_rows"].shape[0])
+    signal_rows_bar, signal_base_bar = plan.signal.backward(state["signal_rows"], raw_bar)
     noise_rows_bar, noise_base_bar = plan.noise.backward(state["noise_rows"], noise_values_bar)
     signal_rows_bar[: noise_rows_bar.shape[0]] += noise_rows_bar
     carrier_rows_bar, signal_values_bar_in = _expand_backward(

@@ -1533,3 +1533,131 @@ multiplicity for either official setup is currently claimed. Preserve all inheri
 strict disagreements, phase samples, memory and contention evidence. If there is
 no meaningful saving, retire structural sweep reuse rather than combine it with
 unconfirmed derivative/storage candidates.
+
+
+## Candidate 21 feedback and structural-sweep handoff
+
+Evaluated SHA `2803e9158e78b4bcbf2766fd32cb9ba7f9b376d9`, request
+`d55e0e34766f4c1b984e9a99f75c92c7`; jobs grid-1/2/3 and aligo-1/2/3.
+All six unchanged official runs passed. Complete fresh-process seconds:
+
+- Grid: 0.8268340174108744, 0.7930844146758318, 0.8006586339324713;
+  median 0.8006586339324713, range 0.7930844146758318–0.8268340174108744.
+- Official aLIGO: 0.545679084956646, 0.5461974944919348, 0.5469981133937836;
+  median 0.5461974944919348, range 0.545679084956646–0.5469981133937836.
+
+Grid forward milliseconds: 181.103174, 176.656852, 183.080725; reverse:
+86.647019, 81.383996, 82.546156. aLIGO forward: 34.445215, 33.935232,
+32.404780; reverse: 14.224285, 13.893938, 14.474554.
+Compared with admitted candidate 7's historical cohort, median grid complete
+-0.919050 ms, forward -0.059913 ms, reverse -2.811268 ms, build +0.062106 ms,
+imports +2.709905 ms. aLIGO complete -2.357662 ms, forward +1.045082 ms,
+reverse -0.159867 ms, build +0.257209 ms, imports +1.101728 ms. These are
+unpaired observations, not causal phase savings. Grid ranges overlap; no
+repeat-supported improvement is established. Relative ranges: grid 4.215230%,
+aLIGO 0.241493%.
+
+Maximum sampled process-group RSS bytes: grid 649666560, aLIGO 313384960,
+generalization 834813952. No infrastructure failure or memory exceedance.
+Fixed CPU2 / one logical CPU / library threads1 / no persistent cache. Other-host
+contention is not excluded. confirmed_improvement=false, source_review=null,
+ranking_eligible=false. Admission reasons: requires_source_review,
+large_gain_below_selection_threshold, and overlapping large first-run ranges.
+
+Inspected all six official per-array strict comparison records and all fourteen
+initial-seed/pristine generalization case records; programmatic comparison with
+candidate 20 finds them unchanged. Both official archive hashes are unchanged.
+All seed comparisons pass, including all 14 generalization cases. Remote raw NPZ
+files were not reopened. Pristine strict review still fails: grid 131 signal,
+3 gradient and 1 loss entries, aLIGO 1 loss entry; rand1/rand3 sensitivity log
+errors about 2.04e-4 and 5.81e-5 remain. Seed-relative gradient max absolute
+differences are 5.686350050382316e-6 grid and 3.637978807091713e-11 aLIGO.
+The six grid FD coordinates 54/59/63/136/161/163 remain unresolved; prior aLIGO
+29/29 checks remain separate evidence. Whole-pass JVP/Hessians remain unsupported.
+Do not treat the generalization artifact's self-comparison as independent proof.
+
+Decision: close structural sweep reuse after candidates 20 and 21 did not show
+a meaningful complete-run gain. Restore host_pass.py exactly from admitted
+`ee4fea28c04d482566be16e916b609d7c6a99e5e`. All production simulator files now
+match that admitted revision; no other lane changes are transferred. This is a
+working-tree restoration for the supervisor to record, not a history reset.
+Failed/unconfirmed revisions and their revision-specific synthetic scripts stay
+preserved. No new performance candidate is submitted by this handoff.
+
+Next evidence requested from coordinator: use the existing opt-in
+`experiments/notes/overnight-numerics-profile.py::collect_host_profiles` around a
+separate synchronized diagnostic driver on admitted candidate 7, with unchanged
+full inputs and fixed resource policy. Archive first forward and first backward
+callback records separately, including self/cumulative times and call counts for
+_assemble, SystemPlan.values/backward, function_jacobian, _factor, _solve,
+_Products.apply and add.at. If additional instrumentation is approved, record
+actual refinement correction counts and component-group multiplicities. Keep
+instrumented measurements separate from unchanged official timing; do not edit
+public harnesses. No callback profile has yet been supplied to this lane.
+
+Use that attribution before choosing another implementation: if derivative
+contractions dominate, the preserved candidate 13 evidence and its outstanding
+paired request deserve examination; if residual products dominate, examine
+candidate 9. Shared-primal candidates 18/19 also remain unconfirmed. None should
+be combined or promoted automatically. Existing requests for paired fresh-process
+candidate/parent dual-official runs and independent source review remain pending;
+this turn does not claim they were performed. A subsequent proposal requires both
+exact-SHA official benchmarks and full numerical/generalization inspection anew.
+This stop handoff closes the sweep-reuse hypothesis, not the authorized campaign.
+
+
+## Candidate 22: one ordered parameter scatter per component group
+
+Supervisor requested a concrete experiment after the candidate 21 stop handoff;
+no new evaluator/profile evidence was supplied. Retain the preceding 21 feedback
+and failed-trial history. Candidate SHA and job IDs pending supervisor submission.
+Production source is admitted ee4fea28 plus this host_pass.py change only; the
+preserved restoration removes 21's sweep reuse. No other lane is combined.
+
+Hypothesis: SystemPlan.backward repeatedly invokes np.add.at for each derivative
+slot after computing a group's entire input cotangent tensor. Coalesce those
+calls into one group scatter, with a topology-derived destination array prepared
+once at build. This targets reverse execution (admitted grid median 85.357424 ms,
+aLIGO 14.384152 ms), although no callback attribution has established the fraction
+spent here. The measured redundancy is call/index preparation, not repeated
+factorization or repeated physical solves. No runtime saving is claimed.
+
+Destination order is slot-major, then component row, matching the original nested
+loop's order for each parameter accumulator. Contributions are transposed from
+(B,R,S) to (B,S,R), then reshaped to (B,S*R). Different batch rows never share a
+parameter accumulator, so grouping their updates does not change per-destination
+addition order. Groups retain their original order. Negative parameter aliases,
+negative and repeated slots, and duplicate destinations remain intact; no
+uniqueness assumption or zero pruning is introduced. Jacobians, contraction
+expressions, outputs, physical inputs, all refinement/solve paths and all JAX
+boundaries are unchanged. The new structural arrays are deterministic functions
+of existing groups already covered by the plan key.
+
+This is a different scatter mechanism from candidate 8's per-slot uniqueness
+shortcut and batched solve-free reverse algebra, neither of which is included.
+It also does not revisit the retired sweep-independent derivative mechanism.
+Cost tradeoff: one static R*S integer destination array per group and, when
+reshape requires it, one B*R*S complex contribution copy at reverse execution,
+in exchange for replacing S scatter calls by one. No implementation tuning knob.
+The official build/gradient phases must count these costs.
+
+Validation: overnight-numerics-group-scatter-check.py passes 37 inherited
+assembly/backward checks, 684 real-component comparisons across all 19 functions,
+and 160 prescribed-Jacobian cancellation checks: 881 total. Includes negative
+parameter aliases, negative/repeated/empty slots, duplicate groups/destinations,
+complex and zero inputs, signed zero/nonfinite cotangents, extreme cancellation,
+and empty batch rows. Finite entries match admitted parent bitwise (including
+signed zero); nonfinite entries compare array-equal. In a small synthetic
+19-group, 7-slot case, actual np.add.at call counts fall from 133 to 19 with equal
+results. These are AST-extracted host-kernel checks, not official workloads,
+timings, or a universal correctness certificate. Syntax and git diff checks pass.
+
+Request unchanged full grid and official aLIGO runs on the same exact simulator
+SHA, numerical array/gradient and fourteen-case generalization comparisons, and
+independent source review. If the full-run result looks promising, obtain paired
+fresh-process repetitions against admitted ee4fea28 under matching CPU/resource
+policy; report each workload separately. Callback profiling remains requested
+separately from official timings. Preserve all inherited pristine disagreements
+and unresolved FD coordinates detailed above. Do not promote based on call counts
+or an isolated reverse-phase reduction. If this narrowly scoped change fails to
+improve, retire group-scatter coalescing without bundling unrelated optimizations.
