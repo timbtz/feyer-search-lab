@@ -68,7 +68,34 @@ D = 1 noise detector.
   batched T solves, coefficient/noise cotangent terms, noise transpose product and conj N solves;
   the shared noise-row cotangent is still accumulated row by row in order.
 - Expected: forward and gradient exec phases fall (fewer Python-level NumPy calls); outputs expected
-  bitwise identical to candidate 1 / seed (same per-row operations and reduction order). Unmeasured.
+  bitwise identical to candidate 1 / seed (same per-row operations and reduction order).
+- SHA `214b4fa7f2a68fb38464b4235780ee790c355f4e`, request `dba4a2c9f0d64e778b4cfdc21c343995`.
+  Official PASS 3/3 grid + 3/3 aLIGO; arrays bitwise identical to the seed again (same SHAs;
+  generalization 14/14 identical to seed).
+  - Grid first run 1.10924, 1.01959, 1.03415 s (median 1.03415; sample 1 had imports 0.359 s).
+  - Grid forward exec 216.2, 213.0, 214.3 ms; gradient 204.1, 203.1, 208.7 ms => both ~+35 ms
+    slower than candidate 1 (179 / 172 ms). aLIGO: forward 31.9/31.8/32.0, gradient 23.1/23.7/23.0 ms
+    (slightly faster than c1), aLIGO total median 0.62103 s.
+  - **Rejected.** Mechanism disproved for the large setup: row batching (3-D gathers, `reduceat`
+    along axis 1, stacking) costs more than the Python overhead it removes. Inference: the per-row
+    loop is not dominated by NumPy call overhead; the backward (no factorization, 2 refined solves
+    per row) costs ~1.7 ms per row, so the SuperLU triangular solves themselves (x1 initial + up to
+    3 refinement corrections each) are the likely dominant cost. Reverted to candidate 1's loops.
+
+## Candidate 3: fill-minimizing column ordering for the signal factors (parent = candidate 1 code)
+- Hypothesis: triangular-solve and factor cost scale with nnz(L+U). The seed always uses COLAMD.
+  For nearly structurally symmetric optical matrices, MMD on A^T + A often gives less fill.
+- Change: per evaluation, the first signal row is factored with COLAMD and MMD_AT_PLUS_A; the
+  ordering with smaller SuperLU `nnz` (nnz(L)+nnz(U)) is used for all rows of that evaluation (ties
+  or missing attribute keep COLAMD). Every row is still factored afresh from its own values; partial
+  pivoting and the refinement (steps, tolerance, residual against the original A) are unchanged.
+  Ordering is selected from the actual factorization of each supplied setup, not by recognising it.
+  Cost: one extra factorization per evaluation.
+- Numerics: if MMD wins, results differ from the seed at rounding level (different elimination
+  order before refinement). Strict vs seed and generalization must be inspected; if arrays are
+  bitwise identical to the seed, either COLAMD won or `nnz` is unavailable (inconclusive).
+- Parameter menu (implementation choice, not physics): `COLUMN_ORDERINGS` in host_pass.py; legal
+  SuperLU values NATURAL, MMD_ATA, MMD_AT_PLUS_A, COLAMD. Default ("COLAMD", "MMD_AT_PLUS_A").
 
 ## Open numerical findings carried forward unchanged
 Strict dense-reference flags (signal entries, gradients 33/161/180), uifo_rand1 2.04e-4 / uifo_rand3
