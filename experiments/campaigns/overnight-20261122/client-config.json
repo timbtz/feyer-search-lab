@@ -1,0 +1,20 @@
+{
+  "ssh_host": "amd-hackathon",
+  "remote_runtime": "/workspace/feyer-final-validation/releases/4a3902a137bbc5c73e92de4b2dc204fb6bd204b2",
+  "remote_root": "/workspace/feyer-final-validation",
+  "mirror": "/workspace/feyer-lab/repo.git",
+  "deadline_unix": 1795339664.0,
+  "evidence_root": "/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/overnight-20261122/evidence",
+  "publisher_worktree": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/overnight-control",
+  "campaign_dir": "/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/overnight-20261122",
+  "remote_python": "/workspace/venv-feyer/bin/python",
+  "reference_root": "/workspace/feyer-final-validation/references/pristine",
+  "seed_reference_root": "/workspace/feyer-final-validation/references/initial_seed",
+  "generalization_harness": "/workspace/feyer-final-validation/references/gencheck.py",
+  "generalization_reference": "/workspace/feyer-final-validation/references/pristine-generalization.npz",
+  "generalization_seed": "/workspace/feyer-final-validation/references/initial-seed-generalization.npz",
+  "source_review_command": "'/Users/t.betz/Documents/Feyer challenge/.lab/venv-topology-smac/bin/python' -m lab.overnight_review",
+  "source_review_timeout": 360,
+  "command_timeout": 120,
+  "poll_seconds": 10
+}

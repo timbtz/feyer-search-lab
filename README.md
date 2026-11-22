@@ -1,3 +1,5 @@
+> **Active optimization campaign:** [Current best submission](CURRENT_BEST.md) · [Eight-hour runbook](.wiki/overnight-20261122.md) · [Live campaign tracking](https://github.com/timbtz/feyer-search-lab/issues/21). This control branch updates candidate evidence and the selected best automatically.
+
 # Faster Physics — START Hack Munich 2026
 
 Make **Differometor** faster while preserving its physical predictions and gradients.

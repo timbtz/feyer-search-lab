@@ -1,0 +1,20 @@
+{
+  "schema_version": "feyer-campaign-authorization-v1",
+  "campaign": "overnight-20261122",
+  "authorized_at_unix": 1795310864.0,
+  "deadline_unix": 1795339664.0,
+  "duration_hours": 8,
+  "providers_priority": [
+    "claude",
+    "codex"
+  ],
+  "models": {
+    "claude": "claude-opus-5-5",
+    "codex": "gpt-6-astra"
+  },
+  "codex_reasoning_effort": "high",
+  "scope": "New isolated optimization campaign; both official benchmarks; one logical CPU; broader regressions; GitHub publication",
+  "prior_claude_stop": "Superseded only for this new campaign by explicit user authorization; old sessions and deadlines remain closed",
+  "lower_variants": "Conservative simulator variants and stable timings, not LoRA fine-tuning",
+  "selection": "Large benchmark primary; aLIGO separate transfer; repeated fresh-process median/spread are our selection heuristic, not asserted judge aggregation"
+}
