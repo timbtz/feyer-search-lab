@@ -1011,3 +1011,137 @@
 - If this indexing refinement is unhelpful, restore ee4fea2 and prioritize the outstanding
   import/build profile or exact candidate7 review/paired-evidence request; do not stack
   unconfirmed variants. Deadline unchanged:2026-11-22 09:27:44 UTC.
+
+
+### Candidate 14 feedback and end of speculative small-variant sequence
+
+- Evaluated SHA **8e111f16fe84ed923db379bd4221bf214066858c**, evaluation
+  **aead632620a9464498344b59d10b8638**. Large jobs grid-1/2/3, official aLIGO
+  jobs aligo-1/2/3. All six unchanged official fresh-process runs passed.
+- Large samples **0.829137923, 0.806818409, 0.807451569** seconds; median
+  **0.807451569**, range **0.806818409–0.829137923**. Official aLIGO samples
+  **0.543226795, 0.544487456, 0.551004561**; median **0.544487456**, range
+  **0.543226795–0.551004561**. The large median is 5.874 ms higher than the
+  unmatched admitted ee4fea2 cohort, while aLIGO is 4.068 ms lower. Neither is
+  controlled paired evidence. Ranges overlap the incumbent; no confirmed improvement.
+- Phase medians in milliseconds (descriptive only):
+
+  | Phase | Large | aLIGO |
+  | --- | ---: | ---: |
+  | imports | 271.428 | 264.573 |
+  | build | 73.354 | 38.926 |
+  | forward_lower | 19.899 | 19.402 |
+  | forward_compile | 33.555 | 33.347 |
+  | forward | 183.765 | 32.717 |
+  | sensitivity_lower | 25.621 | 26.720 |
+  | sensitivity_compile | 40.063 | 41.774 |
+  | gradient_lower | 16.701 | 16.642 |
+  | gradient_compile | 51.743 | 52.316 |
+  | gradient | 86.383 | 14.681 |
+
+- Compared with candidate13's separate cohort, forward-lower+compile and gradient-lower+
+  compile sums of phase medians decrease only about0.242 ms large and1.466 ms aLIGO.
+  This does not demonstrate useful compilation savings. Build spans69.799–77.770 ms large,
+  and imports span267.089–294.380 ms; timing variability cannot be assigned to this edit.
+  No instrumented primitive/HLO result or synthetic slice-check result was returned.
+- Sampled process-group peak RSS bytes: large **552873984, 505016320, 623030272**;
+  aLIGO **281092096, 293494784, 281124864**; generalization **782561280**. No budget
+  exceedance or infrastructure failure. CPU2, one logical CPU, library threads1, x64,
+  package flags and no persistent cache unchanged. Other-host contention not excluded.
+- Every official saved-array category passes initial-seed tolerances, with identical official
+  archive hashes to candidate13. All14 generalization cases pass initial-seed tolerances.
+  Generalization archive65522650411773be25a7ced683ae0456e074c3f454f24220c8f27e39fb8ba05f;
+  the self-comparison archive match is not evidence of bitwise equality to the initial seed.
+  No new tolerance failure is reported. Official gradient maximum seed differences remain
+  5.686350050e-6 large and3.637978807e-11 aLIGO. Direct ee4fea2 array comparison and
+  independent source review were not supplied. Pristine comparisons remain failing.
+- Decision: retire candidate14. Restored simulate.py exactly from reviewed
+  **ee4fea28c04d482566be16e916b609d7c6a99e5e** and verified all ten simulator modules
+  byte-identical to that parent. No history reset, commit or merge. Candidate14 and its
+  diagnostic remain preserved; the slice-check must be run on candidate14, since its
+  primitive-selection assertions intentionally do not hold on the restored scatter helper.
+- Candidates12/13/14 large medians were0.799623925/0.809530795/0.807451569 s in separate
+  cohorts; none was a repeat-supported improvement. Candidate13 reduced source complexity
+  but no measured benefit; candidate14's narrower indexing did not establish a compilation
+  improvement. End speculative small implementation variants here, retaining ee4fea2.
+
+### Required next evidence for this lane
+
+- First choice: supervisor-run import/build attribution on ee4fea2 using the existing
+  experiments/notes/overnight-overhead-profile.py. Use the unchanged caller's actual setup,
+  optimization pairs, changing pairs and changing values for large and official101-frequency
+  aLIGO, plus one unrelated optical setup. Its CLI has been inspected; required setup flag is
+  --setup-json, optional flags --optimization-pairs-json, --changing-pairs-json and
+  --changing-values-json (the last two must be supplied together), and --top 60. Supply the
+  checkout through PYTHONPATH, a fresh fixed-environment process, and the existing resource
+  policy. Paths/serialized caller inputs are coordinator-owned; no new fixture is authorized
+  by this note. Omitting inputs profiles public defaults and must not be called official.
+- Return top-self and top-cumulative tables for simulator_imports, setup_from_data,
+  prepare_sweep and run_build_step, plus an import-time tree covering the actual benchmark's
+  imports (the helper alone does not include all benchmark-owned imports). These diagnostic
+  runs are not clean official timing samples and cannot replace either official benchmark.
+  The managed agent did not launch them or change evaluator policy. No profile has been
+  received despite prior requests; select the next implementation only after attribution.
+- Alternative evidence task, already requested: independent source review and direct parent
+  output/gradient comparison for candidate7 **1ea70bfbde9bcf42fce836846a4e1e92aee36a3b**,
+  then five interleaved fresh runs per revision per official setup against ee4fea2 if review
+  permits. That combined boundary candidate had the strongest observed phase reduction, but
+  remains unadmitted with overlapping ranges. No silent restoration, merge or promotion.
+- Inherited open findings remain explicit: pristine grid signal/gradients33,161,180/loss;
+  uifo_rand1/rand3 log-sensitivity errors~2.04e-4/~5.81e-5; unresolved grid FD54,59,63,
+  136,161,163. Prior aLIGO FD29/29 passed. Whole-pass customVJP does not support JVP/Hessians.
+  No tolerance changes or universal-physics claim.
+- Handoff at2026-11-22 around03:18 UTC: ready_for_evaluation=false, stop=true for this
+  hypothesis sequence, not for the authorized campaign. Deadline remains09:27:44 UTC,
+  epoch1795339664.0. Lane/branch overnight-overhead-v1. Restored reviewed source and all
+  failed-trial evidence are preserved for the supervisor; no new optimization candidate.
+
+### Candidate15 — isolate structurally empty detector-phase work (2026-11-22 03:20 UTC)
+
+- New supervisor instruction requests one concrete experiment despite the prior stop
+  handoff. Candidate14 remains retired; its measured results above are unchanged.
+  This delta uses reviewed simulator parent **ee4fea28c04d482566be16e916b609d7c6a99e5e**.
+  Branch history/HEAD remains supervisor-owned; candidate SHA and job IDs pending.
+- Mechanism: the static parameter-layout path currently traces an empty phase gather,
+  radians/exponential and scatter-multiply when both phase index arrays are empty.
+  Mark only that structurally empty case with an internal None sentinel and omit its
+  phase scatter. Nonempty layouts, including all phase values currently zero, execute
+  exactly the original expressions. Require BOTH index arrays empty; inconsistent
+  nonempty metadata does not enter this shortcut. Generic non-static paths are unchanged.
+  This removes no design variables, physical outputs, differentiation contributions or
+  JIT stages. No solver/refinement/adjoint changes, answer reuse or launch changes.
+- Why this experiment: combined boundary candidate7 had observed forward/gradient trace
+  and compile reductions, while its isolated callback-transpose candidate12 did not
+  establish a meaningful gain. The empty-phase part has not been evaluated alone.
+  Candidate11 retained the link gather/scatter and therefore did not isolate candidate7's
+  full identity-link shortcut either. This experiment tests ONLY phase emptiness, leaving
+  identity linking and callback layouts unchanged. Candidate7 is unadmitted; its numbers
+  are motivation for attribution, not evidence this isolated change is faster.
+- Cost target: forward and gradient tracing/compilation. Candidate14 observations provide
+  separate phase medians: large forward lower/compile19.899/33.555 ms and gradient
+  lower/compile16.701/51.743 ms; aLIGO19.402/33.347 and16.642/52.316 ms. Imports/build
+  were271.428/73.354 ms large and264.573/38.926 ms aLIGO. No candidate15 timing exists;
+  the removed primitives may already be eliminated by lowering and give no total gain.
+- Local checks passed: Python AST parsing, exact AST equality of nonempty phase expression
+  and scatter against ee4fea2, and byte identity of every other simulator module to ee4fea2.
+  An initial source-check assertion selected the generic phase assignment by AST traversal
+  order; selecting the static-layout assignment correctly resolved that check. This was
+  a diagnostic selection error, not an executed simulator failure.
+- Prepared **experiments/notes/overnight-overhead-empty-phase-check.py** for the supervisor.
+  It extracts the actual phase code and compares JIT primals plus VJPs for parameter row
+  and complex selection vectors against the unconditional original path, in eight small
+  synthetic cases: empty layout, one/multiple destinations, repeated parameter references,
+  irregular placement, zero/nonzero phases and a zero selector. It checks absence of phase
+  primitives only for empty layouts and their retention for nonempty layouts. Local JAX/
+  NumPy unavailable: runtime checks are UNEXECUTED, no numerical validation claimed.
+- Request this diagnostic, both unchanged official benchmarks on the new exact SHA, all
+  output/gradient comparisons against ee4fea2 and initial seed, existing14 generalization
+  cases, and independent source review. If promising, obtain matching interleaved fresh
+  parent/candidate samples rather than promoting against old unmatched timings. Preserve
+  phase breakdowns/RSS and report contention status. Import/build attribution remains
+  useful; no profile or direct parent-array report has arrived.
+- Inherited pristine and finite-difference disagreements listed above remain unresolved;
+  first-order reverse support only. Candidate15 ready for evaluation, not promotion.
+  Next decision: if empty-phase removal offers no stable reduction, retire this isolated
+  mechanism; inspect actual lowered primitive evidence or import/build profiles before
+  further implementation changes. Deadline remains09:27:44 UTC, epoch1795339664.0.
