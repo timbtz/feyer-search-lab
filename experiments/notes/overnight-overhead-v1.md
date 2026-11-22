@@ -325,3 +325,128 @@
   Numerics expected identical to ee4fea2 (boundary changes are exact copies/no-ops).
 - If not promoted for incumbent-movement reasons again, I recommend the coordinator apply this lane's diff to
   whatever the incumbent is at the time (it is small and disjoint) rather than another chase from this branch.
+
+### Candidate 7 feedback and hypothesis handoff (Codex, 2026-11-22 02:35 UTC)
+
+- Exact candidate `1ea70bfbde9bcf42fce836846a4e1e92aee36a3b`; evaluation
+  `dacbeb43d6a740f49d2dccc765449298`, publication `21ebd736a144b7b783a1c75fd8984274713f3349`;
+  local feedback HEAD `a241374`. Both official benchmarks passed 3/3. No evaluator failure.
+- Large samples: 0.806567159, 0.779120542, 0.773866884 s; median **0.779120542 s**,
+  range 0.773866884–0.806567159 s. aLIGO samples: 0.517428415, 0.517229011, 0.521617815 s;
+  median **0.517428415 s**, range 0.517229011–0.521617815 s.
+- Against admitted incumbent `ee4fea28c04d482566be16e916b609d7c6a99e5e`, unpaired median differences
+  are -22.457 ms large and -31.127 ms aLIGO. Large candidate maximum 0.806567 exceeds incumbent
+  minimum 0.794425; ranges overlap. **Not a confirmed improvement or promotion.** Source review is
+  null. Policy reasons: `requires_source_review`, `large_first_run_ranges_overlap_requires_paired_evidence`.
+  The incumbent did not move in this comparison; repeating the incumbent-chasing explanation would be wrong.
+- Phase medians, ms, large / aLIGO: imports 266.277 / 264.398; build 74.523 / 37.255;
+  forward lower 12.002 / 11.212, compile 27.872 / 27.223, execute 181.160 / 32.702;
+  sensitivity lower 25.730 / 26.418, compile 39.787 / 41.388, execute 0.858 / 0.471;
+  gradient lower 11.575 / 11.598, compile 45.929 / 46.981, execute 86.548 / 14.690.
+  The boundary phase reduction remains consistent with candidates 5 and 6. The further gradient-execution
+  reduction versus candidate 6 (141.413 / 23.532 ms) belongs to the transferred numerical lane changes.
+  It is not a new gain from this lane. No repeated matched phase comparison to ee4fea2 was supplied.
+- Sampled RSS bytes large: 523784192, 573317120, 523735040; aLIGO: 294809600, 294731776,
+  293302272. Benchmark job walls large: 3.020475, 3.017903, 3.018821 s; aLIGO: 1.371973,
+  1.372252, 1.646331 s. Whole evaluation 20.685640 s, including generalization (~6.585431 s).
+  Warm runtime is not supplied here. Other-host contention was not excluded. No timing sample discarded.
+- Numerical evidence: all official arrays pass the initial-seed tolerances; sensitivity log difference
+  is zero. Gradient maximum absolute difference versus seed is 5.686350e-6 (relative L2 8.181451e-11)
+  for large and 3.637979e-11 (relative L2 1.294944e-15) for aLIGO. All 14 additional cases pass the
+  initial-seed comparisons. These are **not bitwise-equality findings** for gradients. The generalization
+  `artifacts` block compares the candidate archive to itself; its matching digest does not establish
+  identity to the initial seed or ee4fea2. Compare the saved ee4fea2 and candidate arrays directly before
+  accepting the handoff's expected exact equality. No such direct comparison was supplied this turn.
+  Pristine-reference mismatches (including uifo_rand1/rand3 log errors ~2.0361e-4/5.8101e-5) and six
+  unresolved grid FD coordinates persist; no universal correctness claim. Whole-pass JVP/Hessians remain unsupported.
+- Source inspection: the remaining simulator diff versus ee4fea2 is precisely the boundary/no-op work in
+  build.py, host_pass.py and simulate.py. No new solver transfer is useful: its supplied mathematical
+  changes are already present. This inspection is not the required independent review.
+- Validation repair: the existing layout-check script imported `simulate` from the package, which exports
+  a **function**, then tried to use it as the implementation module. Replaced that import with
+  `importlib.import_module("differometor.simulate")`. This only fixes our notes-side diagnostic; no simulator
+  source changed. AST parsing and `git diff --check` pass; runtime remains unexecuted locally (no JAX/NumPy).
+  Previous notes reported no runtime result for this script; do not infer one from official passes.
+
+### Decision and concrete coordinator follow-up
+
+- End this boundary-compilation hypothesis with no new simulator submission. Preserve every failed trial;
+  keep candidate 7 available for evaluation and retain **ee4fea2 as the admitted best**, not candidate 7.
+  Three-plus unconfirmed submissions justify stopping further variants of this mechanism. No branch reset,
+  cherry-pick, merge or promotion is performed. This handoff ends the hypothesis, not the eight-hour campaign.
+- First resolve existing evidence: independent review of exact candidate 1ea70bf versus ee4fea2; direct
+  saved-array comparison to that parent; run the repaired layout check and prior gather check in the fixed
+  environment. The checks supplement, and never replace, the two unchanged official benchmarks.
+- Request at least five interleaved fresh-process complete runs per exact SHA (1ea70bf and ee4fea2),
+  separately for large and aLIGO, under the same CPU 2/thread/resource policy. Retain every sample, phase,
+  memory measurement and overlap observation. Use the existing supervisor/evaluator route; no launch changes.
+  This tests the measured ~26 ms boundary hypothesis without inventing another candidate or changing arithmetic.
+- Distinct next direction: profile setup before changing it. Imports remain ~264–266 ms, build ~37–75 ms.
+  Static inspection finds no additional eager optional plotting dependency on the simulation path.
+  Candidate 4 already showed that vectorizing builder bookkeeping did not give a clear transferable benefit.
+  `prepare_arrays` does contain a host→JAX→NumPy→JAX conversion of changing values, but its cost is unknown;
+  eliminating that tiny conversion blindly is not justified as the next full submission.
+- Requested diagnostics, through the coordinator: a fresh-process import-time tree for the actual import
+  sequence; and cProfile attribution of build_inputs/run_build_step on both official setups. Keep profiled
+  runs diagnostic-only and separate from clean timing samples; do not modify the official files. Attribute
+  JAX device puts, matrix/instruction construction, sparse-plan construction and benchmark-owned setup work
+  separately. Select one demonstrated hotspot afterward, using ee4fea2 (or a subsequently admitted reviewed
+  parent) as the starting point. No speculative implementation or new official run was launched here.
+- Continuity: campaign `overnight-20261122`, lane/session `overnight-overhead-v1`, branch
+  `explore/overnight-overhead-v1`, absolute deadline **2026-11-22 09:27:44 UTC / 1795339664** unchanged.
+
+## Candidate 8: host-first construction with one final batched array transfer
+
+- The supervisor explicitly resumed after the hypothesis handoff and requested a concrete next experiment.
+  No new evaluator result has arrived; candidate 7's feedback above remains authoritative.
+- Deliberate source parent: admitted, independently reviewed **ee4fea28c04d482566be16e916b609d7c6a99e5e**,
+  evaluation `e4f7b59d3b094a8e9c6dd41263cab78e`. The unpromoted boundary/no-op changes of candidates 5–7
+  were removed from this working copy only. Candidate 7 remains preserved at `1ea70bf`; no Git history was
+  reset. New candidate SHA and run IDs pending supervisor commit/evaluation. This follows the search-policy
+  change of direction; it does not stack another optimization on the unreviewed boundary variant.
+- Measured target: build remains ~74.5 ms large / 37.3 ms aLIGO in candidate 7. Earlier vectorized Python
+  bookkeeping (candidate 4) was rejected. This experiment instead changes when arrays are transferred.
+- Established source-level redundancy: `build`, `pairs_to_arrays` and `_group_component_indices` eagerly
+  convert each NumPy array to JAX; `prepare_arrays`, diff-slot/noise-reuse checks, `_build_sparse_structure`
+  and `build_host_plan` then convert those arrays back to NumPy for structural inspection. The finalized
+  arrays are eventually needed as JAX inputs, but the intermediate device-array wrappers and host reads
+  are avoidable. Their time share is not profiled, so no magnitude of gain is promised.
+- Implementation: the four internal array producers accept private `_host_arrays=True`; their public
+  defaults keep the original JAX-returning behavior. `run_build_step` uses NumPy intermediates while
+  deriving all structural plans, then `_put_built_arrays` transfers only ndarray leaves with one
+  `jax.device_put(tuple(...))` and reconstructs the built dict/list/tuple containers, preserving dictionary
+  insertion order (including the public port map). Python metadata (including port-map
+  integers), None, empty tuples and registered-static plans are preserved. `HOST_BUILD_ARRAYS=False`
+  selects the original path for diagnosis. All arrays are still created and transferred during the build
+  call; any asynchronous completion remains inside the complete first-run evaluation. No result caching,
+  preloading, fixture dispatch, compilation-policy change or work outside the timer.
+- Net simulator diff versus ee4fea2 is **build.py and simulate.py only**. Confirmed byte-identical to
+  ee4fea2: host.py, host_pass.py, sparse.py, components.py. Solver/refinement/adjoint mathematics unchanged.
+  Matrix values, selection order, structural zero entries, diff-slot predicates and index dtypes unchanged.
+  The change may affect host-buffer lifetime and memory; the evaluator must measure that tradeoff too.
+- Hypothesis: fewer per-array dispatches and readbacks reduce setup/build and complete first-run time on
+  arbitrary supplied setups. Compilation and execution should be unchanged relative to ee4fea2. A null
+  result is plausible if instruction construction or benchmark-owned work dominates. Compare against
+  ee4fea2, **not candidate 7**, whose separate ~26 ms boundary reduction has intentionally been removed.
+- Local checks: AST parsing and `git diff --check` passed. A standard-library AST comparison of all four
+  changed producers found their arithmetic/control-flow AST identical to ee4fea2 after removing only the
+  new conversion-selector assignments/keywords and normalizing converter names. This is source evidence,
+  not a runtime equivalence result. No NumPy/JAX installed locally; no benchmark or runtime check launched.
+  The extracted transfer helper also passed a standard-library test using explicit array/JAX stand-ins
+  for one transfer call, container order, opaque-plan identity and metadata preservation; this verifies
+  traversal only and is not numerical/JAX validation.
+- Added `experiments/notes/overnight-overhead-host-build-check.py`: build-only equivalence of old/new
+  paths on three aLIGO modulation modes, sparse on/off, optimized/default/grouped inputs, and arbitrary
+  three-point sweeps. It compares pytree/static-plan equality, shapes, dtypes, weak typing and exact array
+  bytes, plus empty arrays and Python metadata preservation. The link registry is restored between its
+  two synthetic builds so function-index assignment starts from identical state. No official validation
+  is altered. The preserved layout diagnostic is now also compatible with the parent without no-op helpers.
+- Supervisor request: run this focused build check in the fixed environment, then both unchanged full
+  benchmarks and generalization on the new exact SHA, with saved-array comparisons to ee4fea2 and seed.
+  Expect identical arrays to ee4fea2; investigate any difference rather than relaxing tolerance. Retain all
+  inherited pristine-reference failures and unresolved FD coordinates. Obtain fresh independent review.
+  For promising results request repeated interleaved fresh candidate/ee4fea2 runs, retaining all samples,
+  phase breakdowns, RSS and contention observations. Profiled diagnostics remain separate from clean timings.
+- Decision: reject if any returned structure/value differs, new numerical failures occur, or setup gains
+  do not survive matched timing. Do not add a second conversion variant without evidence. Deadline/session
+  unchanged; this is an evaluable new setup hypothesis, not a claim that candidate 7 was promoted.

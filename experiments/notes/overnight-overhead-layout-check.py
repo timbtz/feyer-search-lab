@@ -8,13 +8,18 @@ forward outputs and full VJP gradients must be bitwise equal. Also prints jaxpr
 equation counts for the forward vjp to inspect the mechanism. Not a benchmark.
 """
 
+import importlib
+
 import numpy as np
 import jax
 import jax.numpy as jnp
 
 import differometor as df
-from differometor import simulate as sim
 from differometor.setups import aligo
+
+# The package exports a function named `simulate`; import the module explicitly
+# so the flag comparisons below actually reach the implementation module.
+sim = importlib.import_module("differometor.simulate")
 
 jax.config.update("jax_enable_x64", True)
 
@@ -49,9 +54,13 @@ for mode in ("space_modulation", "amplitude_modulation", "frequency_modulation")
     for label, params in (("default", base), ("perturbed", base * (1 + 1e-3 * rng.standard_normal(base.shape)))):
         params = jnp.asarray(params)
         results = {}
-        configs = ((False, False), (True, False), (True, True))  # (static layout, skip no-ops)
+        configs = ((False, False), (True, False))
+        if hasattr(sim, "SKIP_STATIC_NOOPS"):
+            configs += ((True, True),)  # Candidates 5-7 also implement no-op skipping.
         for static, skip in configs:
-            sim.STATIC_PARAMETER_LAYOUT, sim.SKIP_STATIC_NOOPS = static, skip
+            sim.STATIC_PARAMETER_LAYOUT = static
+            if hasattr(sim, "SKIP_STATIC_NOOPS"):
+                sim.SKIP_STATIC_NOOPS = skip
             results[(static, skip)] = loss_and_grad(arrays, params)
         v0, o0, g0 = results[configs[0]]
         for config in configs[1:]:
@@ -65,11 +74,16 @@ for mode in ("space_modulation", "amplitude_modulation", "frequency_modulation")
                       float(np.max(np.abs(np.asarray(g0) - np.asarray(g1)))))
             else:
                 print("  bitwise equal:", label, config)
-    print("  links identity:", layout is not None and layout.linking_is_identity(sim.LINKING_FUNCTIONS, sim.identity_link),
-          "detector phases:", layout is not None and layout.has_detector_phases)
+    if layout is not None and hasattr(layout, "linking_is_identity"):
+        print("  links identity:", layout.linking_is_identity(sim.LINKING_FUNCTIONS, sim.identity_link),
+              "detector phases:", layout.has_detector_phases)
     for static, skip in configs:
-        sim.STATIC_PARAMETER_LAYOUT, sim.SKIP_STATIC_NOOPS = static, skip
+        sim.STATIC_PARAMETER_LAYOUT = static
+        if hasattr(sim, "SKIP_STATIC_NOOPS"):
+            sim.SKIP_STATIC_NOOPS = skip
         print("  forward-vjp jaxpr eqns", (static, skip), ":", count_eqns(arrays, jnp.asarray(base)))
-sim.STATIC_PARAMETER_LAYOUT, sim.SKIP_STATIC_NOOPS = True, True
+sim.STATIC_PARAMETER_LAYOUT = True
+if hasattr(sim, "SKIP_STATIC_NOOPS"):
+    sim.SKIP_STATIC_NOOPS = True
 print("FAILURES:", failures)
 raise SystemExit(1 if failures else 0)

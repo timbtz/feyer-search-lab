@@ -25,7 +25,7 @@ import numpy as np
 from jax import lax, vmap, jit
 
 from differometor.setups import Setup
-from differometor.build import build, pairs_to_arrays, prepare_arrays, LINKING_FUNCTIONS, identity_link
+from differometor.build import build, pairs_to_arrays, prepare_arrays, LINKING_FUNCTIONS
 from differometor.components import FUNCTIONS, UNIT_VACUUM, H_PLANCK, F0
 from differometor import components as _components
 from differometor.sparse import SparseStructure, SparseSystem, sparse_solve
@@ -421,20 +421,12 @@ def simulate(
         row = parameters.reshape(parameters.shape[1:])
         row = _static_set(row, layout.optimized_parameter_indices,
                           _static_take(optimized_parameters, layout.optimized_value_indices))
-        # Omit structurally exact no-ops (decided from the static layout, never from
-        # parameter values): the builder's placeholder link writes each parameter
-        # back onto itself through `identity_link`, and a setup without detector
-        # phases scatters nothing into the selection vectors.
-        if not (SKIP_STATIC_NOOPS and layout.linking_is_identity(LINKING_FUNCTIONS, identity_link)):
-            inputs_to_link = _static_take(row, layout.linked_indices)
-            outputs_to_link = vmap(lambda i, x: lax.switch(i, LINKING_FUNCTIONS, x))(
-                linking_function_indices, inputs_to_link
-            )
-            row = _static_set(row, layout.indices_to_link, outputs_to_link)
-        if SKIP_STATIC_NOOPS and not layout.has_detector_phases:
-            qhd_phase_values = None
-        else:
-            qhd_phase_values = jnp.exp(1j * jnp.radians(_static_take(row, layout.qhd_parameter_indices)))
+        inputs_to_link = _static_take(row, layout.linked_indices)
+        outputs_to_link = vmap(lambda i, x: lax.switch(i, LINKING_FUNCTIONS, x))(
+            linking_function_indices, inputs_to_link
+        )
+        row = _static_set(row, layout.indices_to_link, outputs_to_link)
+        qhd_phase_values = jnp.exp(1j * jnp.radians(_static_take(row, layout.qhd_parameter_indices)))
         return _simulate_host_pass(
             host_plan,
             row.reshape(1, -1),
@@ -970,9 +962,6 @@ HOST_PASS: bool = True
 # builder-verified unique destinations a scatter's derivative is a plain
 # gather/scatter. Values are identical. False keeps the generic indexing.
 STATIC_PARAMETER_LAYOUT: bool = True
-# With the static layout, omit the placeholder identity link and an empty
-# detector-phase scatter (both exact no-ops for values and derivatives).
-SKIP_STATIC_NOOPS: bool = True
 
 
 def _static_take(values, indices):
@@ -1012,26 +1001,19 @@ def _simulate_host_pass(
     noise_selection_vectors,
     qhd_placing_indices,
 ):
-    """`_simulate_sparse` evaluated on the host behind one custom VJP.
-
-    `qhd_phase_values=None` means the builder placed no detector phases: a
-    scatter_mul with no updates returns the selection vectors unchanged, so it is
-    omitted.
-    """
+    """`_simulate_sparse` evaluated on the host behind one custom VJP."""
     structure = plan.structure
-    if qhd_phase_values is not None:
-        noise_selection_vectors = lax.scatter_mul(
-            noise_selection_vectors,
-            qhd_placing_indices.reshape(-1, 3),
-            qhd_phase_values,
-            lax.ScatterDimensionNumbers(
-                update_window_dims=(),
-                inserted_window_dims=(0, 1, 2),
-                scatter_dims_to_operand_dims=(0, 1, 2),
-            ),
-            unique_indices=True,
-        )
-    # host_pass returns carrier (CN, Bc) and signal (N, Bs) already transposed.
+    noise_selection_vectors = lax.scatter_mul(
+        noise_selection_vectors,
+        qhd_placing_indices.reshape(-1, 3),
+        qhd_phase_values,
+        lax.ScatterDimensionNumbers(
+            update_window_dims=(),
+            inserted_window_dims=(0, 1, 2),
+            scatter_dims_to_operand_dims=(0, 1, 2),
+        ),
+        unique_indices=True,
+    )
     carrier, signal, noise = _host_pass.host_pass(
         plan,
         parameters.astype(jnp.complex128),
@@ -1042,7 +1024,7 @@ def _simulate_host_pass(
         structure.noise.base_values(noise_matrix).astype(jnp.complex128),
         noise_selection_vectors.astype(jnp.complex128),
     )
-    return carrier, signal, noise.squeeze()
+    return carrier.T, signal.T, noise.squeeze()
 
 
 def _build_sparse_structure(simulation_arrays):
@@ -1325,6 +1307,42 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
     return signal, noise
 
 
+# Build structural metadata from NumPy intermediates, then transfer the finished
+# arrays together. False retains the per-array conversion path for comparison.
+HOST_BUILD_ARRAYS: bool = True
+
+
+def _put_built_arrays(tree):
+    """Transfer arrays in built containers, preserving metadata order and static plans."""
+    arrays = []
+
+    def collect(value):
+        if isinstance(value, np.ndarray):
+            arrays.append(value)
+        elif isinstance(value, dict):
+            for item in value.values():
+                collect(item)
+        elif isinstance(value, (tuple, list)):
+            for item in value:
+                collect(item)
+
+    collect(tree)
+    transferred = iter(jax.device_put(tuple(arrays)))
+
+    def restore(value):
+        if isinstance(value, np.ndarray):
+            return next(transferred)
+        if isinstance(value, dict):
+            return {key: restore(item) for key, item in value.items()}
+        if isinstance(value, tuple):
+            return tuple(restore(item) for item in value)
+        if isinstance(value, list):
+            return [restore(item) for item in value]
+        return value  # Includes opaque, registered-static HostPlan/SparseStructure.
+
+    return restore(tree)
+
+
 def run_build_step(
     setup: Setup,
     changing_pairs: list | None = None,
@@ -1372,13 +1390,16 @@ def run_build_step(
     """
     start = time()
 
-    instructions, matrices, metadata = build(setup)
+    instructions, matrices, metadata = build(setup, _host_arrays=HOST_BUILD_ARRAYS)
     component_groups = {}
     arrays_to_prepare, carrier_arrays, signal_arrays, noise_arrays = pairs_to_arrays(
         *instructions, optimization_pairs, changing_pairs, component_groups=component_groups,
         matrix_shapes={"carrier": matrices[1].shape, "signal": matrices[2].shape, "noise": matrices[3].shape},
+        _host_arrays=HOST_BUILD_ARRAYS,
     )
-    prepared_arrays = prepare_arrays(*arrays_to_prepare, changing_values, parameters=matrices[0])
+    prepared_arrays = prepare_arrays(
+        *arrays_to_prepare, changing_values, parameters=matrices[0], _host_arrays=HOST_BUILD_ARRAYS
+    )
 
     arg_count = simulate.__code__.co_argcount
     arg_names = simulate.__code__.co_varnames[:arg_count]
@@ -1435,6 +1456,9 @@ def run_build_step(
             host_plan = _host_pass.build_host_plan(simulation_arrays, sparse_structure, component_groups)
             if host_plan is not None:
                 simulation_arrays["host_plan"] = host_plan
+
+    if HOST_BUILD_ARRAYS:
+        simulation_arrays, metadata = _put_built_arrays((simulation_arrays, metadata))
 
     if timeit:
         for array in simulation_arrays.values():

@@ -128,8 +128,7 @@ class ParameterLayout:
     """
 
     def __init__(self, parameter_count, optimized_parameter_indices, optimized_value_indices,
-                 linked_indices, indices_to_link, qhd_parameter_indices, qhd_placing_indices,
-                 linking_function_indices=None):
+                 linked_indices, indices_to_link, qhd_parameter_indices, qhd_placing_indices):
         self.parameter_count = int(parameter_count)
         self.optimized_parameter_indices = np.asarray(optimized_parameter_indices, dtype=np.int64).ravel()
         self.optimized_value_indices = np.asarray(optimized_value_indices, dtype=np.int64).ravel()
@@ -137,35 +136,9 @@ class ParameterLayout:
         self.indices_to_link = np.asarray(indices_to_link, dtype=np.int64).ravel()
         self.qhd_parameter_indices = np.asarray(qhd_parameter_indices, dtype=np.int64).ravel()
         self.qhd_placing_indices = np.asarray(qhd_placing_indices, dtype=np.int64).reshape(-1, 3)
-        # None: unknown, so linking is never treated as a no-op.
-        self.linking_function_indices = (
-            None if linking_function_indices is None
-            else np.asarray(linking_function_indices, dtype=np.int64).ravel()
-        )
         self._key = _digest(np.int64(self.parameter_count), self.optimized_parameter_indices,
                             self.optimized_value_indices, self.linked_indices, self.indices_to_link,
-                            self.qhd_parameter_indices, self.qhd_placing_indices,
-                            np.asarray([-1] if self.linking_function_indices is None
-                                       else self.linking_function_indices, dtype=np.int64))
-
-    def linking_is_identity(self, linking_functions, identity):
-        """True when every link applies `identity` and writes back to the index it reads.
-
-        Then gathering, linking and scattering returns the parameter row unchanged
-        (values and derivatives), so the step can be omitted exactly.
-        """
-        functions = self.linking_function_indices
-        if functions is None or functions.size != self.linked_indices.size:
-            return False
-        if not np.array_equal(self.linked_indices, self.indices_to_link):
-            return False
-        return all(0 <= int(f) < len(linking_functions) and linking_functions[int(f)] is identity
-                   for f in functions)
-
-    @property
-    def has_detector_phases(self):
-        """Whether any detector-phase factor is scattered into the selection vectors."""
-        return self.qhd_placing_indices.shape[0] > 0
+                            self.qhd_parameter_indices, self.qhd_placing_indices)
 
     @classmethod
     def from_arrays(cls, simulation_arrays):
@@ -185,7 +158,6 @@ class ParameterLayout:
                 np.asarray(simulation_arrays["indices_to_link"]),
                 np.asarray(simulation_arrays["qhd_parameter_indices"]),
                 np.asarray(simulation_arrays["qhd_placing_indices"]),
-                np.asarray(simulation_arrays["linking_function_indices"]),
             )
         except (KeyError, TypeError, ValueError, IndexError):
             return None
@@ -682,67 +654,36 @@ def _shapes(plan, carrier_values, signal_values, selection_vectors):
     carrier_count = carrier_values.shape[1]
     signal_count = signal_values.shape[1] * carrier_count
     detectors, size = selection_vectors.shape[0], plan.structure.signal.size
-    carrier_size = plan.structure.carrier.size
-    # Primal carrier and signal are returned transposed, (CN, Bc) and (N, Bs): the
-    # layout `simulate` returns, so the XLA programs need no transpose of either
-    # array. The (Bc, CN) / (Bs, N) copies are separate outputs used only as
-    # backward residuals, so no buffer is both a primal output and a residual.
-    return (jax.ShapeDtypeStruct((carrier_size, carrier_count), jnp.complex128),
-            jax.ShapeDtypeStruct((size, signal_count), jnp.complex128),
-            jax.ShapeDtypeStruct((detectors, signal_count), jnp.float64),
-            jax.ShapeDtypeStruct((carrier_count, carrier_size), jnp.complex128),
+    return (jax.ShapeDtypeStruct((carrier_count, plan.structure.carrier.size), jnp.complex128),
             jax.ShapeDtypeStruct((signal_count, size), jnp.complex128),
+            jax.ShapeDtypeStruct((detectors, signal_count), jnp.float64),
             jax.ShapeDtypeStruct((signal_count, detectors, size), jnp.complex128),
             jax.ShapeDtypeStruct((signal_count, detectors, size), jnp.complex128))
 
 
-def _transposed(array):
-    """C-contiguous transpose (exact copy of the values)."""
-    return np.ascontiguousarray(np.asarray(array).T)
-
-
-def host_forward_transposed(plan, *inputs):
-    """`host_forward` plus transposed carrier (CN, Bc) and signal (N, Bs) copies."""
-    carrier, signal, noise, covariances, weights = host_forward(plan, *inputs)
-    return _transposed(carrier), _transposed(signal), noise, carrier, signal, covariances, weights
-
-
-def host_backward_transposed(plan, *arguments):
-    """`host_backward` for cotangents of the transposed carrier/signal outputs.
-
-    The cotangents arrive as (CN, Bc) and (N, Bs); they are restored to (Bc, CN)
-    and (Bs, N) as C-contiguous copies, so `host_backward` receives arrays
-    identical in values and memory layout to the untransposed convention.
-    """
-    (*inputs, carrier, signal, noise, covariances, weights, carrier_bar, signal_bar, noise_bar) = arguments
-    return host_backward(plan, *inputs, carrier, signal, noise, covariances, weights,
-                         _transposed(carrier_bar), _transposed(signal_bar), noise_bar)
-
-
 def _forward_call(plan, *inputs):
-    return jax.pure_callback(partial(host_forward_transposed, plan),
-                             _shapes(plan, inputs[1], inputs[2], inputs[6]),
+    return jax.pure_callback(partial(host_forward, plan), _shapes(plan, inputs[1], inputs[2], inputs[6]),
                              *inputs, vmap_method="sequential")
 
 
 @partial(jax.custom_vjp, nondiff_argnums=(0,))
 def host_pass(plan, parameters, carrier_values, signal_values, carrier_base, signal_base, noise_base,
               selection_vectors):
-    """Carrier (CN, Bc), signal (N, Bs) and noise (D, Bs) evaluated on the host."""
-    carrier_t, signal_t, noise, _, _, _, _ = _forward_call(
+    """Carrier (Bc, CN), signal (Bs, N) and noise (D, Bs) evaluated on the host."""
+    carrier, signal, noise, _, _ = _forward_call(
         plan, parameters, carrier_values, signal_values, carrier_base, signal_base, noise_base, selection_vectors)
-    return carrier_t, signal_t, noise
+    return carrier, signal, noise
 
 
 def _host_pass_fwd(plan, *inputs):
-    carrier_t, signal_t, noise, carrier, signal, covariances, weights = _forward_call(plan, *inputs)
-    return (carrier_t, signal_t, noise), (inputs, (carrier, signal, noise, covariances, weights))
+    carrier, signal, noise, covariances, weights = _forward_call(plan, *inputs)
+    return (carrier, signal, noise), (inputs, (carrier, signal, noise, covariances, weights))
 
 
 def _host_pass_bwd(plan, residuals, cotangents):
     inputs, outputs = residuals
     shapes = tuple(jax.ShapeDtypeStruct(value.shape, value.dtype) for value in inputs)
-    return jax.pure_callback(partial(host_backward_transposed, plan), shapes, *inputs, *outputs, *cotangents,
+    return jax.pure_callback(partial(host_backward, plan), shapes, *inputs, *outputs, *cotangents,
                              vmap_method="sequential")
 
 

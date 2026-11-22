@@ -84,14 +84,19 @@ from differometor.components import (
 # device-to-host conversions during `build`.
 # ---------------------------------------------------------------------
 
+def _numpy_array(values, dtype):
+    """Host-side array conversion with the builder's explicit double/int64 dtypes."""
+    np_dtype = {int: np.int64, complex: np.complex128}.get(dtype, dtype)
+    return np.asarray(values, dtype=np_dtype)
+
+
 def _host_array(values, dtype):
     """Convert host lists via NumPy first (same values/dtype as jnp.array(values, dtype)).
 
     `jnp.array` on long Python lists inspects every element for dtype inference;
     a single NumPy conversion avoids that per-element work during `build`.
     """
-    np_dtype = {int: np.int64, complex: np.complex128}.get(dtype, dtype)
-    return jnp.asarray(np.asarray(values, dtype=np_dtype))
+    return jnp.asarray(_numpy_array(values, dtype))
 
 
 def _np_phase_shift(tuning, frequency, refractive_index):
@@ -164,16 +169,6 @@ Notes
 - This is module-level state. If you build multiple setups in the same process and rely on
   strict reproducibility of indices, you should reset this list before each build.
 """
-
-
-def identity_link(x):
-    """Placeholder linking function used when a setup has no linked parameters.
-
-    A named function (instead of an anonymous lambda) so that `simulate` can
-    recognize, from the builder's static indices, that the placeholder link writes
-    each parameter back onto itself and is therefore exactly a no-op.
-    """
-    return x
 
 
 def set_instructions(
@@ -489,7 +484,7 @@ def parameter_linking(
             linked_names.append(new_parameter[0])
 
 
-def build(setup: Setup):
+def build(setup: Setup, *, _host_arrays: bool = False):
     """
     Build carrier, signal, and noise matrices plus update instructions from a setup graph.
 
@@ -519,12 +514,16 @@ def build(setup: Setup):
     - `parameters` is shaped `(1, N)` to match later vectorized update logic.
     - If no explicit signal exists, a dummy signal degree of freedom is created to avoid conditional
       branches in later JAX computations.
+    - Internal `_host_arrays=True` retains NumPy arrays until `run_build_step` has
+      finished inspecting structure. The default returns JAX arrays as before.
 
     Raises
     ------
     ValueError
         If invalid graph connections are detected (for example detector as edge source).
     """
+    _array = _numpy_array if _host_arrays else _host_array
+    _asarray = np.asarray if _host_arrays else jnp.asarray
     system_size = 0
     signal_size = 0
     matrix_positions = {}
@@ -1500,28 +1499,28 @@ def build(setup: Setup):
     if len(linked_indices) == 0:
         linked_indices = [0]
         indices_to_link = [0]
-        LINKING_FUNCTIONS.append(identity_link)
+        LINKING_FUNCTIONS.append(lambda x: x)
         linking_function_indices = [0]
 
     return (
         (carrier_instructions, signal_instructions, noise_instructions, signal_components, parameter_names),
         (
-            _host_array([parameters], complex),
-            jnp.asarray(np.asarray(carrier_matrix)),
-            jnp.asarray(np.asarray(signal_matrix)),
-            _host_array(noise_matrix, complex),
-            _host_array(noise_selection_vectors, complex),
-            _host_array(qhd_parameter_indices, int),
-            _host_array(qhd_placing_indices, int),
-            _host_array(linked_indices, int),
-            _host_array(linking_function_indices, int),
-            _host_array(indices_to_link, int),
+            _array([parameters], complex),
+            _asarray(np.asarray(carrier_matrix)),
+            _asarray(np.asarray(signal_matrix)),
+            _array(noise_matrix, complex),
+            _array(noise_selection_vectors, complex),
+            _array(qhd_parameter_indices, int),
+            _array(qhd_placing_indices, int),
+            _array(linked_indices, int),
+            _array(linking_function_indices, int),
+            _array(indices_to_link, int),
         ),
         (
-            _host_array(detector_indices, int),
-            _host_array(mirror_indices, int),
-            _host_array(beamsplitter_indices, int),
-            _host_array(isolator_indices, int),
+            _array(detector_indices, int),
+            _array(mirror_indices, int),
+            _array(beamsplitter_indices, int),
+            _array(isolator_indices, int),
             port_to_index,
         ),
     )
@@ -1547,8 +1546,9 @@ def _matrix_indices_are_unique(matrix_indices, matrix_shape):
     return True
 
 
-def _group_component_indices(function_indices, function_input_indices=None):
+def _group_component_indices(function_indices, function_input_indices=None, *, _host_arrays=False):
     """Classify instructions and map original rows to grouped output rows."""
+    _array = _numpy_array if _host_arrays else _host_array
     groups = defaultdict(list)
     for row, function_index in enumerate(function_indices):
         groups[int(function_index)].append(row)
@@ -1557,12 +1557,12 @@ def _group_component_indices(function_indices, function_input_indices=None):
     for grouped_row, original_row in enumerate(grouped_rows):
         output_rows[original_row] = grouped_row
     result = {
-        "function_rows": {index: _host_array(groups[index], int) for index in sorted(groups)},
-        "output_rows": _host_array(output_rows, int),
+        "function_rows": {index: _array(groups[index], int) for index in sorted(groups)},
+        "output_rows": _array(output_rows, int),
     }
     if function_input_indices is not None:
         result["parameter_indices"] = {
-            index: _host_array([function_input_indices[row] for row in groups[index]], int)
+            index: _array([function_input_indices[row] for row in groups[index]], int)
             for index in sorted(groups)
         }
     return result
@@ -1579,6 +1579,7 @@ def pairs_to_arrays(
     *,
     component_groups: dict | None = None,
     matrix_shapes: dict | None = None,
+    _host_arrays: bool = False,
 ):
     """
     Convert instruction dictionaries into dense index arrays for vectorized JAX execution.
@@ -1636,7 +1637,9 @@ def pairs_to_arrays(
     -----
     - If an instruction set is empty, a dummy update is produced to keep array shapes valid.
     - The signal arrays may include additional arrays that reference carrier solution entries.
+    - Internal `_host_arrays=True` defers JAX conversion until structural metadata is built.
     """
+    _array = _numpy_array if _host_arrays else _host_array
     optimized_parameter_indices = []
     optimization_value_indices = []
 
@@ -1773,17 +1776,17 @@ def pairs_to_arrays(
         if len(arrays["function_input_indices"]) == 0:
             # Dummy update that leaves matrices unchanged.
             if component_groups is not None:
-                component_groups[system] = _group_component_indices([FUNCTIONS.index(dummy_function)], [[0, 0, 0]])
+                component_groups[system] = _group_component_indices([FUNCTIONS.index(dummy_function)], [[0, 0, 0]], _host_arrays=_host_arrays)
             return (
-                _host_array([[0, 0, 0]], int),
-                _host_array([FUNCTIONS.index(dummy_function)], int),
-                _host_array([[0], [0]], int),
-                _host_array([[0], [0]], int),
+                _array([[0, 0, 0]], int),
+                _array([FUNCTIONS.index(dummy_function)], int),
+                _array([[0], [0]], int),
+                _array([[0], [0]], int),
             )
 
         function_input_indices = np.vstack(arrays["function_input_indices"])
         if component_groups is not None:
-            component_groups[system] = _group_component_indices(arrays["function_indices"], function_input_indices)
+            component_groups[system] = _group_component_indices(arrays["function_indices"], function_input_indices, _host_arrays=_host_arrays)
         output_indices = np.stack((np.concatenate(arrays["output_row_indices"]), np.concatenate(arrays["output_column_indices"])))
         system_matrix_indices = np.stack((np.concatenate(arrays["system_matrix_row_indices"]), np.concatenate(arrays["system_matrix_column_indices"])))
 
@@ -1808,27 +1811,27 @@ def pairs_to_arrays(
                     component_groups[system]["unique_carrier_placing_indices"] = ()
 
             return (
-                _host_array(function_input_indices, int),
-                _host_array(arrays["function_indices"], int),
-                _host_array(output_indices, int),
-                _host_array(system_matrix_indices, int),
-                _host_array(carrier_solution_indices, int),
-                _host_array(carrier_solution_placing_indices, int),
+                _array(function_input_indices, int),
+                _array(arrays["function_indices"], int),
+                _array(output_indices, int),
+                _array(system_matrix_indices, int),
+                _array(carrier_solution_indices, int),
+                _array(carrier_solution_placing_indices, int),
             )
 
         return (
-            _host_array(function_input_indices, int),
-            _host_array(arrays["function_indices"], int),
-            _host_array(output_indices, int),
-            _host_array(system_matrix_indices, int),
+            _array(function_input_indices, int),
+            _array(arrays["function_indices"], int),
+            _array(output_indices, int),
+            _array(system_matrix_indices, int),
         )
 
     return (
         (
-            _host_array(optimized_parameter_indices, int),
-            _host_array(optimization_value_indices, int),
-            _host_array(carrier_changing_parameter_indices, int),
-            _host_array(signal_changing_parameter_indices, int),
+            _array(optimized_parameter_indices, int),
+            _array(optimization_value_indices, int),
+            _array(carrier_changing_parameter_indices, int),
+            _array(signal_changing_parameter_indices, int),
         ),
         combine_arrays(carrier_arrays, "carrier"),
         combine_arrays(signal_arrays, "signal", signal=True),
@@ -1843,12 +1846,15 @@ def prepare_arrays(
     signal_changing_parameter_indices,
     changing_values,
     parameters,
+    *,
+    _host_arrays: bool = False,
 ):
     """
     Ensure that all index and value arrays are non-empty and have consistent shapes.
 
     This function inserts "do-nothing" dummy indices and values when a particular feature is unused,
     so downstream vectorized code can run without conditional branches.
+    Internal `_host_arrays=True` retains NumPy intermediates for `run_build_step`.
 
     Parameters
     ----------
@@ -1880,31 +1886,33 @@ def prepare_arrays(
         If both carrier and signal changing indices are non-empty (unsupported combination),
         or if `changing_values` has an incompatible shape.
     """
+    _array = _numpy_array if _host_arrays else _host_array
+    _asarray = np.asarray if _host_arrays else jnp.asarray
     optimized_parameters = None
     # Host copies: eager jnp indexing here compiles one XLA program per operation.
     host_parameters = np.asarray(parameters)
 
     # Ensure at least one optimized parameter index exists, using a dummy identity update if needed.
     if len(optimized_parameter_indices) == 0:
-        optimized_parameter_indices = _host_array([0], int)
-        optimized_parameters = jnp.asarray(host_parameters[0][np.array([0])])
-        optimized_value_indices = _host_array([0], int)
+        optimized_parameter_indices = _array([0], int)
+        optimized_parameters = _asarray(host_parameters[0][np.array([0])])
+        optimized_value_indices = _array([0], int)
 
     # Normalize changing_values to shape (V, R) if provided.
     if changing_values is not None:
         changing_values = np.asarray(changing_values)
         if len(changing_values.shape) == 1:
             changing_values = changing_values.reshape(1, -1)
-        changing_values = jnp.asarray(changing_values)
-        signal_changing_values = jnp.asarray(np.array(changing_values))
+        changing_values = _asarray(changing_values)
+        signal_changing_values = _asarray(np.array(changing_values))
 
     if len(carrier_changing_parameter_indices) != 0 and len(signal_changing_parameter_indices) != 0:
         raise ValueError("This combination of changing component-parameter pairs is not supported yet.")
 
     # Carrier changing defaults.
     if len(carrier_changing_parameter_indices) == 0:
-        carrier_changing_parameter_indices = _host_array([0], int)
-        carrier_changing_values = jnp.asarray(host_parameters[0][np.array([0])][None, :])
+        carrier_changing_parameter_indices = _array([0], int)
+        carrier_changing_values = _asarray(host_parameters[0][np.array([0])][None, :])
     else:
         carrier_changing_values = changing_values
         if carrier_changing_values.shape[0] != len(carrier_changing_parameter_indices):
@@ -1919,8 +1927,8 @@ def prepare_arrays(
 
     # Signal changing defaults.
     if len(signal_changing_parameter_indices) == 0:
-        signal_changing_parameter_indices = _host_array([0], int)
-        signal_changing_values = jnp.asarray(host_parameters[0][np.array([0])][None, :])
+        signal_changing_parameter_indices = _array([0], int)
+        signal_changing_values = _asarray(host_parameters[0][np.array([0])][None, :])
 
     return (
         optimized_parameters,
