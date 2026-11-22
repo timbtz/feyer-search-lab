@@ -1,0 +1,499 @@
+diff --git a/differometor/__init__.py b/differometor/__init__.py
+index d45d847..51b6151 100644
+--- a/differometor/__init__.py
++++ b/differometor/__init__.py
+@@ -26,5 +26,31 @@ _apply_xla_defaults()
+ 
+ from differometor.setups import Setup
+ from differometor.simulate import run, run_build_step, run_simulation_step, simulate
+-from differometor.plot import visualize_setup
+ from differometor.components import power_detector, signal_detector
++
++__all__ = [
++    "Setup",
++    "run",
++    "run_build_step",
++    "run_simulation_step",
++    "simulate",
++    "visualize_setup",
++    "power_detector",
++    "signal_detector",
++]
++
++
++def __getattr__(name):
++    # `visualize_setup` (Plotly rendering) is loaded on first access so importing
++    # the simulator does not import Plotly. `df.visualize_setup` and
++    # `from differometor import visualize_setup` return the original function.
++    if name == "visualize_setup":
++        from differometor.plot import visualize_setup
++
++        globals()["visualize_setup"] = visualize_setup
++        return visualize_setup
++    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
++
++
++def __dir__():
++    return sorted(set(globals()) | {"visualize_setup"})
+diff --git a/differometor/host.py b/differometor/host.py
+index 6789685..a8b017f 100644
+--- a/differometor/host.py
++++ b/differometor/host.py
+@@ -203,11 +203,15 @@ def evaluate_function(function_index, inputs):
+     return np.stack([np.broadcast_to(np.asarray(item, dtype=np.complex128), shape) for item in stack.items], axis=-1)
+ 
+ 
+-def function_jacobian(function_index, slots, inputs):
+-    """Outputs (..., 4) and Wirtinger blocks J, K (..., 4, len(slots)) on the host."""
++def function_jacobian(function_index, slots, inputs, with_outputs=True):
++    """Outputs (..., 4) and Wirtinger blocks J, K (..., 4, len(slots)) on the host.
++
++    `with_outputs=False` skips the (unused) primal evaluation and returns None
++    for the outputs; the Jacobian blocks are computed identically.
++    """
+     inputs, columns = _columns(inputs)
+     shape = inputs.shape[:-1]
+-    outputs = evaluate_function(function_index, inputs)
++    outputs = evaluate_function(function_index, inputs) if with_outputs else None
+     linear = np.zeros(shape + (4, len(slots)), dtype=np.complex128)
+     antilinear = np.zeros(shape + (4, len(slots)), dtype=np.complex128)
+     for position, slot in enumerate(slots):
+diff --git a/differometor/host_pass.py b/differometor/host_pass.py
+index dd9b415..7b1d1d6 100644
+--- a/differometor/host_pass.py
++++ b/differometor/host_pass.py
+@@ -71,6 +71,12 @@ class SystemPlan:
+         last[writes.size - 1 - first_in_reverse] = True
+         self.writes, self.last = writes, last
+         self.written = np.unique(writes)
++        # Only the last write to a position receives a cotangent (the others are
++        # exactly zero). When those last writes read distinct component outputs,
++        # the cotangent scatter is a plain assignment instead of `np.add.at`.
++        self.last_positions = writes[last]
++        self.last_selection = self.flat_selection[last]
++        self.last_selection_unique = bool(np.unique(self.last_selection).size == self.last_selection.size)
+         self._key = _digest(
+             np.asarray([f for f, _, _ in self.groups], dtype=np.int64),
+             *[indices for _, indices, _ in self.groups],
+@@ -90,18 +96,20 @@ class SystemPlan:
+         """Cotangents of the parameter rows (B, P) and the base values (nnz_total,)."""
+         count = rows.shape[0]
+         batch = np.arange(count)[:, None]
+-        outputs_bar = np.zeros((count, self.writes.size), dtype=np.complex128)
+-        outputs_bar[:, self.last] = values_bar[:, self.writes[self.last]]
++        last_bar = values_bar[:, self.last_positions]
+         base_bar = values_bar.copy()
+         base_bar[:, self.written] = 0
+         flat = np.zeros((count, self.total_rows * 4), dtype=np.complex128)
+-        np.add.at(flat, (batch, self.flat_selection[None, :]), outputs_bar)
++        if self.last_selection_unique:
++            flat[:, self.last_selection] = last_bar
++        else:
++            np.add.at(flat, (batch, self.last_selection[None, :]), last_bar)
+         flat = flat.reshape(count, self.total_rows, 4)
+         rows_bar = np.zeros(rows.shape, dtype=np.complex128)
+         for (function_index, indices, slots), start, stop in zip(self.groups, self.offsets[:-1], self.offsets[1:]):
+             if not slots:
+                 continue
+-            _, linear, antilinear = function_jacobian(function_index, slots, rows[:, indices])
++            _, linear, antilinear = function_jacobian(function_index, slots, rows[:, indices], with_outputs=False)
+             output_bar = flat[:, start:stop, :, None]                       # (B, R, 4, 1)
+             inputs_bar = np.sum(linear * output_bar, axis=2) + np.conj(np.sum(antilinear * output_bar, axis=2))
+             for position, slot in enumerate(slots):
+@@ -109,20 +117,90 @@ class SystemPlan:
+         return rows_bar, base_bar.sum(axis=0)
+ 
+ 
++class ParameterLayout:
++    """Static parameter-row index layout of one built setup (host NumPy copies).
++
++    Holds the concrete optimized-parameter insertion, linking and detector-phase
++    indices that `run_build_step` produced, so `simulate` can index the parameter
++    row with explicit, unique, in-bounds gathers/scatters instead of generic traced
++    indexing. Like the rest of the host plan it describes the built arrays; rebuild
++    it (re-run `run_build_step`) whenever those index arrays change.
++    """
++
++    def __init__(self, parameter_count, optimized_parameter_indices, optimized_value_indices,
++                 linked_indices, indices_to_link, qhd_parameter_indices, qhd_placing_indices):
++        self.parameter_count = int(parameter_count)
++        self.optimized_parameter_indices = np.asarray(optimized_parameter_indices, dtype=np.int64).ravel()
++        self.optimized_value_indices = np.asarray(optimized_value_indices, dtype=np.int64).ravel()
++        self.linked_indices = np.asarray(linked_indices, dtype=np.int64).ravel()
++        self.indices_to_link = np.asarray(indices_to_link, dtype=np.int64).ravel()
++        self.qhd_parameter_indices = np.asarray(qhd_parameter_indices, dtype=np.int64).ravel()
++        self.qhd_placing_indices = np.asarray(qhd_placing_indices, dtype=np.int64).reshape(-1, 3)
++        self._key = _digest(np.int64(self.parameter_count), self.optimized_parameter_indices,
++                            self.optimized_value_indices, self.linked_indices, self.indices_to_link,
++                            self.qhd_parameter_indices, self.qhd_placing_indices)
++
++    @classmethod
++    def from_arrays(cls, simulation_arrays):
++        """Layout from concrete built arrays, or None if not representable exactly.
++
++        Requires nonnegative in-bounds parameter-row indices and unique write
++        destinations (so the scatters may declare unique indices); otherwise the
++        caller keeps the generic indexing path.
++        """
++        try:
++            parameters = np.asarray(simulation_arrays["parameters"])
++            layout = cls(
++                parameters.shape[1] if parameters.ndim == 2 else -1,
++                np.asarray(simulation_arrays["optimized_parameter_indices"]),
++                np.asarray(simulation_arrays["optimized_value_indices"]),
++                np.asarray(simulation_arrays["linked_indices"]),
++                np.asarray(simulation_arrays["indices_to_link"]),
++                np.asarray(simulation_arrays["qhd_parameter_indices"]),
++                np.asarray(simulation_arrays["qhd_placing_indices"]),
++            )
++        except (KeyError, TypeError, ValueError, IndexError):
++            return None
++        if parameters.ndim != 2 or parameters.shape[0] != 1:
++            return None
++        count = layout.parameter_count
++        for indices in (layout.optimized_parameter_indices, layout.linked_indices, layout.indices_to_link,
++                        layout.qhd_parameter_indices):
++            if indices.size and (indices.min() < 0 or indices.max() >= count):
++                return None
++        if layout.optimized_value_indices.size and layout.optimized_value_indices.min() < 0:
++            return None
++        for indices in (layout.optimized_parameter_indices, layout.indices_to_link):
++            if np.unique(indices).size != indices.size:
++                return None
++        return layout
++
++    def applies(self, parameters, optimized_parameters):
++        """Trace-time shape check that the static indices are in bounds for these inputs."""
++        if parameters.ndim != 2 or parameters.shape[0] != 1 or parameters.shape[1] != self.parameter_count:
++            return False
++        if optimized_parameters.ndim != 1:
++            return False
++        values = self.optimized_value_indices
++        return not values.size or int(values.max()) < optimized_parameters.shape[0]
++
++
+ class HostPlan:
+     """Static host plan for one built setup (no array leaves)."""
+ 
+     def __init__(self, structure, carrier, signal, noise, carrier_changing, signal_changing,
+-                 signal_carrier_indices, noise_row_reuse):
++                 signal_carrier_indices, noise_row_reuse, parameter_layout=None):
+         self.structure = structure
+         self.carrier, self.signal, self.noise = carrier, signal, noise
+         self.carrier_changing = np.asarray(carrier_changing, dtype=np.int64).ravel()
+         self.signal_changing = np.asarray(signal_changing, dtype=np.int64).ravel()
+         self.signal_carrier_indices = np.asarray(signal_carrier_indices, dtype=np.int64).ravel()
+         self.noise_row_reuse = bool(noise_row_reuse)
++        self.parameter_layout = parameter_layout
+         self._key = (_digest(self.carrier_changing, self.signal_changing, self.signal_carrier_indices,
+                              np.int64(self.noise_row_reuse))
+-                     + carrier._key + signal._key + noise._key + structure._key)
++                     + carrier._key + signal._key + noise._key + structure._key
++                     + ("" if parameter_layout is None else parameter_layout._key))
+ 
+     def __hash__(self):
+         return hash(self._key)
+@@ -161,7 +239,8 @@ def build_host_plan(simulation_arrays, structure, component_groups):
+                     np.asarray(simulation_arrays["carrier_changing_parameter_indices"]),
+                     np.asarray(simulation_arrays["signal_changing_parameter_indices"]),
+                     np.asarray(simulation_arrays["signal_carrier_indices"]),
+-                    "noise_row_reuse" in component_groups)
++                    "noise_row_reuse" in component_groups,
++                    ParameterLayout.from_arrays(simulation_arrays))
+ 
+ 
+ def _expand(array, indices, values):
+@@ -290,14 +369,24 @@ def _solve(products, values, factor, rhs, trans):
+     return solution
+ 
+ 
+-# Signal-system factorizations of the latest forward evaluation, consumed by its
+-# backward evaluation (same coefficients, verified by digest) and then dropped.
+-# Each forward factors afresh, so repeated evaluations never reuse a factorization.
+-_FACTORS = {}
++# Assembly state of the latest forward evaluation (component values, carrier
++# factorizations and solution, signal-system factorizations), consumed once by
++# its backward evaluation when the backward receives byte-identical assembly
++# inputs (verified by digest of the small input arrays; all assembled values and
++# factored coefficients are deterministic functions of them), then dropped. A
++# mismatch, or a backward without a preceding forward, reassembles and refactors.
++# Each forward assembles and factors afresh; nothing is reused across evaluations.
++_ASSEMBLY = {}
+ 
+ 
+-def _digest_values(pattern, values):
+-    return pattern, hashlib.blake2b(np.ascontiguousarray(values).tobytes(), digest_size=20).digest()
++def _assembly_key(plan, *inputs):
++    digest = hashlib.blake2b(digest_size=20)
++    for array in inputs:
++        array = np.ascontiguousarray(array)
++        digest.update(str(array.dtype).encode())
++        digest.update(np.asarray(array.shape, dtype=np.int64).tobytes())
++        digest.update(array.tobytes())
++    return plan._key, digest.digest()
+ 
+ 
+ def _selections(plan, carrier, selection_vectors):
+@@ -318,8 +407,10 @@ def _assemble(plan, parameters, carrier_values, signal_values, carrier_base, sig
+     carrier_coefficients, carrier_rhs = _split(structure.carrier, carrier_vals)
+     carrier = np.empty((carrier_rows.shape[0], structure.carrier.size), dtype=np.complex128)
+     carrier_products = _products(structure.carrier.pattern)
++    carrier_factors = []
+     for row in range(carrier_rows.shape[0]):
+         factor = _factor(structure.carrier.pattern, carrier_coefficients[row])
++        carrier_factors.append(factor)
+         carrier[row] = _solve(carrier_products, carrier_coefficients[row], factor, carrier_rhs[row], "N")
+     signal_rows = _expand(carrier_rows, plan.signal_changing, signal_values)
+     raw_signal = plan.signal.values(signal_rows, signal_base)
+@@ -329,14 +420,17 @@ def _assemble(plan, parameters, carrier_values, signal_values, carrier_base, sig
+     final = np.where(structure.signal_conjugate, np.conj(placed), placed)
+     noise_rows = signal_rows[:1] if plan.noise_row_reuse else signal_rows
+     return dict(carrier_rows=carrier_rows, carrier_values=carrier_vals, carrier_coefficients=carrier_coefficients,
+-                carrier=carrier, signal_rows=signal_rows, raw_signal=raw_signal, signal_values=final,
++                carrier_factors=carrier_factors, carrier=carrier, signal_rows=signal_rows, raw_signal=raw_signal, signal_values=final,
+                 noise_rows=noise_rows, noise_values=plan.noise.values(noise_rows, noise_base))
+ 
+ 
+ def host_forward(plan, parameters, carrier_values, signal_values, carrier_base, signal_base, noise_base,
+                  selection_vectors):
+-    state = _assemble(plan, np.asarray(parameters), np.asarray(carrier_values), np.asarray(signal_values),
+-                      np.asarray(carrier_base), np.asarray(signal_base), np.asarray(noise_base))
++    assembly_inputs = (np.asarray(parameters), np.asarray(carrier_values), np.asarray(signal_values),
++                       np.asarray(carrier_base), np.asarray(signal_base), np.asarray(noise_base))
++    state = _assemble(plan, *assembly_inputs)
++    _ASSEMBLY.clear()
++    _ASSEMBLY[_assembly_key(plan, *assembly_inputs)] = state
+     structure = plan.structure
+     system = structure.signal
+     coefficients, rhs = _split(system, state["signal_values"])
+@@ -355,8 +449,9 @@ def host_forward(plan, parameters, carrier_values, signal_values, carrier_base,
+         sources = noise_products.apply(state["noise_values"][0 if plan.noise_row_reuse else row], weight)
+         solution = _solve(products, coefficients[row], factor, np.concatenate([rhs[row][:, None], sources], axis=1), "N")
+         signal[row], covariances[row], weights[row] = solution[:, 0], solution[:, 1:].T, weight.T
+-    _FACTORS.clear()
+-    _FACTORS[_digest_values(system.pattern, coefficients)] = factors
++    # Consumed by the matching backward together with the rest of the state:
++    # these coefficients are a deterministic function of the digested inputs.
++    state["signal_factors"] = factors
+     noise = _noise_amplitude(np.sum(np.real(covariances * np.conj(selections)), axis=2)).T     # (D, Bs)
+     return state["carrier"], signal, noise, covariances, weights
+ 
+@@ -382,8 +477,12 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
+     signal_values, selection_vectors = np.asarray(signal_values), np.asarray(selection_vectors)
+     carrier, signal, noise = np.asarray(carrier), np.asarray(signal), np.asarray(noise)
+     covariances, weights = np.asarray(covariances), np.asarray(weights)
+-    state = _assemble(plan, parameters, carrier_values, signal_values, np.asarray(carrier_base),
+-                      np.asarray(signal_base), np.asarray(noise_base))
++    assembly_inputs = (parameters, carrier_values, signal_values, np.asarray(carrier_base),
++                       np.asarray(signal_base), np.asarray(noise_base))
++    state = _ASSEMBLY.pop(_assembly_key(plan, *assembly_inputs), None)
++    _ASSEMBLY.clear()
++    if state is None:
++        state = _assemble(plan, *assembly_inputs)
+     structure = plan.structure
+     system, noise_system, carrier_system = structure.signal, structure.noise, structure.carrier
+     coefficients, _ = _split(system, state["signal_values"])
+@@ -393,20 +492,25 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
+ 
+     # noise = sqrt(c t), t = sum Re(cov conj(s)): t_bar = noise_bar c / (2 noise).
+     temporary_bar = np.asarray(noise_bar, dtype=np.float64) * _NOISE_SCALE / (2 * noise)      # (D, Bs)
+-    covariance_bar = temporary_bar.T[:, :, None] * np.conj(selections)                         # (Bs, D, N)
++    # The covariance cotangent t_bar conj(s) enters only through the A^T solve below,
++    # where it is replaced by its exact solution t_bar conj(w).
+     selection_bar = temporary_bar.T[:, :, None] * np.conj(covariances)
+     signal_values_bar = np.zeros(state["signal_values"].shape, dtype=np.complex128)
+     noise_values_bar = np.zeros(state["noise_values"].shape, dtype=np.complex128)
+     pattern, noise_pattern = system.pattern, noise_system.pattern
+     products, noise_products = _products(pattern), _products(noise_pattern)
+-    factors = _FACTORS.pop(_digest_values(pattern, coefficients), None)
+-    _FACTORS.clear()
++    factors = state.get("signal_factors")
+     signal_bar = np.asarray(signal_bar)
+     for row in range(count):
+         factor = factors[row] if factors is not None else _factor(pattern, coefficients[row])
+         solution = np.concatenate([signal[row][:, None], covariances[row].T], axis=1)           # (N, 1 + D)
+-        solution_bar = np.concatenate([signal_bar[row][:, None], covariance_bar[row].T], axis=1)
+-        rhs_bar = _solve(products, coefficients[row], factor, solution_bar, "T")               # A^T r = x_bar
++        # A^T r = x_bar for x = [signal, covariances]. The covariance columns have
++        # x_bar = t_bar conj(s) with real t_bar, and the forward solved A^H w = s;
++        # conjugating gives A^T conj(w) = conj(s), so r_cov = t_bar conj(w) exactly.
++        # Only the signal column needs a refined solve.
++        signal_rhs_bar = _solve(products, coefficients[row], factor, signal_bar[row], "T")
++        covariance_rhs_bar = np.conj(weights[row].T) * temporary_bar[:, row][None, :]           # (N, D)
++        rhs_bar = np.concatenate([signal_rhs_bar[:, None], covariance_rhs_bar], axis=1)
+         coefficient_bar = -np.sum(rhs_bar[pattern.rows] * solution[pattern.cols], axis=1)
+         sources_bar, weight = rhs_bar[:, 1:], weights[row].T                                    # (N, D)
+         noise_row = 0 if plan.noise_row_reuse else row
+@@ -448,7 +552,7 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
+     carrier_pattern = carrier_system.pattern
+     carrier_products = _products(carrier_pattern)
+     for row in range(carrier.shape[0]):
+-        factor = _factor(carrier_pattern, state["carrier_coefficients"][row])
++        factor = state["carrier_factors"][row]
+         rhs_bar = _solve(carrier_products, state["carrier_coefficients"][row], factor, carrier_total_bar[row], "T")
+         carrier_values_bar[row, : carrier_system.nnz] = -rhs_bar[carrier_pattern.rows] * carrier[row][carrier_pattern.cols]
+         if carrier_system.augmented:
+diff --git a/differometor/simulate.py b/differometor/simulate.py
+index 18cb33b..ecdcceb 100644
+--- a/differometor/simulate.py
++++ b/differometor/simulate.py
+@@ -18,7 +18,6 @@ Conventions used throughout:
+ """
+ 
+ import jax
+-import jax.scipy.linalg
+ from functools import partial
+ from time import time
+ import jax.numpy as jnp
+@@ -391,6 +390,11 @@ def simulate(
+         the carrier, signal and noise systems are assembled as structural-nonzero
+         value vectors and solved with sparse LU. Rebuild it whenever base matrices'
+         structure, selectors or matrix destinations change; omit it for the dense path.
++    host_plan : HostPlan | None
++        Optional static host-evaluation plan produced by `run_build_step`. It carries
++        the builder's concrete sweep, insertion, linking and detector-phase indices;
++        when present those static copies are used instead of the traced index arrays.
++        Re-run `run_build_step` whenever any index array or selector changes.
+ 
+     Returns
+     -------
+@@ -409,6 +413,33 @@ def simulate(
+     - Conjugation and block manipulation follow the conventions used for upper and lower
+       sidebands in frequency-domain interferometer models.
+     """
++    host_path = sparse_structure is not None and SPARSE_SOLVES and HOST_PASS and host_plan is not None
++    layout = getattr(host_plan, "parameter_layout", None) if host_path and STATIC_PARAMETER_LAYOUT else None
++    if layout is not None and layout.applies(parameters, optimized_parameters):
++        # Same insertion, linking and detector-phase steps as below, indexed with the
++        # builder's concrete (nonnegative, in-bounds, unique-destination) indices.
++        row = parameters.reshape(parameters.shape[1:])
++        row = _static_set(row, layout.optimized_parameter_indices,
++                          _static_take(optimized_parameters, layout.optimized_value_indices))
++        inputs_to_link = _static_take(row, layout.linked_indices)
++        outputs_to_link = vmap(lambda i, x: lax.switch(i, LINKING_FUNCTIONS, x))(
++            linking_function_indices, inputs_to_link
++        )
++        row = _static_set(row, layout.indices_to_link, outputs_to_link)
++        qhd_phase_values = jnp.exp(1j * jnp.radians(_static_take(row, layout.qhd_parameter_indices)))
++        return _simulate_host_pass(
++            host_plan,
++            row.reshape(1, -1),
++            qhd_phase_values,
++            carrier_changing_values,
++            signal_changing_values,
++            carrier_matrix,
++            signal_matrix,
++            noise_matrix,
++            noise_selection_vectors,
++            layout.qhd_placing_indices,
++        )
++
+     # Insert optimized parameter values into the base parameter row.
+     parameters = parameters.at[[0], optimized_parameter_indices].set(
+         optimized_parameters[optimized_value_indices]
+@@ -924,6 +955,40 @@ def _simulate_sparse(
+ HOST_PASS: bool = True
+ 
+ 
++# On the host path, index the parameter row with the host plan's static layout
++# (explicit gathers and unique-index scatters) instead of generic traced indexing.
++# `.at[].set` with traced indices cannot assume unique destinations, so its JVP and
++# transpose build an id-tagging scatter/compare/select construction; with
++# builder-verified unique destinations a scatter's derivative is a plain
++# gather/scatter. Values are identical. False keeps the generic indexing.
++STATIC_PARAMETER_LAYOUT: bool = True
++
++
++def _static_take(values, indices):
++    """values[indices] for a 1-D array and concrete nonnegative in-bounds indices."""
++    return lax.gather(
++        values,
++        np.asarray(indices, dtype=np.int64)[:, None],
++        lax.GatherDimensionNumbers(offset_dims=(), collapsed_slice_dims=(0,), start_index_map=(0,)),
++        slice_sizes=(1,),
++        mode=lax.GatherScatterMode.PROMISE_IN_BOUNDS,
++    )
++
++
++def _static_set(values, indices, updates):
++    """values.at[indices].set(updates) for concrete unique in-bounds indices (1-D)."""
++    return lax.scatter(
++        values,
++        np.asarray(indices, dtype=np.int64)[:, None],
++        jnp.asarray(updates).astype(values.dtype),
++        lax.ScatterDimensionNumbers(
++            update_window_dims=(), inserted_window_dims=(0,), scatter_dims_to_operand_dims=(0,)
++        ),
++        unique_indices=True,
++        mode=lax.GatherScatterMode.PROMISE_IN_BOUNDS,
++    )
++
++
+ def _simulate_host_pass(
+     plan,
+     parameters,
+@@ -1129,6 +1194,11 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
+     if NOISE_FACTOR_REUSE not in ("off", "direct", "direct_implicit", "all"):
+         raise ValueError(f"Unknown NOISE_FACTOR_REUSE {NOISE_FACTOR_REUSE!r}")
+     if NOISE_FACTOR_REUSE != "off":
++        # Imported here: only this dense path needs it, so the default sparse/host
++        # path does not pay for importing jax.scipy.linalg at package import.
++        # The aliased form does not rebind `jax` as a local name.
++        import jax.scipy.linalg as jax_scipy_linalg
++
+         # One LU per signal row, shared by the signal solve, the adjoint noise-weight
+         # solve (A^H y = s via trans=2) and the covariance solve. Each solve is a
+         # custom_linear_solve whose matvec depends differentiably on A, mirroring
+@@ -1138,7 +1208,7 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
+         factors = (lu_matrix, lu_pivots)
+ 
+         def lu_apply(rhs, trans):
+-            return jax.scipy.linalg.lu_solve(factors, rhs, trans=trans)
++            return jax_scipy_linalg.lu_solve(factors, rhs, trans=trans)
+ 
+         def direct_solve(rhs):
+             return lax.custom_linear_solve(
+@@ -1175,8 +1245,8 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
+                 return lax.custom_linear_solve(
+                     lambda x: jnp.einsum("bji,bj->bi", jnp.conjugate(system), x),
+                     rhs.astype(jnp.complex128),
+-                    solve=lambda _, x: jax.scipy.linalg.lu_solve(adjoint_factors, x, trans=0),
+-                    transpose_solve=lambda _, x: jax.scipy.linalg.lu_solve(adjoint_factors, x, trans=1),
++                    solve=lambda _, x: jax_scipy_linalg.lu_solve(adjoint_factors, x, trans=0),
++                    transpose_solve=lambda _, x: jax_scipy_linalg.lu_solve(adjoint_factors, x, trans=1),
+                 )
+ 
+             noise_weights = vmap(explicit_adjoint_solve)(carrier_selections)
+diff --git a/differometor/sparse.py b/differometor/sparse.py
+index 45de42d..c1f4510 100644
+--- a/differometor/sparse.py
++++ b/differometor/sparse.py
+@@ -211,6 +211,10 @@ class SparseSystem:
+         all_cols = np.concatenate([cols, np.full(rhs_rows.shape, size, dtype=np.int64)])
+         self.all_rows = all_rows
+         self.all_cols = all_cols
++        # Concrete, nonnegative coordinates in the same order as the values.
++        # Prepare the gather operand once while building, rather than tracing
++        # general advanced-index normalization/packing at every JAX boundary.
++        self.base_coordinates = np.stack((all_rows, all_cols), axis=1)
+         position = np.full(base_matrix.shape, -1, dtype=np.int64)
+         position[all_rows, all_cols] = np.arange(all_rows.size)
+         self._position = position
+@@ -237,7 +241,16 @@ class SparseSystem:
+ 
+     def base_values(self, matrix):
+         """Gather the base matrix values at all pattern entries (traced)."""
+-        return matrix[self.all_rows, self.all_cols]
++        return jax.lax.gather(
++            matrix,
++            self.base_coordinates,
++            jax.lax.GatherDimensionNumbers(
++                offset_dims=(), collapsed_slice_dims=(0, 1), start_index_map=(0, 1)
++            ),
++            slice_sizes=(1, 1),
++            unique_indices=True,
++            mode="promise_in_bounds",
++        )
+ 
+     def split(self, values):
+         """Split augmented values (..., nnz_total) into A values and dense RHS."""

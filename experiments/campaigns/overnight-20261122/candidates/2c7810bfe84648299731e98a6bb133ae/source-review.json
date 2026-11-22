@@ -1,0 +1,77 @@
+{
+  "candidate_sha": "5bbb91e38ff993a10486f296a738860339cd05e0",
+  "parent_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+  "diff_sha256": "5e88376cfc3a33295e8366784bb6ff57d861f378d2e43e1a275618da15d5fd29",
+  "source_context_sha256": "b770d4896a0ea0dc24a5251f366a8bb26ef68d4172409d4111a46e5a2c4d0c87",
+  "evaluation_receipt_sha256": "dc64e06f4eee718ce06b4049f1021539bdd57b5b794fe19784b7da080775ede4",
+  "deadline_unix": 1795339664.0,
+  "reviewer": "independent-headless-source-review-v1",
+  "provider": "claude",
+  "model": "claude-opus-5-5",
+  "session_id": "2f5287c1-6ab7-450a-bcf2-931c97c06cbd",
+  "result": {
+    "response": {
+      "approved": true,
+      "reasons": [
+        "Static parameter layout (simulate.py, host_pass.ParameterLayout): the insertion, linking and detector-phase steps are the same as the generic path. The static indices are used only when the builder's arrays are nonnegative and in bounds, insertion and link destinations are unique (so last-write-wins semantics cannot differ), parameters have shape (1, P), and optimized_value_indices fit the optimized vector. In every other case the code falls back to the generic indexing. The derivative of a unique-index scatter/gather is a plain gather/scatter, so gradients are preserved. No setup-specific logic is involved.",
+        "The layout reads static copies of index arrays taken at build time and ignores the traced index arguments. This matches the existing HostPlan behaviour (sweep and carrier indices were already static), is documented in the docstring, and requires re-running run_build_step if indices change. Non-blocking.",
+        "Covariance cotangent shortcut in host_backward: the forward solves A^H w = s, which implies A^T conj(w) = conj(s). The covariance column cotangent is t_bar*conj(s) with real t_bar, so its solution is exactly t_bar*conj(w). This is an exact algebraic identity that reuses an iteratively refined forward solution, not an approximation. The shapes and indexing match the old (Bs, D, N) construction. The signal column still gets a refined A^T solve.",
+        "_ASSEMBLY forward-to-backward state: this is equivalent to keeping AD residuals within one forward/backward pair. The key is the plan key plus a digest of the dtype, shape and bytes of all assembly inputs. The assembled values and factorizations are deterministic functions of those inputs, so a hit returns the same values a reassembly would. On a miss (for example, sequential vmap ordering, repeated vjp_fn calls, or a backward with no forward) it reassembles. Each forward assembles and factors afresh and clears the store, so nothing is cached across evaluations and no answers are reused.",
+        "Carrier factor reuse in the backward: it uses the factorization of the same carrier coefficients the forward used (or the backward's fresh _assemble on a miss). The result is mathematically identical to refactoring.",
+        "SystemPlan.backward: non-last writes had exactly zero cotangent, so scattering only the last writes is equivalent. Plain assignment replaces np.add.at only when the destinations are verified unique. function_jacobian(with_outputs=False) skips only the unused primal value; the Jacobian blocks are unchanged.",
+        "SparseSystem.base_values: the lax.gather with unique_indices/promise_in_bounds is valid because the pattern coordinates come from np.nonzero of a mask, so they are distinct, nonnegative and in bounds. Values are identical and the gather is differentiable.",
+        "Lazy loading of the Plotly-based visualize_setup and the local import of jax.scipy.linalg (dense path only, using an alias so jax is not rebound) only change import timing. Neither is simulation work moved out of the timed region.",
+        "No fixture detection, hardcoded results, dropped frequencies, outputs or gradients, dtype downcasts, weakened validation or persistent compilation cache were found. The XLA flags in __init__ are unchanged inherited package options.",
+        "Numerical evidence: all 14 cases, including dev/grid-style, uifo random-structure/randparams, voyager, aligo, amod and fmod, match the trusted seed reference with zero failing elements and log sensitivity error 0.0. new_failures is empty and all outputs are finite. Fresh-process benchmarks pass for both grid (median 0.853 s) and aLIGO (median 0.556 s).",
+        "Inherited caveat: the pristine-comparison mismatches (signal, gradient and loss on dev/uifo_rand*, sensitivity log error on uifo_rand1/3, aLIGO loss element) are identical to the documented inherited caveats and were not introduced by this change. The host-pass custom_vjp also inherits its first-order-only limitation.",
+        "This approval is one additional bounded review, not proof of universal correctness."
+      ],
+      "generalization_risks": []
+    },
+    "session_id": "2f5287c1-6ab7-450a-bcf2-931c97c06cbd",
+    "model": "claude-opus-5-5",
+    "model_verification": "provider-init",
+    "usage": [
+      {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 86540,
+        "cache_read_input_tokens": 2305,
+        "output_tokens": 4347,
+        "output_tokens_details": {
+          "thinking_tokens": 2872
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 86540,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 4347,
+            "cache_read_input_tokens": 2305,
+            "cache_creation_input_tokens": 86540,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 86540
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      }
+    ]
+  },
+  "failures": [],
+  "approved": true,
+  "finished_at": 1795313736.945135,
+  "prompt_sha256": "b9b6ed06024d5ea5f7773777343c27ee98f5cb97226487d49e23c91e6da102b0",
+  "scope": "no-fixture-specialization-and-integrity",
+  "policy_rejection": []
+}

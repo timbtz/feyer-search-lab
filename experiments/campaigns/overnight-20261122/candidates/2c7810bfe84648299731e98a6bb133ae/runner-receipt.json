@@ -1,0 +1,3110 @@
+{
+  "schema_version": "feyer-overnight-evaluation-v1",
+  "evaluation_id": "2c7810bfe84648299731e98a6bb133ae",
+  "candidate_sha": "5bbb91e38ff993a10486f296a738860339cd05e0",
+  "cohort_digest": "0543092279d0368390fe9a039823f591cb0f163f58ff89849ecb07fd22f4647e",
+  "cohort": {
+    "host": "j-h6w4ycifvvza6wlxma2mxou2mm",
+    "policy": {
+      "cpu": 2,
+      "python": "/workspace/venv-feyer/bin/python",
+      "memory_budget_bytes": 16000000000,
+      "memory_reserve_bytes": 8000000000,
+      "lock_states": [
+        "/workspace/feyer-lab/state",
+        "/workspace/feyer-lab-lane1/state"
+      ],
+      "harness": {
+        "upstream_commit": "83f8d2f40fc75218a1d8ec7908cc0bf1c8f99a75",
+        "source": "https://github.com/feyerlabs/start-hack-munich-2026",
+        "files": {
+          "benchmark.py": "b2e8c5367705e220f83c3d5f2bb95301e3148b102dc0d34f5c2c6f5792b9984e",
+          "benchmark_aligo.py": "8c1018592e33f66b0913490159f7e2c20f5a2acec614b95b9bbbda18d90d99fc",
+          "plot_timings.py": "21e19966f36fbffc6bd0e416b5fb99e8d7d6b4593bf5b14b7a0d4e3b5216ca8a"
+        }
+      },
+      "runtime_files": {
+        "dual_benchmark_worker.py": "cdeff6f1476796278945e9dae59f278095167979c5b1a81821eb8403ef7ef8d4",
+        "transfer_run.py": "749e4c920454217ab03d5af997d35f0366ce26fb4e2bd6ec1b269809da744180",
+        "transfer_validation.py": "ea54de7bb687901435339272178093989e9366aa59b8cfd2df8e5d5b16acd255",
+        "worker.py": "dc22f8865b67606117cd372cdcf712d54879b353edbaf6125e3955bdc7a12f9f",
+        "resources.py": "3de3297e4207603043208e3c4235e6ac82c0e4eed246e8dd264cd689fceb7e75"
+      }
+    },
+    "container_limits": {
+      "memory.max": "59055800320",
+      "memory.swap.max": "0",
+      "cpu.max": "1600000 100000",
+      "cpuset.cpus.effective": "0-127"
+    },
+    "environment": {
+      "cpu_model": "AMD EPYC 9334 32-Core Processor",
+      "cpu_affinity_ids": [
+        2
+      ],
+      "platform": "Linux-6.8.0-79-generic-x86_64-with-glibc2.35",
+      "python": "3.12.15",
+      "packages": {
+        "differometor": "0.0.6",
+        "jax": "0.9.0",
+        "jaxlib": "0.9.0",
+        "numpy": "2.5.5",
+        "optax": "0.2.6"
+      },
+      "backend": "cpu",
+      "jax_enable_x64": true,
+      "persistent_compilation_cache": false,
+      "thread_limits": {
+        "OMP_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "NUMEXPR_NUM_THREADS": "1"
+      }
+    },
+    "timing_regime": "both-existing-queues-reserved; external-contention-not-excluded"
+  },
+  "benchmarks": {
+    "grid": {
+      "passed": true,
+      "fresh_process": true,
+      "samples": [
+        {
+          "seconds": 0.8823590371757746,
+          "candidate_sha": "5bbb91e38ff993a10486f296a738860339cd05e0",
+          "fresh_process": true,
+          "official_passed": true,
+          "report_path": "requests/2c7810bfe84648299731e98a6bb133ae/grid-1/report.json",
+          "report_sha256": "b2d9ddf7f7128e2e20fb0fe96391ab305525257a338328830dfa61e30af90209",
+          "arrays_sha256": "2bf8c944d9c80b5be7362fa86a342be7b102b24184b939332297f938696e48b7",
+          "effective_environment": {
+            "cpu_model": "AMD EPYC 9334 32-Core Processor",
+            "cpu_affinity_count": 1,
+            "cpu_affinity_ids": [
+              2
+            ],
+            "requested_logical_cpus": 1,
+            "logical_cpus_on_host": 128,
+            "platform": "Linux-6.8.0-79-generic-x86_64-with-glibc2.35",
+            "python": "3.12.15",
+            "packages": {
+              "differometor": "0.0.6",
+              "jax": "0.9.0",
+              "jaxlib": "0.9.0",
+              "numpy": "2.5.5",
+              "optax": "0.2.6"
+            },
+            "backend": "cpu",
+            "jax_enable_x64": true,
+            "persistent_compilation_cache": false,
+            "omp_num_threads": "1",
+            "xla_flags": "--xla_backend_optimization_level=0 --xla_cpu_use_fusion_emitters=false",
+            "thread_limits": {
+              "OMP_NUM_THREADS": "1",
+              "OPENBLAS_NUM_THREADS": "1",
+              "MKL_NUM_THREADS": "1",
+              "NUMEXPR_NUM_THREADS": "1"
+            }
+          }
+        },
+        {
+          "seconds": 0.850608242675662,
+          "candidate_sha": "5bbb91e38ff993a10486f296a738860339cd05e0",
+          "fresh_process": true,
+          "official_passed": true,
+          "report_path": "requests/2c7810bfe84648299731e98a6bb133ae/grid-2/report.json",
+          "report_sha256": "2a8ad6668cbbffcd0a82190ede973acb1e7602f6d2d9822f381313728cedb48c",
+          "arrays_sha256": "2bf8c944d9c80b5be7362fa86a342be7b102b24184b939332297f938696e48b7",
+          "effective_environment": {
+            "cpu_model": "AMD EPYC 9334 32-Core Processor",
+            "cpu_affinity_count": 1,
+            "cpu_affinity_ids": [
+              2
+            ],
+            "requested_logical_cpus": 1,
+            "logical_cpus_on_host": 128,
+            "platform": "Linux-6.8.0-79-generic-x86_64-with-glibc2.35",
+            "python": "3.12.15",
+            "packages": {
+              "differometor": "0.0.6",
+              "jax": "0.9.0",
+              "jaxlib": "0.9.0",
+              "numpy": "2.5.5",
+              "optax": "0.2.6"
+            },
+            "backend": "cpu",
+            "jax_enable_x64": true,
+            "persistent_compilation_cache": false,
+            "omp_num_threads": "1",
+            "xla_flags": "--xla_backend_optimization_level=0 --xla_cpu_use_fusion_emitters=false",
+            "thread_limits": {
+              "OMP_NUM_THREADS": "1",
+              "OPENBLAS_NUM_THREADS": "1",
+              "MKL_NUM_THREADS": "1",
+              "NUMEXPR_NUM_THREADS": "1"
+            }
+          }
+        },
+        {
+          "seconds": 0.8526666797697544,
+          "candidate_sha": "5bbb91e38ff993a10486f296a738860339cd05e0",
+          "fresh_process": true,
+          "official_passed": true,
+          "report_path": "requests/2c7810bfe84648299731e98a6bb133ae/grid-3/report.json",
+          "report_sha256": "1e747bcafc7ceb5d98971ded062a31285e171a5479d35bc79ef4c22bc5753b2e",
+          "arrays_sha256": "2bf8c944d9c80b5be7362fa86a342be7b102b24184b939332297f938696e48b7",
+          "effective_environment": {
+            "cpu_model": "AMD EPYC 9334 32-Core Processor",
+            "cpu_affinity_count": 1,
+            "cpu_affinity_ids": [
+              2
+            ],
+            "requested_logical_cpus": 1,
+            "logical_cpus_on_host": 128,
+            "platform": "Linux-6.8.0-79-generic-x86_64-with-glibc2.35",
+            "python": "3.12.15",
+            "packages": {
+              "differometor": "0.0.6",
+              "jax": "0.9.0",
+              "jaxlib": "0.9.0",
+              "numpy": "2.5.5",
+              "optax": "0.2.6"
+            },
+            "backend": "cpu",
+            "jax_enable_x64": true,
+            "persistent_compilation_cache": false,
+            "omp_num_threads": "1",
+            "xla_flags": "--xla_backend_optimization_level=0 --xla_cpu_use_fusion_emitters=false",
+            "thread_limits": {
+              "OMP_NUM_THREADS": "1",
+              "OPENBLAS_NUM_THREADS": "1",
+              "MKL_NUM_THREADS": "1",
+              "NUMEXPR_NUM_THREADS": "1"
+            }
+          }
+        }
+      ],
+      "median_seconds": 0.8526666797697544,
+      "minimum_seconds": 0.850608242675662,
+      "maximum_seconds": 0.8823590371757746
+    },
+    "aligo": {
+      "passed": true,
+      "fresh_process": true,
+      "samples": [
+        {
+          "seconds": 0.5557099170982838,
+          "candidate_sha": "5bbb91e38ff993a10486f296a738860339cd05e0",
+          "fresh_process": true,
+          "official_passed": true,
+          "report_path": "requests/2c7810bfe84648299731e98a6bb133ae/aligo-1/report.json",
+          "report_sha256": "3ad7c1f9f42483764c86ab1010678df4d36dc921338023604d26d179f62d0ef8",
+          "arrays_sha256": "02d9ec8bf716adc1065360933033f874072dc3eec168fec025f6288504da83cb",
+          "effective_environment": {
+            "cpu_model": "AMD EPYC 9334 32-Core Processor",
+            "cpu_affinity_count": 1,
+            "cpu_affinity_ids": [
+              2
+            ],
+            "requested_logical_cpus": 1,
+            "logical_cpus_on_host": 128,
+            "platform": "Linux-6.8.0-79-generic-x86_64-with-glibc2.35",
+            "python": "3.12.15",
+            "packages": {
+              "differometor": "0.0.6",
+              "jax": "0.9.0",
+              "jaxlib": "0.9.0",
+              "numpy": "2.5.5",
+              "optax": "0.2.6"
+            },
+            "backend": "cpu",
+            "jax_enable_x64": true,
+            "persistent_compilation_cache": false,
+            "omp_num_threads": "1",
+            "xla_flags": "--xla_backend_optimization_level=0 --xla_cpu_use_fusion_emitters=false",
+            "thread_limits": {
+              "OMP_NUM_THREADS": "1",
+              "OPENBLAS_NUM_THREADS": "1",
+              "MKL_NUM_THREADS": "1",
+              "NUMEXPR_NUM_THREADS": "1"
+            }
+          }
+        },
+        {
+          "seconds": 0.5517909042537212,
+          "candidate_sha": "5bbb91e38ff993a10486f296a738860339cd05e0",
+          "fresh_process": true,
+          "official_passed": true,
+          "report_path": "requests/2c7810bfe84648299731e98a6bb133ae/aligo-2/report.json",
+          "report_sha256": "ad4f7fa02c7bf91696dc8619ca3643f2e1d7ad2a562cfb72adf72622f65773fa",
+          "arrays_sha256": "02d9ec8bf716adc1065360933033f874072dc3eec168fec025f6288504da83cb",
+          "effective_environment": {
+            "cpu_model": "AMD EPYC 9334 32-Core Processor",
+            "cpu_affinity_count": 1,
+            "cpu_affinity_ids": [
+              2
+            ],
+            "requested_logical_cpus": 1,
+            "logical_cpus_on_host": 128,
+            "platform": "Linux-6.8.0-79-generic-x86_64-with-glibc2.35",
+            "python": "3.12.15",
+            "packages": {
+              "differometor": "0.0.6",
+              "jax": "0.9.0",
+              "jaxlib": "0.9.0",
+              "numpy": "2.5.5",
+              "optax": "0.2.6"
+            },
+            "backend": "cpu",
+            "jax_enable_x64": true,
+            "persistent_compilation_cache": false,
+            "omp_num_threads": "1",
+            "xla_flags": "--xla_backend_optimization_level=0 --xla_cpu_use_fusion_emitters=false",
+            "thread_limits": {
+              "OMP_NUM_THREADS": "1",
+              "OPENBLAS_NUM_THREADS": "1",
+              "MKL_NUM_THREADS": "1",
+              "NUMEXPR_NUM_THREADS": "1"
+            }
+          }
+        },
+        {
+          "seconds": 0.5584083441644907,
+          "candidate_sha": "5bbb91e38ff993a10486f296a738860339cd05e0",
+          "fresh_process": true,
+          "official_passed": true,
+          "report_path": "requests/2c7810bfe84648299731e98a6bb133ae/aligo-3/report.json",
+          "report_sha256": "8d8387998c1a2e6f41fa69758c21b80a08375699cde41b20dd5a50cdf7621861",
+          "arrays_sha256": "02d9ec8bf716adc1065360933033f874072dc3eec168fec025f6288504da83cb",
+          "effective_environment": {
+            "cpu_model": "AMD EPYC 9334 32-Core Processor",
+            "cpu_affinity_count": 1,
+            "cpu_affinity_ids": [
+              2
+            ],
+            "requested_logical_cpus": 1,
+            "logical_cpus_on_host": 128,
+            "platform": "Linux-6.8.0-79-generic-x86_64-with-glibc2.35",
+            "python": "3.12.15",
+            "packages": {
+              "differometor": "0.0.6",
+              "jax": "0.9.0",
+              "jaxlib": "0.9.0",
+              "numpy": "2.5.5",
+              "optax": "0.2.6"
+            },
+            "backend": "cpu",
+            "jax_enable_x64": true,
+            "persistent_compilation_cache": false,
+            "omp_num_threads": "1",
+            "xla_flags": "--xla_backend_optimization_level=0 --xla_cpu_use_fusion_emitters=false",
+            "thread_limits": {
+              "OMP_NUM_THREADS": "1",
+              "OPENBLAS_NUM_THREADS": "1",
+              "MKL_NUM_THREADS": "1",
+              "NUMEXPR_NUM_THREADS": "1"
+            }
+          }
+        }
+      ],
+      "median_seconds": 0.5557099170982838,
+      "minimum_seconds": 0.5517909042537212,
+      "maximum_seconds": 0.5584083441644907
+    }
+  },
+  "generalization": {
+    "case_count": 14,
+    "all_finite": true,
+    "inputs_identical": true,
+    "seed_comparison_passed": true,
+    "new_failures": [],
+    "seed_case_checks": [
+      {
+        "passed": true,
+        "issues": [],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "loss": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "log_sensitivity_error": 0.0
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-05
+        },
+        "case": "dev"
+      },
+      {
+        "passed": true,
+        "issues": [],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "loss": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "log_sensitivity_error": 0.0
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-05
+        },
+        "case": "dev_perturbed"
+      },
+      {
+        "passed": true,
+        "issues": [],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "loss": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "log_sensitivity_error": 0.0
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-05
+        },
+        "case": "uifo_20_5000"
+      },
+      {
+        "passed": true,
+        "issues": [],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "loss": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "log_sensitivity_error": 0.0
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-05
+        },
+        "case": "uifo_rand1"
+      },
+      {
+        "passed": true,
+        "issues": [],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "loss": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "log_sensitivity_error": 0.0
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-05
+        },
+        "case": "uifo_rand2"
+      },
+      {
+        "passed": true,
+        "issues": [],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "loss": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "log_sensitivity_error": 0.0
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-05
+        },
+        "case": "uifo_rand3"
+      },
+      {
+        "passed": true,
+        "issues": [],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "loss": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "log_sensitivity_error": 0.0
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-05
+        },
+        "case": "voyager"
+      },
+      {
+        "passed": true,
+        "issues": [],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "loss": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "log_sensitivity_error": 0.0
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-05
+        },
+        "case": "aligo"
+      },
+      {
+        "passed": true,
+        "issues": [],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "loss": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "log_sensitivity_error": 0.0
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-05
+        },
+        "case": "dev_randparams"
+      },
+      {
+        "passed": true,
+        "issues": [],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "loss": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "log_sensitivity_error": 0.0
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-05
+        },
+        "case": "uifo_randparams1"
+      },
+      {
+        "passed": true,
+        "issues": [],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "loss": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "log_sensitivity_error": 0.0
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-05
+        },
+        "case": "uifo_randparams2"
+      },
+      {
+        "passed": true,
+        "issues": [],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "loss": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "log_sensitivity_error": 0.0
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-05
+        },
+        "case": "uifo_randparams3"
+      },
+      {
+        "passed": true,
+        "issues": [],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "loss": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "log_sensitivity_error": 0.0
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-05
+        },
+        "case": "uifo_amod1"
+      },
+      {
+        "passed": true,
+        "issues": [],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "loss": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "log_sensitivity_error": 0.0
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-05
+        },
+        "case": "uifo_fmod1"
+      }
+    ],
+    "artifact_checks": {
+      "schema": "feyer-transfer-array-audit-v1",
+      "passed": true,
+      "cases": [
+        {
+          "passed": true,
+          "issues": [],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "log_sensitivity_error": 0.0
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "dev"
+        },
+        {
+          "passed": true,
+          "issues": [],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "log_sensitivity_error": 0.0
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "dev_perturbed"
+        },
+        {
+          "passed": true,
+          "issues": [],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "log_sensitivity_error": 0.0
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "uifo_20_5000"
+        },
+        {
+          "passed": true,
+          "issues": [],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "log_sensitivity_error": 0.0
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "uifo_rand1"
+        },
+        {
+          "passed": true,
+          "issues": [],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "log_sensitivity_error": 0.0
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "uifo_rand2"
+        },
+        {
+          "passed": true,
+          "issues": [],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "log_sensitivity_error": 0.0
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "uifo_rand3"
+        },
+        {
+          "passed": true,
+          "issues": [],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "log_sensitivity_error": 0.0
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "voyager"
+        },
+        {
+          "passed": true,
+          "issues": [],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "log_sensitivity_error": 0.0
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "aligo"
+        },
+        {
+          "passed": true,
+          "issues": [],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "log_sensitivity_error": 0.0
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "dev_randparams"
+        },
+        {
+          "passed": true,
+          "issues": [],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "log_sensitivity_error": 0.0
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "uifo_randparams1"
+        },
+        {
+          "passed": true,
+          "issues": [],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "log_sensitivity_error": 0.0
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "uifo_randparams2"
+        },
+        {
+          "passed": true,
+          "issues": [],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "log_sensitivity_error": 0.0
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "uifo_randparams3"
+        },
+        {
+          "passed": true,
+          "issues": [],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "log_sensitivity_error": 0.0
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "uifo_amod1"
+        },
+        {
+          "passed": true,
+          "issues": [],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "log_sensitivity_error": 0.0
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "uifo_fmod1"
+        }
+      ],
+      "reference_archive_sha256": "7f4da491d96cf6191afd5969f1aae91f33bcfef721b0a92fb0b9bb3477133d5c",
+      "candidate_archive_sha256": "7f4da491d96cf6191afd5969f1aae91f33bcfef721b0a92fb0b9bb3477133d5c",
+      "scope": "Additional strict review; not official PASS, no ranking or timing promotion."
+    },
+    "candidate_archive_sha256": "7f4da491d96cf6191afd5969f1aae91f33bcfef721b0a92fb0b9bb3477133d5c",
+    "pristine_comparison": {
+      "schema": "feyer-transfer-array-audit-v1",
+      "passed": false,
+      "cases": [
+        {
+          "passed": false,
+          "issues": [
+            "gradient: elementwise regression mismatch",
+            "loss: elementwise regression mismatch",
+            "signal: elementwise regression mismatch"
+          ],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": false,
+              "failing_count": 3
+            },
+            "loss": {
+              "passed": false,
+              "failing_count": 1
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": false,
+              "failing_count": 131
+            },
+            "log_sensitivity_error": 6.80508378536615e-08
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "dev"
+        },
+        {
+          "passed": false,
+          "issues": [
+            "gradient: elementwise regression mismatch",
+            "signal: elementwise regression mismatch"
+          ],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": false,
+              "failing_count": 1
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": false,
+              "failing_count": 9
+            },
+            "log_sensitivity_error": 3.304147355720488e-08
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "dev_perturbed"
+        },
+        {
+          "passed": true,
+          "issues": [],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "log_sensitivity_error": 4.155964461460826e-11
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "uifo_20_5000"
+        },
+        {
+          "passed": false,
+          "issues": [
+            "gradient: elementwise regression mismatch",
+            "loss: elementwise regression mismatch",
+            "sensitivity: elementwise regression mismatch",
+            "signal: elementwise regression mismatch",
+            "sensitivity: logarithmic tolerance exceeded"
+          ],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": false,
+              "failing_count": 74
+            },
+            "loss": {
+              "passed": false,
+              "failing_count": 1
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": false,
+              "failing_count": 101
+            },
+            "signal": {
+              "passed": false,
+              "failing_count": 3047
+            },
+            "log_sensitivity_error": 0.0002036099068405406
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "uifo_rand1"
+        },
+        {
+          "passed": false,
+          "issues": [
+            "signal: elementwise regression mismatch"
+          ],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": false,
+              "failing_count": 2322
+            },
+            "log_sensitivity_error": 9.538787537621829e-10
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "uifo_rand2"
+        },
+        {
+          "passed": false,
+          "issues": [
+            "gradient: elementwise regression mismatch",
+            "loss: elementwise regression mismatch",
+            "sensitivity: elementwise regression mismatch",
+            "signal: elementwise regression mismatch",
+            "sensitivity: logarithmic tolerance exceeded"
+          ],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": false,
+              "failing_count": 41
+            },
+            "loss": {
+              "passed": false,
+              "failing_count": 1
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": false,
+              "failing_count": 100
+            },
+            "signal": {
+              "passed": false,
+              "failing_count": 1848
+            },
+            "log_sensitivity_error": 5.8100919558157216e-05
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "uifo_rand3"
+        },
+        {
+          "passed": false,
+          "issues": [
+            "signal: elementwise regression mismatch"
+          ],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": false,
+              "failing_count": 395
+            },
+            "log_sensitivity_error": 1.0196288258157438e-11
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "voyager"
+        },
+        {
+          "passed": true,
+          "issues": [],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "log_sensitivity_error": 1.275708427783684e-10
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "aligo"
+        },
+        {
+          "passed": false,
+          "issues": [
+            "signal: elementwise regression mismatch"
+          ],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": false,
+              "failing_count": 255
+            },
+            "log_sensitivity_error": 5.055626672856306e-08
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "dev_randparams"
+        },
+        {
+          "passed": false,
+          "issues": [
+            "gradient: elementwise regression mismatch",
+            "signal: elementwise regression mismatch"
+          ],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": false,
+              "failing_count": 1
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": false,
+              "failing_count": 105
+            },
+            "log_sensitivity_error": 3.0414469165407354e-08
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "uifo_randparams1"
+        },
+        {
+          "passed": false,
+          "issues": [
+            "gradient: elementwise regression mismatch",
+            "sensitivity: elementwise regression mismatch",
+            "signal: elementwise regression mismatch"
+          ],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": false,
+              "failing_count": 14
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": false,
+              "failing_count": 13
+            },
+            "signal": {
+              "passed": false,
+              "failing_count": 2916
+            },
+            "log_sensitivity_error": 4.2482410833599715e-07
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "uifo_randparams2"
+        },
+        {
+          "passed": false,
+          "issues": [
+            "signal: elementwise regression mismatch"
+          ],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": false,
+              "failing_count": 622
+            },
+            "log_sensitivity_error": 3.5602177206328633e-08
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "uifo_randparams3"
+        },
+        {
+          "passed": true,
+          "issues": [],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "log_sensitivity_error": 7.105427357601002e-15
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "uifo_amod1"
+        },
+        {
+          "passed": true,
+          "issues": [],
+          "arrays": {
+            "carrier": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "gradient": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "loss": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "noise": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "powers": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "sensitivity": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "signal": {
+              "passed": true,
+              "failing_count": 0
+            },
+            "log_sensitivity_error": 5.1514348342607263e-14
+          },
+          "regression_policy": {
+            "rtol": 1e-07,
+            "scale_atol": 1e-12,
+            "sensitivity_log_tolerance": 1e-05
+          },
+          "case": "uifo_fmod1"
+        }
+      ],
+      "reference_archive_sha256": "ea1980477379e05f6d6c2f7c5f0824762144a633c368c94618fd54b65ac05f8e",
+      "candidate_archive_sha256": "7f4da491d96cf6191afd5969f1aae91f33bcfef721b0a92fb0b9bb3477133d5c",
+      "scope": "Additional strict review; not official PASS, no ranking or timing promotion."
+    },
+    "comparison_path": "requests/2c7810bfe84648299731e98a6bb133ae/generalization/comparison.json",
+    "comparison_sha256": "bb0a7db4458458d64f8790b49cff3be6a196848e015d2f968c165b533ffb39c3"
+  },
+  "admission": {
+    "promotion_ready": true,
+    "source_sha": "5bbb91e38ff993a10486f296a738860339cd05e0",
+    "candidate_sha": "5bbb91e38ff993a10486f296a738860339cd05e0",
+    "comparison_cohort_passed": true,
+    "scope": "public-benchmarks-and-no-new-regressions",
+    "universal_physics_claim": false
+  },
+  "inherited_caveats": [
+    {
+      "setup": "grid",
+      "repetition": 1,
+      "pristine_comparison": {
+        "passed": false,
+        "issues": [
+          "gradient: elementwise regression mismatch",
+          "loss: elementwise regression mismatch",
+          "signal: elementwise regression mismatch"
+        ],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": false,
+            "failing_count": 3
+          },
+          "loss": {
+            "passed": false,
+            "failing_count": 1
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": false,
+            "failing_count": 131
+          },
+          "log_sensitivity_error": 6.80508378536615e-08
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-05
+        },
+        "gradient_relative_l2": 8.85181111502918e-08,
+        "gradient_max_abs_difference": 0.005251471869996749
+      }
+    },
+    {
+      "setup": "grid",
+      "repetition": 2,
+      "pristine_comparison": {
+        "passed": false,
+        "issues": [
+          "gradient: elementwise regression mismatch",
+          "loss: elementwise regression mismatch",
+          "signal: elementwise regression mismatch"
+        ],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": false,
+            "failing_count": 3
+          },
+          "loss": {
+            "passed": false,
+            "failing_count": 1
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": false,
+            "failing_count": 131
+          },
+          "log_sensitivity_error": 6.80508378536615e-08
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-05
+        },
+        "gradient_relative_l2": 8.85181111502918e-08,
+        "gradient_max_abs_difference": 0.005251471869996749
+      }
+    },
+    {
+      "setup": "grid",
+      "repetition": 3,
+      "pristine_comparison": {
+        "passed": false,
+        "issues": [
+          "gradient: elementwise regression mismatch",
+          "loss: elementwise regression mismatch",
+          "signal: elementwise regression mismatch"
+        ],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": false,
+            "failing_count": 3
+          },
+          "loss": {
+            "passed": false,
+            "failing_count": 1
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": false,
+            "failing_count": 131
+          },
+          "log_sensitivity_error": 6.80508378536615e-08
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-05
+        },
+        "gradient_relative_l2": 8.85181111502918e-08,
+        "gradient_max_abs_difference": 0.005251471869996749
+      }
+    },
+    {
+      "setup": "aligo",
+      "repetition": 1,
+      "pristine_comparison": {
+        "passed": false,
+        "issues": [
+          "loss: elementwise regression mismatch"
+        ],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "loss": {
+            "passed": false,
+            "failing_count": 1
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "log_sensitivity_error": 1.1802825383711024e-10
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-06
+        },
+        "gradient_relative_l2": 2.7302432684957025e-10,
+        "gradient_max_abs_difference": 8.843209798214957e-06
+      }
+    },
+    {
+      "setup": "aligo",
+      "repetition": 2,
+      "pristine_comparison": {
+        "passed": false,
+        "issues": [
+          "loss: elementwise regression mismatch"
+        ],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "loss": {
+            "passed": false,
+            "failing_count": 1
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "log_sensitivity_error": 1.1802825383711024e-10
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-06
+        },
+        "gradient_relative_l2": 2.7302432684957025e-10,
+        "gradient_max_abs_difference": 8.843209798214957e-06
+      }
+    },
+    {
+      "setup": "aligo",
+      "repetition": 3,
+      "pristine_comparison": {
+        "passed": false,
+        "issues": [
+          "loss: elementwise regression mismatch"
+        ],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "loss": {
+            "passed": false,
+            "failing_count": 1
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "log_sensitivity_error": 1.1802825383711024e-10
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-06
+        },
+        "gradient_relative_l2": 2.7302432684957025e-10,
+        "gradient_max_abs_difference": 8.843209798214957e-06
+      }
+    },
+    {
+      "generalization_pristine_comparison": {
+        "schema": "feyer-transfer-array-audit-v1",
+        "passed": false,
+        "cases": [
+          {
+            "passed": false,
+            "issues": [
+              "gradient: elementwise regression mismatch",
+              "loss: elementwise regression mismatch",
+              "signal: elementwise regression mismatch"
+            ],
+            "arrays": {
+              "carrier": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "gradient": {
+                "passed": false,
+                "failing_count": 3
+              },
+              "loss": {
+                "passed": false,
+                "failing_count": 1
+              },
+              "noise": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "powers": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "sensitivity": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "signal": {
+                "passed": false,
+                "failing_count": 131
+              },
+              "log_sensitivity_error": 6.80508378536615e-08
+            },
+            "regression_policy": {
+              "rtol": 1e-07,
+              "scale_atol": 1e-12,
+              "sensitivity_log_tolerance": 1e-05
+            },
+            "case": "dev"
+          },
+          {
+            "passed": false,
+            "issues": [
+              "gradient: elementwise regression mismatch",
+              "signal: elementwise regression mismatch"
+            ],
+            "arrays": {
+              "carrier": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "gradient": {
+                "passed": false,
+                "failing_count": 1
+              },
+              "loss": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "noise": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "powers": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "sensitivity": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "signal": {
+                "passed": false,
+                "failing_count": 9
+              },
+              "log_sensitivity_error": 3.304147355720488e-08
+            },
+            "regression_policy": {
+              "rtol": 1e-07,
+              "scale_atol": 1e-12,
+              "sensitivity_log_tolerance": 1e-05
+            },
+            "case": "dev_perturbed"
+          },
+          {
+            "passed": true,
+            "issues": [],
+            "arrays": {
+              "carrier": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "gradient": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "loss": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "noise": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "powers": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "sensitivity": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "signal": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "log_sensitivity_error": 4.155964461460826e-11
+            },
+            "regression_policy": {
+              "rtol": 1e-07,
+              "scale_atol": 1e-12,
+              "sensitivity_log_tolerance": 1e-05
+            },
+            "case": "uifo_20_5000"
+          },
+          {
+            "passed": false,
+            "issues": [
+              "gradient: elementwise regression mismatch",
+              "loss: elementwise regression mismatch",
+              "sensitivity: elementwise regression mismatch",
+              "signal: elementwise regression mismatch",
+              "sensitivity: logarithmic tolerance exceeded"
+            ],
+            "arrays": {
+              "carrier": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "gradient": {
+                "passed": false,
+                "failing_count": 74
+              },
+              "loss": {
+                "passed": false,
+                "failing_count": 1
+              },
+              "noise": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "powers": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "sensitivity": {
+                "passed": false,
+                "failing_count": 101
+              },
+              "signal": {
+                "passed": false,
+                "failing_count": 3047
+              },
+              "log_sensitivity_error": 0.0002036099068405406
+            },
+            "regression_policy": {
+              "rtol": 1e-07,
+              "scale_atol": 1e-12,
+              "sensitivity_log_tolerance": 1e-05
+            },
+            "case": "uifo_rand1"
+          },
+          {
+            "passed": false,
+            "issues": [
+              "signal: elementwise regression mismatch"
+            ],
+            "arrays": {
+              "carrier": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "gradient": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "loss": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "noise": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "powers": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "sensitivity": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "signal": {
+                "passed": false,
+                "failing_count": 2322
+              },
+              "log_sensitivity_error": 9.538787537621829e-10
+            },
+            "regression_policy": {
+              "rtol": 1e-07,
+              "scale_atol": 1e-12,
+              "sensitivity_log_tolerance": 1e-05
+            },
+            "case": "uifo_rand2"
+          },
+          {
+            "passed": false,
+            "issues": [
+              "gradient: elementwise regression mismatch",
+              "loss: elementwise regression mismatch",
+              "sensitivity: elementwise regression mismatch",
+              "signal: elementwise regression mismatch",
+              "sensitivity: logarithmic tolerance exceeded"
+            ],
+            "arrays": {
+              "carrier": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "gradient": {
+                "passed": false,
+                "failing_count": 41
+              },
+              "loss": {
+                "passed": false,
+                "failing_count": 1
+              },
+              "noise": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "powers": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "sensitivity": {
+                "passed": false,
+                "failing_count": 100
+              },
+              "signal": {
+                "passed": false,
+                "failing_count": 1848
+              },
+              "log_sensitivity_error": 5.8100919558157216e-05
+            },
+            "regression_policy": {
+              "rtol": 1e-07,
+              "scale_atol": 1e-12,
+              "sensitivity_log_tolerance": 1e-05
+            },
+            "case": "uifo_rand3"
+          },
+          {
+            "passed": false,
+            "issues": [
+              "signal: elementwise regression mismatch"
+            ],
+            "arrays": {
+              "carrier": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "gradient": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "loss": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "noise": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "powers": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "sensitivity": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "signal": {
+                "passed": false,
+                "failing_count": 395
+              },
+              "log_sensitivity_error": 1.0196288258157438e-11
+            },
+            "regression_policy": {
+              "rtol": 1e-07,
+              "scale_atol": 1e-12,
+              "sensitivity_log_tolerance": 1e-05
+            },
+            "case": "voyager"
+          },
+          {
+            "passed": true,
+            "issues": [],
+            "arrays": {
+              "carrier": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "gradient": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "loss": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "noise": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "powers": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "sensitivity": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "signal": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "log_sensitivity_error": 1.275708427783684e-10
+            },
+            "regression_policy": {
+              "rtol": 1e-07,
+              "scale_atol": 1e-12,
+              "sensitivity_log_tolerance": 1e-05
+            },
+            "case": "aligo"
+          },
+          {
+            "passed": false,
+            "issues": [
+              "signal: elementwise regression mismatch"
+            ],
+            "arrays": {
+              "carrier": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "gradient": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "loss": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "noise": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "powers": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "sensitivity": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "signal": {
+                "passed": false,
+                "failing_count": 255
+              },
+              "log_sensitivity_error": 5.055626672856306e-08
+            },
+            "regression_policy": {
+              "rtol": 1e-07,
+              "scale_atol": 1e-12,
+              "sensitivity_log_tolerance": 1e-05
+            },
+            "case": "dev_randparams"
+          },
+          {
+            "passed": false,
+            "issues": [
+              "gradient: elementwise regression mismatch",
+              "signal: elementwise regression mismatch"
+            ],
+            "arrays": {
+              "carrier": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "gradient": {
+                "passed": false,
+                "failing_count": 1
+              },
+              "loss": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "noise": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "powers": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "sensitivity": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "signal": {
+                "passed": false,
+                "failing_count": 105
+              },
+              "log_sensitivity_error": 3.0414469165407354e-08
+            },
+            "regression_policy": {
+              "rtol": 1e-07,
+              "scale_atol": 1e-12,
+              "sensitivity_log_tolerance": 1e-05
+            },
+            "case": "uifo_randparams1"
+          },
+          {
+            "passed": false,
+            "issues": [
+              "gradient: elementwise regression mismatch",
+              "sensitivity: elementwise regression mismatch",
+              "signal: elementwise regression mismatch"
+            ],
+            "arrays": {
+              "carrier": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "gradient": {
+                "passed": false,
+                "failing_count": 14
+              },
+              "loss": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "noise": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "powers": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "sensitivity": {
+                "passed": false,
+                "failing_count": 13
+              },
+              "signal": {
+                "passed": false,
+                "failing_count": 2916
+              },
+              "log_sensitivity_error": 4.2482410833599715e-07
+            },
+            "regression_policy": {
+              "rtol": 1e-07,
+              "scale_atol": 1e-12,
+              "sensitivity_log_tolerance": 1e-05
+            },
+            "case": "uifo_randparams2"
+          },
+          {
+            "passed": false,
+            "issues": [
+              "signal: elementwise regression mismatch"
+            ],
+            "arrays": {
+              "carrier": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "gradient": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "loss": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "noise": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "powers": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "sensitivity": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "signal": {
+                "passed": false,
+                "failing_count": 622
+              },
+              "log_sensitivity_error": 3.5602177206328633e-08
+            },
+            "regression_policy": {
+              "rtol": 1e-07,
+              "scale_atol": 1e-12,
+              "sensitivity_log_tolerance": 1e-05
+            },
+            "case": "uifo_randparams3"
+          },
+          {
+            "passed": true,
+            "issues": [],
+            "arrays": {
+              "carrier": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "gradient": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "loss": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "noise": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "powers": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "sensitivity": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "signal": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "log_sensitivity_error": 7.105427357601002e-15
+            },
+            "regression_policy": {
+              "rtol": 1e-07,
+              "scale_atol": 1e-12,
+              "sensitivity_log_tolerance": 1e-05
+            },
+            "case": "uifo_amod1"
+          },
+          {
+            "passed": true,
+            "issues": [],
+            "arrays": {
+              "carrier": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "gradient": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "loss": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "noise": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "powers": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "sensitivity": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "signal": {
+                "passed": true,
+                "failing_count": 0
+              },
+              "log_sensitivity_error": 5.1514348342607263e-14
+            },
+            "regression_policy": {
+              "rtol": 1e-07,
+              "scale_atol": 1e-12,
+              "sensitivity_log_tolerance": 1e-05
+            },
+            "case": "uifo_fmod1"
+          }
+        ],
+        "reference_archive_sha256": "ea1980477379e05f6d6c2f7c5f0824762144a633c368c94618fd54b65ac05f8e",
+        "candidate_archive_sha256": "7f4da491d96cf6191afd5969f1aae91f33bcfef721b0a92fb0b9bb3477133d5c",
+        "scope": "Additional strict review; not official PASS, no ranking or timing promotion."
+      }
+    }
+  ],
+  "note": "Pristine mismatches remain review caveats, never erased; initial seed comparison is the no-new-regression gate.",
+  "raw_runner_receipt_sha256": "dc64e06f4eee718ce06b4049f1021539bdd57b5b794fe19784b7da080775ede4",
+  "original_evaluation_id": "2c7810bfe84648299731e98a6bb133ae",
+  "source_review_selection": {
+    "eligible_except_source_review": true,
+    "reasons": [],
+    "ignored_gate": "requires_source_review",
+    "current_best_sha256": "bac1046daf986f8fafdad2802d878c3f6a80c787fa051430087c9ec244740f9b",
+    "current_best_candidate_sha": "2b4654f294414590f760fe972edd69f6774fe9e1",
+    "selection_decision": {
+      "promote": false,
+      "reasons": [
+        "requires_source_review"
+      ],
+      "metrics": {
+        "grid": {
+          "samples_seconds": [
+            0.8823590371757746,
+            0.850608242675662,
+            0.8526666797697544
+          ],
+          "median_seconds": 0.8526666797697544,
+          "min_seconds": 0.850608242675662,
+          "max_seconds": 0.8823590371757746,
+          "relative_range": 0.037237053180835214
+        },
+        "aligo": {
+          "samples_seconds": [
+            0.5557099170982838,
+            0.5517909042537212,
+            0.5584083441644907
+          ],
+          "median_seconds": 0.5557099170982838,
+          "min_seconds": 0.5517909042537212,
+          "max_seconds": 0.5584083441644907,
+          "relative_range": 0.011908083169224945
+        }
+      },
+      "policy": {
+        "version": "overnight-selection-v2",
+        "minimum_repetitions": 3,
+        "large_minimum_absolute_gain_seconds": 0.003,
+        "large_minimum_relative_gain": 0.005,
+        "aligo_maximum_ratio": 1.02,
+        "maximum_relative_range": 0.1,
+        "large_candidate_maximum_must_be_below_incumbent_minimum": true,
+        "scope": "Team search-selection heuristic, not organizer judging policy."
+      },
+      "timing_comparison": {
+        "incumbent_grid_min_seconds": 0.9071941785514355,
+        "candidate_grid_max_seconds": 0.8823590371757746,
+        "observed_ranges_nonoverlapping": true
+      }
+    },
+    "observed_at": 1795313692.6323469,
+    "note": "Review-cost preflight only; Publisher must assess again before promotion."
+  },
+  "source_review": {
+    "approved": true,
+    "candidate_sha": "5bbb91e38ff993a10486f296a738860339cd05e0",
+    "parent_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+    "diff_sha256": "5e88376cfc3a33295e8366784bb6ff57d861f378d2e43e1a275618da15d5fd29",
+    "reviewer": "independent-headless-source-review-v1",
+    "provider": "claude",
+    "model": "claude-opus-5-5",
+    "session_id": "2f5287c1-6ab7-450a-bcf2-931c97c06cbd",
+    "scope": "no-fixture-specialization-and-integrity",
+    "artifact_path": "reviews/2c7810bfe84648299731e98a6bb133ae/review.json",
+    "artifact_sha256": "84995e17470c85128b9795cefbfe7eb84b8733916582ecbd898d94ac6d2b8c3d",
+    "diff_path": "reviews/2c7810bfe84648299731e98a6bb133ae/source.diff",
+    "reasons": [
+      "Static parameter layout (simulate.py, host_pass.ParameterLayout): the insertion, linking and detector-phase steps are the same as the generic path. The static indices are used only when the builder's arrays are nonnegative and in bounds, insertion and link destinations are unique (so last-write-wins semantics cannot differ), parameters have shape (1, P), and optimized_value_indices fit the optimized vector. In every other case the code falls back to the generic indexing. The derivative of a unique-index scatter/gather is a plain gather/scatter, so gradients are preserved. No setup-specific logic is involved.",
+      "The layout reads static copies of index arrays taken at build time and ignores the traced index arguments. This matches the existing HostPlan behaviour (sweep and carrier indices were already static), is documented in the docstring, and requires re-running run_build_step if indices change. Non-blocking.",
+      "Covariance cotangent shortcut in host_backward: the forward solves A^H w = s, which implies A^T conj(w) = conj(s). The covariance column cotangent is t_bar*conj(s) with real t_bar, so its solution is exactly t_bar*conj(w). This is an exact algebraic identity that reuses an iteratively refined forward solution, not an approximation. The shapes and indexing match the old (Bs, D, N) construction. The signal column still gets a refined A^T solve.",
+      "_ASSEMBLY forward-to-backward state: this is equivalent to keeping AD residuals within one forward/backward pair. The key is the plan key plus a digest of the dtype, shape and bytes of all assembly inputs. The assembled values and factorizations are deterministic functions of those inputs, so a hit returns the same values a reassembly would. On a miss (for example, sequential vmap ordering, repeated vjp_fn calls, or a backward with no forward) it reassembles. Each forward assembles and factors afresh and clears the store, so nothing is cached across evaluations and no answers are reused.",
+      "Carrier factor reuse in the backward: it uses the factorization of the same carrier coefficients the forward used (or the backward's fresh _assemble on a miss). The result is mathematically identical to refactoring.",
+      "SystemPlan.backward: non-last writes had exactly zero cotangent, so scattering only the last writes is equivalent. Plain assignment replaces np.add.at only when the destinations are verified unique. function_jacobian(with_outputs=False) skips only the unused primal value; the Jacobian blocks are unchanged.",
+      "SparseSystem.base_values: the lax.gather with unique_indices/promise_in_bounds is valid because the pattern coordinates come from np.nonzero of a mask, so they are distinct, nonnegative and in bounds. Values are identical and the gather is differentiable.",
+      "Lazy loading of the Plotly-based visualize_setup and the local import of jax.scipy.linalg (dense path only, using an alias so jax is not rebound) only change import timing. Neither is simulation work moved out of the timed region.",
+      "No fixture detection, hardcoded results, dropped frequencies, outputs or gradients, dtype downcasts, weakened validation or persistent compilation cache were found. The XLA flags in __init__ are unchanged inherited package options.",
+      "Numerical evidence: all 14 cases, including dev/grid-style, uifo random-structure/randparams, voyager, aligo, amod and fmod, match the trusted seed reference with zero failing elements and log sensitivity error 0.0. new_failures is empty and all outputs are finite. Fresh-process benchmarks pass for both grid (median 0.853 s) and aLIGO (median 0.556 s).",
+      "Inherited caveat: the pristine-comparison mismatches (signal, gradient and loss on dev/uifo_rand*, sensitivity log error on uifo_rand1/3, aLIGO loss element) are identical to the documented inherited caveats and were not introduced by this change. The host-pass custom_vjp also inherits its first-order-only limitation.",
+      "This approval is one additional bounded review, not proof of universal correctness."
+    ],
+    "generalization_risks": [],
+    "policy_rejection": []
+  }
+}
