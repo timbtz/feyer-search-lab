@@ -989,6 +989,15 @@ def _static_set(values, indices, updates):
     )
 
 
+def _phase_scatter_mode(indices, selection_shape):
+    """Use in-bounds scatter semantics only for verified concrete coordinates."""
+    if (isinstance(indices, np.ndarray) and np.issubdtype(indices.dtype, np.integer)
+            and indices.ndim == 2 and indices.shape[1] == 3 and len(selection_shape) == 3
+            and np.all(indices >= 0) and np.all(indices < np.asarray(selection_shape))):
+        return lax.GatherScatterMode.PROMISE_IN_BOUNDS
+    return None  # Preserve lax.scatter_mul's default for traced or unchecked indices.
+
+
 def _simulate_host_pass(
     plan,
     parameters,
@@ -1013,6 +1022,7 @@ def _simulate_host_pass(
             scatter_dims_to_operand_dims=(0, 1, 2),
         ),
         unique_indices=True,
+        mode=_phase_scatter_mode(qhd_placing_indices, noise_selection_vectors.shape),
     )
     carrier, signal, noise = _host_pass.host_pass(
         plan,

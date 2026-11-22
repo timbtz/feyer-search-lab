@@ -1541,3 +1541,73 @@
   sensitivity-phase saving is absent or lost in total variance, retire this direct-square
   trial and use the still-pending import/build attribution before further micro-variants.
   No measured gain is claimed. Campaign deadline09:27:44 UTC unchanged.
+
+### Candidate19 feedback — direct-square readout retired
+
+- SHA **0a705c5a28401324dc214a82fcab69a1ceca931a**, evaluation
+  **9eec33c1266745fdbd3a2bd5c0a33056**, grid-1/2/3 and aligo-1/2/3.
+  Official3/3 passes each. Reported full-array comparisons, including powers and every
+  gradient entry, pass against initial-seed tolerances; all14 generalization cases also
+  pass those tolerances. Pristine signal/gradient/loss and uifo sensitivity failures remain.
+  Archive hashes changed (large df2fcce0..., aLIGO d1a462e8...); no bitwise-equivalence
+  claim is made. Raw per-entry power deltas and synthetic diagnostic results were not
+  supplied. No independent review; no promotion or universal numerical claim.
+- Large first-run seconds:0.8354643564671278,0.8035739101469517,0.793807327747345;
+  median0.8035739101469517, range0.793807327747345–0.8354643564671278.
+  Official aLIGO:0.5448887161910534,0.5519863422960043,0.5455458797514439;
+  median0.5455458797514439, range0.5448887161910534–0.5519863422960043.
+  Against historical ee4fea2 medians, large is1.996 ms slower and aLIGO3.009 ms faster.
+  Unpaired ranges overlap. Supervisor confirmed_improvement=false; large gain below
+  threshold, overlapping ranges, independent source review absent.
+- Phase medians ms large/aLIGO: imports266.086/264.119; build72.097/37.693;
+  forward lower19.657/19.290, compile32.740/33.656, execute184.710/32.804;
+  sensitivity lower26.651/27.362, compile39.969/41.575, execute0.859/0.487;
+  gradient lower17.286/17.050, compile52.211/53.671, execute84.821/14.384.
+  Relative to preceding candidate18's separate cohort, sensitivity lowering rose about
+  1.129/1.084 ms; sensitivity compilation is essentially unchanged. No targeted phase
+  gain established. Retire arithmetic rewrite rather than extending it to another formula.
+- Sampled peak RSS bytes large518868992/672632832/523542528;
+  aLIGO295395328/283484160/295043072; generalization956096512. No memory-limit excess or
+  infrastructure failure. Same EPYC9334 CPU2, one logical CPU, threads1, x64, unchanged
+  package flags, no persistent cache; contention not excluded, ranking_eligible=false.
+- Restored components.py exactly to reviewed ee4fea2; candidate19 remains in history.
+  Inherited grid33/161/180 discrepancies, grid finite differences54/59/63/136/161/163,
+  uifo_rand1/rand3 sensitivity disagreements and first-order-only host VJP remain open.
+
+### Candidate20 — validate static phase-scatter bounds
+
+- Semantic baseline **ee4fea28c04d482566be16e916b609d7c6a99e5e**. Only simulate.py differs;
+  candidate19's power change is removed. New `_phase_scatter_mode` returns
+  PROMISE_IN_BOUNDS only for NumPy integer coordinates of shape(K,3) whose entries are
+  nonnegative and less than the corresponding current selection-array dimensions.
+  Otherwise it returns None, retaining lax.scatter_mul's existing default behavior.
+- Target: tracing/lowering and compilation of the phase scatter and its reverse pass.
+  The host plan already supplies concrete phase destinations, but the scatter still uses
+  default bounds behavior. The check proves bounds from arbitrary supplied coordinates
+  and the current traced operand shape, allowing JAX to omit generic bounds handling.
+  Latest forward lower/compile medians19.657/32.740 ms large,19.290/33.656 ms aLIGO;
+  gradient lower/compile17.286/52.211 ms large,17.050/53.671 ms aLIGO are whole-phase costs,
+  not recoverable-cost estimates. Host validation itself costs time and must be counted.
+- This is distinct from candidate15's empty-phase elimination: all exp/gather/scatter
+  operations remain, including empty arrays. It does not combine15/16/18/19. No current
+  zero value is treated as structural absence. No additional uniqueness promise is made;
+  the scatter retains its parent's existing unique_indices=True contract. Traced JAX
+  indices, negative indices, out-of-bounds coordinates, noninteger arrays and unrecognized
+  shapes retain the default. Structural metadata still requires rebuild after mutation,
+  as already documented; no cache or new invalidation mechanism is introduced.
+- Pure source verification removed exactly the helper and one mode keyword and matched
+  the entire parent simulate.py AST. All nine other simulator Python modules match parent
+  bytes. Syntax and diff checks pass. No numerical or performance test run locally.
+- Prepared `experiments/notes/overnight-overhead-phase-bounds-check.py` for supervisor:
+  twelve JIT primal/VJP comparisons against the actual scatter with mode omitted, covering
+  static and dynamic indices, empty/valid/negative/out-of-range coordinates, zero selectors
+  and zero updates; additional dtype/shape/JAX-array fallback checks. Runtime UNEXECUTED
+  because local NumPy/JAX are absent. No installations or independent benchmarks.
+- Candidate SHA/jobs pending supervisor commit. Request the synthetic checks, both unchanged
+  official benchmarks, every output and gradient, varied-setup/frequency/modulation checks,
+  and independent review. Any apparent gain needs paired fresh parent/candidate confirmation
+  with separate total samples, medians/ranges, phase tradeoffs, memory and overlap status.
+  Existing pristine and finite-difference disagreements remain open; no tolerance changes.
+  If bounds simplification does not improve its target phases, do not pursue another scatter
+  mode variant without lowered-graph attribution. Pending import/build profile remains a
+  separate next direction. Deadline09:27:44 UTC unchanged; no measured gain claimed.
