@@ -211,6 +211,28 @@ D = 1 noise detector.
 - If it triggers on grid, the backward has no signal-system solves left (only the carrier adjoint),
   so gradient exec should fall well below 110 ms. If arrays equal candidate 6 bitwise, it did not
   trigger (e.g. qhd phase makes sel complex, or a differential readout).
+- SHA `ee4fea28c04d482566be16e916b609d7c6a99e5e`, evaluation `e4f7b59d3b094a8e9c6dd41263cab78e`.
+  **Confirmed improvement, admitted campaign best** (approved independent source review, which
+  covered all mechanisms of candidates 1, 5, 6, 7 and the ported incumbent diff).
+  Official PASS 3/3 + 3/3; strict vs seed PASS (grid gradient relL2 8.2e-11, aLIGO 1.3e-15);
+  generalization archive byte-identical to the seed reference (14/14); pristine profile unchanged.
+  - Grid 0.82248, 0.80158, 0.79442 s (median 0.80158; range non-overlapping with 5bbb91e).
+    Gradient exec 85.4, 86.9, 84.6 ms (c6 ~110); forward 177.4, 181.2, 182.9 ms.
+  - aLIGO 0.55162, 0.54856, 0.54472 s (median 0.54856); gradient 14.5, 14.4, 14.4 ms.
+- Cumulative in this lane vs seed (single cohorts, not paired): grid gradient exec 187 -> 85 ms.
+
+## Candidate 8: solve-free backward rows batched + unique-index scatters (parent = candidate 7)
+- After candidate 7 the common backward path has no signal solves; what remains per row is ~15 small
+  NumPy calls (gathers over 2533 nnz x 2 columns) x 101 rows, plus `SystemPlan.backward`'s per-slot
+  `np.add.at` scatters into the parameter rows.
+- Change 1: if every row takes both shortcuts (checked first, exactly as before), the row arithmetic
+  runs once for all rows with the same elementwise operations and same last-axis reductions; the
+  shared noise-row cotangent still accumulates row by row. Otherwise the original loop runs.
+- Change 2: in `SystemPlan.backward`, a slot whose parameter columns are distinct across the group's
+  rows (checked once per plan) uses `rows_bar[:, cols] += values`, which performs the same single
+  addition per element as `np.add.at`; repeated columns keep `np.add.at`.
+- Expected: outputs bitwise identical to candidate 7 (up to signed zeros); grid gradient exec below
+  ~85 ms. Unlike candidate 2 there are no SuperLU solves or `reduceat` products in the batched part.
 - Evidence so far on where the time goes: the backward phase (no factorization; two refined solves
   plus small products per row) costs ~1.7 ms/row, about the same as the forward (factor + two
   refined solves). So factorization is a small share; triangular solves + refinement dominate.

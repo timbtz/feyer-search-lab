@@ -77,6 +77,9 @@ class SystemPlan:
         self.last_positions = writes[last]
         self.last_selection = self.flat_selection[last]
         self.last_selection_unique = bool(np.unique(self.last_selection).size == self.last_selection.size)
+        # Per (function, slot): whether the parameter columns read by the group's rows are distinct.
+        self.slot_unique = {(f, s): bool(np.unique(i[:, s]).size == i.shape[0])
+                            for f, i, d in self.groups for s in d}
         self._key = _digest(
             np.asarray([f for f, _, _ in self.groups], dtype=np.int64),
             *[indices for _, indices, _ in self.groups],
@@ -113,7 +116,12 @@ class SystemPlan:
             output_bar = flat[:, start:stop, :, None]                       # (B, R, 4, 1)
             inputs_bar = np.sum(linear * output_bar, axis=2) + np.conj(np.sum(antilinear * output_bar, axis=2))
             for position, slot in enumerate(slots):
-                np.add.at(rows_bar, (batch, indices[None, :, slot]), inputs_bar[:, :, position])
+                columns = indices[:, slot]
+                if self.slot_unique[(function_index, slot)]:
+                    # Distinct destinations: the same single addition per element as np.add.at.
+                    rows_bar[:, columns] += inputs_bar[:, :, position]
+                else:
+                    np.add.at(rows_bar, (batch, columns[None, :]), inputs_bar[:, :, position])
         return rows_bar, base_bar.sum(axis=0)
 
 
@@ -564,7 +572,45 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
     factors = state.get("signal_factors")
     signal_bar = np.asarray(signal_bar)
     noise_hermitian = [_is_hermitian(noise_pattern, values) for values in state["noise_values"]]
-    for row in range(count):
+
+    # When every row takes both solve-free shortcuts below (collinear signal cotangent,
+    # Hermitian noise source), the per-row arithmetic is pure elementwise/gather work;
+    # do it for all rows at once with the same operations and reduction order.
+    shortcut = count > 0 and all(noise_hermitian[0 if plan.noise_row_reuse else row] for row in range(count))
+    alphas, chosen = [], []
+    for row in range(count if shortcut else 0):
+        for detector in range(detectors):
+            alpha = _collinear_coefficient(signal_bar[row], np.conj(selections[row, detector]))
+            if alpha is not None:
+                alphas.append(alpha)
+                chosen.append(detector)
+                break
+        else:
+            shortcut = False
+            break
+    if shortcut:
+        index = np.arange(count)
+        weights_t = np.swapaxes(weights, 1, 2)                                                 # (B, N, D)
+        signal_rhs_bar = np.asarray(alphas, dtype=np.complex128)[:, None] * np.conj(weights[index, np.asarray(chosen, dtype=np.intp)])
+        covariance_rhs_bar = np.conj(weights_t) * temporary_bar.T[:, None, :]
+        rhs_bar = np.concatenate([signal_rhs_bar[:, :, None], covariance_rhs_bar], axis=2)    # (B, N, 1 + D)
+        solution = np.concatenate([signal[:, :, None], np.swapaxes(covariances, 1, 2)], axis=2)
+        coefficient_bar = -np.sum(rhs_bar[:, pattern.rows] * solution[:, pattern.cols], axis=2)
+        sources_bar = rhs_bar[:, :, 1:]
+        noise_terms = np.sum(sources_bar[:, noise_pattern.rows] * weights_t[:, noise_pattern.cols], axis=2)
+        if plan.noise_row_reuse:
+            for row in range(count):                       # same sequential accumulation as the loop
+                noise_values_bar[0] += noise_terms[row]
+        else:
+            noise_values_bar += noise_terms
+        adjoint = np.conj(np.swapaxes(covariances, 1, 2)) * temporary_bar.T[:, None, :]       # (B, N, D)
+        selection_bar += np.swapaxes(adjoint, 1, 2)
+        coefficient_bar += np.conj(-np.sum(adjoint[:, pattern.cols] * weights_t[:, pattern.rows], axis=2))
+        signal_values_bar[:, : system.nnz] = coefficient_bar
+        if system.augmented:
+            signal_values_bar[:, system.nnz :] = rhs_bar[:, system.rhs_rows, 0]
+
+    for row in range(0 if shortcut else count):
         factor = factors[row] if factors is not None else _factor(pattern, coefficients[row])
         solution = np.concatenate([signal[row][:, None], covariances[row].T], axis=1)           # (N, 1 + D)
         # A^T r = x_bar for x = [signal, covariances]. The covariance columns have
