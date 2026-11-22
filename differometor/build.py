@@ -1886,9 +1886,7 @@ def prepare_arrays(
         if len(changing_values.shape) == 1:
             changing_values = changing_values.reshape(1, -1)
         changing_values = jnp.asarray(changing_values)
-        # The normalized JAX array is immutable. Reuse it instead of copying it
-        # back to NumPy and transferring an identical array to JAX a second time.
-        signal_changing_values = changing_values
+        signal_changing_values = jnp.asarray(np.array(changing_values))
 
     if len(carrier_changing_parameter_indices) != 0 and len(signal_changing_parameter_indices) != 0:
         raise ValueError("This combination of changing component-parameter pairs is not supported yet.")

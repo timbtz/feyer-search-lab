@@ -2153,3 +2153,66 @@
   FD54/59/63/136/161/163 and the first-order-only host VJP remain open. No tolerances,
   fixtures or workloads changed. This is an unevaluated setup candidate, not a promotion.
   Deadline remains2026-11-22 09:27:44 UTC; prepared04:33 UTC.
+
+
+### Candidate26 feedback and retirement
+
+- Evaluated SHA **7666a10f3deb2a6b1aa32c32d8bfeb9436b81d29**, request/job **8eeab1988cdd45fb875394e403e49cb0**; grid-1/2/3 and aligo-1/2/3. Receipt: experiments/runs/overnight-20261122/overnight-overhead-v1/8eeab1988cdd45fb875394e403e49cb0.json.
+- Both unchanged official benchmarks passed3/3; all saved arrays/gradients passed initial-seed policy in six official runs and14 generalization cases. Strict pristine comparisons retain the inherited disagreements. No new numerical failure is identified in this receipt. source_review=null; confirmed_improvement=false; no promotion.
+- grid: samples seconds=[0.8304953221231699, 0.7930362112820148, 0.8082717321813107]; median=0.808271732181; range=0.793036211282–0.830495322123. Phase medians ms={'imports': 266.201, 'initialize': 3.495, 'load': 1.461, 'build': 73.998, 'forward_lower': 19.544, 'forward_compile': 33.026, 'forward': 184.235, 'sensitivity_lower': 25.539, 'sensitivity_compile': 39.744, 'sensitivity': 0.863, 'gradient_lower': 16.548, 'gradient_compile': 52.25, 'gradient': 86.168, 'host_transfer': 0.188}.
+- grid: sampled process-group peak RSS bytes=[686661632, 525324288, 623800320].
+- aligo: samples seconds=[0.5472959391772747, 0.5450863540172577, 0.5440386086702347]; median=0.545086354017; range=0.544038608670–0.547295939177. Phase medians ms={'imports': 265.331, 'initialize': 3.594, 'load': 0.209, 'build': 38.33, 'forward_lower': 19.139, 'forward_compile': 33.143, 'forward': 32.895, 'sensitivity_lower': 26.084, 'sensitivity_compile': 41.172, 'sensitivity': 0.48, 'gradient_lower': 16.776, 'gradient_compile': 53.062, 'gradient': 14.466, 'host_transfer': 0.151}.
+- aligo: sampled process-group peak RSS bytes=[282034176, 314556416, 315469824].
+- Generalization archive cc0a1950b691acf1ed2d127f4958a0c26ac089f4bdffea89d84e87d1de1db623; peak RSS949866496 bytes. Official array hashes remain112c0407...large and9c1ce936...aLIGO. Initial-seed maximum absolute gradient differences remain5.686350050382316e-6 large and3.637978807091713e-11 aLIGO; tolerance agreement does not establish bitwise seed equality. No infrastructure or memory-budget failure. EPYC9334, CPU2(one logical CPU), threads1, x64, unchanged permitted flags, no persistent compilation cache. Other-host overlap unknown; ranking_eligible=false.
+- Versus historical reviewed ee4fea2 totals, large median is6.694 ms slower and aLIGO3.469 ms faster; both ranges overlap the parent. These are unpaired observations, not causal changes. The targeted build medians are73.998 ms large and38.330 ms aLIGO; compared with25 they differ by+0.458/-0.749 ms. Candidate25 had a different metadata implementation, so this is contextual only. One large build was68.881 ms, but the other two were73.998/75.127 ms: no stable targeted gain is established.
+- Decision: retire26 and restore build.py to reviewed **ee4fea28c04d482566be16e916b609d7c6a99e5e**. All10 simulator modules match that parent byte-for-byte. Failed26 stays in branch history. Do not evaluate this restoration as a new optimization. No further small conversion/copy variants without measured attribution.
+- Next coordinator action: run the existing experiments/notes/overnight-overhead-profile.py diagnostic on reviewed ee4fea2 with --trace-forward, supplying actual setup JSON, optimization pairs, optimized values, changing pairs and changing values for each caller. Request large, official aLIGO and a third optical setup as separate fresh-process attribution runs. This instrumented diagnostic does not substitute for official timings; it identifies import/build/trace call costs. No profiling result has been returned and this agent has not launched the diagnostic or any benchmark.
+- A separate stronger confirmation target remains candidate15/21 structural empty-phase elimination: request independent source review, the prepared empty/nonempty phase derivative check, and interleaved fresh parent/candidate cohorts on matching resource policy. Do not combine26 or infer confirmation from another candidate-only replay. This request preserves the stronger hypothesis without inventing a new simulator variant.
+- Existing pristine gradients33/161/180, uifo_rand1/3 sensitivity disagreements, grid FD54/59/63/136/161/163 and first-order-only custom VJP limitations remain unresolved. No tolerance, fixture, workload or flags changed. Syntax and diff checks passed. Stops the sweep-copy hypothesis, not the new campaign; absolute deadline remains2026-11-22 09:27:44 UTC.
+
+
+### Candidate27 — isolate structurally empty selector scatter
+
+- Supervisor explicitly resumed after26 retirement and requested a concrete next experiment.
+  Parent: reviewed ee4fea28c04d482566be16e916b609d7c6a99e5e. Candidate SHA and both official
+  job identifiers pending. build.py restoration retires26; the sole new simulator change
+  against ee4fea2 is inside _simulate_host_pass in simulate.py. No unpromoted changes combined.
+- Evidence motivating this narrower experiment:15 (2e50e7cffc8c7feb5ae53dc770e26cbb45250ab8,
+  b699b389623a46c98a1e34c803ca18d8) and its replay21 (f90fa964a73aca5515ba93a3517ec1d26ae32a32,
+  a4d2cd8dcf5f448aafa8d2817fb59644) both showed forward trace around14 ms and gradient trace
+  around13 ms, compared with26's19.544/16.548 ms large and19.139/16.776 ms aLIGO. Those were
+  candidate-only observations, not matched-parent confirmation or promotion.15 eliminated
+  both phase construction and scatter, passing None through the helper.27 isolates the
+  empty scatter only, retaining all arrays and the original phase construction/API.
+- Mechanism: a scatter multiplication with no updates/destinations is the identity. For an
+  empty one-dimensional complex128 update array, zero integer destination entries and a
+  rank-three complex128 selector operand, bypass that scatter. Conditions depend only on
+  static array metadata, never values, setup identity or workload size. All other cases
+  execute the exact original lax.scatter_mul. No current zero phases or selectors are pruned.
+  Physical outputs, callback inputs/residuals, solver mathematics and three JIT stages remain.
+- Unlike15, exp/radians/gather for phases still trace. Expected benefit is limited to empty
+  scatter lowering and its AD bookkeeping; it may be smaller than15 or absent.26 measured
+  forward compile33.026/33.143 ms and gradient compile52.250/53.062 ms (large/aLIGO); these
+  whole phases are not estimates of recoverable cost. No27 timing or speedup claimed.
+- Local checks:72 executions of the actual guard expression with stdlib shape/dtype stubs
+  cover empty/nonempty/malformed-rank phases, destinations, integer/noninteger indices,
+  selector ranks and complex128/complex64. Nonempty scatter AST matches parent exactly.
+  Nine other simulator files match ee4fea2; syntax/diff checks pass. These are structural
+  checks, not JAX execution or a derivative certificate.
+- Prepared experiments/notes/overnight-overhead-empty-scatter-check.py for supervisor use:
+  extracts actual phase construction and actual conditional scatter; compares JIT primal
+  and VJPs with the unconditional parent operation in ten cases. Includes two empty selector
+  layouts, nonempty placements, repeated phase parameter indices with unique destinations,
+  nonzero/zero phases, and zero-valued selectors. Checks that empty cases omit scatter while
+  retaining exp, and nonempty cases retain both primitives. UNEXECUTED locally: NumPy/JAX
+  unavailable. No fixtures, benchmark calls or timing loop in this diagnostic.
+- Request both unchanged official benchmarks and full saved arrays/gradients on exact new SHA;
+  fourteen varied generalization cases, the focused diagnostic and independent source review.
+  If the phase reduction recurs, require interleaved fresh parent/candidate measurements on
+  matched CPU/thread policy, separate samples/medians/ranges, phase deltas, RSS and overlap.
+  Compare with15 only as attribution, not as evidence that combining edits is validated.
+-26 remains retired and preserved. Inherited pristine signal/gradient/loss disagreements,
+  gradients33/161/180, uifo_rand1/3 sensitivity errors, unresolved grid FD54/59/63/136/161/163
+  and first-order-only host VJP remain open. No tolerances, fixtures, flags or workloads changed.
+  If27 does not isolate a useful effect, end this empty-scatter refinement and obtain the
+  outstanding supervisor profile rather than more equivalent scatter variants.
