@@ -3223,3 +3223,118 @@
   bounded evidence. No solver/refinement/adjoint mathematics, compiler flags,
   official stage, frequency/design-variable count or tolerances change.
   Deadline remains2026-11-22 09:27:44 UTC; this is not an evaluated gain.
+
+
+### Candidate36 feedback — retire membership variant
+
+- Evaluated SHA b2e4eef5090f78e3f0f4af715af3815df5d8d66f;
+  evaluation c9a10d266e2541719388392febd33a2f (grid-1/2/3 and aligo-1/2/3).
+  Receipt: experiments/runs/overnight-20261122/overnight-overhead-v1/c9a10d266e2541719388392febd33a2f.json.
+  Both unchanged official benchmarks passed 3/3. confirmed_improvement=false;
+  independent source review absent. This is not an admitted improvement.
+- Large fresh-process seconds: 0.8383957836776972, 0.803311750292778,
+  0.8130866773426533; median 0.8130866773426533; range
+  0.803311750292778–0.8383957836776972 (relative range 4.315%).
+  Official aLIGO: 0.5479739662259817, 0.5441044643521309,
+  0.5454107876867056; median 0.5454107876867056; range
+  0.5441044643521309–0.5479739662259817 (relative range 0.709%).
+  Versus historical reviewed ee4fea2 medians: large +11.509 ms,
+  aLIGO -3.144 ms. These unpaired cohorts overlap; no gain attribution.
+- Phase medians in ms (large / aLIGO): imports 273.597 / 263.112;
+  initialize 3.534 / 3.550; load 1.525 / 0.210; build 69.950 / 38.362;
+  forward lower 19.774 / 19.446, compile 33.943 / 33.890,
+  execute 184.014 / 33.295; sensitivity lower 26.752 / 26.265,
+  compile 41.227 / 41.415, execute 0.887 / 0.480;
+  gradient lower 17.376 / 16.529, compile 52.084 / 53.357,
+  execute 83.547 / 14.697; host transfer 0.189 / 0.152.
+  Build samples large 69.950, 75.399, 69.209 ms; aLIGO 38.362,
+  37.623, 38.738 ms. Against candidate35 build medians, differences
+  are -4.945 / +0.424 ms, but35 used a different boundary variant and
+  was unpaired. Candidate32's large build median was already70.022 ms.
+  Reduced list scans have not established a stable complete-run improvement.
+- Sampled peak RSS bytes: large 511107072, 525635584, 508678144;
+  aLIGO 305045504, 295251968, 313913344; generalization 928632832.
+  No sampled budget exceedance. EPYC9334, CPU2, one logical CPU and
+  library threads one, x64, no persistent cache, existing package flags.
+  Other-host contention was not excluded; no quiet paired cohort supplied.
+- Saved-output comparisons: all carrier/signal/noise/powers/sensitivity/loss/
+  gradient checks pass against initial-seed tolerances in six official and
+  fourteen generalization cases. Official array archives match candidate35's
+  archives. Generalization archive f5fc911e9d380b2bd9aff6bb173cb88e95a54bf07428ecdbc2677232ea6b6834
+  differs from the initial-seed archive; passes are not bitwise-seed claims.
+  Pristine strict failures persist (including grid signal, loss and gradients;
+  aLIGO loss; uifo_rand1/3 sensitivity log differences approximately
+  2.0361e-4 / 5.8101e-5). No newly failing seed-relative entries reported.
+  Grid FD54/59/63/136/161/163 remain unresolved; prior aLIGO29/29 checks
+  remain bounded evidence. Whole-pass VJP remains first-order reverse only.
+- Decision: retire36 and restore build.py byte-for-byte to reviewed
+  ee4fea28c04d482566be16e916b609d7c6a99e5e. Preserve evaluated revision,
+  612-case structural diagnostic and these results; no history reset.
+  This restoration is not a new candidate. Do not repeat membership variants
+  without attribution evidence. Next: supervisor-run existing
+  experiments/notes/overnight-overhead-profile.py --trace-forward with actual
+  large, official aLIGO and a third setup; attribute append_information calls
+  and build time before selecting another bookkeeping change. No such profile
+  has been supplied. Candidate30 remains separately preserved for focused
+  diagnostics, independent review and matched-parent confirmation.
+- All ten simulator modules match reviewed parent after restoration; syntax and
+  whitespace checks passed. No benchmarks, commits, installs or agents launched.
+  Stop ends36's hypothesis, not the campaign; deadline remains
+  2026-11-22 09:27:44 UTC.
+
+
+### Candidate37 — construct padded component-input rows in one allocation
+
+- Resumed after36 retirement at supervisor request for a concrete next experiment.
+  Keep36 restored; scientific parent ee4fea28c04d482566be16e916b609d7c6a99e5e.
+  Only set_instructions' input-padding block differs from this parent. This
+  candidate does not retain membership, gather, source-map or row-label variants.
+  Candidate SHA and both official job identifiers pending supervisor submission.
+- Source-proven redundant work: each function-input row shorter than seven slots
+  allocates a float64 zero tail and then a concatenated output, copying the tail
+  into that output. For ordinary numeric NumPy arrays, allocate one zero-filled
+  output of shape (rows,7), dtype result_type(input.dtype,float64), then copy all
+  existing columns into its prefix. This matches the original dtype promotion,
+  retains signed zeros in existing values, and leaves positive-zero padding.
+  The caller's array is not modified. Width seven and over retain original
+  control flow/assertions. Non-numeric arrays and ndarray subclasses retain
+  the exact original concatenation path; the guard concerns array semantics,
+  not setup identity, shape identity or physical values.
+- Distinct target from36: NumPy array allocation/copying inside set_instructions,
+  not component membership. Candidate33 removed scalar multiplication of output
+  row labels and did not establish a total gain; it is not included. This is a
+  narrowly scoped allocation experiment, not evidence that allocation dominates.
+  Allocation count falls from two arrays to one per eligible padding call, at
+  the cost of a dtype/type guard and result_type call. Their overhead may erase
+  the benefit. No physical arithmetic, derivative pruning or solver changes.
+- Measured context only:36 build medians69.950 ms large/38.362 ms aLIGO;
+  total medians813.087/545.411 ms and import medians273.597/263.112 ms.
+  No profile isolates padding time; no37 timing exists. Do not claim this
+  recovers an appreciable fraction of build until complete fresh runs show it.
+- Local diagnostic experiments/notes/overnight-overhead-padding-check.py
+  --structural-only passed918 cases, executing the actual old/new padding AST
+  using a small stdlib array model. Covers0–16 rows, widths0–8, numeric and
+  fallback dtype-kind guards, caller nonmutation and unchanged identity when
+  no padding occurs. This does not validate NumPy casting or JAX gradients.
+  Default diagnostic remains UNEXECUTED:960 NumPy full instruction comparisons
+  across ten dtypes (including object/string fallback), empty/single/multiple
+  rows, widths0–7, contiguous/strided inputs, negative zero, NaN, and sideband
+  expansion; plus16 ndarray-subclass/masked-array fallback comparisons.
+  Supervisor should execute this focused diagnostic in the fixed environment.
+- AST restoration of only this padding block equals the reviewed parent's entire
+  build.py AST. Nine other simulator modules match parent bytes. Simulator and
+  diagnostic syntax plus git diff --check passed.36's retirement restoration
+  remains visible against branch HEAD; no history reset or independent benchmark.
+- Request both unchanged full official benchmarks on the exact new revision,
+  saved-output/gradient checks and all fourteen generalization cases against
+  initial seed and pristine references. If promising, obtain independent source
+  review and matched interleaved fresh-process candidate/ee4fea2 samples with
+  separate large/aLIGO medians, ranges, phase tradeoffs, memory and overlap.
+  Retire if no repeat-supported total improvement; do not expand this into
+  further allocation variants without profiling. Existing supervisor-only
+  overhead-profile.py is still pending and should attribute set_instructions.
+- Inherited pristine signal/loss/gradient disagreements (including33/161/180),
+  uifo_rand1/3 sensitivity differences and unresolved grid FD54/59/63/136/161/163
+  remain open. Prior aLIGO29/29 checks are bounded; host VJP remains first-order
+  reverse only. No change to tolerances, fixtures, workload, outputs, compiler
+  settings or three JIT stages. Deadline2026-11-22 09:27:44 UTC unchanged.

@@ -230,11 +230,21 @@ def set_instructions(
 
     # Standardize function input length to 7 by padding with placeholder zeros.
     if function_input_indices.shape[1] < function_input_indices_shape:
-        pad_width = function_input_indices_shape - function_input_indices.shape[1]
-        function_input_indices = np.concatenate(
-            [function_input_indices, np.zeros((function_input_indices.shape[0], pad_width))],
-            axis=1,
-        )
+        if type(function_input_indices) is np.ndarray and function_input_indices.dtype.kind in "buifc":
+            # Match concatenation with float64 zeros, using one output allocation.
+            # Keep every input slot, including zeros that may later be differentiated.
+            padded = np.zeros(
+                (function_input_indices.shape[0], function_input_indices_shape),
+                dtype=np.result_type(function_input_indices.dtype, np.float64),
+            )
+            padded[:, :function_input_indices.shape[1]] = function_input_indices
+            function_input_indices = padded
+        else:
+            pad_width = function_input_indices_shape - function_input_indices.shape[1]
+            function_input_indices = np.concatenate(
+                [function_input_indices, np.zeros((function_input_indices.shape[0], pad_width))],
+                axis=1,
+            )
 
     assert (
         function_input_indices.shape[1] == function_input_indices_shape
@@ -1630,14 +1640,14 @@ def pairs_to_arrays(
     optimized_parameter_indices = []
     optimization_value_indices = []
 
-    carrier_components = set()
+    carrier_components = []
     carrier_changing_parameter_indices = []
     carrier_arrays = defaultdict(list)
 
     signal_changing_parameter_indices = []
     signal_arrays = defaultdict(list)
 
-    noise_components = set()
+    noise_components = []
     noise_arrays = defaultdict(list)
 
     if optimization_pairs is None:
@@ -1674,7 +1684,7 @@ def pairs_to_arrays(
             signal_arrays["carrier_row_indices"].append(instruction["carrier_row_indices"])
             signal_arrays["carrier_column_indices"].append(instruction["carrier_column_indices"])
 
-    def append_information(instructions: dict, arrays: dict, component: str, components: set | None = None):
+    def append_information(instructions: dict, arrays: dict, component: str, components: list | None = None):
         """
         Helper to append one component's instruction data to a target arrays dictionary.
 
@@ -1687,8 +1697,7 @@ def pairs_to_arrays(
         component:
             Component key to append.
         components:
-            Set of previously appended components. Output order comes from calls
-            to this helper, not iteration over the set.
+            List used as a "seen" set to avoid adding the same component multiple times.
 
         Returns
         -------
@@ -1699,7 +1708,7 @@ def pairs_to_arrays(
 
         if component in components:
             return None
-        components.add(component)
+        components.append(component)
 
         arrays["function_input_indices"].append(component_function_input_indices)
         arrays["function_indices"].extend(instructions[component]["function_indices"])
