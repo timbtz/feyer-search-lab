@@ -159,9 +159,17 @@ class PublicationTests(unittest.TestCase):
         path = self.write_receipt(); first = self.publisher.publish(path); head = mod.git(self.repo, 'rev-parse', 'HEAD')
         second = self.publisher.publish(path)
         self.assertEqual(second['publication_status'], 'already_published')
+        self.assertEqual(second['decision'], first['decision'])
+        self.assertEqual(second['commit_sha'], first['commit_sha'])
         self.assertEqual(head, mod.git(self.repo, 'rev-parse', 'HEAD'))
         value = json.loads(path.read_bytes()); value['caveats'] = ['changed']; path.write_bytes(mod.encoded(value))
         with self.assertRaisesRegex(ValueError, 'different evidence'): self.publisher.publish(path)
+
+    def test_already_published_does_not_trust_an_unpushed_or_dirty_local_record(self):
+        path = self.write_receipt(); result = self.publisher.publish(path)
+        marker = self.publisher.state / ('published-' + result['evaluation_id'] + '.json')
+        marker.unlink()
+        with self.assertRaisesRegex(ValueError, 'verified publication'): self.publisher.publish(path)
 
     def test_push_failure_keeps_outbox_and_retry_commits_only_once(self):
         mod.git(self.repo, 'remote', 'set-url', 'origin', str(self.root / 'missing'))

@@ -155,6 +155,19 @@ def assess(receipt, current):
             'policy': POLICY}
 
 
+def caveat_summaries(previous, receipt):
+    values = [c for c in previous if isinstance(c, str) and 'fresh dual calibration is pending' not in c]
+    for value in receipt.get('inherited_caveats', []) + receipt.get('caveats', []):
+        if isinstance(value, str): values.append(value)
+        elif isinstance(value, dict):
+            if 'generalization_pristine_comparison' in value:
+                values.append('Generalization pristine-reference disagreements remain; see complete candidate receipt.')
+            else:
+                values.append(str(value.get('setup', 'Additional')) +
+                              ' pristine-reference disagreements remain; see complete candidate receipt.')
+    return list(dict.fromkeys(values))
+
+
 def markdown(best):
     lines = ['# Current best submission', '',
              '**Status:** ' + best['status'], '',
@@ -286,9 +299,17 @@ class Publisher:
             record_path = PREFIX + '/candidates/' + evaluation_id + '/record.json'
             existing = self.worktree / record_path
             if existing.exists():
-                if json.loads(existing.read_bytes())['receipt_sha256'] != digest(raw):
+                recorded = json.loads(existing.read_bytes())
+                if recorded['receipt_sha256'] != digest(raw):
                     raise ValueError('evaluation_id already exists with different evidence')
-                return {'published': True, 'publication_status': 'already_published', 'evaluation_id': evaluation_id}
+                if git(self.worktree, 'status', '--porcelain'):
+                    raise ValueError('Existing publication record is not in a clean worktree')
+                published = self.state / ('published-' + evaluation_id + '.json')
+                prior = json.loads(published.read_bytes()) if published.exists() else {}
+                if not prior.get('published'):
+                    raise ValueError('Existing local record lacks a verified publication receipt')
+                return {**prior, 'publication_status': 'already_published',
+                        'evaluation_id': evaluation_id, 'decision': recorded['decision']}
             current = json.loads((self.worktree / BEST).read_bytes())
             decision = assess(receipt, current)
             files = {}; archived = []
@@ -344,8 +365,7 @@ class Publisher:
                         'repository_url': self.repository_url, 'metrics': decision['metrics'],
                         'cohort_digest': receipt['cohort_digest'], 'record_path': record_path,
                         'evaluation_id': evaluation_id, 'policy': POLICY,
-                        'caveats': [c for c in current['caveats'] if 'fresh dual calibration is pending' not in c]
-                                   + receipt.get('inherited_caveats', []) + receipt.get('caveats', [])}
+                        'caveats': caveat_summaries(current['caveats'], receipt)}
                 files[BEST] = encoded(best); files['CURRENT_BEST.md'] = markdown(best)
             return self._submit(evaluation_id, files, decision)
 
