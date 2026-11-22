@@ -4351,3 +4351,81 @@ Hermitian exact guard unchanged.
 Expected: large reverse between 85 and 106 ms (one fewer solve per row, product +
 correction solve remain); arrays differ from35 at refinement level (different starting
 iterate); strict-vs-seed should pass. Unmeasured; no shell in this session.
+
+### Trial44 evaluated: no gain; retired, source restored to35
+
+SHA `8c0d9da6cbda33cbfdbbbe50d2ed24ea53195945`, request `04e92247e6f44d4690a2cb334fc79379`.
+sparse.py sha 6eaa9949... confirmed equal to35/7. Six official passes; strict vs seed
+pass (grid gradient relL2 5.18e-10, max abs 3.04e-5; aLIGO 2.6e-14); 14/14 seed
+generalization; pristine profile unchanged (grid 131 signal/3 gradient/1 loss; rand1/rand3
+log errors 2.04e-4/5.81e-5). Arrays changed vs35 (grid 638b7668..., aLIGO 2c3e83c1...).
+Large 0.85436, 0.81726, 0.81781 s (median 0.81781); reverse 108.2/104.3/104.8 ms (=35).
+aLIGO 0.55738, 0.55946, 0.62122 s (median 0.55946; third sample imports 337.6 ms, flagged
+unstable); reverse 17.9/26.0/18.0 ms.
+Interpretation: warm-started refinement still needs about as many correction solves as a
+cold start (the first correction from alpha conj(w) is evidently not below the 1e-14
+relative stopping test, so a second correction runs), so no solve is saved.
+Decision: retire; host_pass.py and sparse.py restored to35. Trials42/43/44 are three
+consecutive unconfirmed submissions -> end this lane's micro-mechanism search.
+
+## Handoff (Claude, 2026-11-22, ~2.5 h before deadline)
+
+- Reviewed timing reference: admitted candidate 7 `ee4fea2` (grid median 0.8016 s, aLIGO
+  0.5486 s, approved source review). Safer numerical parent: candidate 35 `7a94803`
+  (exact Hermitian and exact collinearity guards; reverse ~106 ms vs 7's ~85 ms because
+  the exact collinearity test rejects the grid rows). Working tree = 35.
+- Open decision for the coordinator: candidate 7's tolerance guards are faster but have
+  a synthetic amplification counterexample (candidate34 notes); 35 is safe but ~20 ms
+  slower on the large reverse. Neither a warm start (44) nor scalar re-estimation (36)
+  recovered the time safely.
+- Remaining ideas with evidence still needed (do not guess further without profiling):
+  (1) a cheap a-posteriori residual bound for the reused alpha conj(w) (compute
+  r = v - A^T x via one sparse product and accept only if the forward-error estimate
+  |A^-T r| from one plain solve is below the refinement tolerance -- costs one solve,
+  so only useful if refinement normally takes >=2 corrections, which 44 suggests);
+  (2) forward phase (~180 ms) remains the largest execute cost; needs the profiler run
+  (`overnight-numerics-profile.py`) before another mechanism.
+- All inherited discrepancies remain open: pristine signal/gradient 33/161/180, loss,
+  rand1/rand3 log sensitivity, six grid FD coordinates; first-order reverse-only VJP.
+
+### Closing analysis of the last reverse idea (no submission)
+
+Idea (1) above: accept x = alpha conj(w) + solve(r), r = v - alpha conj(s), when
+max|solve(r)| <= 1e-14 max|x| (otherwise cold refined solve). Trial 44 already measures
+the relevant quantity: its first warm-start correction equals solve(v - A^T x0) =
+solve(r) - alpha A^-T(residual of w), and since 44 saved no solve relative to35, that
+first correction must have exceeded the same 1e-14 test on the grid rows while the cold
+start's first correction passed. So solve(r) is not below the tolerance on this workload,
+and idea (1) would mostly fall back, adding one wasted triangular solve per row (expected
+small regression). Accepting it without the test would reintroduce candidate 7's
+amplification risk. Conclusion: under the current 1e-14 forward-correction criterion,
+there is no cheaper way to keep candidate 35's safety; recovering ~20 ms requires either
+(a) accepting candidate 7's guard as a coordinator decision, or (b) a different, justified
+stopping criterion with ill-conditioned evidence. Neither is a decision for this lane
+without measurement. No new candidate is submitted; working tree = candidate 35.
+
+## Trial45 (Claude): minimal row-ordered residual product on candidate 35 (prepared, unevaluated)
+
+- Parent: candidate 35 source (7a94803; sparse.py sha 6eaa9949… confirmed by feedback
+  04e92247 on commit 8c0d9da). Only `_Products` in host_pass.py changes.
+- Why this one: candidate 9 (5dde094, eval 87a7fb6f) used the same mechanism and had the only
+  repeat-consistent forward drop in this lane's history: grid forward 171.31/169.78/170.00 ms
+  vs 177–183 ms on its parent. Output archives were byte-identical. It was retired because its
+  complete-run ranges overlapped and candidate 10's added scratch buffers produced an unstable
+  cohort. Nothing refuted it. Candidate 35's forward is still 178–182 ms (feedback 04e92247:
+  181.85/178.47/179.55 ms), so that gain has never been delivered on the safe parent.
+- This is a reduced form with no `bind` closure, per-solve scratch, or conj caching:
+  (a) a static `row_sorted_cols = cols[row_order]`, so the "N" product computes
+  `values[row_order] * x[row_sorted_cols]` (an nnz gather) instead of gathering and then
+  permuting the (nnz, K) product. Every element is `values[ro[i]] * x[cols[ro[i]]]`, as before.
+  (b) When the static row/column id list is exactly 0..N-1, the `reduceat` result is returned
+  directly and the zero fill and scatter are skipped. Otherwise it uses the original path.
+  Same reduceat segments and order, so the result is bit-identical. Refinement steps, the
+  1e-14 test, SuperLU options, exact guards and all derivative entries are unchanged.
+- Expected effect: about 5–10 ms off the forward, plus a small reverse effect (both use `apply`
+  in refinement). This expectation comes from candidate 9 and is not measured on this parent.
+  No local run was possible in this turn (no shell). Expect the official/generalization
+  archives to be byte-identical to candidate 35 apart from the timing strings. Investigate any
+  numerical difference rather than calling it rounding.
+- Decision rule: if large forward does not fall by ≥5 ms in all three samples versus
+  04e92247, retire the product mechanism for good and restore candidate 35's `_Products`.

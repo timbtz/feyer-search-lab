@@ -332,19 +332,34 @@ class _Products:
         self.row_order = np.argsort(pattern.rows, kind="stable")
         self.row_ids, self.row_starts = np.unique(pattern.rows[self.row_order], return_index=True)
         self.col_ids, self.col_starts = np.unique(pattern.cols, return_index=True)  # CSC order
+        # Static row-ordered column indices: the "N" product gathers x once in row
+        # order instead of gathering in pattern order and then reordering the
+        # (nnz, K) products. The elementwise products and the reduceat summation
+        # order are unchanged, so results are bit-identical.
+        self.row_sorted_cols = np.ascontiguousarray(pattern.cols[self.row_order])
+        # When every row (column) holds a structural entry, reduceat already yields
+        # the full result; skip the zero fill and scatter.
+        self.all_rows = bool(self.row_ids.size == self.size and np.array_equal(self.row_ids, np.arange(self.size)))
+        self.all_cols = bool(self.col_ids.size == self.size and np.array_equal(self.col_ids, np.arange(self.size)))
 
     def apply(self, values, x, trans="N"):
         """op(A) x for x (N,) or (N, K); op in {A, A^T, A^H}."""
         x = np.asarray(x)
         vector = x.ndim == 1
         x = x[:, None] if vector else x
-        result = np.zeros((self.size, x.shape[1]), dtype=np.complex128)
         if trans == "N":
-            contributions = (values[:, None] * x[self.cols])[self.row_order]
-            result[self.row_ids] = np.add.reduceat(contributions, self.row_starts, axis=0)
+            contributions = values[self.row_order][:, None] * x[self.row_sorted_cols]
+            reduced = np.add.reduceat(contributions, self.row_starts, axis=0)
+            ids, full = self.row_ids, self.all_rows
         else:
             weights = values if trans == "T" else np.conj(values)
-            result[self.col_ids] = np.add.reduceat(weights[:, None] * x[self.rows], self.col_starts, axis=0)
+            reduced = np.add.reduceat(weights[:, None] * x[self.rows], self.col_starts, axis=0)
+            ids, full = self.col_ids, self.all_cols
+        if full:
+            result = reduced.astype(np.complex128, copy=False)
+        else:
+            result = np.zeros((self.size, x.shape[1]), dtype=np.complex128)
+            result[ids] = reduced
         return result[:, 0] if vector else result
 
 
@@ -396,28 +411,6 @@ def _collinear_coefficient(vector, direction):
     return None
 
 
-# Relative least-squares residual below which alpha * direction is used only as
-# the starting iterate of a refined solve. It selects a starting point, never an
-# answer: the refinement still corrects the full residual.
-WARM_START_RESIDUAL = 1e-6
-
-
-def _near_collinear_coefficient(vector, direction):
-    """Least-squares alpha when vector is close to alpha * direction, else None."""
-    scale = np.max(np.abs(vector)) if vector.size else 0.0
-    if scale == 0 or not np.isfinite(scale) or not np.all(np.isfinite(direction)):
-        return None
-    norm = np.real(np.vdot(direction, direction))
-    if norm == 0 or not np.isfinite(norm):
-        return None
-    alpha = np.vdot(direction, vector) / norm
-    if not np.isfinite(alpha):
-        return None
-    if np.max(np.abs(vector - alpha * direction)) <= WARM_START_RESIDUAL * scale:
-        return alpha
-    return None
-
-
 def _is_hermitian(pattern, values):
     """Whether finite supplied coefficients equal their conjugate transpose exactly.
 
@@ -437,19 +430,10 @@ def _is_hermitian(pattern, values):
     return bool(np.array_equal(values, transposed))
 
 
-def _solve(products, values, factor, rhs, trans, initial=None):
-    """Solve op(A) x = rhs with SuperLU and the iterative refinement of `differometor.sparse`.
-
-    `initial` optionally replaces the first SuperLU solve as the starting iterate.
-    The refinement loop is unchanged: every step solves for the full residual
-    rhs - op(A) x and applies the same correction-size stopping test, with at
-    least one correction, so a starting iterate never bypasses the residual.
-    """
+def _solve(products, values, factor, rhs, trans):
+    """Solve op(A) x = rhs with SuperLU and the iterative refinement of `differometor.sparse`."""
     rhs = np.ascontiguousarray(rhs, dtype=np.complex128)
-    if initial is None:
-        solution = factor.solve(rhs, trans=trans)
-    else:
-        solution = np.array(initial, dtype=np.complex128, copy=True)
+    solution = factor.solve(rhs, trans=trans)
     for _ in range(REFINEMENT_STEPS):
         correction = factor.solve(np.ascontiguousarray(rhs - products.apply(values, solution, trans)), trans=trans)
         solution = solution + correction
@@ -607,18 +591,7 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
                 signal_rhs_bar = alpha * np.conj(weights[row, detector])
                 break
         if signal_rhs_bar is None:
-            # Not exactly representable: when the cotangent is close to some
-            # alpha conj(s_d), start refinement from alpha conj(w_d) instead of a
-            # fresh solve. Refinement then solves for the full residual (including
-            # the collinearity defect and w's own residual) with the unchanged
-            # correction-size stopping test.
-            start = None
-            for detector in range(detectors):
-                alpha = _near_collinear_coefficient(signal_bar[row], np.conj(selections[row, detector]))
-                if alpha is not None:
-                    start = alpha * np.conj(weights[row, detector])
-                    break
-            signal_rhs_bar = _solve(products, coefficients[row], factor, signal_bar[row], "T", initial=start)
+            signal_rhs_bar = _solve(products, coefficients[row], factor, signal_bar[row], "T")
         covariance_rhs_bar = np.conj(weights[row].T) * temporary_bar[:, row][None, :]           # (N, D)
         rhs_bar = np.concatenate([signal_rhs_bar[:, None], covariance_rhs_bar], axis=1)
         coefficient_bar = -np.sum(rhs_bar[pattern.rows] * solution[pattern.cols], axis=1)
