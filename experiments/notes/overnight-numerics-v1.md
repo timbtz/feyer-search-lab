@@ -2000,3 +2000,87 @@ fresh-process runs, separately reporting grid/aLIGO samples/median/range, forwar
 and reverse tradeoffs, RSS and job overlap. If a discrepancy is new, investigate
 ordering/pivot/refinement behavior rather than loosening tolerance. If no stable
 gain, retire this choice without combining it with pending historical candidates.
+
+### Candidate25 feedback and candidate26: preserve solver output layout
+
+25 SHA8aa393502844782c85bb84f381cad67b4d83296c, evaluator job
+fb04003661e946e38638f38f3e19b06b (grid-1/2/3 and aligo-1/2/3).
+All six official runs passed; no confirmed improvement, no source review yet.
+Grid complete samples seconds:0.8338793199509382,0.7940353136509657,
+0.7943721208721399; median0.7943721208721399,
+range[0.7940353136509657,0.8338793199509382].
+aLIGO samples:0.54917286708951,0.5458456967025995,0.5436431616544724;
+median0.5458456967025995,range[0.5436431616544724,0.54917286708951].
+Ranges overlap admitted7; selection did not promote. Historical median differences
+are -7.206ms grid and -2.709ms aLIGO, not matched-cohort evidence of a gain.
+Median phases ms (difference from historical admitted7): grid forward178.100144
+(-3.062943),reverse87.398566(+2.041142),build69.674807(-4.319273),
+imports268.407753(+2.807138); aLIGO forward32.737512(-0.152638),
+reverse14.665924(+0.281772),build38.246561(+0.284016),
+imports267.511480(+4.002672). Grid forward's apparent saving is partly offset by
+reverse, with unrelated build/import variation. Peak sampled RSS bytes:
+grid711069696,aligo294592512,generalization893956096. No infrastructure failure
+or budget exceedance; external job contention remains unexcluded.
+
+Official output archives and detailed comparison records match24 (grid112c0407...
+/aligo9c1ce936...). All14 generalization cases pass initial-seed tolerances, but
+numerical equality is NOT established. Newly nonzero sensitivity log errors vs
+initial seed: uifo_20_5000=7.105427357601002e-15,
+uifo_rand1=8.065725864980777e-11,uifo_rand2=2.1241675085548195e-11,
+uifo_rand3=1.96489065018568e-08. All reported array pass/failure counts are
+unchanged, including gradients. Against pristine, rand1 sensitivity error changes
+from0.0002036099068405406 to0.00020360993885759626; rand2 from
+9.538787537621829e-10 to9.584653071215143e-10; rand3 from
+5.8100919558157216e-05 to5.80965652936527e-05. These are newly observed changes,
+not evidence that the old disagreements are resolved. Inspected saved JSON
+per-array reports; remote NPZ files were not independently reopened locally.
+Generalization archive96f64113... also contains non-numerical metadata; its hash
+alone is not an array-equality test. Candidate-self comparison is not independent.
+
+Decision: investigate a narrow layout repair before any promotion of25. No
+additional contraction/scatter variant or other-lane source is combined. The
+admitted parent remains7, and25 remains preserved in history. This is a repair
+of the distinct column-order hypothesis, not another trial of closed22–24.
+
+Concrete inspection: SuperLU returns multi-column solutions in Fortran order.
+25's normal-solve advanced row gather returns a C-order array, which propagates
+through iterative-refinement addition. This is a proven execution difference,
+not a proven cause of the remote numerical changes. An initial400 small complex
+sparse cases (sizes6–74, changing coefficients, strong pivoting and similarity
+scales10^-12–10^12) showed no direct N/T/H numerical differences. No actual optical
+fixture or benchmark was run locally, and the local platform differs from the
+Linux evaluator. Neither rounding nor a pivoting explanation is established.
+
+26 hypothesis: retain the parent solver's output layout while reusing structural
+column ordering. Its only numerical execution change relative25 replaces the
+normal-solve row gather with np.empty_like(permuted) and
+solution[columns]=permuted. For B=A[:,columns], x[columns]=B^-1 rhs exactly.
+empty_like preserves the source layout; each element is assigned once because
+columns is a permutation. Remove the now-unused inverse permutation and its
+construction. No extra full copy is added: the gather's result allocation is
+replaced by the equally sized scatter destination. Transpose/adjoint solves,
+factorization policy, all original-coordinate residuals and refinement stopping
+criteria remain unchanged. Every forward still assembles and factors afresh.
+This may change scatter locality/performance; speed remains unmeasured.
+
+Retained inspection overnight-numerics-column-layout-check.py compares admitted7,
+committed25 and current26 on400 factor triples,3600 direct and refined solve
+triples (N/T/H,1/2/5 RHS). All results are bitwise equal on these cases; all
+refinement counts match and RHS inputs remain unchanged.25 changes layout in800
+direct and800 refined results;26 changes layout in zero. Also reran the original
+column-order inspection:196 factor pairs,1752 refined solves and48 forward calls
+remain bitwise equal, correction-count distribution1579/149/24 unchanged.
+These synthetic checks bound implementation behavior; they do not reproduce or
+resolve the remote rand3 sensitivity change or validate optical gradients.
+
+26 SHA/jobs pending supervisor commit. Request both unchanged official benchmarks,
+all saved outputs/gradients against7,25 and initial seed, all14 generalization
+cases, and independent source review before promotion. Specifically report whether
+the four new sensitivity errors disappear, persist or grow. If they persist,
+request evaluator-side per-matrix factor permutation, pivot and refined residual
+comparisons for the affected arbitrary setups; do not invent an explanation or
+continue blind permutation variants. If timing looks promising, obtain matched
+fresh-process parent/candidate repetitions, including RSS and overlap records.
+Inherited pristine signal/gradient/loss disagreements, six unresolved grid FD
+coordinates54/59/63/136/161/163, prior aLIGO29/29 confirmation, and absent
+JVP/Hessian support all remain explicit. No tolerances or workload changed.

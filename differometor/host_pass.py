@@ -329,7 +329,6 @@ class _ColumnOrdering:
     def __init__(self, pattern, first_factor):
         self.pattern = pattern
         self.columns = np.argsort(first_factor.perm_c)
-        self.inverse = np.argsort(self.columns)
         # CSC columns remain internally sorted. Include every structural entry,
         # including values that happen to be zero at the first parameter point.
         counts = np.diff(pattern.indptr)[self.columns]
@@ -348,18 +347,25 @@ class _ColumnOrdering:
         options = dict(_SUPERLU_OPTIONS, ColPerm="NATURAL")
         factor = gstrf(self.pattern.size, data.size, data, self.indices, self.indptr,
                        csc_construct_func=_construct_csc, ilu=False, options=options)
-        return _PermutedFactor(factor, self.columns, self.inverse)
+        return _PermutedFactor(factor, self.columns)
 
 
 class _PermutedFactor:
     """Solve with factors of B=A[:, columns] using A's original coordinates."""
 
-    def __init__(self, factor, columns, inverse):
-        self.factor, self.columns, self.inverse = factor, columns, inverse
+    def __init__(self, factor, columns):
+        self.factor, self.columns = factor, columns
 
     def solve(self, rhs, trans="N"):
         if trans == "N":
-            return self.factor.solve(rhs, trans=trans)[self.inverse]
+            permuted = self.factor.solve(rhs, trans=trans)
+            # SuperLU returns multi-RHS solutions in Fortran order. A row gather
+            # would switch them to C order, changing the layout used throughout
+            # refinement. Scatter into an equally laid-out result instead:
+            # B = A[:, columns] implies x[columns] = B^-1 rhs.
+            solution = np.empty_like(permuted)
+            solution[self.columns] = permuted
+            return solution
         # B^T/H x = rhs[columns] is equivalent to A^T/H x = rhs.
         return self.factor.solve(rhs[self.columns], trans=trans)
 
