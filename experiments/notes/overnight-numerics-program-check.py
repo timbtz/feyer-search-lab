@@ -18,7 +18,7 @@ programs = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = programs
 spec.loader.exec_module(programs)
 # Reuse the preserved comprehensive Dual tests. Its old shim-level work counter
-# does not observe compiled execution, so deliberately omit that metric here.
+# does not observe program execution, so deliberately omit that metric here.
 output = io.StringIO()
 with redirect_stdout(output):
     checked = runpy.run_path(str(ROOT / 'experiments/notes/overnight-numerics-directions-check.py'))
@@ -68,13 +68,18 @@ counted_parent = counted_load(parent_source)
 f = next(i for i, function in enumerate(new['HOST_FUNCTIONS']) if function.__name__ == 'surface')
 slots = tuple(range(7))
 program = programs.jacobian_program(new['HOST_FUNCTIONS'][f], slots, 7, new['Dual'], new['_Slots'])
-functions = {k: v for k, v in program.__globals__.items() if k.startswith('f') and k[1:].isdigit()}
-for name, function in functions.items():
+original_nodes = program.nodes
+nodes = list(original_nodes)
+for index, node in enumerate(nodes):
+    if node[0] != 'operation':
+        continue
+    function = node[1]
     if isinstance(function, np.ufunc) and function.__name__ in transcendentals:
         def call(*args, function=function):
             counts['candidate'][function.__name__] += 1
             return function(*args)
-        program.__globals__[name] = call
+        nodes[index] = ('operation', call, node[2])
+program.nodes = tuple(nodes)
 inputs = rng.uniform(.1, .8, (3, 11, 7)).astype(np.complex128)
 counts['parent'].clear()
 try:
@@ -83,11 +88,11 @@ try:
         b = new['function_jacobian'](f, slots, inputs, with_outputs=False)
         equal(a[1:], b[1:])
 finally:
-    program.__globals__.update(functions)
+    program.nodes = original_nodes
 assert 0 < sum(counts['candidate'].values()) < sum(counts['parent'].values())
-assert all(not isinstance(v, np.ndarray) for v in program.__globals__.values())
+assert all(node[0] != 'constant' or np.isscalar(node[1]) for node in program.nodes)
 
-# Include first graph construction and code compilation in the cold allocation
+# Include first graph construction and plan construction in the cold allocation
 # probe; warm probe shows retained-temporary cost independently. Neither is an
 # official workload or a speed measurement.
 def peak(function):

@@ -1,6 +1,6 @@
 """Static NumPy arithmetic programs for the component dual interpreter.
 
-Only operation graphs are cached. Graph construction uses symbolic columns, never
+Only operation graphs are cached; there is no generated source or bytecode. Graph construction uses symbolic columns, never
 an evaluation's physical parameters, and every call executes on its supplied
 columns. No algebraic simplification or zero-derivative elimination is performed.
 """
@@ -86,48 +86,52 @@ class _Graph:
             self.nodes.append(("operation", function, indices))
         return _Expression(self, self.interned[key])
 
-    def compile(self, writes):
-        namespace = {}
-        lines = ["def evaluate(columns, linear, antilinear):"]
-        destinations = {}
+    def program(self, writes):
+        destinations = [[] for _ in self.nodes]
         for target, column, position, index in writes:
-            destinations.setdefault(index, []).append((target, column, position))
-        # Share an intermediate only until its last arithmetic use. Write each
-        # independent Jacobian destination when its value becomes available;
-        # keeping the entire graph's arrays alive would inflate peak memory.
+            destinations[index].append((target, column, position))
+        # Retain each array only until its final arithmetic use. Jacobian
+        # destinations are independent, so write them as soon as available.
         last_use = list(range(len(self.nodes)))
         for index, node in enumerate(self.nodes):
             if node[0] == "operation":
                 for operand in node[2]:
                     last_use[operand] = index
-        release = {}
+        release = [[] for _ in self.nodes]
         for operand, index in enumerate(last_use):
-            release.setdefault(index, []).append(operand)
-        for index, node in enumerate(self.nodes):
+            release[index].append(operand)
+        return _Program(tuple(self.nodes), tuple(map(tuple, destinations)), tuple(map(tuple, release)))
+
+
+class _Program:
+    """Static operation layout; each invocation owns its numerical workspace."""
+
+    def __init__(self, nodes, destinations, release):
+        self.nodes, self.destinations, self.release = nodes, destinations, release
+
+    def __call__(self, columns, linear, antilinear):
+        values = [None] * len(self.nodes)
+        for index, (node, destinations, release) in enumerate(
+                zip(self.nodes, self.destinations, self.release)):
             kind = node[0]
             if kind == "input":
-                expression = f"columns[{node[1]}]"
+                value = columns[node[1]]
             elif kind == "constant":
-                namespace[f"c{index}"] = node[1]
-                expression = f"c{index}"
+                value = node[1]
             else:
-                namespace[f"f{index}"] = node[1]
-                expression = f"f{index}(" + ", ".join(f"v{i}" for i in node[2]) + ")"
-            lines.append(f"    v{index} = {expression}")
-            for target, column, position in destinations.get(index, ()):
-                lines.append(f"    {target}[..., {column}, {position}] = v{index}")
-            if index in release:
-                lines.append("    del " + ", ".join(f"v{i}" for i in release[index]))
-        lines.append("    return None")
-        # Generated text contains only fixed identifiers and integer indices.
-        # NumPy ufuncs and scalar constants are bound directly in the namespace.
-        exec(compile("\n".join(lines), "<component-jacobian-program>", "exec"), namespace)
-        return namespace["evaluate"]
+                function, operands = node[1:]
+                value = function(*(values[operand] for operand in operands))
+            values[index] = value
+            for target, column, position in destinations:
+                output = linear if target == "linear" else antilinear
+                output[..., column, position] = value
+            for operand in release:
+                values[operand] = None
 
 
 @lru_cache(maxsize=128)
 def jacobian_program(function, slots, column_count, dual_type, slots_type):
-    """Compile the existing Dual operations once for a component/slot layout."""
+    """Stage the existing Dual operations once for a component/slot layout."""
     graph = _Graph(column_count)
     writes = []
     for position, slot in enumerate(slots):
@@ -138,4 +142,4 @@ def jacobian_program(function, slots, column_count, dual_type, slots_type):
             if isinstance(item, dual_type):
                 writes.append(("linear", column, position, graph.constant(item.a)))
                 writes.append(("antilinear", column, position, graph.constant(item.b)))
-    return graph.compile(writes)
+    return graph.program(writes)

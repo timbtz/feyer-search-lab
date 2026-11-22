@@ -2679,3 +2679,82 @@ a single run or candidate-self comparisons. No combination with prior unconfirme
 trials. If first-run staging dominates, reject this implementation rather than
 moving compilation outside the timer. Existing pristine disagreements,28's open
 new failures, six grid FD questions and whole-pass JVP/Hessian limitation remain.
+
+
+### Candidate30 feedback; candidate31 direct graph execution
+
+Evaluated30 SHA c4dc5ae7d4536c754d186ba31e546659f2ef7cbd;
+request b41a623cd23946a3a39c563e03ba9469, grid-1/2/3 and aligo-1/2/3.
+All six official runs passed, but confirmed_improvement=false, no source review,
+and selection rejected unstable timing, inadequate large gain, overlapping ranges
+and aLIGO regression. The runner's promotion_ready=true is not promotion.
+
+Large complete fresh-process samples (seconds):
+[0.8904174827039242, 0.7973683625459671, 0.802862286567688];
+median0.802862286567688, range0.7973683625459671–0.8904174827039242,
+relative range11.590%. Official aLIGO separately:
+[0.5600046403706074, 0.5712345577776432, 0.6612497363239527];
+median0.5712345577776432, range0.5600046403706074–0.6612497363239527,
+relative range17.724%. All samples retained. The first grid sample had elevated
+imports, gradient lowering/compilation and execution; aLIGO3 imports373.495ms
+were elevated. These fluctuations are not evidence that derivative staging caused
+all total-time changes. Host contention is not excluded; no paired cohort supplied.
+Compared to admitted7's earlier medians: large +1.284603ms, aLIGO +22.679402ms.
+
+Large median forward182.987805ms/reverse87.573757ms/build73.763885ms/
+imports265.433796ms; deltas versus admitted7: +1.824718/+2.216333/-0.230195/
+-0.166818ms. aLIGO medians32.826757/22.846971/38.303858/282.689825ms;
+deltas -0.063393/+8.462819/+0.341313/+19.181017ms. Each aLIGO reverse sample
+was22.564–23.073ms, compared with admitted7's earlier14.384ms median. The repeat
+reverse increase motivates investigating first-use graph/source construction;
+that attribution is a hypothesis, since no callback profile isolates the cost.
+Sampled peak RSS maxima: large594616320, aLIGO293654528, generalization1037729792
+bytes. No infrastructure failure or budget exceedance reported.
+
+Inspected every returned official and14-case comparison record. All official
+archive hashes and initial-seed/pristine comparison records exactly match29.
+All14 initial-seed cases pass, zero log-sensitivity error; all14 seed and pristine
+per-case records equal29. Gradient differences versus seed remain nonzero within
+tolerance (large maxabs5.686350050382316e-6, aLIGO3.637978807091713e-11).
+Pristine signal/gradient/loss and random-topology sensitivity disagreements remain
+unchanged. Remote NPZ payloads were not available locally; comparison records and
+archive hashes are the inspected evidence. Candidate-self comparisons are not an
+independent certificate. Six unresolved grid FD coordinates, prior aLIGO29/29
+checks, first-order-only transform support and28's unresolved native-product
+failures remain separate.30 is preserved in history and is not an admitted gain.
+
+Candidate31 is a focused simplification of30, not a merge with another trial.
+Retain its symbolic tracing, ordered operation interning and last-use lifetime
+plan, but remove generated Python source, compile and exec entirely. _Graph.program
+now returns a callable _Program with static node/destination/release tuples.
+Each invocation allocates its own local values list, reads fresh supplied columns,
+calls the same operation functions on the same ordered operands, writes each
+Jacobian destination, and clears local references after their last use. No input
+array or result is stored in the program or cache. No numerical arithmetic,
+reductions, scatter order, component formulas or physical outputs are changed.
+A Python loop and argument gathering replace the generated straight-line function;
+this introduces runtime overhead but avoids first-call Python compilation cost.
+All symbolic graph construction remains inside the first numerical call and timer.
+The process-local128-entry structural cache has the same keys and bounded scope;
+no persistent cache or timing-policy changes. There is no shape-size threshold or
+fixture dispatch, and no zero derivative pruning.
+
+Re-ran overnight-numerics-program-check.py on31:4104 component/Jacobian/contraction,
+8 SystemPlan pullback,133 extreme/nonfinite,912 extra shape/layout/slot checks and
+1596 independent finite-difference directions pass. Finite values match admitted7
+bitwise; nonfinite values match elementwise. Maximum scaled finite-difference
+error1.7286649972079704e-9 under the unchanged2e-7 synthetic bound. Actual surface
+transcendental counts remain parent114 versus candidate15. The test-only counter
+now wraps operation-node callables and restores the node tuple; it does not alter
+production modules, NumPy or benchmark validation.
+
+Same small17x23-row surface allocation probe: parent531448 bytes;31 first-call
+peak616578 bytes, later-call547288 bytes.30's corresponding cold/warm figures
+were2538365/543304 bytes. Reduced cold allocation confirms removal of construction
+work, not elapsed-time gain. No benchmark or local timing was run.31 has no assigned
+SHA/job IDs yet. Independent review and both unchanged complete official workloads
+on one exact SHA are required, with every saved output/gradient and all14 cases
+compared to admitted7/seed and pristine separately. If promising, require matched
+repeated fresh-process parent/candidate samples, medians/ranges, phases, RSS and
+contention evidence. If direct execution still loses, retire this staging path;
+do not hide compilation outside the timer or promote a warm-only benefit.
