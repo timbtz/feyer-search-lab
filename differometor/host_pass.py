@@ -492,7 +492,8 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
 
     # noise = sqrt(c t), t = sum Re(cov conj(s)): t_bar = noise_bar c / (2 noise).
     temporary_bar = np.asarray(noise_bar, dtype=np.float64) * _NOISE_SCALE / (2 * noise)      # (D, Bs)
-    covariance_bar = temporary_bar.T[:, :, None] * np.conj(selections)                         # (Bs, D, N)
+    # The covariance cotangent t_bar conj(s) enters only through the A^T solve below,
+    # where it is replaced by its exact solution t_bar conj(w).
     selection_bar = temporary_bar.T[:, :, None] * np.conj(covariances)
     signal_values_bar = np.zeros(state["signal_values"].shape, dtype=np.complex128)
     noise_values_bar = np.zeros(state["noise_values"].shape, dtype=np.complex128)
@@ -503,8 +504,13 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
     for row in range(count):
         factor = factors[row] if factors is not None else _factor(pattern, coefficients[row])
         solution = np.concatenate([signal[row][:, None], covariances[row].T], axis=1)           # (N, 1 + D)
-        solution_bar = np.concatenate([signal_bar[row][:, None], covariance_bar[row].T], axis=1)
-        rhs_bar = _solve(products, coefficients[row], factor, solution_bar, "T")               # A^T r = x_bar
+        # A^T r = x_bar for x = [signal, covariances]. The covariance columns have
+        # x_bar = t_bar conj(s) with real t_bar, and the forward solved A^H w = s;
+        # conjugating gives A^T conj(w) = conj(s), so r_cov = t_bar conj(w) exactly.
+        # Only the signal column needs a refined solve.
+        signal_rhs_bar = _solve(products, coefficients[row], factor, signal_bar[row], "T")
+        covariance_rhs_bar = np.conj(weights[row].T) * temporary_bar[:, row][None, :]           # (N, D)
+        rhs_bar = np.concatenate([signal_rhs_bar[:, None], covariance_rhs_bar], axis=1)
         coefficient_bar = -np.sum(rhs_bar[pattern.rows] * solution[pattern.cols], axis=1)
         sources_bar, weight = rhs_bar[:, 1:], weights[row].T                                    # (N, D)
         noise_row = 0 if plan.noise_row_reuse else row

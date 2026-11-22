@@ -146,6 +146,26 @@ D = 1 noise detector.
   coefficient hashes, no discarded primal evaluation in Jacobians, last-write-only cotangent scatter.
 - Expected: grid gradient exec about -15 ms against the incumbent; everything else as the incumbent;
   arrays bitwise identical to the seed. Needs paired incumbent-vs-candidate runs before a claim.
+- SHA `34e637d1e0a1dbf518697c19b160fe7799d3a8b2`, request `ff20917c53cb40478b0a4aacd84181da`.
+  Official PASS 3/3 + 3/3; arrays bitwise identical to the seed; generalization 14/14 identical.
+  - Grid 0.92547, 0.89466, 0.87557 s (median 0.89466; incumbent cohort 0.95429, 0.91127, 0.90719,
+    median 0.91127). Forward compile 32.8-33.0 ms (incumbent effect); forward exec 188.7, 179.0,
+    177.3 ms; gradient exec 174.1, 181.5, 168.9 ms.
+  - aLIGO 0.57678, 0.55640, 0.55742 s (median 0.55742; incumbent 0.56009).
+  - Not promoted: needs source review; ranges overlap (candidate max 0.9255 > incumbent min 0.9072).
+    Best numerically clean revision of this branch. Paired runs vs 2b4654f still requested.
+
+## Candidate 5: drop the covariance columns from the backward A^T solve (parent = candidate 4)
+- Exact identity: covariance cotangent x_bar = t_bar conj(s) (t_bar real per row/detector). The
+  forward solved A^H w = s; conjugating gives A^T conj(w) = conj(s), so the A^T solution for those
+  columns is r_cov = t_bar conj(w). The backward now solves only the signal column (1 instead of
+  1 + D right-hand sides) and forms r_cov from the forward's refined w.
+- Numerics: not bitwise. w carries the forward refinement (same factor, same tolerance); the signal
+  column's refinement stop test no longer includes the covariance column. Expected differences vs
+  seed at refinement level (~1e-14 relative); strict-vs-seed (rtol 1e-7) should pass. Any larger
+  difference, especially on uifo_rand1/rand3, voyager or gradient indices 33/161/180, means reject.
+- Expected: grid gradient exec falls by the cost of one RHS column in each of the 101 refined
+  T solves (unmeasured; plausibly 10-25 ms). aLIGO proportional.
 - Evidence so far on where the time goes: the backward phase (no factorization; two refined solves
   plus small products per row) costs ~1.7 ms/row, about the same as the forward (factor + two
   refined solves). So factorization is a small share; triangular solves + refinement dominate.
