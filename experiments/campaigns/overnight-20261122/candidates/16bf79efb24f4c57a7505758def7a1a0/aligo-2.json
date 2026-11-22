@@ -1,0 +1,362 @@
+{
+  "benchmark": "start-munich-2026-public-differometor-aligo-v1",
+  "measured_at_utc": "2026-11-22T09:06:52.585487+00:00",
+  "starter_sha256": "8c1018592e33f66b0913490159f7e2c20f5a2acec614b95b9bbbda18d90d99fc",
+  "benchmark_harness_sha256": "b2e8c5367705e220f83c3d5f2bb95301e3148b102dc0d34f5c2c6f5792b9984e",
+  "source": {
+    "public_repository": "https://github.com/artificial-scientist-lab/Differometor",
+    "baseline_commit": "b0dc7c79e7c72a1b010174f6bdcad01efa51d6ff",
+    "commit": "cb5fc5b6380e3515260a60def1fc6bff7af27df5",
+    "modified": false,
+    "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "simulator_files_sha256": {
+      "differometor/__init__.py": "bead888da8405199ee58f9796ddf02364833f3a243dffe72b862f82d90bc269b",
+      "differometor/build.py": "5a5c86c99bebe572b56f725ade4f37b526f5fc1cf8d166a71b99075986a01b2e",
+      "differometor/components.py": "c4b15b2341c03bdd5a7facce0d76d30dc6403f835a622d459b30f0b32d5f31a6",
+      "differometor/host.py": "50b2546ad41004dd6a60e1dc4b4332c79c04be658a2bc344040d4ac18c745eef",
+      "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+      "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+      "differometor/simulate.py": "cbd9e1bbc55d0a64e7cf9054fde371b3951557b06dd2c6810757699b86822bbc",
+      "differometor/sparse.py": "9d39e6ce79c5ef6a877f6cb2ef04648df6fca7f31bbb3ca82aa01e3e31370697",
+      "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+    }
+  },
+  "inputs": {
+    "setup": "differometor.setups.aligo(mode='space_modulation')",
+    "label": "aLIGO optical setup",
+    "setup_sha256": "f77fa86eeae1771a9aa3a9305c490a7ef406df6a542c3e93de303d3070536390",
+    "reference": "aligo_test_data.json",
+    "reference_sha256": "e3419da07888d0260800be08ba873dc22518de0b103582740cc447e0014c5cb4",
+    "frequency_count": 101,
+    "frequency_min_hz": 20.000000000000004,
+    "frequency_max_hz": 4999.999999999999,
+    "gradient_parameter_count": 29,
+    "optimization_pairs": [
+      [
+        "L0",
+        "power"
+      ],
+      [
+        "bs",
+        "reflectivity"
+      ],
+      [
+        "bs",
+        "tuning"
+      ],
+      [
+        "prm",
+        "reflectivity"
+      ],
+      [
+        "prm",
+        "tuning"
+      ],
+      [
+        "itmx",
+        "reflectivity"
+      ],
+      [
+        "itmx",
+        "tuning"
+      ],
+      [
+        "etmx",
+        "reflectivity"
+      ],
+      [
+        "etmx",
+        "tuning"
+      ],
+      [
+        "itmy",
+        "reflectivity"
+      ],
+      [
+        "itmy",
+        "tuning"
+      ],
+      [
+        "etmy",
+        "reflectivity"
+      ],
+      [
+        "etmy",
+        "tuning"
+      ],
+      [
+        "srm",
+        "reflectivity"
+      ],
+      [
+        "srm",
+        "tuning"
+      ],
+      [
+        "sq1",
+        "db"
+      ],
+      [
+        "sq1",
+        "angle"
+      ],
+      [
+        "itmxsus",
+        "mass"
+      ],
+      [
+        "etmxsus",
+        "mass"
+      ],
+      [
+        "itmysus",
+        "mass"
+      ],
+      [
+        "etmysus",
+        "mass"
+      ],
+      [
+        "L0_prm",
+        "length"
+      ],
+      [
+        "prm_bs",
+        "length"
+      ],
+      [
+        "bs_itmx",
+        "length"
+      ],
+      [
+        "itmx_etmx",
+        "length"
+      ],
+      [
+        "bs_itmy",
+        "length"
+      ],
+      [
+        "itmy_etmy",
+        "length"
+      ],
+      [
+        "bs_srm",
+        "length"
+      ],
+      [
+        "sq1_srm",
+        "length"
+      ]
+    ]
+  },
+  "workload": {
+    "objective": "mean(log10(sensitivity / public_reference))",
+    "gradient_coordinates": "physical parameter values; independent lengths",
+    "optimizer_steps": 0,
+    "forward_residuals": "saved for separately compiled reverse pass",
+    "total_scope": "imports, CPU initialization, input I/O, setup, all lowering/compilation, forward, sensitivity/powers/loss, reverse-mode gradient and host transfer",
+    "excluded": "validation and benchmark harness bookkeeping, repeated profiling, plot/report generation; interpreter launch before the first timer"
+  },
+  "environment": {
+    "cpu_model": "AMD EPYC 9334 32-Core Processor",
+    "cpu_affinity_count": 1,
+    "cpu_affinity_ids": [
+      2
+    ],
+    "requested_logical_cpus": 1,
+    "logical_cpus_on_host": 128,
+    "platform": "Linux-6.8.0-79-generic-x86_64-with-glibc2.35",
+    "python": "3.12.15",
+    "packages": {
+      "differometor": "0.0.6",
+      "jax": "0.9.0",
+      "jaxlib": "0.9.0",
+      "numpy": "2.5.5",
+      "optax": "0.2.6"
+    },
+    "backend": "cpu",
+    "jax_enable_x64": true,
+    "persistent_compilation_cache": false,
+    "omp_num_threads": "1",
+    "xla_flags": "--xla_backend_optimization_level=0",
+    "thread_limits": {
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1"
+    }
+  },
+  "phases": [
+    {
+      "key": "imports",
+      "label": "Python / library imports",
+      "category": "setup",
+      "seconds": 0.26716557517647743
+    },
+    {
+      "key": "initialize",
+      "label": "Initialize CPU backend",
+      "category": "setup",
+      "seconds": 0.0031409673392772675
+    },
+    {
+      "key": "load",
+      "label": "Read and parse public inputs",
+      "category": "setup",
+      "seconds": 0.0002987682819366455
+    },
+    {
+      "key": "build",
+      "label": "Build optical setup and prepare inputs",
+      "category": "setup",
+      "seconds": 0.0758470930159092
+    },
+    {
+      "key": "forward_lower",
+      "label": "Forward: trace / lower",
+      "category": "compile",
+      "seconds": 0.004223436117172241
+    },
+    {
+      "key": "forward_compile",
+      "label": "Forward: compile",
+      "category": "compile",
+      "seconds": 0.005571229383349419
+    },
+    {
+      "key": "forward",
+      "label": "Forward simulation + AD residuals",
+      "category": "execute",
+      "seconds": 0.027403252199292183
+    },
+    {
+      "key": "sensitivity_lower",
+      "label": "Sensitivity: trace / lower",
+      "category": "compile",
+      "seconds": 0.01971983164548874
+    },
+    {
+      "key": "sensitivity_compile",
+      "label": "Sensitivity: compile",
+      "category": "compile",
+      "seconds": 0.08256983384490013
+    },
+    {
+      "key": "sensitivity",
+      "label": "Sensitivity, powers and scalar loss",
+      "category": "execute",
+      "seconds": 0.000774923712015152
+    },
+    {
+      "key": "gradient_lower",
+      "label": "Gradient: trace / lower",
+      "category": "compile",
+      "seconds": 0.007809760048985481
+    },
+    {
+      "key": "gradient_compile",
+      "label": "Gradient: compile",
+      "category": "compile",
+      "seconds": 0.04386354610323906
+    },
+    {
+      "key": "gradient",
+      "label": "Reverse-mode gradient",
+      "category": "execute",
+      "seconds": 0.009760715067386627
+    },
+    {
+      "key": "host_transfer",
+      "label": "Transfer results to host",
+      "category": "output",
+      "seconds": 0.0001273471862077713
+    }
+  ],
+  "repeat_samples": [
+    {
+      "forward": 0.0197819285094738,
+      "sensitivity": 0.00047477521002292633,
+      "gradient": 0.009105563163757324,
+      "host_transfer": 8.556060492992401e-05
+    },
+    {
+      "forward": 0.019928475841879845,
+      "sensitivity": 0.0005991868674755096,
+      "gradient": 0.007422443479299545,
+      "host_transfer": 8.299760520458221e-05
+    },
+    {
+      "forward": 0.018207402899861336,
+      "sensitivity": 0.0005386173725128174,
+      "gradient": 0.0073784347623586655,
+      "host_transfer": 8.473172783851624e-05
+    }
+  ],
+  "timing_seconds": {
+    "end_to_end": 0.5482762791216373,
+    "trace_lower_and_compile": 0.16375763714313507,
+    "runtime_samples": [
+      0.029447827488183975,
+      0.028033103793859482,
+      0.026209186762571335
+    ],
+    "runtime_median": 0.028033103793859482,
+    "runtime_min": 0.026209186762571335,
+    "runtime_max": 0.029447827488183975,
+    "phase_runtime_medians": {
+      "forward": 0.0197819285094738,
+      "sensitivity": 0.0005386173725128174,
+      "gradient": 0.007422443479299545,
+      "host_transfer": 8.473172783851624e-05
+    }
+  },
+  "validation": {
+    "all_outputs_and_gradients_finite": true,
+    "upstream_sensitivity_check_passed": true,
+    "sensitivity_log_atol": 1e-06,
+    "max_absolute_log_sensitivity_error": 3.779376811507973e-11,
+    "gradient_check": {
+      "parameter": "sq1.db",
+      "autodiff": -0.012906610254274795,
+      "finite_differences": [
+        {
+          "step": 0.001,
+          "central_difference": -0.012906610254791383,
+          "absolute_error": 5.165885080815613e-13
+        },
+        {
+          "step": 0.0005,
+          "central_difference": -0.012906610255291448,
+          "absolute_error": 1.0166537750544435e-12
+        }
+      ],
+      "rtol": 0.01,
+      "atol": 1e-06,
+      "passed": true
+    },
+    "gradient_shape": [
+      29
+    ],
+    "gradient_norm": 45750.222393451455,
+    "loss": 7.897268128395551e-12,
+    "output_shapes": {
+      "carrier": [
+        36,
+        1
+      ],
+      "signal": [
+        82,
+        101
+      ],
+      "noise": [
+        101
+      ]
+    },
+    "output_dtypes": {
+      "carrier": "complex128",
+      "signal": "complex128",
+      "noise": "float64"
+    }
+  }
+}
