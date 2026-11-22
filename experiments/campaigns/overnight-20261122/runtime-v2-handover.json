@@ -1,0 +1,156 @@
+{
+  "runtime_commit": "630ea27c5036206a9da0d42f6120beea75ab3117",
+  "previous_runtime": "b994c60f02eb1ddf64c9df710562071e5f97c5a1",
+  "deadline_unix": 1795339664.0,
+  "started_at": 1795312775.683009,
+  "tests_passed": 117,
+  "reason": "Reviewed-best sharing, conservative timing gate, review provenance and Claude-first routing fix",
+  "controllers": [
+    {
+      "name": "overnight-overhead-v1",
+      "pid": 98338,
+      "caffeinate_pid": 98339,
+      "command": [
+        "/Users/t.betz/Documents/Feyer challenge/.lab/venv-topology-smac/bin/python",
+        "-m",
+        "lab.overnight_search",
+        "--campaign-dir",
+        "/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/overnight-20261122",
+        "--name",
+        "overnight-overhead-v1",
+        "--lane",
+        "0",
+        "--worktree",
+        "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/overnight-overhead-v1",
+        "--branch",
+        "explore/overnight-overhead-v1",
+        "--brief",
+        "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/overnight-runtime-v2/experiments/briefs/overnight-20261122-overhead.md",
+        "--deadline-unix",
+        "1795339664.0",
+        "--evaluator-command",
+        "'/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/overnight-20261122/evaluate'",
+        "--codex-bin-dir",
+        "/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/overnight-20261122/bin",
+        "--hook-timeout",
+        "2400",
+        "--status-export",
+        "/Users/t.betz/Documents/Feyer challenge/.lab/agent-status/overnight-overhead-v1.json",
+        "--resume",
+        "--shared-best-worktree",
+        "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/overnight-control"
+      ],
+      "provider_threads_preserved": {
+        "claude": "aa7fd85d-950c-430e-aa74-7276a7756d94",
+        "codex": "01a200f6-5720-7643-8f37-5e3f098b2a3d"
+      },
+      "pending_candidate_preserved": {
+        "kind": "model",
+        "before_sha": "0eb5ae82644221ae00bf3e8703015ea1b404d231",
+        "subject": "lab: overnight-overhead-v1 turn 2",
+        "evaluate": true,
+        "response": {
+          "summary": "Prepared candidate 2: replace three general base-matrix indexing operations with explicit JAX gathers using builder-derived coordinates. Recorded candidate 1\u2019s results; no timing improvement is confirmed.",
+          "hypothesis": "Prepacked, unique, in-bounds coordinates may reduce tracing and compilation overhead while preserving all values and derivatives. Benefit remains unmeasured.",
+          "ready_for_evaluation": true,
+          "stop": false,
+          "notes": "AST parsing and git diff checks passed. Local Python lacks JAX/NumPy. Supervisor: run experiments/notes/overnight-overhead-gather-check.py, both unchanged official benchmarks, and strict/generalization comparisons; obtain independent source review. Compare repeated fresh-process timings against c7c3e7a and seed 53f38d3. Candidate 1 matched seed outputs exactly but retained all inherited pristine-reference disagreements. Full evidence and handoff: experiments/notes/overnight-overhead-v1.md."
+        }
+      },
+      "started_at": 1795312775.6865568
+    },
+    {
+      "name": "overnight-numerics-v1",
+      "pid": 98340,
+      "caffeinate_pid": 98341,
+      "command": [
+        "/Users/t.betz/Documents/Feyer challenge/.lab/venv-topology-smac/bin/python",
+        "-m",
+        "lab.overnight_search",
+        "--campaign-dir",
+        "/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/overnight-20261122",
+        "--name",
+        "overnight-numerics-v1",
+        "--lane",
+        "1",
+        "--worktree",
+        "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/overnight-numerics-v1",
+        "--branch",
+        "explore/overnight-numerics-v1",
+        "--brief",
+        "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/overnight-runtime-v2/experiments/briefs/overnight-20261122-numerics.md",
+        "--deadline-unix",
+        "1795339664.0",
+        "--evaluator-command",
+        "'/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/overnight-20261122/evaluate'",
+        "--codex-bin-dir",
+        "/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/overnight-20261122/bin",
+        "--hook-timeout",
+        "2400",
+        "--status-export",
+        "/Users/t.betz/Documents/Feyer challenge/.lab/agent-status/overnight-numerics-v1.json",
+        "--resume",
+        "--shared-best-worktree",
+        "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/overnight-control"
+      ],
+      "provider_threads_preserved": {
+        "claude": "57c7de44-c9ff-460f-88f1-9ffa79a35479"
+      },
+      "pending_candidate_preserved": {
+        "kind": "model",
+        "before_sha": "642eeef3ad058040d8ef1cc90e11e95017acac0d",
+        "subject": "lab: overnight-numerics-v1 turn 2",
+        "evaluate": true,
+        "response": {
+          "summary": "Candidate 2: batch the per-row refinement work across all 101 frequencies. Its parent is candidate 1, e4b3509.\n\nCandidate 1 results (request 9a08fdda): all three large and all three aLIGO runs passed the official benchmark. Every saved array is bitwise identical to the seed (same array SHAs, zero strict failures against the seed, 14/14 generalization cases identical). The pristine strict failures are the same pre-existing ones the seed already has. The large gradient phase was 173.2, 170.5 and 172.3 ms, against the seed's single 187.44 ms sample. The large total did not improve: median 0.9876 s against the seed audit's 0.9870 s. The aLIGO median, 0.6669 s against the seed audit's 0.6260 s, moved only in import and compile phases this change does not touch, and there are no paired seed runs to separate that from noise. So candidate 1 is numerically clean, with about \u221215 ms in the gradient phase, but it is not a confirmed improvement in total time.\n\nCandidate 2 changes only differometor/host_pass.py:\n- A new `_solve_batch` keeps each row's own SuperLU solves and each row's own refinement stop test: at most 3 corrections, stopping once max|dx| \u2264 1e-14\u00b7max|x| for that row, and converged rows drop out.\n- For the rows still refining, the residual products (`_Products.apply_batch`, same products and same reduction order as `apply`) and the stop-test reductions now run all at once instead of row by row.\n- Forward: factor every row, then batched A^H solves, one batched noise-source product, and batched A solves.\n- Backward: batched A^T solves, coefficient and noise cotangent terms, noise transpose product and conjugate solves. The shared noise-row cotangent is still added up row by row in the original order.\n\nTolerances, refinement policy, conventions and the workload are unchanged. Notes are updated in experiments/notes/overnight-numerics-v1.md.",
+          "hypothesis": "Both large execute phases (forward and gradient) are roughly 1.7 ms per row and largely made of many small per-row NumPy calls in the refinement loop. Batching the residual products and stop tests across rows should cut that overhead, so both phases should drop clearly below candidate 1's ~179 ms forward and ~172 ms gradient. The aLIGO execute phases should drop proportionally less. Outputs are expected to be bitwise identical to the seed and candidate 1, because each row gets the same operations and the same reduction order; any difference should be investigated.",
+          "ready_for_evaluation": true,
+          "stop": false,
+          "notes": "Not measured yet. I still have file tools only, so there was no local run; the bitwise-identity expectation and the speed gain both rest on reading the code. Please check that the array SHAs match the seed references (grid 5124476e\u2026, aLIGO 75df8515\u2026) and the generalization archive cfb66746\u2026; if they differ, I'll compare the gradient and signal discrepancies before going further. For a promotion decision we need paired fresh-process runs of the seed 53f38d3, candidate 1 e4b3509 and this candidate in the same window. Candidate 1's total gain cannot be judged against the old audit because imports alone vary 0.27\u20130.30 s between runs. Candidate 1 also still needs source review. Next ideas, each kept separate for attribution: (a) compute the COLAMD column ordering once per evaluation from row 0 and factor the other rows with that fixed ordering; the ordering depends only on structure, and every row still gets its own numeric factorization. (b) The identity r_cov = t_bar\u00b7conj(w) would remove D columns from the backward A^T solve; it changes rounding, so it needs strict review."
+        }
+      },
+      "started_at": 1795312775.706316
+    }
+  ],
+  "prior_states_sha256": "dd2c8d6b802c2995774e713895e27db2f3ee8ceba9a7faa04873fc22c7ac0702",
+  "observations": [
+    {
+      "id": "overnight-overhead-v1",
+      "pid": 98338,
+      "status": "evaluating",
+      "iteration": 2,
+      "candidate_count": 2,
+      "threads": {
+        "claude": "aa7fd85d-950c-430e-aa74-7276a7756d94",
+        "codex": "01a200f6-5720-7643-8f37-5e3f098b2a3d"
+      },
+      "deadline_unix": 1795339664.0,
+      "current_runtime": {
+        "commit": "630ea27c5036206a9da0d42f6120beea75ab3117",
+        "sha256": "217accf50b23d5b4ad0b833838bbb7902e53f55552d52272ab4c677f403e7762"
+      },
+      "shared_best_worktree": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/overnight-control",
+      "observed_at": 1795312777.792503
+    },
+    {
+      "id": "overnight-numerics-v1",
+      "pid": 98340,
+      "status": "evaluating",
+      "iteration": 2,
+      "candidate_count": 2,
+      "threads": {
+        "claude": "57c7de44-c9ff-460f-88f1-9ffa79a35479"
+      },
+      "deadline_unix": 1795339664.0,
+      "current_runtime": {
+        "commit": "630ea27c5036206a9da0d42f6120beea75ab3117",
+        "sha256": "217accf50b23d5b4ad0b833838bbb7902e53f55552d52272ab4c677f403e7762"
+      },
+      "shared_best_worktree": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/overnight-control",
+      "observed_at": 1795312777.8701189
+    }
+  ],
+  "routing_correction": "One early Codex turn started during a transient Claude probe because of a controller edge case, not because Claude quota was exhausted. The tested runtime now preserves Claude preference unless quota or authentication blocks it. Completed work and both provider conversation IDs are retained.",
+  "review_correction": "Contradictory approval-with-risks responses remain rejected, with their raw response/model identity retained. Semantic rejection is no longer classified as provider outage. Earlier evidence remains unchanged.",
+  "selection_correction": "New selection additionally requires non-overlapping observed large-case ranges; uncertain small gains remain provisional. This is a conservative team heuristic, not statistical proof or judging policy."
+}
