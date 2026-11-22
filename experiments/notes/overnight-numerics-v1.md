@@ -188,6 +188,29 @@ D = 1 noise detector.
   (no shell): if gradient exec stays ~140 ms the check did not trigger (correct, just no gain).
 - Numerics: not bitwise vs candidate 5 when triggered (forward covariance refinement replaces a
   fresh refined solve; tolerance-level N vs N^H). Expected refinement-level differences.
+- SHA `9de89099ee118ba4c559b9fdfbdb433ea5995f65`, request `6a58fcea615240de86d57273c9d0f057`.
+  Triggered on both setups (arrays changed: grid 108746cc..., aLIGO e82569f4...). Official PASS
+  3/3 + 3/3; strict vs seed PASS (grid gradient relL2 7.5e-10, max abs 4.4e-5 -- closer to the seed
+  than candidate 5's 9.7e-10; aLIGO 2.7e-14); generalization 14/14 pass vs seed; pristine profile
+  unchanged.
+  - Grid 0.85607, 0.81876, 0.82230 s (median 0.82230 vs c5 0.85267). Gradient exec 109.3, 109.1,
+    111.2 ms (c5 ~140). Forward 181.7, 179.3, 182.4 ms.
+  - aLIGO 0.54800, 0.54971, 0.54957 s (median 0.54957); gradient 18.5, 18.5, 18.7 ms (c5 ~23.5).
+  - Not promoted yet: needs source review; first grid sample (imports 0.293 s) overlaps the incumbent
+    minimum 0.8506. Paired runs vs 5bbb91e requested.
+
+## Candidate 7: signal-column cotangent in span of conj(s) -> no backward solve (parent = candidate 6)
+- The readout `signal_detector` is linear in the signal: conj(c_p) sig_upper[p] + c_p sig_lower[p],
+  so its cotangent is y_bar * [conj(c_p), c_p] at the port entries. The noise selection vector for
+  a detector at that port is s = [sel c_p, conj(sel c_p)]; for real sel, conj(s) is proportional to the
+  cotangent. Then A^T r = alpha conj(s) has r = alpha conj(w) with the forward's refined w.
+- Generic, measured trigger: per row and detector, least-squares alpha and acceptance only if
+  max|signal_bar - alpha conj(s_d)| <= 8 eps max|signal_bar| (`_collinear_coefficient`). A zero
+  cotangent gives r = 0. Otherwise the refined T-solve is kept. Nothing depends on which readout or
+  setup is used; it is a property of the supplied cotangent.
+- If it triggers on grid, the backward has no signal-system solves left (only the carrier adjoint),
+  so gradient exec should fall well below 110 ms. If arrays equal candidate 6 bitwise, it did not
+  trigger (e.g. qhd phase makes sel complex, or a differential readout).
 - Evidence so far on where the time goes: the backward phase (no factorization; two refined solves
   plus small products per row) costs ~1.7 ms/row, about the same as the forward (factor + two
   refined solves). So factorization is a small share; triangular solves + refinement dominate.

@@ -381,6 +381,27 @@ def _transpose_index(pattern):
     return _TRANSPOSES[pattern]
 
 
+def _collinear_coefficient(vector, direction):
+    """alpha with vector == alpha * direction (to roundoff), else None.
+
+    Least-squares alpha, accepted only if the residual is within
+    HERMITIAN_TOLERANCE * max|vector| (a few units of double roundoff). A zero
+    vector gives alpha = 0; a zero direction never matches a nonzero vector.
+    """
+    scale = np.max(np.abs(vector)) if vector.size else 0.0
+    if scale == 0:
+        return 0.0
+    if not np.isfinite(scale):
+        return None
+    norm = np.real(np.vdot(direction, direction))
+    if norm == 0 or not np.isfinite(norm):
+        return None
+    alpha = np.vdot(direction, vector) / norm
+    if np.max(np.abs(vector - alpha * direction)) <= HERMITIAN_TOLERANCE * scale:
+        return alpha
+    return None
+
+
 def _is_hermitian(pattern, values):
     """Whether the sparse matrix with these values equals its conjugate transpose (to roundoff)."""
     values = np.asarray(values)
@@ -550,7 +571,16 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
         # x_bar = t_bar conj(s) with real t_bar, and the forward solved A^H w = s;
         # conjugating gives A^T conj(w) = conj(s), so r_cov = t_bar conj(w) exactly.
         # Only the signal column needs a refined solve.
-        signal_rhs_bar = _solve(products, coefficients[row], factor, signal_bar[row], "T")
+        # The same identity applies to the signal column when its cotangent is a
+        # multiple of some conj(s_d): A^T (alpha conj(w_d)) = alpha conj(s_d).
+        signal_rhs_bar = None
+        for detector in range(detectors):
+            alpha = _collinear_coefficient(signal_bar[row], np.conj(selections[row, detector]))
+            if alpha is not None:
+                signal_rhs_bar = alpha * np.conj(weights[row, detector])
+                break
+        if signal_rhs_bar is None:
+            signal_rhs_bar = _solve(products, coefficients[row], factor, signal_bar[row], "T")
         covariance_rhs_bar = np.conj(weights[row].T) * temporary_bar[:, row][None, :]           # (N, D)
         rhs_bar = np.concatenate([signal_rhs_bar[:, None], covariance_rhs_bar], axis=1)
         coefficient_bar = -np.sum(rhs_bar[pattern.rows] * solution[pattern.cols], axis=1)
