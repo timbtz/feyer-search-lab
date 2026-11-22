@@ -56,14 +56,14 @@ def _digest(*arrays):
 class SystemPlan:
     """Static component groups, output selection and ordered writes for one system."""
 
+    # Target size of the two live complex128 Jacobian blocks. A single batch
+    # row may exceed this target; it is never split or omitted.
+    JACOBIAN_BLOCK_BYTES = 256 * 1024
+
     def __init__(self, sparse_system, groups, selected_rows, selected_columns):
         self.system = sparse_system
         # (function_index, (R, S) parameter indices, slots that carry derivatives)
         self.groups = tuple((int(f), np.asarray(i, dtype=np.int64), tuple(int(s) for s in d)) for f, i, d in groups)
-        # Slot-major order matches the nested slot/component additions in backward.
-        # Keep duplicates and negative indices: np.add.at handles both as before.
-        self.gradient_destinations = tuple(indices[:, slots].T.reshape(-1)
-                                           for _, indices, slots in self.groups)
         self.offsets = np.cumsum([0] + [indices.shape[0] for _, indices, _ in self.groups])
         self.total_rows = int(self.offsets[-1])
         self.flat_selection = (np.asarray(selected_rows, dtype=np.int64) * 4
@@ -110,19 +110,33 @@ class SystemPlan:
             np.add.at(flat, (batch, self.last_selection[None, :]), last_bar)
         flat = flat.reshape(count, self.total_rows, 4)
         rows_bar = np.zeros(rows.shape, dtype=np.complex128)
-        for (function_index, indices, slots), start, stop, destinations in zip(
-                self.groups, self.offsets[:-1], self.offsets[1:], self.gradient_destinations):
+        for (function_index, indices, slots), start, stop in zip(self.groups, self.offsets[:-1], self.offsets[1:]):
             if not slots:
                 continue
-            _, linear, antilinear = function_jacobian(function_index, slots, rows[:, indices], with_outputs=False)
             output_bar = flat[:, start:stop, :, None]                       # (B, R, 4, 1)
-            inputs_bar = np.sum(linear * output_bar, axis=2) + np.conj(np.sum(antilinear * output_bar, axis=2))
-            # One scatter for the group. For each batch row, retain the original
-            # slot-then-component accumulation order, including repeated slots
-            # and parameter aliases. Batch rows have disjoint destinations.
-            contributions = inputs_bar.transpose(0, 2, 1).reshape(count, len(slots) * indices.shape[0])
-            np.add.at(rows_bar, (batch, destinations[None, :]), contributions)
+            inputs_bar = self._group_pullback(function_index, slots, rows[:, indices], output_bar)
+            for position, slot in enumerate(slots):
+                np.add.at(rows_bar, (batch, indices[None, :, slot]), inputs_bar[:, :, position])
         return rows_bar, base_bar.sum(axis=0)
+
+    @staticmethod
+    def _group_pullback(function_index, slots, inputs, output_bar):
+        """Contract independent batch rows with bounded live Jacobian storage."""
+        count, components = inputs.shape[:2]
+        bytes_per_row = 2 * components * 4 * len(slots) * np.dtype(np.complex128).itemsize
+        block_rows = max(1, SystemPlan.JACOBIAN_BLOCK_BYTES // max(1, bytes_per_row))
+
+        def contract(block, cotangent):
+            _, linear, antilinear = function_jacobian(function_index, slots, block, with_outputs=False)
+            return np.sum(linear * cotangent, axis=2) + np.conj(np.sum(antilinear * cotangent, axis=2))
+
+        if count <= block_rows:
+            return contract(inputs, output_bar)
+        inputs_bar = np.empty((count, components, len(slots)), dtype=np.complex128)
+        for start in range(0, count, block_rows):
+            stop = min(start + block_rows, count)
+            inputs_bar[start:stop] = contract(inputs[start:stop], output_bar[start:stop])
+        return inputs_bar
 
 
 class ParameterLayout:

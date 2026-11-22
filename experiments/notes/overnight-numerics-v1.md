@@ -1661,3 +1661,106 @@ separately from official timings. Preserve all inherited pristine disagreements
 and unresolved FD coordinates detailed above. Do not promote based on call counts
 or an isolated reverse-phase reduction. If this narrowly scoped change fails to
 improve, retire group-scatter coalescing without bundling unrelated optimizations.
+
+
+## Candidate 22 feedback: retire group-scatter coalescing
+
+SHA `c3e5e266b9a99e7e7513d8897e91f10c9548420e`; request
+`c2e4ff0e96c7436785dbd822f281f63b`, jobs grid-1/2/3 and aligo-1/2/3.
+All six unchanged official runs passed. Complete fresh-process seconds:
+
+- Grid: 0.8337271902710199, 0.8021378945559263, 0.7915780618786812;
+  median 0.8021378945559263, range 0.7915780618786812–0.8337271902710199.
+- Official aLIGO: 0.5452605132013559, 0.5413661487400532, 0.542662775143981;
+  median 0.542662775143981, range 0.5413661487400532–0.5452605132013559.
+
+Grid forward ms 186.761927/183.446730/178.069087; reverse
+84.817791/82.909863/86.196870. aLIGO forward
+32.981979/32.609781/32.476936; reverse14.579657/14.517339/14.559438.
+Median deltas versus historical admitted candidate7, in ms: grid complete
++0.560211, forward +2.283643, reverse -0.539633, build -0.653427,
+imports -0.740286; aLIGO complete -5.892381, forward -0.280369,
+reverse +0.175286, build +0.020165, imports +1.163602. Unpaired phase
+observations do not establish causality. Grid complete median is slower; no
+meaningful reverse saving is demonstrated. Retire this mechanism after one trial.
+
+Maximum sampled process-group RSS bytes grid642359296, aLIGO295714816,
+generalization788893696. No infrastructure failure or memory exceedance. Fixed
+CPU2/one logical CPU/threads1/no persistent cache; external contention not excluded.
+Confirmed=false, source_review=null, ranking_eligible=false. Admission reasons
+missing review, below-threshold large gain, overlapping large timing ranges.
+
+Compared every official strict record and every initial-seed/pristine
+14-case generalization record programmatically against21: unchanged. Both
+official archive hashes unchanged. All initial-seed checks pass. Remote raw NPZ
+files were not reopened. Pristine strict disagreements remain grid131 signal/
+3 gradient/1 loss and aLIGO1 loss; rand1/rand3 sensitivity log errors about2.04e-4
+and5.81e-5 remain. Six grid FD coordinates54/59/63/136/161/163 unresolved;
+prior aLIGO29/29 and first-order-only custom VJP caveats unchanged. The artifact
+self-comparison is not independent validation. No tolerance change or numerical
+failure suppression is justified. Retained22 in history; source restored to7
+before the single new change below.
+
+## Candidate 23: bound live Jacobian storage by independent batch rows
+
+Candidate SHA/job IDs pending supervisor submission. Only host_pass.py differs
+from admitted ee4fea28. Scatter coalescing22, sweep reuse20/21 and all other
+unconfirmed variants are absent. No other-lane transfer or combination.
+
+Hypothesis: the admitted reverse phase materializes two full complex Jacobian
+blocks per component group, followed by equally shaped multiplication temporaries.
+Split only independent batch rows into blocks before these operations to reduce
+live allocations/cache pressure. This is execution blocking, not Jacobian layout
+permutation (16), streamed derivative-slot contraction (12/13), reuse of identical
+inputs (17/20/21), or shared primal differentiation (18/19). All derivative slots
+and all group rows are still computed. It may cost more Python/Dual dispatch.
+Historical derivative-phase observations motivate the target, but no full callback
+profile was supplied, and no timing improvement is claimed.
+
+SystemPlan._group_pullback derives a batch-block length from the actual group's
+component count and derivative-slot count. Each block invokes the unchanged
+function_jacobian and the exact same axis2 multiply/sum/conjugate expressions.
+It places the resulting independent row cotangents in a full inputs_bar array;
+original per-slot scatter order and np.add.at are preserved. No early cotangent
+summation, zero pruning, precision change, factor/solve change, output removal,
+input-value detection or numerical cache is introduced. A one-row block may
+exceed the memory target: the row is retained intact. Empty/small batches use
+the original whole-group calculation.
+
+Implementation menu for attributable future trials: class constant
+SystemPlan.JACOBIAN_BLOCK_BYTES defaults to262144 bytes (256KiB). Legal settings
+are positive integer byte targets; change only between exact-revision evaluations.
+block_rows=max(1,target//max(1,2*components*4*slots*16)). The target describes
+just the live pair of complex128 Jacobians, not a hard process memory bound.
+It is generic for arbitrary topology, batch lengths and slot counts. No official
+shape or frequency count is encoded. Do not vary physical design variables as
+tuning parameters. No further parameter search is proposed before this trial.
+
+Validation: overnight-numerics-block-pullback-check.py passes37 inherited
+assembly/backward comparisons,2736 local component-contraction comparisons and
+19 blocked integration comparisons:2792 total. All19 component functions,
+empty/small/blocked batches, different component counts, empty/single/negative/
+repeated slots, complex/zero/nonfinite inputs and cotangents, negative parameter
+aliases, duplicate parameter destinations are covered. Finite entries equal
+parent bitwise including signed zero; nonfinite entries array-equal. Integration
+checks preserve the original scatter semantics. Tests are small AST-extracted
+host kernels; no full optical workload or official benchmark was run locally.
+
+One illustrative synthetic surface group (37 independent rows,43 component rows,
+7 derivative slots) allocates1,425,536 bytes for the parent's Jacobian pair.
+Candidate pairs are231168 bytes six times then38528 bytes, i.e. seven calls
+instead of one. Measured traced peak allocation falls2,496,720->672,488 bytes;
+this excludes pre-existing input arrays and is not process RSS. Both resulting
+cotangent arrays match bitwise. No runtime saving follows from allocation alone.
+Syntax and git diff checks pass.
+
+Request both unchanged official full benchmarks on this same exact new SHA,
+complete array/gradient comparisons,14-case seed/pristine generalization, and
+independent source review. Keep inherited numerical disagreements visible. If
+promising, request paired fresh-process complete candidate/parent runs with
+separate grid/aLIGO samples, medians/ranges, phase tradeoffs, RSS and contention
+status. Count all setup and callback work. Separate profiling should report
+function_jacobian call counts and actual block triggering in arbitrary setups;
+no triggering rate for either official workload has been claimed here. If the
+added dispatch loses time, retire this blocking choice instead of bundling it
+with unrelated pending candidates.
