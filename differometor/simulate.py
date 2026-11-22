@@ -1031,7 +1031,8 @@ def _simulate_host_pass(
             ),
             unique_indices=True,
         )
-    # host_pass returns carrier (CN, Bc) and signal (N, Bs) already transposed.
+    # Preserve the host solver orientation at the callback boundary; JAX handles
+    # the public layout and its transpose rule for reverse-mode cotangents.
     carrier, signal, noise = _host_pass.host_pass(
         plan,
         parameters.astype(jnp.complex128),
@@ -1042,7 +1043,7 @@ def _simulate_host_pass(
         structure.noise.base_values(noise_matrix).astype(jnp.complex128),
         noise_selection_vectors.astype(jnp.complex128),
     )
-    return carrier, signal, noise.squeeze()
+    return carrier.T, signal.T, noise.squeeze()
 
 
 def _build_sparse_structure(simulation_arrays):

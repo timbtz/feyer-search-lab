@@ -690,68 +690,36 @@ def _shapes(plan, carrier_values, signal_values, selection_vectors):
     carrier_count = carrier_values.shape[1]
     signal_count = signal_values.shape[1] * carrier_count
     detectors, size = selection_vectors.shape[0], plan.structure.signal.size
-    carrier_size = plan.structure.carrier.size
-    # Primal carrier and signal are returned transposed, (CN, Bc) and (N, Bs): the
-    # layout `simulate` returns, so the XLA programs need no transpose of either
-    # array. These same arrays are retained as backward residuals; restore their
-    # host orientation inside the backward callback instead of transferring a
-    # second carrier/signal pair through the forward callback.
-    return (jax.ShapeDtypeStruct((carrier_size, carrier_count), jnp.complex128),
-            jax.ShapeDtypeStruct((size, signal_count), jnp.complex128),
+    return (jax.ShapeDtypeStruct((carrier_count, plan.structure.carrier.size), jnp.complex128),
+            jax.ShapeDtypeStruct((signal_count, size), jnp.complex128),
             jax.ShapeDtypeStruct((detectors, signal_count), jnp.float64),
             jax.ShapeDtypeStruct((signal_count, detectors, size), jnp.complex128),
             jax.ShapeDtypeStruct((signal_count, detectors, size), jnp.complex128))
 
 
-def _transposed(array):
-    """C-contiguous transpose (exact copy of the values)."""
-    return np.ascontiguousarray(np.asarray(array).T)
-
-
-def host_forward_transposed(plan, *inputs):
-    """`host_forward` plus transposed carrier (CN, Bc) and signal (N, Bs) copies."""
-    carrier, signal, noise, covariances, weights = host_forward(plan, *inputs)
-    return _transposed(carrier), _transposed(signal), noise, covariances, weights
-
-
-def host_backward_transposed(plan, *arguments):
-    """`host_backward` for cotangents of the transposed carrier/signal outputs.
-
-    The primal residuals and cotangents arrive as (CN, Bc) and (N, Bs); they are
-    restored to (Bc, CN) and (Bs, N) as C-contiguous copies, so `host_backward`
-    receives arrays identical in values and memory layout to the untransposed
-    convention.
-    """
-    (*inputs, carrier, signal, noise, covariances, weights, carrier_bar, signal_bar, noise_bar) = arguments
-    return host_backward(plan, *inputs, _transposed(carrier), _transposed(signal),
-                         noise, covariances, weights,
-                         _transposed(carrier_bar), _transposed(signal_bar), noise_bar)
-
-
 def _forward_call(plan, *inputs):
-    return jax.pure_callback(partial(host_forward_transposed, plan),
-                             _shapes(plan, inputs[1], inputs[2], inputs[6]),
+    return jax.pure_callback(partial(host_forward, plan), _shapes(plan, inputs[1], inputs[2], inputs[6]),
                              *inputs, vmap_method="sequential")
 
 
 @partial(jax.custom_vjp, nondiff_argnums=(0,))
 def host_pass(plan, parameters, carrier_values, signal_values, carrier_base, signal_base, noise_base,
               selection_vectors):
-    """Carrier (CN, Bc), signal (N, Bs) and noise (D, Bs) evaluated on the host."""
-    carrier_t, signal_t, noise, _, _ = _forward_call(
+    """Carrier (Bc, CN), signal (Bs, N) and noise (D, Bs) evaluated on the host."""
+    carrier, signal, noise, _, _ = _forward_call(
         plan, parameters, carrier_values, signal_values, carrier_base, signal_base, noise_base, selection_vectors)
-    return carrier_t, signal_t, noise
+    return carrier, signal, noise
 
 
 def _host_pass_fwd(plan, *inputs):
-    carrier_t, signal_t, noise, covariances, weights = _forward_call(plan, *inputs)
-    return (carrier_t, signal_t, noise), (inputs, (carrier_t, signal_t, noise, covariances, weights))
+    carrier, signal, noise, covariances, weights = _forward_call(plan, *inputs)
+    return (carrier, signal, noise), (inputs, (carrier, signal, noise, covariances, weights))
 
 
 def _host_pass_bwd(plan, residuals, cotangents):
     inputs, outputs = residuals
     shapes = tuple(jax.ShapeDtypeStruct(value.shape, value.dtype) for value in inputs)
-    return jax.pure_callback(partial(host_backward_transposed, plan), shapes, *inputs, *outputs, *cotangents,
+    return jax.pure_callback(partial(host_backward, plan), shapes, *inputs, *outputs, *cotangents,
                              vmap_method="sequential")
 
 
