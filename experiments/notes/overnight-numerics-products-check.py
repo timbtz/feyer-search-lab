@@ -2,8 +2,10 @@
 
 Run with an existing NumPy/SciPy environment. Extracts just the numerical kernel
 definitions so this inspection does not need JAX or import the simulator package.
+Use --candidate-ref to inspect a preserved trial after restoring admitted source.
 """
 
+import argparse
 import ast
 from pathlib import Path
 import subprocess
@@ -39,9 +41,15 @@ class Factor:
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--candidate-ref", help="Local committed revision; defaults to working source")
+    args = parser.parse_args()
     parent = kernels(subprocess.check_output(
         ["git", "show", f"{PARENT}:differometor/host_pass.py"], cwd=ROOT, text=True))
-    candidate = kernels((ROOT / "differometor/host_pass.py").read_text())
+    source = (subprocess.check_output(
+        ["git", "show", f"{args.candidate_ref}:differometor/host_pass.py"], cwd=ROOT, text=True)
+        if args.candidate_ref else (ROOT / "differometor/host_pass.py").read_text())
+    candidate = kernels(source)
     rng = np.random.default_rng(20261122)
     products_checked = solves_checked = 0
     correction_counts = {}
@@ -71,7 +79,7 @@ def main():
                     operator = dense if trans == "N" else dense.T if trans == "T" else dense.conj().T
                     for columns in (None, 1, 2, 4):
                         shape = (size,) if columns is None else (size, columns)
-                        bound = new.bind(values, trans, shape)
+                        bound = bind_product(new, values, trans, shape)
                         rhs = rng.normal(size=shape) + 1j * rng.normal(size=shape)
                         expected = old.apply(values, rhs, trans)
                         actual = bound(rhs)
@@ -121,7 +129,7 @@ def main():
     values = np.array([0, 2j, -3, 1 + 4j], dtype=np.complex128)
     for trans in ("N", "T", "H"):
         for shape in ((7,), (7, 2)):
-            bound = new.bind(values, trans, shape)
+            bound = bind_product(new, values, trans, shape)
             for _ in range(3):
                 x = rng.normal(size=shape) + 1j * rng.normal(size=shape)
                 assert bound(x).tobytes() == old.apply(values, x, trans).tobytes()
@@ -130,6 +138,15 @@ def main():
            "refinement_step_counts_equal": correction_counts,
            "max_scaled_dense_product_error": max_dense_product_error,
            "scope": "small synthetic kernels; no official validation or performance measurement"})
+
+
+def bind_product(products, values, trans, shape):
+    """Support admitted source and both preserved residual-allocation trials."""
+    if not hasattr(products, "bind"):
+        return lambda x: products.apply(values, x, trans)
+    if products.bind.__code__.co_argcount == 3:
+        return products.bind(values, trans)
+    return products.bind(values, trans, shape)
 
 
 if __name__ == "__main__":

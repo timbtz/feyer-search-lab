@@ -330,45 +330,8 @@ class _Products:
         self.size = pattern.size
         self.rows, self.cols = pattern.rows, pattern.cols
         self.row_order = np.argsort(pattern.rows, kind="stable")
-        self.row_columns = pattern.cols[self.row_order]
         self.row_ids, self.row_starts = np.unique(pattern.rows[self.row_order], return_index=True)
         self.col_ids, self.col_starts = np.unique(pattern.cols, return_index=True)  # CSC order
-
-    def bind(self, values, trans, rhs_shape):
-        """Prepare numerical coefficients for repeated products within one solve.
-
-        The stable row permutation preserves the original reduction order. Only
-        topology indices live on this plan; reordered/conjugated coefficients
-        belong to this call and are never reused for a later evaluation.
-        Scratch arrays also belong to this solve. The returned product is valid
-        until the next call; `_solve` consumes it immediately in `rhs - product`.
-        """
-        if trans == "N":
-            weights = values[self.row_order]
-            columns, ids, starts = self.row_columns, self.row_ids, self.row_starts
-        else:
-            weights = values if trans == "T" else np.conj(values)
-            columns, ids, starts = self.rows, self.col_ids, self.col_starts
-
-        vector = len(rhs_shape) == 1
-        width = 1 if vector else rhs_shape[1]
-        contributions = np.empty((columns.size, width), dtype=np.complex128)
-        reduced = np.empty((ids.size, width), dtype=np.complex128)
-        # Rows with no structural entries stay zero throughout the solve.
-        result = np.zeros((self.size, width), dtype=np.complex128)
-
-        def apply(x):
-            x = np.asarray(x)
-            x = x[:, None] if vector else x
-            # Structural indices are in bounds. `clip` avoids take's extra
-            # exception-safety buffer for `out` in the default `raise` mode.
-            np.take(x, columns, axis=0, out=contributions, mode="clip")
-            np.multiply(weights[:, None], contributions, out=contributions)
-            np.add.reduceat(contributions, starts, axis=0, out=reduced)
-            result[ids] = reduced
-            return result[:, 0] if vector else result
-
-        return apply
 
     def apply(self, values, x, trans="N"):
         """op(A) x for x (N,) or (N, K); op in {A, A^T, A^H}."""
@@ -460,11 +423,8 @@ def _solve(products, values, factor, rhs, trans):
     """Solve op(A) x = rhs with SuperLU and the iterative refinement of `differometor.sparse`."""
     rhs = np.ascontiguousarray(rhs, dtype=np.complex128)
     solution = factor.solve(rhs, trans=trans)
-    # Coefficients are invariant throughout this solve's refinement iterations.
-    # Prepare their row ordering or conjugation once, retaining every correction.
-    product = products.bind(values, trans, rhs.shape) if REFINEMENT_STEPS else None
     for _ in range(REFINEMENT_STEPS):
-        correction = factor.solve(np.ascontiguousarray(rhs - product(solution)), trans=trans)
+        correction = factor.solve(np.ascontiguousarray(rhs - products.apply(values, solution, trans)), trans=trans)
         solution = solution + correction
         if np.max(np.abs(correction)) <= REFINEMENT_TOLERANCE * np.max(np.abs(solution)):
             break

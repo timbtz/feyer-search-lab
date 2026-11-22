@@ -387,3 +387,53 @@ Candidate 1 is not intended to touch any of them.
   fresh timing confirmation if promising. If worse than candidate 9, discard only this scratch
   refinement. Candidate 9 must still earn admission separately; no warm-only or cross-cohort
   timing claim is promoted. All previously unresolved numerical/transform caveats persist.
+
+## End of residual-allocation hypothesis: candidate 10 feedback and handoff
+
+- Candidate 10 SHA `10e63deac66a5c8b4d5265efe7b97e1e8c0f0b6d`, evaluation
+  `bfbee01b11c64b0d9b94f342cbf7a84c`. Official grid-1/2/3 and aligo-1/2/3 all PASS.
+  Large samples 0.8686032258, 0.7747887578, 0.7814419530 s; median 0.7814419530,
+  range 0.7747887578–0.8686032258 s, relative range 12.01%, above the 10% team threshold.
+  aLIGO samples 0.5410033129, 0.5430320539, 0.5427588578 s; median 0.5427588578,
+  range 0.5410033129–0.5430320539 s (0.374%). No combined score.
+- Large forward 221.80/162.61/168.06 ms; gradient 83.97/83.64/84.89 ms. The first forward
+  sample is retained. Its cause is unknown; do not attribute it to contention or allocation
+  without a profile. aLIGO forward 32.15/31.55/33.02 ms, gradient 14.30/14.67/14.19 ms.
+  Imports large 289.76/263.57/262.55 ms; compilation remains in the usual range except
+  first sensitivity lower 29.66 ms. Warm runtimes do not decide this experiment.
+- All official output archive hashes still equal candidate 7. All physical array and gradient
+  comparisons to the seed pass, including 14 additional cases. Gradient seed differences and
+  the pristine mismatch profile are unchanged from candidate 9. Generalization archive includes
+  timings, as established above; no full-archive byte-identity claim. Strict pristine comparisons
+  and six grid finite-difference coordinates remain open; no universal correctness claim.
+  Peak sampled RSS: grid 629415936 B; aLIGO 305397760 B; generalization 808505344 B.
+  CPU2 and single library threads; other-host overlap is not ruled out. No source review supplied.
+- Decision: three consecutive unconfirmed submissions (8/9/10) end this implementation search.
+  Candidate 8 did not reduce large gradient time; candidate 9 consistently lowered forward time
+  in its cohort but complete-run ranges overlap; candidate 10 has an unstable large cohort.
+  Do not produce another residual-allocation variant from these numbers. All commits remain.
+- Restored only `differometor/host_pass.py` to this branch's admitted candidate 7 content, without
+  resetting Git history. All `differometor/**` source now equals `ee4fea2` exactly. This restoration
+  is a bookkeeping submission, not a new optimization. Supervisor may evaluate the restored SHA
+  on both official benchmarks as a current recalibration before ending this hypothesis.
+- The synthetic checker now accepts `--candidate-ref` to inspect preserved candidates 9/10
+  without editing production source. Default checks restored source. Tests remain small synthetic
+  kernels, excluding all official workloads and elapsed-time comparisons.
+- Next coordinator actions, before further changes in this lane:
+  1. Obtain independent source review and at least five paired/interleaved fresh-process dual
+     runs for candidate 9 `5dde094` versus admitted `ee4fea2`. If useful, separately pair candidate
+     10 `10e63de` against 9 to investigate its spread. Retain every sample and resource record.
+  2. Profile host forward/backward under the evaluator's fixed environment on the supplied setup,
+     separately from official timing runs. Attribute `_assemble`, `_factor`, `_solve`, residual
+     product, `SystemPlan.backward`, `function_jacobian` and scatter costs. Record correction-count
+     distributions, factor fill, allocations and first-forward variability. Do not alter harnesses.
+  3. A distinct next hypothesis is sharing primal component intermediates across derivative slots:
+     `function_jacobian` calls the full `HOST_FUNCTIONS[f]` once per slot, including repeated primal
+     transcendental operations. Source establishes repetition, but its share of the remaining
+     ~85 ms gradient phase is unmeasured. Require that profile before introducing a derivative
+     evaluator; preserve structural-zero derivatives, complex conventions and undefined-domain
+     behavior. This idea is not implemented or timed.
+- Handoff session `overnight-numerics-v1`; inherited thread
+  `57c7de44-c9ff-460f-88f1-9ffa79a35479`. Stop is for this hypothesis, not the campaign or budget.
+  The authorized campaign deadline remains 2026-11-22 09:27:44 UTC. Strongest admitted source
+  remains candidate 7; candidate 9 is an unadmitted promising trial, candidate 10 unconfirmed.
