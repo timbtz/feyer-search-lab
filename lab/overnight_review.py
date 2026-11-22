@@ -40,8 +40,6 @@ def response(value):
     if type(value['approved']) is not bool or any(not isinstance(value[k],list) or
         any(not isinstance(v,str) for v in value[k]) for k in ('reasons','generalization_risks')):
         raise ValueError('Review response has invalid types')
-    if value['approved'] and (not value['reasons'] or value['generalization_risks']):
-        raise ValueError('Approval requires reasons and no unresolved generalization risk')
     return value
 
 
@@ -189,16 +187,26 @@ def review(payload, *, call=model_call, providers_factory=None, clock=time.time)
                     provider=next_provider
         except Exception as error:
             failures.append({'error':str(error)})
-        approved=accepted and result['response']['approved'] is True and result.get('session_id') is not None
+        policy_rejection=[]
+        if accepted and result['response']['approved']:
+            if not result['response']['reasons']:
+                policy_rejection.append('Approval requires explicit source-review reasons')
+            if result['response']['generalization_risks']:
+                policy_rejection.append('Approval requires no unresolved generalization risks')
+        approved=(accepted and result['response']['approved'] is True
+                  and result.get('session_id') is not None and not policy_rejection)
         artifact={**binding,'reviewer':REVIEWER,'provider':provider,'model':result.get('model'),'session_id':result.get('session_id'),
             'result':result,'failures':failures,'approved':approved,'finished_at':clock(),
-            'prompt_sha256':sha256(prompt.encode()),'scope':'no-fixture-specialization-and-integrity'}
+            'prompt_sha256':sha256(prompt.encode()),'scope':'no-fixture-specialization-and-integrity',
+            'policy_rejection':policy_rejection}
         durable_json(directory/'review.json',artifact)
         metadata={'source_review':{'approved':approved,'candidate_sha':payload['candidate_sha'],'parent_sha':payload['parent_sha'],
             'diff_sha256':sha256(raw),'reviewer':REVIEWER,'provider':provider,
             'model':result.get('model'),'session_id':result.get('session_id'),'scope':artifact['scope'],
             'artifact_path':str((directory/'review.json').relative_to(root)), 'artifact_sha256':file_digest(directory/'review.json'),
-            'diff_path':str((directory/'source.diff').relative_to(root))}}
+            'diff_path':str((directory/'source.diff').relative_to(root)),
+            'reasons':result['response']['reasons'], 'generalization_risks':result['response']['generalization_risks'],
+            'policy_rejection':policy_rejection}}
         durable_json(directory/'metadata.json',metadata)
         return metadata
 

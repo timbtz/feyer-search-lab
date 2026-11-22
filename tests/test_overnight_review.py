@@ -11,9 +11,9 @@ from lab import overnight_review as review
 
 
 class Registry:
-    def __init__(self,*args): self.provider='claude'; self.failures=[]
+    def __init__(self,*args): self.provider='claude'; self.failures=[]; self.successes=[]
     def choose(self): return self.provider
-    def success(self,p,started_at=None): pass
+    def success(self,p,started_at=None): self.successes.append((p,started_at))
     def failure(self,p,error):
         self.failures.append(error)
         if 'quota' in error: self.provider='codex'; return 'quota'
@@ -110,6 +110,29 @@ class ReviewTests(unittest.TestCase):
         def risky(*args):
             result=self.call(*args); result['response']['generalization_risks']=['Potential fixture specialization']; return result
         self.assertFalse(self.run_review(risky)['source_review']['approved'])
+
+    def test_semantic_rejection_preserves_model_response_without_provider_backoff(self):
+        for kind in ('risk','missing-reasons'):
+            with self.subTest(kind=kind):
+                self.receipt['evaluation_id']=uuid.uuid4().hex
+                (self.root/'receipt.json').write_text(json.dumps(self.receipt))
+                registry=Registry()
+                def contradictory(*args):
+                    result=self.call(*args)
+                    result['usage']=[{'input_tokens':100,'output_tokens':50}]
+                    if kind=='risk': result['response']['generalization_risks']=['Untested fallback imports']
+                    else: result['response']['reasons']=[]
+                    return result
+                out=review.review(self.payload,call=contradictory,providers_factory=lambda *a:registry,
+                                  clock=lambda:review.DEADLINE-100)['source_review']
+                self.assertFalse(out['approved']); self.assertTrue(out['policy_rejection'])
+                self.assertEqual(out['model'],'claude-opus-5-5'); self.assertEqual(out['session_id'],'test-session')
+                self.assertEqual(registry.failures,[]); self.assertEqual(len(registry.successes),1)
+                artifact=json.loads((self.root/out['artifact_path']).read_text())
+                self.assertTrue(artifact['result']['response']['approved'])
+                self.assertEqual(artifact['result']['usage'],[{'input_tokens':100,'output_tokens':50}])
+                self.assertEqual(artifact['failures'],[])
+                if kind=='risk': self.assertEqual(out['generalization_risks'],['Untested fallback imports'])
 
     def test_real_quota_classification_can_fall_back_once(self):
         def limited(provider,*args):
