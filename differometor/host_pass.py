@@ -123,12 +123,14 @@ class ParameterLayout:
     Holds the concrete optimized-parameter insertion, linking and detector-phase
     indices that `run_build_step` produced, so `simulate` can index the parameter
     row with explicit, unique, in-bounds gathers/scatters instead of generic traced
-    indexing. Like the rest of the host plan it describes the built arrays; rebuild
+    indexing. Homogeneous linking-function indices also select the original JAX
+    callable directly. Like the rest of the host plan it describes the built arrays; rebuild
     it (re-run `run_build_step`) whenever those index arrays change.
     """
 
     def __init__(self, parameter_count, optimized_parameter_indices, optimized_value_indices,
-                 linked_indices, indices_to_link, qhd_parameter_indices, qhd_placing_indices):
+                 linked_indices, indices_to_link, qhd_parameter_indices, qhd_placing_indices,
+                 linking_function_indices=None):
         self.parameter_count = int(parameter_count)
         self.optimized_parameter_indices = np.asarray(optimized_parameter_indices, dtype=np.int64).ravel()
         self.optimized_value_indices = np.asarray(optimized_value_indices, dtype=np.int64).ravel()
@@ -136,9 +138,19 @@ class ParameterLayout:
         self.indices_to_link = np.asarray(indices_to_link, dtype=np.int64).ravel()
         self.qhd_parameter_indices = np.asarray(qhd_parameter_indices, dtype=np.int64).ravel()
         self.qhd_placing_indices = np.asarray(qhd_placing_indices, dtype=np.int64).reshape(-1, 3)
+        self.linking_function_indices = (None if linking_function_indices is None else
+                                         np.array(linking_function_indices, dtype=np.int64, copy=True))
+        self.single_linking_function = None
+        functions = self.linking_function_indices
+        if (functions is not None and functions.ndim == 1 and functions.size
+                and functions.size == self.linked_indices.size == self.indices_to_link.size
+                and np.all(functions == functions[0])):
+            self.single_linking_function = int(functions[0])
         self._key = _digest(np.int64(self.parameter_count), self.optimized_parameter_indices,
                             self.optimized_value_indices, self.linked_indices, self.indices_to_link,
                             self.qhd_parameter_indices, self.qhd_placing_indices)
+        if functions is not None:
+            self._key += _digest(functions)
 
     @classmethod
     def from_arrays(cls, simulation_arrays):
@@ -150,6 +162,9 @@ class ParameterLayout:
         """
         try:
             parameters = np.asarray(simulation_arrays["parameters"])
+            functions = np.asarray(simulation_arrays["linking_function_indices"])
+            if functions.ndim != 1 or not np.issubdtype(functions.dtype, np.integer):
+                return None
             layout = cls(
                 parameters.shape[1] if parameters.ndim == 2 else -1,
                 np.asarray(simulation_arrays["optimized_parameter_indices"]),
@@ -158,6 +173,7 @@ class ParameterLayout:
                 np.asarray(simulation_arrays["indices_to_link"]),
                 np.asarray(simulation_arrays["qhd_parameter_indices"]),
                 np.asarray(simulation_arrays["qhd_placing_indices"]),
+                functions,
             )
         except (KeyError, TypeError, ValueError, IndexError):
             return None

@@ -603,3 +603,141 @@
   overlap. A smaller metadata allocation alone does not establish first-run improvement.
 - Next decision: if setup gain is not stable, reject rather than tuning lookup algorithms blindly;
   retain ee4fea2 and request a supervised build profile before another structural variant.
+
+
+### Candidate 10 feedback and search-direction handoff (2026-11-22)
+
+- Exact candidate `890af63d7c7da2d08a33fe945d391571690e1b5a`; evaluation
+  `82170c2372534c88b82296452b4631fd`, grid-1/2/3 and aligo-1/2/3.
+- Large complete first-run samples: **0.833215686, 0.801084740, 0.790944828 s**;
+  median **0.801084740**, range **0.790944828–0.833215686**.
+- Official aLIGO samples: **0.544145374, 0.542451084, 0.543524455 s**;
+  median **0.543524455**, range **0.542451084–0.544145374**.
+- Unpaired median deltas against admitted ee4fea2: -0.493 ms large, -5.031 ms aLIGO.
+  These do not establish improvement: large gain below selection threshold, overlapping ranges,
+  source review missing. No samples discarded. No combined score calculated.
+- Target build samples: large 72.047, 72.364, 71.515 ms (median 72.047); aLIGO 38.792,
+  37.980, 37.417 ms (median 37.980). No matching parent phase cohort, so no attributable delta.
+  Large forward execution 176.643–185.142 ms, imports 263.893–293.011 ms. Import and execution
+  variability are larger than the observed large median difference; their causes are unproven.
+- Sampled peak RSS large: 566087680, 529248256, 539631616 bytes; aLIGO: 280870912,
+  284540928, 287014912 bytes; generalization: 864940032 bytes. No memory-budget exceedance
+  or infrastructure failure. Sampling misses brief peaks; overlapping external work is unknown.
+  Reduced metadata storage from the algorithm does not establish a measured RSS reduction.
+- Both official benchmarks passed 3/3; all 14 generalization cases pass initial-seed tolerances.
+  Official output archive hashes equal the recent candidates' hashes. Pristine comparisons still
+  fail: grid signal/gradients 33,161,180/loss; aLIGO loss; custom uifo_rand1/rand3 sensitivity
+  (~2.0361e-4/~5.8101e-5 log errors), plus previously recorded cases. Seed comparison gradient
+  maximum absolute differences remain 5.686350e-6 large and 3.637979e-11 aLIGO. No new discrepancy
+  reported, but saved parent-versus-candidate inspection and source review are not supplied.
+  Six grid FD coordinates 54,59,63,136,161,163 remain unresolved; prior aLIGO checks passed 29/29.
+  Whole-pass custom VJP remains first-order reverse mode only. No universal physics claim.
+- The position/gather diagnostic outputs requested for candidate 10 are absent from feedback;
+  do not mark them passed. Retain candidate 10 and all previous failed/unconfirmed commits.
+- Decision: retire compact metadata as a performance proposal for this campaign cohort, restore
+  sparse.py from ee4fea2, and stop this sequence of speculative small setup/readout changes.
+  All ten current simulator modules checked byte-for-byte against admitted reviewed ee4fea2.
+  This is a working-source restoration only; no Git reset, commit, merge or promotion performed.
+
+### Concrete next experiment: supervised attribution before another simulator edit
+
+- Candidates 8 (host-first transfer), 9 (joint readout split) and 10 (compact inverse lookup) all
+  passed official validation but none yielded a meaningful confirmed large-case improvement.
+  Their large medians were 0.841352144, 0.801257059 and 0.801084740 s respectively; these are
+  separate unmatched cohorts, not an average or a controlled ranking. Source-level redundancy
+  alone has not reliably predicted end-to-end benefit. Do not produce another lookup/readout
+  variation without new phase attribution.
+- Added **experiments/notes/overnight-overhead-profile.py**, a concrete supervisor-run diagnostic.
+  It accepts arbitrary setup JSON, optional optimization-pair JSON and optional changing-pair/value
+  JSON; no fixture names or shape dispatch. Use the exact caller inputs for relevant attribution.
+  It checks that imports come from this checkout and that JAX/NumPy/simulator were not preloaded.
+  It captures cProfile call counts, self/cumulative time and instrumented wall durations for
+  simulator/library imports, backend initialization, input load, Setup.from_data, sweep transfer
+  and run_build_step, with completion synchronization. It reports sparse system dimensions,
+  entry counts and retained dense/compact inverse-lookup bytes. It never calls simulation, edits
+  inputs, starts a subprocess, writes files or changes thread/CPU policy. Output is JSON on stdout.
+- CLI: `python experiments/notes/overnight-overhead-profile.py --setup-json <supplied-setup.json>
+  --optimization-pairs-json <supplied-pairs.json> --changing-pairs-json <supplied-sweep-pairs.json>
+  --changing-values-json <supplied-sweep-values.json>`. Place the checkout on PYTHONPATH and use
+  the supervisor's fixed environment/resource policy. Do not invent omitted pairs from the fixture:
+  omitted inputs explicitly exercise public builder defaults, not the official build workload.
+- Profile ee4fea2-equivalent source in fresh processes for the two official setups and one other
+  setup. These are instrumented diagnostic runs, never clean timing samples or replacements for
+  the unchanged official benchmarks. The script's import sequence covers simulator dependencies,
+  not all benchmark imports (e.g. benchmark-owned optax). For the actual import sequence request
+  a supervised Python import-time tree separately. Likewise benchmark-owned parameter grouping
+  and frequency generation need separate attribution; this script makes no claim to include them.
+- Local validation: profiler CLI help ran using standard library only; all edited Python sources
+  parsed; simulator identity and git diff --check passed. No profiling run or independent benchmark
+  executed locally; JAX/NumPy remain unavailable. The profiling artifact is prepared, not measured.
+- Before further experimentation, select a hotspot with enough measured cost to exceed timing
+  spread, then formulate one conservative change. Independently, candidate 7 (`1ea70bf`) remains
+  the strongest unadmitted boundary hypothesis: inspect its source and direct parent arrays, and
+  request interleaved fresh-process confirmation against ee4fea2 as already specified above.
+  Do not silently combine it with any of these failed/unconfirmed refinements.
+- Handoff stops this hypothesis, not the authorized campaign. Lane/session overnight-overhead-v1,
+  branch explore/overnight-overhead-v1, deadline 2026-11-22 09:27:44 UTC (1795339664) unchanged.
+  No new optimization revision is ready for official evaluation; restored parent and diagnostic
+  are ready for supervisor bookkeeping and attribution work.
+
+### Candidate 11: homogeneous linking-function dispatch (prepared, unmeasured)
+
+- Explicit supervisor continuation requests one concrete implementation after the no-change
+  handoff. No new timing or profiling feedback arrived. Keep candidate 10's unsuccessful result
+  above; do not retry the compact lookup, host-first build or scalar readout sequence. Switch to
+  a narrow JAX-boundary hypothesis on reviewed simulator source **ee4fea28c04d482566be16e916b609d7c6a99e5e**.
+  Candidate SHA and new job identifiers are pending supervisor commit/evaluation. The profile
+  diagnostic remains available and unexecuted; it is not evidence for this proposal.
+- Evidence for targeting compilation: latest evaluated candidate 10 spends roughly 19.5 ms
+  forward lowering, 33.4 ms forward compilation, 16.7 ms gradient lowering and 53.1 ms gradient
+  compilation on the large case (individual samples span the values recorded above). These
+  costs are similar on aLIGO. Earlier combined boundary candidate 7 improved these phases but
+  was not admitted; it does not establish a gain for this narrower change. Imports and build
+  remain about 264 ms and 72 ms large, 264 ms and 38 ms aLIGO in ordinary samples, with import
+  outliers. New complete first-run and phase deltas are **unknown**.
+- Concrete redundancy: the builder supplies integer linking-function indices, yet the static
+  parameter path uses a vmapped lax.switch over the global callable registry. When every link
+  selects the same function, all inputs can instead pass directly through vmap of that original
+  callable. ParameterLayout now owns a copy of these indices, includes them in its plan key,
+  and records a single selected index only when the indices are nonempty, homogeneous and
+  match both source and destination counts. Runtime shape and registry bounds checks guard
+  dispatch. Mixed links, missing optional metadata, empty links and out-of-range indices retain
+  the original switch; its clamping behavior remains available. Invalid builder metadata dtype
+  or rank disables the static layout. No global registry mutation is added to simulator code.
+- This calls the actual registered callable, never assumes index zero is identity, never
+  inspects Python bytecode, and never interprets custom-JVP/custom-VJP calls as primal calls.
+  JAX still handles the original function and its derivative rules. Inputs are all read before
+  any destination write, preserving parallel-link semantics when sources/destinations overlap.
+  The existing documented rebuild requirement now explicitly includes linking-function indices.
+  Changing static index arrays without rebuilding is not supported. In-place changes to callable
+  definitions after JIT tracing retain the existing global-registry/JIT limitations.
+- Scope relative to ee4fea2: only ParameterLayout metadata and its homogeneous-link dispatch
+  in simulate.py. Sparse.py is restored exactly to ee4fea2, retiring candidate 10 without rewriting
+  Git history. No transposed callbacks, no detector-phase shortcut, no candidate 7 merge, no
+  solver/refinement/adjoint changes, no package/launch changes, no workload or fixture edits.
+- Added `experiments/notes/overnight-overhead-link-check.py` for the supervisor's fixed environment.
+  It compares original vmapped switch and direct dispatch, eager and jitted primal/VJP/JVP
+  where supported, at real/complex signed zero and varied finite values. It includes real/complex
+  abs, a deliberately nonstandard custom JVP, a deliberately nonstandard custom VJP (reverse
+  checks only for that registry), mixed/clamped/empty inputs, a nonidentity entry zero, overlapping
+  and repeated source indices, plan-key invalidation, owned index copies and registry growth.
+  It prints JAX equation counts, not performance claims. Registry replacement is confined to
+  this standalone synthetic diagnostic and restored in finally; no official validation is patched.
+- Local checks executed: Python AST syntax, git diff --check, and 3,907 pure-Python cases using
+  the extracted dispatcher with a minimal scalar-vmap/switch model passed. These establish
+  control-flow/index routing only; they do **not** test NumPy metadata or JAX derivatives.
+  Local NumPy/JAX are unavailable and nothing was installed. The new numerical diagnostic,
+  both official benchmarks and generalization have **not** run for this candidate.
+- Supervisor request: run the synthetic link check, unchanged large and official 101-frequency
+  aLIGO benchmarks on the same new SHA, and the 14-case saved-array audit against both ee4fea2
+  and the seed/pristine references. Inspect every output and gradient, including any new
+  signed-zero/custom-derivative discrepancy. Require independent source review. If promising,
+  obtain paired/interleaved fresh-process parent/candidate repetitions with phase/RSS reporting,
+  fixed CPU/thread policy and overlap status. No promotion based on a single sample or on
+  reductions in synthetic equation count. If the isolated dispatch gain is too small, retire it
+  rather than stacking unvalidated changes; next evidence should be the prepared import/build
+  profile or the already-requested paired review of candidate 7.
+- Inherited unresolved findings stay open: pristine grid signal/gradients 33,161,180/loss;
+  uifo_rand1/rand3 log sensitivity differences ~2.04e-4/~5.81e-5; grid finite-difference coordinates
+  54,59,63,136,161,163. Earlier aLIGO coordinate checks passed 29/29. Whole-pass custom VJP
+  still does not provide JVP/Hessian support. This proposal makes no universal correctness claim.

@@ -215,11 +215,10 @@ class SparseSystem:
         # Prepare the gather operand once while building, rather than tracing
         # general advanced-index normalization/packing at every JAX boundary.
         self.base_coordinates = np.stack((all_rows, all_cols), axis=1)
-        # CSC coefficient order followed by RHS rows is also sorted order of
-        # these column-major keys. Keep O(nnz) lookup metadata instead of an
-        # O(size**2) dense integer table that only served coordinate lookups.
-        self._position_keys = all_cols * size + all_rows
-        self.write_positions = self.positions(write_rows, write_cols)
+        position = np.full(base_matrix.shape, -1, dtype=np.int64)
+        position[all_rows, all_cols] = np.arange(all_rows.size)
+        self._position = position
+        self.write_positions = position[write_rows, write_cols]
         self.unique_writes = bool(np.unique(self.write_positions).size == self.write_positions.size)
         digest = hashlib.sha256()
         for array in (np.int64(size), np.int64(augmented), all_rows, all_cols, self.write_positions):
@@ -227,27 +226,10 @@ class SparseSystem:
         self._key = digest.hexdigest()
 
     def positions(self, rows, cols):
-        rows = np.asarray(rows, dtype=np.int64).ravel()
-        cols = np.asarray(cols, dtype=np.int64).ravel()
-        try:
-            rows, cols = np.broadcast_arrays(rows, cols)
-        except ValueError as exc:
-            raise IndexError("Coordinate arrays could not be broadcast together") from exc
-        column_count = self.size + int(self.augmented)
-        # Match NumPy indexing: negative coordinates wrap once, while indices
-        # beyond either end are errors (not modular aliases of valid entries).
-        if np.any((rows < -self.size) | (rows >= self.size)):
-            raise IndexError("Row index outside system matrix")
-        if np.any((cols < -column_count) | (cols >= column_count)):
-            raise IndexError("Column index outside system matrix")
-        rows = np.where(rows < 0, rows + self.size, rows)
-        cols = np.where(cols < 0, cols + column_count, cols)
-        keys = cols * self.size + rows
-        positions = np.searchsorted(self._position_keys, keys)
-        if (np.any(positions == self._position_keys.size)
-                or np.any(self._position_keys[positions] != keys)):
+        positions = self._position[np.asarray(rows, dtype=np.int64).ravel(), np.asarray(cols, dtype=np.int64).ravel()]
+        if np.any(positions < 0):
             raise ValueError("Requested positions outside the sparse pattern")
-        return positions.astype(np.int64, copy=False)
+        return positions
 
     def mask(self, predicate):
         """Static boolean mask over pattern entries from predicate(rows, cols)."""

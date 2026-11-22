@@ -394,6 +394,7 @@ def simulate(
         Optional static host-evaluation plan produced by `run_build_step`. It carries
         the builder's concrete sweep, insertion, linking and detector-phase indices;
         when present those static copies are used instead of the traced index arrays.
+        This includes linking-function indices when all links select one function.
         Re-run `run_build_step` whenever any index array or selector changes.
 
     Returns
@@ -422,9 +423,7 @@ def simulate(
         row = _static_set(row, layout.optimized_parameter_indices,
                           _static_take(optimized_parameters, layout.optimized_value_indices))
         inputs_to_link = _static_take(row, layout.linked_indices)
-        outputs_to_link = vmap(lambda i, x: lax.switch(i, LINKING_FUNCTIONS, x))(
-            linking_function_indices, inputs_to_link
-        )
+        outputs_to_link = _link_parameter_values(inputs_to_link, linking_function_indices, layout)
         row = _static_set(row, layout.indices_to_link, outputs_to_link)
         qhd_phase_values = jnp.exp(1j * jnp.radians(_static_take(row, layout.qhd_parameter_indices)))
         return _simulate_host_pass(
@@ -962,6 +961,22 @@ HOST_PASS: bool = True
 # builder-verified unique destinations a scatter's derivative is a plain
 # gather/scatter. Values are identical. False keeps the generic indexing.
 STATIC_PARAMETER_LAYOUT: bool = True
+
+
+def _link_parameter_values(inputs, function_indices, layout):
+    """Apply a built layout's homogeneous links directly through JAX.
+
+    All inputs are still read before any linked destinations are written. Calling
+    the original function with vmap preserves its custom JVP/VJP rules. Mixed
+    links, absent metadata and invalid indices retain lax.switch (including its
+    index-clamping behavior). Rebuild the plan when linking indices change.
+    """
+    index = layout.single_linking_function
+    if (index is not None and 0 <= index < len(LINKING_FUNCTIONS)
+            and function_indices.shape == layout.linking_function_indices.shape
+            and inputs.shape == layout.linking_function_indices.shape):
+        return vmap(LINKING_FUNCTIONS[index])(inputs)
+    return vmap(lambda i, x: lax.switch(i, LINKING_FUNCTIONS, x))(function_indices, inputs)
 
 
 def _static_take(values, indices):
