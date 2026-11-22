@@ -2089,3 +2089,67 @@
   unresolved grid FD54/59/63/136/161/163 and first-order-only host VJP remain open. Candidate24
   failure remains recorded above. No tolerance, arithmetic flag, benchmark or fixture changes.
   No commits, pushes, remote jobs, installs or agents. Deadline remains09:27:44 UTC.
+
+### Candidate25 feedback and retirement
+
+- Evaluated SHA **6e1b40c40a91f75e48b162d06ba6a9f5ec6e525a**, request/job **f9bd5bf1345840e7b14f688361d7c8eb**, grid-1/2/3 and aligo-1/2/3. Receipt: experiments/runs/overnight-20261122/overnight-overhead-v1/f9bd5bf1345840e7b14f688361d7c8eb.json.
+- Both unchanged official benchmarks passed3/3. All physical arrays and gradients passed initial-seed policy in six official runs and14 generalization cases. No new numerical failure is identified by this receipt. Strict pristine comparisons remain failing, including grid signal/gradient/loss, aLIGO loss and uifo_rand1/3 sensitivity. source_review=null and confirmed_improvement=false. The prepared static-groups JAX diagnostic has no returned execution result.
+- grid: fresh-process samples seconds=[0.8357062265276909, 0.8071517646312714, 0.8087208960205317]; median=0.808720896021; range=0.807151764631–0.835706226528. Phase medians ms={'imports': 269.67, 'initialize': 3.621, 'load': 1.501, 'build': 73.54, 'forward_lower': 19.327, 'forward_compile': 33.106, 'forward': 181.993, 'sensitivity_lower': 25.705, 'sensitivity_compile': 41.333, 'sensitivity': 0.907, 'gradient_lower': 17.298, 'gradient_compile': 52.346, 'gradient': 88.129, 'host_transfer': 0.195}.
+- grid: sampled process-group peak RSS bytes=[670035968, 540426240, 506347520].
+- aligo: fresh-process samples seconds=[0.550236152485013, 0.5601429101079702, 0.5492269955575466]; median=0.550236152485; range=0.549226995558–0.560142910108. Phase medians ms={'imports': 267.443, 'initialize': 3.559, 'load': 0.209, 'build': 39.079, 'forward_lower': 18.711, 'forward_compile': 34.589, 'forward': 32.613, 'sensitivity_lower': 26.614, 'sensitivity_compile': 41.898, 'sensitivity': 0.486, 'gradient_lower': 16.991, 'gradient_compile': 54.18, 'gradient': 14.475, 'host_transfer': 0.151}.
+- aligo: sampled process-group peak RSS bytes=[279416832, 286810112, 294367232].
+- Generalization peak RSS893042688 bytes; archive8821ecf63fd7d4512d134a8835bfece3ac4c1ea37a6ea2352cd45926afc8fc4f. Official arrays retain hashes112c0407...large and9c1ce936...aLIGO. Seed maximum absolute gradient differences remain5.686350050382316e-6 large and3.637978807091713e-11 aLIGO; tolerance agreement is not bitwise seed equality. No infrastructure or budget failure. CPU2/one logical CPU, library threads1, EPYC9334, x64, permitted flags and no persistent cache. Other-host overlap unknown; ranking_eligible=false.
+- Compared with historical reviewed ee4fea2, median totals are7.143 ms slower large and1.681 ms slower aLIGO. Ranges overlap; these are unpaired observations, not causal regressions. Against recent ordinary-metadata candidate23, forward trace medians differ by only-0.327 ms large/-0.518 ms aLIGO; gradient trace differs by+0.224/+0.410 ms. Candidate23 changed callback filtering, so this comparison is contextual, not a matched-parent test. No repeat-supported gain justifies immutable-metadata API restrictions or extra repeated-build recompilation.
+- Decision: retire25 and restore host_pass.py and simulate.py from reviewed ee4fea2. All10 simulator modules verified byte-identical to that parent. Failed25 remains committed in branch history, and its diagnostic remains for audit but requires25 source. Restoration removes the wrapper and all changed metadata semantics. Do not submit the restoration as another performance candidate.
+- Search direction: no further static-wrapper, leaf-pruning or gather-coordinate variants without attribution. The next concrete experiment is the prepared supervisor-only overnight-overhead-profile.py --trace-forward on the reviewed parent with actual caller setup/pairs/optimized values/sweep inputs. Capture cProfile self/cumulative times and input leaf counts for large, official aLIGO and a third supplied setup. Its results must distinguish JAX input processing from callback/scatter lowering and builder dispatch. No profiling result has been supplied; do not report the hypothesis as measured or launch independent profiling/benchmarks from this managed agent.
+- Separate outstanding evidence: candidate15/21 empty-phase change has repeated candidate-only tracing reductions but still lacks independent source review, nonempty detector-phase derivative checks and interleaved parent comparison. Request that confirmation rather than another identical candidate-only replay. No merge or new performance claim is authorized by these observations.
+- Inherited pristine gradients33/161/180, uifo_rand1/3 sensitivities and grid FD54/59/63/136/161/163 remain unresolved; first-order-only host VJP limitation remains. No tolerance, arithmetic setting, workload or fixture edits. This closes the static-metadata hypothesis only; the campaign deadline remains09:27:44 UTC.
+
+
+### Candidate26 — remove redundant normalized sweep copy
+
+- Supervisor resumed explicitly requesting a concrete implementation after25 retirement.
+  Parent for this experiment is reviewed **ee4fea28c04d482566be16e916b609d7c6a99e5e**.
+  Candidate SHA and large/aLIGO job identifiers are pending supervisor commit/evaluation.
+  host_pass.py/simulate.py changes against branch HEAD remove25; the only new delta against
+  ee4fea2 is the replacement below in build.py. No other unpromoted trial is combined.
+- Source-proven redundant operation: prepare_arrays converts supplied sweep values through
+  np.asarray, normalizes one-dimensional input to a row, then calls jnp.asarray. It immediately
+  copies that normalized JAX array back to NumPy with np.array and calls jnp.asarray again
+  for signal_changing_values. Reuse the already normalized immutable JAX array instead.
+  This removes one host copy/device-to-host conversion and one JAX conversion per supplied
+  sweep. In carrier-only/no-active-sweep paths the second converted array was discarded
+  when the signal dummy was assigned, so its removal also avoids that unused allocation.
+- Existing initial conversion, dtype canonicalization, shape normalization, errors, dummy
+  values and returned JAX array representation remain. Only one of carrier/signal sweeps
+  may be active; their simultaneous use still raises. This does not omit the initial
+  np.asarray of a caller-provided JAX array or relax the existing concrete build boundary.
+  No values are cached between builds/evaluations. Public metadata remains ordinary dicts.
+  No solver, physical function, derivative rule, callback, JIT stage or compiler flag changes.
+- Cost breakdown available from25 receipt (whole-phase medians, not candidate26 measurements):
+  large imports269.670 ms, build73.540 ms, trace/lower total62.330 ms, compile126.785 ms;
+  aLIGO imports267.443 ms, build39.079 ms, trace/lower62.316 ms, compile130.667 ms.
+  The targeted redundant copy is only a fraction of build time and transfers a small sweep
+  array on the official workloads. It may fall below timing noise or the selection threshold.
+  No measured speedup, per-operation cost or recovered percentage is claimed. This narrow
+  copy removal does not repeat18's metadata staging or25's static-pytree/API changes.
+- Local checks: all10 simulator modules parse; byte comparison against ee4fea2 confirms the
+  exact one-assignment replacement plus its comment is the entire new simulator delta.
+  git diff --check passed. NumPy/JAX runtime checks were not run locally because the local
+  environment lacks those dependencies; no installs or independent benchmarks were started.
+- Request both unchanged full official benchmarks on the supervisor's exact new SHA, all
+  saved outputs/gradients and the14 varied generalization cases. Include ordinary carrier
+  and signal sweeps in review; dtype/shape/signed-zero behavior should match because the
+  original first conversion is retained. Independent source review is required for promotion.
+  If a benefit appears, compare interleaved fresh parent/candidate cohorts under identical
+  CPU/thread policy, reporting separate large/aLIGO samples, medians, ranges, phases, RSS
+  and overlap. Do not infer a gain from eliminating a copy alone.
+- If26 is below threshold, retire it rather than accumulate further tiny conversion variants.
+  Next evidence request remains supervisor import/build/trace profiling using the prepared
+  diagnostic on ee4fea2; no such profile has been returned. Candidate15/21 phase reductions
+  remain a separate unreviewed experiment awaiting paired-parent and nonempty-phase checks.
+- Candidate25 failures remain above and in history. Inherited pristine signal/gradient/loss
+  disagreements, gradients33/161/180, uifo_rand1/3 sensitivity errors, unresolved grid
+  FD54/59/63/136/161/163 and the first-order-only host VJP remain open. No tolerances,
+  fixtures or workloads changed. This is an unevaluated setup candidate, not a promotion.
+  Deadline remains2026-11-22 09:27:44 UTC; prepared04:33 UTC.
