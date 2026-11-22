@@ -1759,6 +1759,22 @@ def pairs_to_arrays(
             carrier_changing_parameter_indices.append(parameter_names.index(f"{changing_component}_{changing_parameter}"))
             append_information(parameter_instructions, carrier_arrays, changing_component, carrier_components)
 
+    # A parameter can be read by components other than its named owner. For
+    # example, a space's refractive index also enters both adjacent surfaces.
+    # Schedule those readers too, including at points where their contribution
+    # is currently zero. Keep the existing update order and append only missing
+    # readers; signal-only sweeps are applied after the carrier solve.
+    carrier_inputs = set(optimized_parameter_indices) | set(carrier_changing_parameter_indices)
+    if carrier_inputs:
+        scheduled = set(carrier_components)
+        for component, instruction in parameter_instructions.items():
+            if component not in scheduled and any(
+                index in carrier_inputs
+                for row in instruction["function_input_indices"]
+                for index in row
+            ):
+                append_information(parameter_instructions, carrier_arrays, component, carrier_components)
+
     def combine_arrays(arrays: dict, system: str, signal: bool = False):
         """
         Stack per-component lists into dense arrays. Provide a dummy update if empty.
