@@ -15,6 +15,16 @@ import sys
 import time
 
 
+def extended_readout_loss(carrier, signal, noise, ports, reference):
+    """Same physical readout formula with extended arithmetic for diagnostics."""
+    import numpy as np
+    c, s, n = np.asarray(carrier, dtype=np.clongdouble), np.asarray(signal, dtype=np.clongdouble), np.asarray(noise, dtype=np.longdouble)
+    size = c.shape[0]
+    signals = (np.conj(c)*s[:size] + c*s[size:2*size])[ports]
+    detected = signals.squeeze() if len(ports) == 1 else signals[0]-signals[1]
+    return np.mean(np.log10((n/np.abs(detected)).squeeze()/np.asarray(reference, dtype=np.longdouble)))
+
+
 def check_coordinate(evaluate, point, index, derivative, step, *, direction=0):
     import numpy as np
     samples = []
@@ -90,12 +100,36 @@ def run(args):
     objective, grad = float(objective), np.asarray(grad)
     def evaluate(p):
         return float(compiled(jnp.asarray(p), arrays, ports, expected))
+    precision_probe = bool(getattr(args, 'extended_residual', False))
+    if precision_probe:
+        # The target gradient was computed above by the UNMODIFIED candidate.
+        # Only the diagnostic primal below gets more accurate residual/readout
+        # arithmetic; this must never be reported as ordinary candidate timing.
+        if np.finfo(np.longdouble).nmant <= np.finfo(np.float64).nmant:
+            raise RuntimeError('Extended-precision diagnostics unavailable on this platform')
+        import differometor.host_pass as hp
+        from lab.solver_precision_probe import extended_solve
+        original_solve = hp._solve
+        def refined_solve(products, values, factor, rhs, trans):
+            initial = original_solve(products, values, factor, rhs, trans)
+            return extended_solve(products, values, factor, rhs, trans, initial)[0]
+        hp._solve = refined_solve
+        forward = jax.jit(lambda p: df.simulate(**dict(arrays, optimized_parameters=p)))
+        port_ids = np.asarray(ports)
+        ref = np.asarray(expected, dtype=np.longdouble)
+        def evaluate(p):
+            c, s, n = jax.device_get(forward(jnp.asarray(p)))
+            return extended_readout_loss(c, s, n, port_ids, ref)
     results = {'schema': 'feyer-all-coordinate-gradient-sanity-v1', 'candidate_sha': sha,
                'harness_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                'setup': args.setup, 'frequencies': int(frequencies.size), 'variables': len(point),
                'cpu_affinity': sorted(os.sched_getaffinity(0)), 'objective': objective,
                'rtol': .01, 'atol': 1e-6, 'checks': [], 'started_at': time.time(),
                'scope': 'Additional finite-difference sanity, not scored and not a 1e-7 precision certificate.'}
+    if precision_probe:
+        results.update(precision_assisted=True, target_gradient='Unmodified exact candidate autodiff',
+                       scope='Diagnostic primal uses extended-residual solves and long-double readout; original candidate gradient target. Not a pass of the unmodified black-box finite difference, not timing evidence.',
+                       residual_probe_sha256=hashlib.sha256(Path(__file__).with_name('solver_precision_probe.py').read_bytes()).hexdigest())
     floors = {'reflectivity': 1e-3, 'tuning': 1., 'angle': 1., 'db': 1.,
               'power': 1e-6, 'mass': 1e-9, 'length': 1e-3}
     prior = json.loads(args.recheck.read_text()) if getattr(args, 'recheck', None) else None
@@ -104,7 +138,12 @@ def run(args):
     if prior:
         results['prior_sha256'] = hashlib.sha256(args.recheck.read_bytes()).hexdigest()
         results['scope'] += ' Predeclared alternative step sizes on previously nonpassing coordinates; original results retained.'
+    only = getattr(args, 'only_indices', None)
+    if only is not None and (not only or len(set(only)) != len(only) or any(i < 0 or i >= len(labels) for i in only)):
+        raise ValueError('Explicit coordinate subset must be unique and in range')
     for index, (name, prop) in enumerate(labels):
+        if only is not None and index not in only:
+            continue
         if prior and prior['checks'][index]['status'] == 'passed':
             continue
         step = 1e-3 * max(abs(point[index]), floors[prop])
@@ -124,7 +163,7 @@ def run(args):
             attempts = []
             # Smaller steps probe truncation; larger steps probe cancellation.
             # This menu does not depend on whether a derivative agrees.
-            for multiplier in (.01, .0001, 100.):
+            for multiplier in ((.1, 1., 10., .01, 100.) if precision_probe else (.01, .0001, 100.)):
                 h, side = step * multiplier, direction
                 if prop == 'reflectivity' and min(point[index], 1-point[index]) <= h:
                     side = 1 if point[index] < .5 else -1
@@ -155,4 +194,6 @@ if __name__ == '__main__':
     p.add_argument('--setup', choices=['grid', 'aligo'], required=True)
     p.add_argument('--output', required=True, type=Path)
     p.add_argument('--recheck', type=Path, help='Retain a first pass and probe its nonpassing coordinates with a fixed alternative step menu')
+    p.add_argument('--extended-residual', action='store_true', help='Separate precision-assisted primal diagnostic; original candidate AD target')
+    p.add_argument('--only-indices', type=int, nargs='+')
     run(p.parse_args())

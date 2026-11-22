@@ -1,9 +1,18 @@
 import unittest
 import numpy as np
-from lab.gradient_sanity import check_coordinate
+from lab.gradient_sanity import check_coordinate, extended_readout_loss
 
 
 class GradientSanityTests(unittest.TestCase):
+    def test_extended_readout_single_and_differential_detectors(self):
+        carrier = np.array([[1j], [2+1j]])
+        signal = np.array([[1+2j, 3-1j], [4+1j, 2-3j], [2-1j, 3j], [1+1j, 2]])
+        fields = np.conj(carrier)*signal[:2]+carrier*signal[2:]
+        for ports in ([0], [0, 1]):
+            detected = fields[0] if len(ports) == 1 else fields[0]-fields[1]
+            noise = 10*np.abs(detected)
+            self.assertAlmostEqual(float(extended_readout_loss(carrier, signal, noise, ports, np.ones(2))), 1., places=14)
+
     def test_correct_quadratic(self):
         point = np.array([2., 3.])
         r = check_coordinate(lambda p: p @ p, point, 0, 4., .01)
