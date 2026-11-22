@@ -1198,3 +1198,145 @@ mismatch before further tuning. No gain or universal compatibility claimed.
 All inherited strict/pristine discrepancies and unresolved grid FD coordinates
 54/59/63/136/161/163 remain open; prior aLIGO extra checks were 29/29. Whole-pass
 custom VJP JVP/Hessian limits remain. Deadline is 2026-11-22 09:27:44 UTC.
+
+## Candidate 18 feedback — preserve exact source for paired confirmation
+
+Evaluated simulator SHA: 457d0eaa2b4ab4fe1005ad0cd0cbd47999864575.
+Dual request: da9fbd3f38fd48bdb8315da1d541bbc6; jobs grid-1/2/3 and
+aligo-1/2/3. Current branch HEAD e913358b666ad9298c8436dcd53feb9e9643b0f2
+only adds the supervisor feedback record; its simulator files match evaluated
+457d0ea exactly. No simulator edit is made in this feedback turn.
+
+Complete first-run seconds, retaining every sample:
+
+- Grid: [0.8228696137666702, 0.7973811868578196, 0.7856276277452707];
+  median 0.7973811868578196; range [0.7856276277452707, 0.8228696137666702].
+- Official aLIGO: [0.5446561574935913, 0.5517825614660978, 0.5451968312263489];
+  median 0.5451968312263489; range [0.5446561574935913, 0.5517825614660978].
+- Admitted candidate-7 historical samples remain grid
+  [0.8224838301539421, 0.8015776835381985, 0.7944249957799911], median
+  0.8015776835381985; aLIGO [0.5516242142766714, 0.5485551562160254,
+  0.544719347730279], median 0.5485551562160254. These are unpaired cohorts.
+
+Phase samples in ms:
+
+- Grid forward [180.501174, 183.435922, 178.890375], reverse
+  [81.142511, 75.831190, 75.750163], build [72.900463, 78.095555, 73.386939],
+  imports [295.892328, 265.809149, 264.072431].
+- aLIGO forward [32.469302, 34.067383, 32.828897], reverse
+  [13.977902, 14.031840, 13.505267], build [37.679261, 37.626436, 37.908709],
+  imports [262.657933, 272.126909, 266.147738].
+- Relative to candidate 7's historical medians: grid complete -4.196497 ms,
+  forward -0.661913 ms, reverse -9.526234 ms; aLIGO complete -3.358325 ms,
+  forward -0.061253 ms, reverse -0.406250 ms. This is a promising reverse-phase
+  observation, not a repeat-confirmed complete improvement. The slow first grid
+  sample remains in the cohort; no import outlier is discarded.
+- Max sampled process-group RSS bytes: grid 612876288, aLIGO 305053696,
+  generalization 882380800. CPU2, one logical CPU and one library thread,
+  no persistent cache. No infrastructure failures or memory-budget exceedances.
+  Other-host contention is not excluded; no new overlap evidence was supplied.
+
+Numerical receipt inspection:
+
+- All six unchanged official benchmarks pass. All saved carrier, signal, noise,
+  powers, sensitivity, loss and gradient seed comparisons pass on each run.
+  The three grid archive hashes are all 112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5;
+  the three aLIGO hashes are all 9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195,
+  matching prior candidates. Raw remote NPZ files were not reopened locally.
+- Programmatically compared every strict-comparison record with candidate 17:
+  all six records and all fourteen initial-seed/pristine generalization case
+  records are exactly unchanged. Seed generalization passes 14/14; pristine
+  strict comparisons still fail. The self-comparison in generalization.artifacts
+  is not used as independent validation. Timing metadata affects archive hashes.
+- Grid seed gradient max absolute difference remains 5.686350050382316e-6,
+  relative L2 8.181451454702114e-11; aLIGO 3.637978807091713e-11 and
+  1.294943745154708e-15. This is tolerance agreement, not byte identity to seed.
+- Pristine grid has 131 signal/3 gradient/1 loss failures, aLIGO 1 loss failure;
+  rand1/rand3 log sensitivity errors remain 2.036099068405406e-4 and
+  5.8100919558157216e-5. Six grid FD coordinates 54/59/63/136/161/163 remain
+  unresolved. Prior aLIGO extra coordinate checks were 29/29, not a universal
+  certificate. Whole-pass custom VJP JVP/Hessian limits remain.
+
+Decision: candidate 18 is provisional, not admitted. confirmed_improvement=false,
+source_review=null, ranking_eligible=false. Admission reasons are missing review
+and overlapping complete grid ranges. Freeze this exact source rather than mix
+another change into a promising but unconfirmed mechanism. Candidate 7 remains
+the strongest admitted parent; candidate 18 remains an isolated experiment.
+
+Concrete coordinator request before further shared-primal tuning:
+
+1. Independently review the delta ee4fea28c04d482566be16e916b609d7c6a99e5e ->
+   457d0eaa2b4ab4fe1005ad0cd0cbd47999864575. Focus on structural direction
+   membership, absent-versus-zero derivative behavior, scalar/reflected binary
+   rules, conjugation, slot aliases and the unchanged full J/K/scatter boundary.
+2. Run five fresh complete grid and five fresh complete official aLIGO processes
+   for EACH of those exact simulator SHAs, interleaving parent/candidate in
+   balanced order under the existing evaluator CPU/thread/environment/resource
+   policy. Keep each setup's samples, median, range, paired differences, phases,
+   memory and overlap evidence separate. Do not change fixtures or use profiled
+   times as official results. Retain numerical checks on both revisions.
+3. If this confirms a meaningful complete gain and source review accepts it,
+   advance through normal admission. Otherwise retire shared-primal tuning or
+   obtain the already requested callback profile before changing representation.
+   Do not automatically combine with candidate 13, whose separate confirmation
+   request remains pending.
+
+No new candidate or redundant unpaired evaluation is requested. This handoff
+ends the present hypothesis turn, not the user-authorized campaign. The absolute
+deadline remains 2026-11-22 09:27:44 UTC. All failed trials remain in history.
+
+## Candidate 19: scalar arithmetic without empty direction objects
+
+The supervisor requested a concrete next experiment after the candidate 18 freeze
+handoff. This bounded refinement continues 18's shared-primal mechanism; it does
+not promote 18 or combine another pending candidate. Production parent is
+457d0eaa2b4ab4fe1005ad0cd0cbd47999864575 (request
+da9fbd3f38fd48bdb8315da1d541bbc6). Candidate SHA and official job identifiers are
+pending supervisor commit/evaluation. Candidate 7 ee4fea28 remains the admitted
+comparison parent. Candidate 18's review and paired confirmation remain pending.
+
+Source inspection found that `_Directions` scalar binary operations constructed
+an empty dictionary and a union of keys, despite only one operand carrying
+derivatives. Reflected operations additionally constructed a temporary direction
+object for the ordinary operand. Candidate 19 applies those existing scalar
+rules directly, with the same arithmetic operand order. Add/subtract still copy
+the direction dictionary, preserving independent maps. Reflected division
+computes its common slope once, and retains the empty-direction guard. The
+both-active-operand rules remain unchanged; no numerical zero removes a seed.
+
+Hypothesis: fewer interpreter allocations and dictionary lookups may reduce
+reverse execution. Candidate 18's measured grid reverse median was 75.831190 ms
+and aLIGO reverse median 13.977902 ms, but its complete-run improvement remains
+unconfirmed. Candidate 19 changes only host.py arithmetic, not forward assembly,
+solves, refinement, parameter values, JAX stages or wrapper/import settings.
+
+Local synthetic evidence, using existing NumPy environment and AST-extracted
+kernels (no JAX, optical workload, benchmark or timing run):
+
+- `overnight-numerics-scalar-directions-check.py` reruns the independent admitted
+  host comparison: 4,104 component/contraction checks, eight SystemPlan backward
+  integrations, 133 extreme/nonfinite cases, and 1,596 finite differences pass.
+  Maximum scaled FD error 1.7286649972079704e-9 with the existing 2e-7 bound.
+- 1,344 direct scalar/reflected operator cases match candidate 18, including
+  empty maps, explicitly zero derivatives, signed zero, complex constants,
+  infinity and NaN. Python scalar zero-division exceptions also match. Finite
+  results are checked bitwise; nonfinite results use array equality with NaNs.
+  Each result retains a distinct direction map.
+- 76 additional component comparisons against exact candidate 18 pass. Across
+  these small synthetic calls, direction-object constructions fall from 1,149
+  to 974 (175 fewer). This is an operation count, not a measured speedup or an
+  estimate of official workload multiplicity.
+- Initial diagnostic runs exposed scalar-incompatible assumptions in the test
+  helper (array indexing of Python floats, then uncaught scalar division by
+  zero). The diagnostic now normalizes comparison values and compares exception
+  types. No simulator correction or tolerance relaxation was needed.
+
+Request both unchanged full official benchmarks on the new exact SHA, all saved
+output/gradient comparisons and the fourteen generalization cases, then an
+independent source review. If promising, obtain balanced paired fresh-process
+confirmation against candidate 7 and candidate 18 to distinguish the incremental
+change. Keep phase/memory/overlap evidence and each benchmark's samples, median
+and range separate. No candidate-19 official measurements exist yet. Existing
+pristine signal/gradient/loss mismatches, rand1/rand3 sensitivity disagreements,
+six unresolved grid finite-difference coordinates and JVP/Hessian limitations
+remain unresolved. Failed trials and the superseded freeze request remain above.

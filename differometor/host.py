@@ -115,8 +115,20 @@ class _Directions:
         return _Directions(-self.v, {s: (-a, -b) for s, (a, b) in self.directions.items()})
 
     def _binary(self, other, operation):
-        left, right = self.v, other.v if isinstance(other, _Directions) else other
-        right_directions = other.directions if isinstance(other, _Directions) else {}
+        # Ordinary operands have no active directions. Apply the existing scalar
+        # rules directly, without constructing an empty map and a union of keys.
+        if not isinstance(other, _Directions):
+            if operation == "add":
+                return _Directions(self.v + other, self.directions.copy())
+            if operation == "sub":
+                return _Directions(self.v - other, self.directions.copy())
+            if operation == "mul":
+                return _Directions(self.v * other,
+                                   {s: (a * other, b * other) for s, (a, b) in self.directions.items()})
+            return _Directions(self.v / other,
+                               {s: (a / other, b / other) for s, (a, b) in self.directions.items()})
+        left, right = self.v, other.v
+        right_directions = other.directions
         if operation == "add":
             value = left + right
         elif operation == "sub":
@@ -166,25 +178,40 @@ class _Directions:
         return self._binary(other, "add")
 
     def __radd__(self, other):
-        return _Directions(other, {})._binary(self, "add")
+        if isinstance(other, _Directions):
+            return other._binary(self, "add")
+        return _Directions(other + self.v, self.directions.copy())
 
     def __sub__(self, other):
         return self._binary(other, "sub")
 
     def __rsub__(self, other):
-        return _Directions(other, {})._binary(self, "sub")
+        if isinstance(other, _Directions):
+            return other._binary(self, "sub")
+        return _Directions(other - self.v,
+                           {s: (-a, -b) for s, (a, b) in self.directions.items()})
 
     def __mul__(self, other):
         return self._binary(other, "mul")
 
     def __rmul__(self, other):
-        return _Directions(other, {})._binary(self, "mul")
+        if isinstance(other, _Directions):
+            return other._binary(self, "mul")
+        return _Directions(other * self.v,
+                           {s: (other * a, other * b) for s, (a, b) in self.directions.items()})
 
     def __truediv__(self, other):
         return self._binary(other, "div")
 
     def __rtruediv__(self, other):
-        return _Directions(other, {})._binary(self, "div")
+        if isinstance(other, _Directions):
+            return other._binary(self, "div")
+        value = other / self.v
+        if not self.directions:
+            return _Directions(value, {})
+        slope = -value / self.v
+        return _Directions(value,
+                           {s: (slope * a, slope * b) for s, (a, b) in self.directions.items()})
 
     def __pow__(self, exponent):
         if isinstance(exponent, (Dual, _Directions)):
