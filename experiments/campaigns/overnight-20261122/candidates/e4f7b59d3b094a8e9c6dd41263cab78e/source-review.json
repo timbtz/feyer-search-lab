@@ -1,0 +1,78 @@
+{
+  "candidate_sha": "ee4fea28c04d482566be16e916b609d7c6a99e5e",
+  "parent_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+  "diff_sha256": "7e18184c5e09aa3b9dc56ccbaab4b18654d701671845e9a332739f6eb2eab958",
+  "source_context_sha256": "71c3105f91ec3010305f8573874467e56697bb55ed9f47aef19a5fa3042095fb",
+  "evaluation_receipt_sha256": "079951ff9c461c37fe5d42cce7dbece5e3065a4e60390760e87cf74496bf50b1",
+  "deadline_unix": 1795339664.0,
+  "reviewer": "independent-headless-source-review-v1",
+  "provider": "claude",
+  "model": "claude-opus-5-5",
+  "session_id": "f1652d7b-763e-476c-900d-b134a1590c7f",
+  "result": {
+    "response": {
+      "approved": true,
+      "reasons": [
+        "The candidate's output archive is byte-identical to the seed reference (candidate and reference SHA-256 are both 7625261b\u2026). All 14 cases, including aligo, voyager, the uifo random-topology cases, the randparams cases, and the amod and fmod cases, pass every array check (carrier, signal, noise, powers, sensitivity, loss, gradient) with log_sensitivity_error 0.0. All outputs are finite and both benchmarks ran in fresh processes. Numbers alone do not prove generality, so the source was reviewed separately below.",
+        "The cache of forward state used by the backward pass (_ASSEMBLY) is general. It only lets a backward pass consume the state from its own forward pass. The key is the plan key plus a blake2b digest of every assembly input, including dtype, shape and bytes. Every forward clears the cache before storing, and every backward pops the entry and then clears. If the digest does not match, or there was no preceding forward (for example vmap 'sequential' or a backward with no forward), the code reassembles. Nothing is reused across evaluations, nothing persists to disk, and no timed work moves outside the timed region. It extends the seed's existing _FACTORS mechanism, which also kept factors only from one forward pass to its backward pass, to the carrier factors and assembled values.",
+        "The covariance-adjoint shortcut is an exact identity. The forward pass solves A^H w = s. Conjugating gives A^T conj(w) = conj(s), so the cotangent t_bar*conj(s) (t_bar real) has the solution t_bar*conj(w). Covariances are never a public output of host_pass, so they have no other cotangent.",
+        "The shortcut for collinear signal cotangents uses the same identity. It applies only when signal_bar matches alpha*conj(s_d) to within 8*eps*max|signal_bar|. Zero vectors, zero directions and non-finite values are handled conservatively, and anything else falls back to the refined A^T solve. It tests a mathematical property of the inputs, not a particular fixture.",
+        "The Hermitian noise-matrix shortcut is derived correctly. conj(w_bar) = t_bar*N^H*w equals t_bar*N*w (the forward sources) when N is Hermitian, so g = t_bar*cov. Hermiticity is checked numerically for every row against the static transpose index. Diagonal entries must be real, any nonzero without a structural partner fails the check, and non-coefficient vectors, non-finite values or asymmetry above 8*eps fall back to the explicit solve. Setups whose noise matrix is not Hermitian keep the original code path.",
+        "SystemPlan.backward now scatters only the last writes. Non-last writes always received zero cotangent in the seed as well, and np.add.at is still used whenever the last-write selections repeat. Calling function_jacobian with with_outputs=False skips only an unused primal evaluation, and the Jacobian blocks are computed exactly as before.",
+        "The static ParameterLayout uses scatters declared unique and in-bounds only after build-time checks pass: indices nonnegative and in bounds, insertion and link destinations unique, a single-row parameter array, and a trace-time shape check in applies(). Otherwise it falls back to the generic .at[] path. The order of insertion, linking and detector-phase steps is unchanged, and the scatter declared unique has the correct transpose for gradients.",
+        "SparseSystem.base_values now uses lax.gather with unique_indices and promise_in_bounds. The coordinates come from build-time pattern positions, which are distinct and in bounds by construction.",
+        "The remaining changes only affect import time: visualize_setup is loaded through module __getattr__, and jax.scipy.linalg is imported locally on the dense path. Both are behaviour-preserving, and the XLA flag defaults are inherited, permitted package compiler options.",
+        "Inherited caveat, not blocking: like the seed's existing host plan, which already ignored traced carrier/signal changing indices, the new static layout uses build-time index copies. A caller who changes those index arrays without re-running run_build_step would get stale indices. This is documented in the docstring and matches the inherited design.",
+        "Inherited caveat, not blocking: the differences against the pristine reference (signal, gradient and loss rtol mismatches; uifo_rand1 and uifo_rand3 sensitivity log errors; the aligo loss mismatch) were already present in the seed. The candidate matches the seed exactly, so these were not introduced by this delta.",
+        "Inherited caveat, not blocking: the host-pass custom_vjp still supports first-order reverse mode only (jvp and second order raise explicit errors), and the division by noise in temporary_bar is unchanged from the seed.",
+        "This approval is one additional, bounded review. It is not proof that the simulator is correct in general."
+      ],
+      "generalization_risks": []
+    },
+    "session_id": "f1652d7b-763e-476c-900d-b134a1590c7f",
+    "model": "claude-opus-5-5",
+    "model_verification": "provider-init",
+    "usage": [
+      {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 90163,
+        "cache_read_input_tokens": 2305,
+        "output_tokens": 4309,
+        "output_tokens_details": {
+          "thinking_tokens": 2596
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 90163,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 4309,
+            "cache_read_input_tokens": 2305,
+            "cache_creation_input_tokens": 90163,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 90163
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      }
+    ]
+  },
+  "failures": [],
+  "approved": true,
+  "finished_at": 1795314162.613089,
+  "prompt_sha256": "ba4a1ad3b2a165ec5af154ab93efc2357c962dedbc87cec8a2658198daeb4d86",
+  "scope": "no-fixture-specialization-and-integrity",
+  "policy_rejection": []
+}

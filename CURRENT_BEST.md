@@ -2,13 +2,13 @@
 
 **Status:** admitted_campaign_best
 
-**Exact simulator revision:** [5bbb91e38ff993a10486f296a738860339cd05e0](https://github.com/timbtz/feyer-search-lab/tree/5bbb91e38ff993a10486f296a738860339cd05e0)
+**Exact simulator revision:** [ee4fea28c04d482566be16e916b609d7c6a99e5e](https://github.com/timbtz/feyer-search-lab/tree/ee4fea28c04d482566be16e916b609d7c6a99e5e)
 
 The larger official benchmark is the primary objective. aLIGO is reported separately.
 This is the best admitted candidate in this campaign; it is not an official judging verdict.
 
-- grid: median 0.852666680 s; range 0.850608243–0.882359037 s.
-- aligo: median 0.555709917 s; range 0.551790904–0.558408344 s.
+- grid: median 0.801577684 s; range 0.794424996–0.822483830 s.
+- aligo: median 0.548555156 s; range 0.544719348–0.551624214 s.
 
 ## Evidence and limitations
 
@@ -23,6 +23,6 @@ This is the best admitted candidate in this campaign; it is not an official judg
 - grid pristine-reference disagreements remain; see complete candidate receipt.
 - aligo pristine-reference disagreements remain; see complete candidate receipt.
 - Generalization pristine-reference disagreements remain; see complete candidate receipt.
-- [Selected candidate evidence](experiments/campaigns/overnight-20261122/candidates/2c7810bfe84648299731e98a6bb133ae/record.json)
+- [Selected candidate evidence](experiments/campaigns/overnight-20261122/candidates/e4f7b59d3b094a8e9c6dd41263cab78e/record.json)
 
 Search selection requires at least three fresh runs of each official benchmark, a large-case gain of at least max(3 ms, 0.5%), no more than 2% aLIGO regression, and relative timing range at most 10%. Under selection-v2, the candidate large-case maximum must also be strictly below the incumbent minimum. Overlapping candidates remain provisional for further paired investigation. Observed nonoverlap is not statistical proof. These are team heuristics, not organizer scoring rules. Failed and provisional trials remain in the candidate receipts.

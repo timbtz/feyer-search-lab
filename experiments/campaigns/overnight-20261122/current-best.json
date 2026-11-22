@@ -1,5 +1,5 @@
 {
-  "candidate_sha": "5bbb91e38ff993a10486f296a738860339cd05e0",
+  "candidate_sha": "ee4fea28c04d482566be16e916b609d7c6a99e5e",
   "caveats": [
     "Strict signal and gradient mismatches at indices33,161,180 remain visible.",
     "Custom uifo_rand1/uifo_rand3 exceed dense sensitivity agreement bound; precision diagnostics support candidate accuracy but do not certify every case.",
@@ -11,28 +11,28 @@
     "Generalization pristine-reference disagreements remain; see complete candidate receipt."
   ],
   "cohort_digest": "0543092279d0368390fe9a039823f591cb0f163f58ff89849ecb07fd22f4647e",
-  "evaluation_id": "2c7810bfe84648299731e98a6bb133ae",
+  "evaluation_id": "e4f7b59d3b094a8e9c6dd41263cab78e",
   "metrics": {
     "aligo": {
-      "max_seconds": 0.5584083441644907,
-      "median_seconds": 0.5557099170982838,
-      "min_seconds": 0.5517909042537212,
-      "relative_range": 0.011908083169224945,
+      "max_seconds": 0.5516242142766714,
+      "median_seconds": 0.5485551562160254,
+      "min_seconds": 0.544719347730279,
+      "relative_range": 0.012587369689536288,
       "samples_seconds": [
-        0.5557099170982838,
-        0.5517909042537212,
-        0.5584083441644907
+        0.5516242142766714,
+        0.5485551562160254,
+        0.544719347730279
       ]
     },
     "grid": {
-      "max_seconds": 0.8823590371757746,
-      "median_seconds": 0.8526666797697544,
-      "min_seconds": 0.850608242675662,
-      "relative_range": 0.037237053180835214,
+      "max_seconds": 0.8224838301539421,
+      "median_seconds": 0.8015776835381985,
+      "min_seconds": 0.7944249957799911,
+      "relative_range": 0.03500451041762796,
       "samples_seconds": [
-        0.8823590371757746,
-        0.850608242675662,
-        0.8526666797697544
+        0.8224838301539421,
+        0.8015776835381985,
+        0.7944249957799911
       ]
     }
   },
@@ -46,7 +46,7 @@
     "scope": "Team search-selection heuristic, not organizer judging policy.",
     "version": "overnight-selection-v2"
   },
-  "record_path": "experiments/campaigns/overnight-20261122/candidates/2c7810bfe84648299731e98a6bb133ae/record.json",
+  "record_path": "experiments/campaigns/overnight-20261122/candidates/e4f7b59d3b094a8e9c6dd41263cab78e/record.json",
   "repository_url": "https://github.com/timbtz/feyer-search-lab",
   "schema_version": "feyer-current-best-v1",
   "seed_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
