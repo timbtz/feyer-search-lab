@@ -1,0 +1,8 @@
+uifo_rand3 dense     strict-style max normalized error vs truth 25.028
+uifo_rand3 sparse    strict-style max normalized error vs truth 16.389
+uifo_rand3 sp_dref1  strict-style max normalized error vs truth 0.005
+uifo_rand3 truth     strict-style max normalized error vs truth 0.000
+uifo_rand3 dense     max rel err |detected| vs truth 3.803e-05; signal relL2 1.76e-11
+uifo_rand3 sparse    max rel err |detected| vs truth 2.039e-08; signal relL2 1.97e-11
+uifo_rand3 sp_dref1  max rel err |detected| vs truth 2.534e-08; signal relL2 1.09e-15
+uifo_rand3 truth     max rel err |detected| vs truth 0.000e+00; signal relL2 0.00e+00

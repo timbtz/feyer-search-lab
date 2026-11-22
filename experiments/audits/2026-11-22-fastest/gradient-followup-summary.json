@@ -1,0 +1,96 @@
+{
+  "schema_version": "feyer-precision-gradient-followup-v1",
+  "candidate_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+  "ranking_eligible": false,
+  "official_verdict_changed": false,
+  "original_black_box_confirmed": 187,
+  "original_black_box_total": 193,
+  "original_black_box_unresolved": [
+    54,
+    59,
+    63,
+    136,
+    161,
+    163
+  ],
+  "runs": {
+    "precision-gradients": {
+      "execution_path": "precision-gradients/execution.json",
+      "report_path": "precision-gradients/gradient-grid.json",
+      "scope": "Diagnostic primal uses extended-residual solves and long-double readout; original candidate gradient target. Not a pass of the unmodified black-box finite difference, not timing evidence. Predeclared alternative step sizes on previously nonpassing coordinates; original results retained.",
+      "passed": false,
+      "supported_indices": [
+        59,
+        136
+      ],
+      "unresolved_indices": [
+        54,
+        63,
+        161,
+        163
+      ],
+      "stable_but_mismatching_attempt_indices": [
+        161
+      ],
+      "rtol": 0.01,
+      "atol": 1e-06,
+      "wall_seconds": 178.2801753859967,
+      "peak_sampled_rss_bytes": 902103040
+    },
+    "extended-assembly-gradients": {
+      "execution_path": "extended-assembly-gradients/execution.json",
+      "report_path": "extended-assembly-gradients/gradient-grid.json",
+      "scope": "Diagnostic primal promotes the same component/assembly source, residual refinement and readout to long double; original candidate AD target. Not an independent physics oracle, unmodified black-box FD pass, or timing result. Predeclared alternative step sizes on previously nonpassing coordinates; original results retained.",
+      "passed": false,
+      "supported_indices": [],
+      "unresolved_indices": [
+        54,
+        59,
+        63,
+        136,
+        161,
+        163
+      ],
+      "stable_but_mismatching_attempt_indices": [
+        59
+      ],
+      "rtol": 0.01,
+      "atol": 1e-06,
+      "wall_seconds": 169.8807262070477,
+      "peak_sampled_rss_bytes": 947789824
+    }
+  },
+  "interpretation": "Alternative diagnostic primals do not upgrade the original black-box count or establish all derivatives. No candidate source changed.",
+  "copied_artifacts": [
+    {
+      "path": "precision-gradients/execution.json",
+      "sha256": "b4c77fd19d106a88bb65f132ca05760e94455326cf95e0db737194d6823294e1",
+      "bytes": 2244
+    },
+    {
+      "path": "precision-gradients/gradient-grid.json",
+      "sha256": "21f2e856b369553ead2e8a97e8ac3d38bec1aa40a1647382b3c3ba1fa378d44f",
+      "bytes": 21941
+    },
+    {
+      "path": "precision-gradients/gradient-grid/stdout.log",
+      "sha256": "c92e0c716d81b90068e7ea4998fbf14583b96a000aa2be2fb31932e3220827d6",
+      "bytes": 229
+    },
+    {
+      "path": "extended-assembly-gradients/execution.json",
+      "sha256": "a2caa70f1b682b1a0a4bff91466137cc8955e40c91ad93d174c9ccd5d38caec0",
+      "bytes": 2282
+    },
+    {
+      "path": "extended-assembly-gradients/gradient-grid.json",
+      "sha256": "9af1667ef265a320a537062310e07b5de92eecb6ec1e72136f64c00ef16f94bc",
+      "bytes": 22070
+    },
+    {
+      "path": "extended-assembly-gradients/gradient-grid/stdout.log",
+      "sha256": "9ed4032b40770e127a7d3eb6fe3d908e400f493453e5bcc3cbf97626d311fdb4",
+      "bytes": 303
+    }
+  ]
+}

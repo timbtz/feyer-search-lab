@@ -1,0 +1,36 @@
+{
+  "scope": "Matrices assembled by pristine JAX implementation, signal solves refined using extended-precision residuals. Carrier remains double precision; not arbitrary-precision physics or independent full-gradient proof.",
+  "cases": [
+    {
+      "case": "uifo_rand1",
+      "ports_from_recorded_gencheck_stdout": [
+        255,
+        257
+      ],
+      "frequency_inputs_identical": true,
+      "candidate": {
+        "signal_relative_l2": 1.4836494830038577e-15,
+        "detected_amplitude_relative_max": 8.872772709043554e-11
+      },
+      "dense_reference": {
+        "signal_relative_l2": 2.2149094763553425e-10,
+        "detected_amplitude_relative_max": 0.00020358920658489636
+      }
+    },
+    {
+      "case": "uifo_rand3",
+      "ports_from_recorded_gencheck_stdout": [
+        267
+      ],
+      "frequency_inputs_identical": true,
+      "candidate": {
+        "signal_relative_l2": 4.170706702799643e-15,
+        "detected_amplitude_relative_max": 1.4306111598617402e-05
+      },
+      "dense_reference": {
+        "signal_relative_l2": 1.7141173988891327e-11,
+        "detected_amplitude_relative_max": 4.382113964091455e-05
+      }
+    }
+  ]
+}

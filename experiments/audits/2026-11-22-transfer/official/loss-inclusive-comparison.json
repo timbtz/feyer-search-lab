@@ -1,0 +1,88 @@
+{
+  "runtime_commit": "d804f35",
+  "checks": [
+    {
+      "passed": true,
+      "issues": [],
+      "arrays": {
+        "carrier": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "gradient": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "loss": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "noise": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "powers": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "sensitivity": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "signal": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "log_sensitivity_error": 0.0
+      },
+      "regression_policy": {
+        "rtol": 1e-07,
+        "scale_atol": 1e-12,
+        "sensitivity_log_tolerance": 1e-05
+      },
+      "setup": "grid"
+    },
+    {
+      "passed": true,
+      "issues": [],
+      "arrays": {
+        "carrier": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "gradient": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "loss": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "noise": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "powers": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "sensitivity": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "signal": {
+          "passed": true,
+          "failing_count": 0
+        },
+        "log_sensitivity_error": 0.0
+      },
+      "regression_policy": {
+        "rtol": 1e-07,
+        "scale_atol": 1e-12,
+        "sensitivity_log_tolerance": 1e-06
+      },
+      "setup": "aligo"
+    }
+  ],
+  "passed": true
+}

@@ -1,0 +1,9 @@
+{
+  "upstream_commit": "83f8d2f40fc75218a1d8ec7908cc0bf1c8f99a75",
+  "source": "https://github.com/feyerlabs/start-hack-munich-2026",
+  "files": {
+    "benchmark.py": "b2e8c5367705e220f83c3d5f2bb95301e3148b102dc0d34f5c2c6f5792b9984e",
+    "benchmark_aligo.py": "8c1018592e33f66b0913490159f7e2c20f5a2acec614b95b9bbbda18d90d99fc",
+    "plot_timings.py": "21e19966f36fbffc6bd0e416b5fb99e8d7d6b4593bf5b14b7a0d4e3b5216ca8a"
+  }
+}

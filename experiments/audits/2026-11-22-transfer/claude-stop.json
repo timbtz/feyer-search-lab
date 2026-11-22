@@ -1,0 +1,7 @@
+{
+  "requested_at": 1795302814.932702,
+  "reason": "User explicitly requested stop all managed Claude headless sessions to free compute for correctness and transfer validation.",
+  "resume_authorized": false,
+  "observed_managed_sessions": "all complete; no local or AMD/Hetzner Claude headless process found",
+  "scope": "Feyer managed Claude headless sessions; unrelated interactive terminals and evaluation jobs preserved"
+}

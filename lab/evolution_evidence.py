@@ -13,6 +13,7 @@ import re
 
 from .phase_report import metrics as phase_metrics, signature
 from .worker import BASELINE_SHA, THREAD_VARIABLES, Worker
+from .compiler_policy import LEGACY, policy_descriptor, policy_digest
 
 SCHEMA_VERSION = 'feyer-evolution-evidence-v1'
 FULL_EVALUATOR_SHA256 = 'd5950bbd872e5b00ad63f0bd7081e5096fb14ba9c96c80a6854a3b714719bd4e'
@@ -67,8 +68,12 @@ def policy_from_job(job, policy_context=None):
     if not evidence['eligible_full']:
         raise ValueError('Cannot derive policy from an unvalidated or incomplete full seed job')
     result = job['result']
-    return {key: result[key] for key in ('worker_sha256', 'evaluator_sha256',
+    policy = {key: result[key] for key in ('worker_sha256', 'evaluator_sha256',
             'comparison_evaluator_sha256', 'reference_arrays_sha256', 'memory_budget_bytes', 'cpu')}
+    if result.get('compiler_policy', LEGACY) != LEGACY:
+        policy.update(compiler_policy=result['compiler_policy'],
+                      compiler_policy_sha256=result['compiler_policy_sha256'])
+    return policy
 
 
 def normalize_job(job, expected_sha=None, policy_context=None):
@@ -123,6 +128,22 @@ def normalize_job(job, expected_sha=None, policy_context=None):
     if not isinstance(result, dict) or not isinstance(report, dict):
         issue('Missing result or timing report: no scientific rejection inferred')
         return finish()
+    compiler_policy = policy.get('compiler_policy', LEGACY)
+    try:
+        compiler_descriptor = policy_descriptor(compiler_policy)
+        expected_compiler_digest = policy_digest(compiler_policy)
+    except ValueError:
+        issue('Unknown coordinator compiler policy')
+        return finish()
+    if result.get('compiler_policy', LEGACY) != compiler_policy:
+        issue('Recorded compiler policy differs from coordinator policy')
+    # Preserve old artifacts only under their original legacy policy. Approved
+    # flags need an independently supplied policy AND an explicit worker receipt.
+    if compiler_policy != LEGACY or 'compiler_policy_sha256' in result:
+        if result.get('compiler_policy_sha256') != expected_compiler_digest:
+            issue('Missing or invalid compiler policy digest')
+    if 'compiler_policy_sha256' in policy and policy['compiler_policy_sha256'] != expected_compiler_digest:
+        issue('Coordinator compiler policy digest mismatch')
     out['validated_output_scope'] = result.get('validated_output_scope')
     if result.get('sha') != sha or result.get('profile') != profile or result.get('status') != job['status']:
         issue('Job/result identity or terminal status mismatch')
@@ -168,6 +189,7 @@ def normalize_job(job, expected_sha=None, policy_context=None):
     try:
         validator = Worker.__new__(Worker)
         validator.cpu = cpu
+        validator.compiler_policy = compiler_policy
         validator._validate_report(report, profile, expected_sha=sha,
                                    evaluator_sha256=result.get('evaluator_sha256'))
         values, phases = phase_metrics(report)
@@ -266,6 +288,11 @@ def normalize_job(job, expected_sha=None, policy_context=None):
               'worker_sha256': result['worker_sha256'], 'memory_policy': memory_policy,
               'container_limits': limits, 'strict_policy': comparison_policy,
               'protected_baseline_sha': result['baseline_sha']}
+    # Keep historical legacy cohort digests stable; never mix reviewed-policy
+    # runs into them, including reviewed runs whose candidate sets no flags.
+    if compiler_policy != LEGACY:
+        cohort['compiler_policy'] = compiler_descriptor
+        cohort['compiler_policy_sha256'] = expected_compiler_digest
     out['cohort_digest'] = canonical_digest(cohort)
     out['cohort'] = cohort
     if policy.get('cohort_digest') and out['cohort_digest'] != policy['cohort_digest']:
