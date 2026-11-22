@@ -851,8 +851,17 @@ def signal_detector(carrier: jnp.ndarray, signal: jnp.ndarray) -> jnp.ndarray:
     Matches:
     finesse > detectors > compute > power.pyx > c_pd1_AC_output
     """
-    upper_sideband = jnp.conj(carrier) * signal[: carrier.shape[0]]
-    lower_sideband = carrier * signal[carrier.shape[0] : carrier.shape[0] * 2]
+    # A single split has a concatenation transpose. Two independent slices
+    # instead transpose to two full-size zero pads followed by an addition.
+    # Keep any trailing mechanical coordinates as an unused third segment so
+    # their signal cotangents remain zero. Clip the boundaries just like slices,
+    # retaining the existing broadcasting behavior for short input vectors.
+    size = carrier.shape[0]
+    upper_signal, lower_signal, _ = jnp.split(
+        signal, (min(size, signal.shape[0]), min(2 * size, signal.shape[0])), axis=0
+    )
+    upper_sideband = jnp.conj(carrier) * upper_signal
+    lower_sideband = carrier * lower_signal
     return upper_sideband + lower_sideband
 
 

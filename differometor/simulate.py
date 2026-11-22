@@ -1307,42 +1307,6 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
     return signal, noise
 
 
-# Build structural metadata from NumPy intermediates, then transfer the finished
-# arrays together. False retains the per-array conversion path for comparison.
-HOST_BUILD_ARRAYS: bool = True
-
-
-def _put_built_arrays(tree):
-    """Transfer arrays in built containers, preserving metadata order and static plans."""
-    arrays = []
-
-    def collect(value):
-        if isinstance(value, np.ndarray):
-            arrays.append(value)
-        elif isinstance(value, dict):
-            for item in value.values():
-                collect(item)
-        elif isinstance(value, (tuple, list)):
-            for item in value:
-                collect(item)
-
-    collect(tree)
-    transferred = iter(jax.device_put(tuple(arrays)))
-
-    def restore(value):
-        if isinstance(value, np.ndarray):
-            return next(transferred)
-        if isinstance(value, dict):
-            return {key: restore(item) for key, item in value.items()}
-        if isinstance(value, tuple):
-            return tuple(restore(item) for item in value)
-        if isinstance(value, list):
-            return [restore(item) for item in value]
-        return value  # Includes opaque, registered-static HostPlan/SparseStructure.
-
-    return restore(tree)
-
-
 def run_build_step(
     setup: Setup,
     changing_pairs: list | None = None,
@@ -1390,16 +1354,13 @@ def run_build_step(
     """
     start = time()
 
-    instructions, matrices, metadata = build(setup, _host_arrays=HOST_BUILD_ARRAYS)
+    instructions, matrices, metadata = build(setup)
     component_groups = {}
     arrays_to_prepare, carrier_arrays, signal_arrays, noise_arrays = pairs_to_arrays(
         *instructions, optimization_pairs, changing_pairs, component_groups=component_groups,
         matrix_shapes={"carrier": matrices[1].shape, "signal": matrices[2].shape, "noise": matrices[3].shape},
-        _host_arrays=HOST_BUILD_ARRAYS,
     )
-    prepared_arrays = prepare_arrays(
-        *arrays_to_prepare, changing_values, parameters=matrices[0], _host_arrays=HOST_BUILD_ARRAYS
-    )
+    prepared_arrays = prepare_arrays(*arrays_to_prepare, changing_values, parameters=matrices[0])
 
     arg_count = simulate.__code__.co_argcount
     arg_names = simulate.__code__.co_varnames[:arg_count]
@@ -1456,9 +1417,6 @@ def run_build_step(
             host_plan = _host_pass.build_host_plan(simulation_arrays, sparse_structure, component_groups)
             if host_plan is not None:
                 simulation_arrays["host_plan"] = host_plan
-
-    if HOST_BUILD_ARRAYS:
-        simulation_arrays, metadata = _put_built_arrays((simulation_arrays, metadata))
 
     if timeit:
         for array in simulation_arrays.values():

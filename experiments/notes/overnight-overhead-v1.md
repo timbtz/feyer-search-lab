@@ -450,3 +450,80 @@
 - Decision: reject if any returned structure/value differs, new numerical failures occur, or setup gains
   do not survive matched timing. Do not add a second conversion variant without evidence. Deadline/session
   unchanged; this is an evaluable new setup hypothesis, not a claim that candidate 7 was promoted.
+
+
+### Candidate 8 feedback and decision (2026-11-22)
+
+- Exact candidate: `ddfb639cb16271550c5d0de799665210ce4290ee`; dual-official job
+  `d35ea4aa620d457a88c1ac4a68ab0c8f`, grid-1/2/3 and aligo-1/2/3. Source review absent.
+- Large complete first-run samples: 0.841352144, 0.864800531, 0.791974228 s;
+  median **0.841352144**, range **0.791974228–0.864800531**.
+- Official aLIGO samples: 0.543858401, 0.543838736, 0.599401077 s;
+  median **0.543858401**, range **0.543838736–0.599401077**.
+- Build samples large: 73.737, 71.866, 70.792 ms; aLIGO: 37.582, 36.894, 36.104 ms.
+  No matching parent phase cohort is supplied, so no measured build delta is established.
+  Large forward execution varied 176.259–252.999 ms; aLIGO gradient varied 14.384–63.480 ms.
+  All samples are retained. External contention is unknown; those variations are not proof of
+  either a simulator regression or an infrastructure cause.
+- All six unchanged official runs passed. All 14 generalization cases passed comparison against
+  initial seed tolerances. The pristine comparisons still fail: grid signal, loss, three gradients;
+  uifo_rand1/rand3 sensitivity errors ~2.0361e-4/5.8101e-5, plus the other recorded inherited
+  discrepancies. Official output archives match candidate 7's hashes, but this is not a claim
+  of byte equality to the seed or admitted parent. Seed gradient maximum absolute differences
+  remain 5.686350e-6 large and 3.637979e-11 aLIGO. Six unresolved grid finite-difference
+  coordinates remain unresolved; extra aLIGO coordinate checks remain 29/29 from prior evidence.
+- Sampled peak RSS large: 614457344, 541024256, 521797632 bytes; aLIGO: 280952832,
+  288124928, 288210944 bytes. Generalization peak: 908480512 bytes. No budget exceedance.
+  Sampling can miss peaks. No infrastructure failure reported; numerical review still required.
+- Not promoted: unstable aLIGO timing, missing source review, insufficient large gain and overlapping
+  ranges. Decision: retire host-first conversion from the working simulator because useful benefit
+  is unestablished and it adds conversion/container complexity. This does not assert a measured
+  slowdown. Preserve candidate 8 and its diagnostic in history. Restore build.py and simulate.py
+  byte-for-byte from reviewed ee4fea2; keep ee4fea2 as admitted best.
+
+## Candidate 9: joint sideband split in the public signal readout
+
+- Source parent: reviewed `ee4fea28c04d482566be16e916b609d7c6a99e5e`. Candidate SHA/job IDs
+  pending supervisor. Net simulator diff versus this parent: components.py only (11 additions,
+  2 deletions). Other nine simulator modules checked byte-for-byte against parent. No combination
+  with unadmitted candidate 7 or 8; their history remains preserved.
+- Distinct target: small readout reverse graph, not another builder-transfer or callback variant.
+  Candidate 8 gradient trace/lower+compile medians are about 69.9 ms large and 69.7 ms aLIGO.
+  These include the whole backward stage, not solely this operation. Sensitivity trace/lower and
+  compile remain roughly 65–68 ms. Expected gain magnitude is unknown and may be negligible.
+- Established redundant work: signal_detector slices the same signal into upper and lower
+  sidebands independently. Their reverse passes each pad to the full signal shape and add the
+  two cotangents. A single joint split transposes by concatenation. JAX 0.9 source confirms this:
+  [split transpose and lowering](https://raw.githubusercontent.com/jax-ml/jax/jax-v0.9.0/jax/_src/lax/lax.py),
+  `_split_transpose_rule` / `_split_lower`;
+  [public split implementation](https://raw.githubusercontent.com/jax-ml/jax/jax-v0.9.0/jax/_src/numpy/lax_numpy.py),
+  `_split` calls `lax.split`. This is structural evidence, not a timing measurement.
+- Implementation: `jnp.split` at clipped N and 2N boundaries yields the same upper/lower slices
+  and an unused tail. Clipping preserves old slice behavior for short vectors, including the old
+  broadcasting rules. Trailing mechanical coordinates still receive zero cotangents. Conjugation,
+  two multiplications, addition, dtype promotion and broadcasting are unchanged. Uses standard
+  JAX differentiation, no hand-coded abs rule, custom derivative or approximation. The public
+  power readout is unchanged: it is auxiliary to the official loss, so a derivative rewrite there
+  would not address this workload. No solver/refinement/adjoint mathematics changed.
+- Signed-zero caveat to inspect: removing zero-pad additions can retain a negative zero in a
+  cotangent where the original addition canonicalized it. The diagnostic reports these separately;
+  no claim of bitwise derivative identity. No abs/sqrt convention is replaced. Non-finite tests
+  check compatibility of the readout, not physical validity of non-finite optical setups.
+- Local checks: all simulator and new diagnostic files parse; git diff --check passes. A pure-Python
+  interval check exhaustively confirmed upper/lower slice identity and partition coverage for
+  900 (carrier length, signal length) pairs, including zero and short vectors. NumPy/JAX are absent
+  locally; no numerical runtime, official benchmark or independent benchmark was launched.
+- Added `experiments/notes/overnight-overhead-readout-check.py`: exact value/JVP/VJP comparisons to
+  the old expression, eager and JIT, real/complex mixtures, broadcasted sweeps, mixed ranks,
+  empty and short vectors, tails, signed zeros, infinities/NaNs, vmap and standalone real Hessian.
+  Reports signed-zero differences and recursive JAX primitive counts for the two VJP graphs.
+  This does not extend the whole-pass host simulator's first-order-only compatibility claim.
+- Supervisor request: run that synthetic diagnostic first; inspect actual pad/add versus concatenate
+  counts. Evaluate both unchanged full benchmarks on the same new SHA, all saved arrays/gradients,
+  14-case generalization and direct admitted-parent comparison. Obtain independent source review.
+  If promising, use interleaved fresh-process parent/candidate runs on matching CPU/environment,
+  report every sample, separate medians/ranges, phase tradeoffs, RSS and overlap. Do not promote
+  merely from an isolated compilation saving or claim pristine disagreements are resolved.
+- Next decision: reject if numerical checks introduce discrepancies or complete first-run gains do
+  not survive paired timing. Do not stack more readout algebra without measured graph/phase evidence;
+  the next distinct investigation would require the previously requested import/build profile.
