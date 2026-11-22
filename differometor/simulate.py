@@ -1024,8 +1024,7 @@ def _simulate_host_pass(
         structure.noise.base_values(noise_matrix).astype(jnp.complex128),
         noise_selection_vectors.astype(jnp.complex128),
     )
-    # The host callback returns carrier/signal in the public orientation.
-    return carrier, signal, noise.squeeze()
+    return carrier.T, signal.T, noise.squeeze()
 
 
 def _build_sparse_structure(simulation_arrays):

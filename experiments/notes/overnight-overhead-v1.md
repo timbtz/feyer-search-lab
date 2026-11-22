@@ -819,3 +819,121 @@
   remain open. The whole-pass custom VJP still does not support JVP/Hessians. If this isolated
   boundary trial fails to improve robustly, restore ee4fea2 and obtain the prepared import/build
   attribution rather than another permutation of unconfirmed boundary changes.
+
+### Candidate 12 feedback and boundary-search handoff
+
+- Evaluated SHA **3f436ce6531bf90e3e5ec864321e2c760c76911c**, evaluation
+  **e9963be7b002421f93f2c16c311729ca**. Large jobs grid-1/2/3; official aLIGO jobs
+  aligo-1/2/3. Both unchanged official benchmarks passed all three fresh runs.
+- Large complete first-run seconds: **0.828883981, 0.795384802, 0.799623925**;
+  median **0.799623925**, range **0.795384802–0.828883981**. Official aLIGO separately:
+  **0.547551330, 0.542284621, 0.540851843**; median **0.542284621**, range
+  **0.540851843–0.547551330**. Relative to the unmatched admitted ee4fea2 cohort,
+  observed median reductions are 1.954 ms large and 6.271 ms aLIGO. The large reduction
+  misses the team selection threshold and ranges overlap. No confirmed improvement.
+- Phase medians (ms), large / aLIGO: imports 265.410 / 264.915; build 73.323 / 37.897;
+  forward lower 18.978 / 18.355, compile 33.250 / 33.419, execute 179.539 / 32.752;
+  sensitivity lower 25.997 / 26.078, compile 39.531 / 41.539;
+  gradient lower 16.483 / 16.230, compile 51.563 / 53.265, execute 87.427 / 14.718.
+  Thus isolated transpose transfer did not reproduce candidate 7's roughly 26 ms combined
+  compilation-phase reduction. Relative to candidate 11's unmatched phase medians, the six
+  lowering/compile medians sum to about 3.2 ms less large and 1.0 ms less aLIGO; this is not
+  a controlled causal comparison or an end-to-end timing result. Grid-1 import was 291.325 ms,
+  while grid-2/3 were 265.410/263.680 ms; external contention and its causes remain unknown.
+- Sampled peak RSS bytes: large **524574720, 524943360, 532213760**; aLIGO
+  **279805952, 287674368, 293363712**; generalization **896102400**. No budget exceedance
+  or infrastructure failure. No controlled memory reduction is established. CPU2, one logical
+  CPU, library threads one, x64 and permitted package flags unchanged; no persistent cache.
+- All 14 extra generalization cases pass initial-seed tolerances; pristine comparisons remain
+  failing. Official archive hashes match recent candidates. Generalization archive hash is
+  ddac9c5749501202f1dab52420e3bd970d41227df145cd77889bb93028f689b5; its differing archive
+  hash alone is not a per-array difference diagnosis. No new tolerance failure is reported.
+  Official seed gradient maximum absolute differences remain 5.686350050e-6 large and
+  3.637978807e-11 aLIGO. The requested synthetic callback diagnostic and direct ee4fea2
+  saved-array comparison are not present in feedback; do not mark them passed. Independent
+  source review is absent. Official PASS is not a numerical correctness certificate.
+- Decision: retire the transpose-only performance proposal. Restored host_pass.py and
+  simulate.py from **ee4fea28c04d482566be16e916b609d7c6a99e5e**; all ten simulator modules
+  verified byte-identical to that reviewed parent. No Git reset/commit/merge was performed.
+  Candidates 10, 11 and 12 (and earlier trials) remain in branch history with their failures.
+  The callback diagnostic is historical and must be run against candidate 12's exact source,
+  since restored ee4fea2 does not define its transposed callback wrappers.
+- Stop this sequence of implementation variants. Candidates 10/11/12 yielded large medians
+  0.801084740 / 0.808584839 / 0.799623925 s in separate cohorts, none a confirmed improvement.
+  Homogeneous linking dispatch and callback transposes have not provided compelling phase
+  evidence alone. Candidate 7 remains unadmitted, not a new baseline. Do not merge its remaining
+  no-op shortcuts on the assumption that subtraction of unmatched timings proves their benefit.
+- Concrete next experiment for the supervisor: run the existing
+  `experiments/notes/overnight-overhead-profile.py` on restored ee4fea2 source, with each
+  caller's actual setup, optimization pairs and sweep values, in fresh fixed-environment
+  processes for large, official aLIGO and one other setup. Return full top-self/top-cumulative
+  import/build tables, not just total wall time. Separately collect the unchanged harness's
+  import-time tree so benchmark-owned imports are counted. These are instrumented attribution
+  runs, not clean official timing samples. The exact CLI and omitted-input caveat are recorded
+  in the earlier profiling section. Do not run the historical candidate checks against the
+  restored parent as though their implementation were still present.
+- Use that attribution to select a distinct hotspot with material measured cost before another
+  simulator edit. If no such hotspot appears, retain ee4fea2 honestly. Alternatively, obtain the
+  already requested independent review/direct parent array audit/interleaved timings for exact
+  candidate 7; that is a validation task, not permission to promote it based on old medians.
+- Unresolved findings remain: pristine grid signal/gradients 33,161,180/loss; uifo_rand1/rand3
+  logarithmic sensitivity discrepancies ~2.04e-4/~5.81e-5; grid finite-difference coordinates
+  54,59,63,136,161,163. Earlier aLIGO coordinate checks passed 29/29. Whole-pass custom VJP
+  remains first-order reverse mode only, without JVP/Hessians. Tolerances unchanged.
+- Handoff: no new optimization candidate for evaluation. Restored parent and recorded evidence
+  are ready for supervisor bookkeeping. Lane/branch overnight-overhead-v1; deadline remains
+  **2026-11-22 09:27:44 UTC**, epoch1795339664. This ends the boundary hypothesis, not the
+  authorized campaign. Profiling and new clean paired timings remain outstanding.
+
+
+### Candidate 13: initialize augmented identities in place
+
+- Resumed at the supervisor's explicit request for a concrete next experiment. Candidate SHA
+  and evaluation/job identifiers are pending supervisor commit and submission. Branch HEAD
+  at preparation is a24a97975527c130cd61f7032157f73c6bc1157c. Scientific comparison parent is
+  **ee4fea28c04d482566be16e916b609d7c6a99e5e**, not the retired candidate 12. Relative to that
+  reviewed parent, the entire simulator delta is **two statements in build.py**. The pending
+  host_pass.py/simulate.py diff against branch HEAD restores the parent and removes candidate
+  12's transposed callbacks; no solver/refinement/adjoint mathematics changes.
+- Distinct conservative mechanism: the builder first allocates zero-filled complex augmented
+  carrier/signal matrices, then creates square complex identity temporaries and copies their
+  entire contents into the already-zero left blocks. Replace those two assignments with
+  np.fill_diagonal(matrix, 1). A rectangular (n, n+1) matrix has exactly n diagonal entries;
+  the right-hand-side column stays zero, including empty/singleton systems. No reduction,
+  arithmetic ordering, indexing metadata, physical parameter or derivative path changes.
+- Actual redundant operation established by source: two np.eye allocations and two dense
+  left-block copies. For carrier order C and signal order S, this avoids 16*(C*C+S*S) bytes
+  of temporary complex128 array capacity, and replaces C*C+S*S destination element writes
+  with C+S writes. This is an allocation/work count, NOT a measured RSS or time saving;
+  allocator reuse, lazy zero pages and later matrix writes can affect observed memory/time.
+  Dimensions come solely from the supplied setup. All dense public matrices remain allocated
+  with the original shapes and dtype and are fully populated as before. No caches are added.
+- Cost context: most recent evaluated candidate 12 had build phase medians 73.323 ms large /
+  37.897 ms official aLIGO; import medians 265.410 / 264.915 ms and summed six lower/compile
+  phase medians about 185.8 / 188.9 ms. Those measurements describe candidate 12, not this
+  candidate or a contemporaneous parent. Only build/allocation work is targeted here. There
+  is no measured attribution of the identity allocation cost; benefit could be below noise.
+  The outstanding supervisor profiling request remains useful and has not been run locally.
+- Search direction: candidates 10/11/12 remain retired and preserved. This is neither another
+  callback/signature permutation nor a repetition of candidate 4's Python bookkeeping or
+  candidate 10's dense position-map rewrite. It reduces implementation complexity without
+  replacing any structural metadata representation. The small source-proven redundancy is
+  sufficient to submit a conservative experiment, not sufficient to claim a speedup.
+- Local checks: AST parsing passed for all ten simulator modules. Verified exact source identity
+  with ee4fea2 for the other nine modules, and verified the build.py delta consists only of
+  the two expected statement replacements. Pure Python rectangular-index models passed for
+  all orders 0 through 128 (129 cases). This models diagonal positions, not NumPy execution.
+  Local NumPy/JAX are unavailable; no runtime simulation or benchmark was launched. Do not
+  mark a NumPy/JAX runtime check as passed.
+- Evaluation request: supervisor commits this exact candidate, runs both unchanged full
+  official benchmarks and compares every saved output and gradient to ee4fea2 and the seed;
+  include the existing generalization cases and independent source review. If the build/total
+  reduction appears promising, obtain paired interleaved fresh-process parent/candidate runs
+  on matching CPU/thread policy, with separate large/aLIGO samples, medians, ranges, phases,
+  memory and overlap status. No acceptance from a small warm allocation test. If gain is
+  unconfirmed, retain ee4fea2 and use the requested profile before selecting another hotspot.
+- Inherited unresolved pristine-reference signal/gradient/loss disagreements, uifo_rand1/rand3
+  sensitivity errors, six grid finite-difference coordinates and first-order-only custom VJP
+  support remain exactly as recorded above. No tolerance or validation policy changes.
+- Prepared before the unchanged 2026-11-22 09:27:44 UTC deadline. Candidate is ready for
+  supervisor evaluation; no performance or numerical outcome is claimed yet.
