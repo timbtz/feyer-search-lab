@@ -74,12 +74,14 @@ def handle(root, request):
 
 
 def main():
+    from .compiler_policy import LEGACY, POLICIES
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=Path('/workspace/feyer-lab'))
     parser.add_argument('command', choices=('request', 'worker'))
     parser.add_argument('--once', action='store_true')
     parser.add_argument('--cpu', type=int, default=2)
     parser.add_argument('--timeout', type=float, default=900)
+    parser.add_argument('--compiler-policy', choices=POLICIES, default=LEGACY)
     args = parser.parse_args()
     if args.command == 'request':
         import sys
@@ -87,7 +89,8 @@ def main():
     else:
         queue = Queue(args.root / 'state', args.root / 'repo.git')
         (args.root / 'state' / 'worker.pid').write_text(str(os.getpid()) + '\n')
-        worker = Worker(queue, args.root / 'runs', args.root / 'control' / 'lab', cpu=args.cpu, timeout=args.timeout)
+        worker = Worker(queue, args.root / 'runs', args.root / 'control' / 'lab', cpu=args.cpu, timeout=args.timeout,
+                        compiler_policy=args.compiler_policy)
         if args.once:
             print(json.dumps(worker.run_once()))
         else:

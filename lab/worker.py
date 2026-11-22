@@ -18,6 +18,7 @@ from pathlib import Path
 
 from .queue import Queue
 from .resources import MemoryMonitor
+from .compiler_policy import LEGACY, flags_allowed, policy_descriptor, policy_digest
 
 BASELINE_SHA = "02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f"
 PROTECTED_PATHS = ("benchmark.py", "plot_timings.py", "examples/data", "requirements.txt", "pyproject.toml", "setup.py")
@@ -78,7 +79,9 @@ class Worker:
                  timeout=900, baseline_sha=BASELINE_SHA,
                  reference_arrays="/workspace/feyer-pristine/base1.npz",
                  heartbeat_seconds=5, stale_seconds=120, compare_full=True,
-                 memory_budget_bytes=32_000_000_000):
+                 memory_budget_bytes=32_000_000_000, compiler_policy=LEGACY):
+        policy_descriptor(compiler_policy)
+        self.compiler_policy = compiler_policy
         self.queue = queue
         self.runs_dir = Path(runs_dir).resolve()
         self.evaluator_root = Path(evaluator_root).resolve()
@@ -223,7 +226,8 @@ class Worker:
             raise ValueError("Report does not identify one requested and effective logical CPU")
         if environment.get("thread_limits") != {name: "1" for name in THREAD_VARIABLES}:
             raise ValueError("Report numerical-library thread limits differ from one")
-        if environment.get("omp_num_threads") != "1" or environment.get("xla_flags") is not None:
+        if environment.get("omp_num_threads") != "1" or not flags_allowed(
+                environment.get("xla_flags"), getattr(self, 'compiler_policy', LEGACY)):
             raise ValueError("Report has unexpected OpenMP or XLA configuration")
         if not str(environment.get("python", "")).startswith("3.12."):
             raise ValueError("Report did not use Python 3.12")
@@ -273,6 +277,8 @@ class Worker:
         result = {"run_dir": str(run), "sha": job["sha"], "profile": job["profile"],
                   "cpu": self.cpu, "python": self.python_path, "platform": platform.platform(),
                   "official_passed": None, "regression_passed": None,
+                  "compiler_policy": self.compiler_policy,
+                  "compiler_policy_sha256": policy_digest(self.compiler_policy),
                   "resource_provenance": resource_snapshot(),
                   "memory_budget_bytes": self.memory_budget_bytes,
                   "evaluator_release": str(self.evaluator_root),
