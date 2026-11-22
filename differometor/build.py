@@ -1470,7 +1470,9 @@ def build(setup: Setup):
     # -----------------------------------------------------------------
     # Mark unused ports and inject vacuum noise at those ports.
     # -----------------------------------------------------------------
-    for node_port in all_ports - used_ports:
+    # Keep instruction order (and downstream static plan metadata) independent
+    # of Python's process hash seed. Each unused port still gets its own source.
+    for node_port in sorted(all_ports - used_ports):
         node, port = node_port.split(".")
         try:
             port_offset = PORT_DICTS[setup.nodes[node]["component"]][port]
