@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 
-def extended_solve(products, values, factor, rhs, trans, initial):
+def extended_solve(products, values, factor, rhs, trans, initial, *, return_extended=False):
     import numpy as np
     rhs = np.asarray(rhs, dtype=np.clongdouble)
     vector = rhs.ndim == 1
@@ -44,7 +44,7 @@ def extended_solve(products, values, factor, rhs, trans, initial):
             best, best_error = x.copy(), error
         if np.max(np.abs(correction)) <= 1e-19 * max(float(np.max(np.abs(x))), 1e-300):
             break
-    result = np.asarray(best[:, 0] if vector else best, dtype=np.complex128)
+    result = np.asarray(best[:, 0] if vector else best, dtype=np.clongdouble if return_extended else np.complex128)
     return result, {'before_componentwise_residual': before, 'extended_componentwise_residual': best_error,
                     'iterations': iterations, 'transpose': trans}
 

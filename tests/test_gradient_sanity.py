@@ -4,6 +4,13 @@ from lab.gradient_sanity import check_coordinate, extended_readout_loss
 
 
 class GradientSanityTests(unittest.TestCase):
+    def test_extended_namespace_does_not_modify_numpy(self):
+        from lab.extended_host_primal import ExtendedNumpy
+        original = np.complex128
+        ext = ExtendedNumpy()
+        self.assertIs(ext.complex128, np.clongdouble)
+        self.assertIs(np.complex128, original)
+        self.assertIs(ext.asarray, np.asarray)
     def test_extended_readout_single_and_differential_detectors(self):
         carrier = np.array([[1j], [2+1j]])
         signal = np.array([[1+2j, 3-1j], [4+1j, 2-3j], [2-1j, 3j], [1+1j, 2]])
@@ -53,6 +60,9 @@ class GradientSanityTests(unittest.TestCase):
                 actual, info = extended_solve(products, matrix.ravel(), Factor(), rhs, trans, expected)
                 np.testing.assert_allclose(actual, expected, rtol=1e-13, atol=1e-13)
                 self.assertLessEqual(info['extended_componentwise_residual'], info['before_componentwise_residual'])
+                high, _ = extended_solve(products, matrix.ravel(), Factor(), rhs, trans, expected, return_extended=True)
+                self.assertEqual(high.dtype, np.dtype(np.clongdouble))
+                np.testing.assert_allclose(high, expected, rtol=1e-13, atol=1e-13)
 
 
 if __name__ == '__main__':

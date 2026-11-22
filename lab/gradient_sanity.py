@@ -120,6 +120,12 @@ def run(args):
         def evaluate(p):
             c, s, n = jax.device_get(forward(jnp.asarray(p)))
             return extended_readout_loss(c, s, n, port_ids, ref)
+        if getattr(args, 'extended_assembly', False):
+            # Restore the narrower hook: this evaluator manages/restores all its
+            # own module bindings and performs no JAX callback side effects.
+            hp._solve = original_solve
+            from lab.extended_host_primal import make_evaluator
+            evaluate = make_evaluator(arrays, ports, expected)
     results = {'schema': 'feyer-all-coordinate-gradient-sanity-v1', 'candidate_sha': sha,
                'harness_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                'setup': args.setup, 'frequencies': int(frequencies.size), 'variables': len(point),
@@ -130,6 +136,10 @@ def run(args):
         results.update(precision_assisted=True, target_gradient='Unmodified exact candidate autodiff',
                        scope='Diagnostic primal uses extended-residual solves and long-double readout; original candidate gradient target. Not a pass of the unmodified black-box finite difference, not timing evidence.',
                        residual_probe_sha256=hashlib.sha256(Path(__file__).with_name('solver_precision_probe.py').read_bytes()).hexdigest())
+        if getattr(args, 'extended_assembly', False):
+            results.update(extended_assembly=True,
+                           assembly_probe_sha256=hashlib.sha256(Path(__file__).with_name('extended_host_primal.py').read_bytes()).hexdigest(),
+                           scope='Diagnostic primal promotes the same component/assembly source, residual refinement and readout to long double; original candidate AD target. Not an independent physics oracle, unmodified black-box FD pass, or timing result.')
     floors = {'reflectivity': 1e-3, 'tuning': 1., 'angle': 1., 'db': 1.,
               'power': 1e-6, 'mass': 1e-9, 'length': 1e-3}
     prior = json.loads(args.recheck.read_text()) if getattr(args, 'recheck', None) else None
@@ -195,5 +205,9 @@ if __name__ == '__main__':
     p.add_argument('--output', required=True, type=Path)
     p.add_argument('--recheck', type=Path, help='Retain a first pass and probe its nonpassing coordinates with a fixed alternative step menu')
     p.add_argument('--extended-residual', action='store_true', help='Separate precision-assisted primal diagnostic; original candidate AD target')
+    p.add_argument('--extended-assembly', action='store_true', help='Also evaluate original component/assembly source in long-double arithmetic; requires --extended-residual')
     p.add_argument('--only-indices', type=int, nargs='+')
-    run(p.parse_args())
+    args = p.parse_args()
+    if args.extended_assembly and not args.extended_residual:
+        p.error('--extended-assembly requires --extended-residual')
+    run(args)
