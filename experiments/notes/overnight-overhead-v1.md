@@ -1884,3 +1884,130 @@
   begin deleting host adjoint calculations or suppressing zero-valued derivative paths.
   The pending import/build profile is the next evidence request. No local benchmark,
   commit, GitHub/SSH, evaluator change or agent spawning. Deadline09:27:44 UTC unchanged.
+
+### Candidate23 feedback and mechanism stop
+
+- Candidate SHA **61e375cd2b712d9f2812aed686090586aec31b2c**, request/evaluation
+  **edcaafd3a1754454bfbb9847e8ccfa42**, grid-1/2/3 and aligo-1/2/3. Read the complete
+  own-branch receipt at experiments/runs/overnight-20261122/overnight-overhead-v1/
+  edcaafd3a1754454bfbb9847e8ccfa42.json. Both official benchmarks pass3/3. Every
+  reported physical output/gradient category and all14 generalization cases pass
+  initial-seed tolerances. Pristine comparisons still fail with inherited patterns.
+  No independent source review or results for the44 synthetic checks were supplied.
+- Large fresh seconds0.8391586150974035,0.806842653080821,0.8026107437908649;
+  median0.806842653080821, range0.8026107437908649–0.8391586150974035.
+  Official aLIGO0.5457160733640194,0.5481212455779314,0.5545543003827333;
+  median0.5481212455779314, range0.5457160733640194–0.5545543003827333.
+  Historical reviewed-parent median difference: large+5.265 ms, aLIGO-0.434 ms.
+  These are unpaired observations, not causal estimates. confirmed_improvement=false;
+  requires_source_review, large_gain_below_selection_threshold, overlapping large
+  ranges require paired evidence. Do not pool the workloads or treat medians as an
+  organizer ranking policy.
+- Phase medians ms large/aLIGO, computed from all three receipt samples:
+  imports268.738/265.888; initialize3.606/3.600; load1.420/0.213;
+  build72.766/38.241; forward lower19.654/19.229, compile33.015/33.457,
+  execute187.806/32.563; sensitivity lower25.682/26.419, compile40.007/41.549,
+  execute0.873/0.468; gradient lower17.074/16.581, compile51.944/53.396,
+  execute87.553/14.830; host transfer0.194/0.149.
+  Compared with22 (which used the parent callback), target gradient lower deltas are
+  -0.177/-0.005 ms and compile deltas -0.112/+0.112 ms. These tiny, mixed, unpaired
+  changes do not establish a useful phase reduction. Do not extend this mechanism
+  into host derivative pruning to manufacture a larger gain.
+- Sampled peak RSS bytes large628232192/645423104/508420096;
+  aLIGO282529792/294793216/288849920; generalization816816128. No infrastructure
+  failure or memory exceedance. CPU2, one logical CPU, library threads1, EPYC9334,
+  x64, reviewed compiler flags and no persistent cache. Other-job overlap is unknown,
+  contention not excluded, ranking_eligible=false.
+- Generalization archiveeab46cfd48108865efcc893b94fd8a8b46cdc343ce04f8f2acfdca0e851ee2fd.
+  Official array hashes112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5
+  large and9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195 aLIGO.
+  Seed gradient max absolute differences5.686350050382316e-6 and3.637978807091713e-11
+  remain unchanged. No reported new tolerance failure; this does not certify universal
+  correctness. Pristine grid signal/gradient33/161/180/loss disagreements, random
+  uifo_rand1/3 log sensitivity errors2.0361e-4/5.8101e-5, unresolved grid FD coordinates
+  54/59/63/136/161/163, and no host-pass JVP/Hessian support remain explicitly open.
+- Decision: retire active-cotangent filtering. Restored host_pass.py to reviewed
+  ee4fea28c04d482566be16e916b609d7c6a99e5e; all ten simulator modules verified byte-identical
+  to that strongest reviewed parent. No history reset; candidate23, its diagnostic and
+  receipt remain preserved. Syntax and diff checks pass. This restoration is not a new
+  speedup candidate and does not justify another unpaired benchmark-only replay.
+
+### Coordinator handoff — obtain attribution before another variant
+
+- End this hypothesis with ready_for_evaluation=false and stop=true. This does not end
+  the authorized campaign or move its09:27:44 UTC deadline. Recent isolated sideband
+  concatenation and callback-result changes supplied no meaningful phase reduction;
+  repeated empty-phase confirmation supplied a tracing signal but remains unreviewed
+  and lacks matched-parent evidence. Retain reviewed ee4fea2 as current simulator source.
+- Next useful evidence request: run existing supervisor-only
+  experiments/notes/overnight-overhead-profile.py against the restored source in fresh
+  fixed-policy processes, with arbitrary supplied setup JSON and actual caller optimization
+  pairs/sweep pairs/values. Obtain large, official aLIGO and one varied optical setup.
+  Report function self/cumulative times and call counts for imports and build. The script
+  does no forward simulation and is an instrumented attribution diagnostic, not a new
+  official timing sample. Its import set is simulator/JAX/NumPy, not the complete harness
+  import graph. No profiling results have been returned yet; local NumPy/JAX unavailable.
+- Separately, the reproducible empty-phase tracing candidate2e50e7c/f90fa96 needs the
+  pending independent review and empty/nonempty detector-phase derivative checks, then
+  interleaved fresh-process candidate versus ee4fea2 on both official workloads before
+  any claim of a stable gain. Do not merely resubmit identical candidate-only samples.
+- Future implementation should target an attributed repeated operation, not another
+  small allocation/API rewrite inferred from a whole-phase total. Possible next direction
+  is reducing repeated builder-to-JAX setup dispatch only if the profile demonstrates it;
+  previous whole-host staging/group staging attempts are preserved failures, not permission
+  to replay them. This handoff requests evidence through the supervisor and starts no job.
+
+### Candidate24 — linear base-matrix gather coordinates
+
+- Supervisor resumed with an explicit request for a concrete evaluable experiment.
+  No additional profile or paired-parent data accompanied that request. Candidate23
+  retirement remains in force. Starting simulator is verified reviewed parent
+  **ee4fea28c04d482566be16e916b609d7c6a99e5e**, not23 or an unreviewed combination.
+  New candidate SHA/job identifiers pending supervisor commit and evaluation.
+- Inspection found builder indexing already host-side; do not claim another removed
+  eager JAX indexing compilation. The selected distinct mechanism is the representation
+  of the three traced SparseSystem.base_values gathers. Each currently consumes an
+  (nnz,2) coordinate constant and a rank-two matrix. New code reshapes the matrix to
+  rank one and gathers with (row*width+column) offsets of shape(nnz,1). It preserves
+  exact entry order, all structural entries (including current zeros), and all matrix
+  derivative destinations. The transpose is the corresponding flattened scatter followed
+  by reshape. No reduction, reassociation or changed optical arithmetic is introduced.
+- Linear offsets are prepared from the current arbitrary setup at construction time.
+  If base_values receives another width, offsets are recomputed from its actual static
+  width and the same coordinates; this preserves valid direct-method calls with wider
+  operands. This is metadata derived from the supplied matrix, not known-workload dispatch.
+  The original base_coordinates attribute remains for compatibility. Additional stored
+  offset memory is8*nnz_total bytes per system plus a width scalar. All construction is
+  inside ordinary timed build; no new cache or outside-timer work.
+- Cost hypothesis: one coordinate component per gathered entry instead of two may reduce
+  gather lowering/address calculation and constant handling in forward and gradient
+  compilation. Three matrix reshape operations are added and may cost more than this
+  saves. Latest observed phase medians from23 were forward lower19.654/19.229 ms and
+  compile33.015/33.457 ms large/aLIGO; gradient lower17.074/16.581 and compile51.944/53.396.
+  These are whole-phase observations, not attributed recoverable costs. No new timing or
+  stable gain is claimed. This differs from previous compact host-position metadata10,
+  contiguous parameter scatter14, and callback-result filtering23.
+- Only SparseSystem.__init__ metadata and SparseSystem.base_values differ from reviewed
+  parent. Solver, refinement, adjoint, callbacks and public output functions are unchanged.
+  Nine other simulator modules match parent bytes. Candidate23 restoration remains a diff
+  against the last evaluated branch revision but is not part of this new mechanism.
+- Local validation:2,000 executions of the ACTUAL changed base_values method with stdlib
+  matrix/index stubs pass, covering1,000 arbitrary patterns with shuffled/empty selections
+  at original and wider widths. They verify index arithmetic and gather options, not JAX
+  transforms or performance. All simulator and diagnostic syntax checks and diff checks pass.
+- Prepared experiments/notes/overnight-overhead-linear-gather-check.py with30 exact JAX
+  primal/VJP comparisons against the reviewed two-coordinate gather: square/augmented
+  systems, duplicate and negative writes, reserved zero-valued entries with nonzero
+  derivatives, real/complex128 operands, wider matrices, empty sparse patterns, and two
+  sequentially batched cases. It imports the real SparseSystem and never patches a simulator,
+  benchmark or validation module. UNEXECUTED locally because NumPy/JAX are unavailable.
+- Request supervisor synthetic check, both unchanged full official benchmarks on the exact
+  new SHA, all saved physical outputs/gradients and14 varied-setup comparisons, independent
+  source review, and paired fresh-process parent confirmation if a meaningful phase change
+  appears. Report separate samples/medians/ranges, phase deltas, memory and overlap.
+  Existing pristine signal/gradient/loss disagreements, uifo_rand1/3 sensitivity differences,
+  unresolved grid FD54/59/63/136/161/163 and host-pass no-JVP/Hessian limitation persist.
+- If this representation change has no meaningful effect, retire it without further
+  flatten/slice/scatter variants absent compiler attribution. Pending import/build profiling
+  remains useful; it was not supplied or launched here. No commits, remote calls, benchmarks,
+  installs or agents. Absolute campaign deadline09:27:44 UTC unchanged.

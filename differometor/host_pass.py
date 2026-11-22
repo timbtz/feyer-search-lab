@@ -675,38 +675,16 @@ def host_pass(plan, parameters, carrier_values, signal_values, carrier_base, sig
     return carrier, signal, noise
 
 
-@jax.tree_util.register_static
-class _ActiveInputs(tuple):
-    """Differentiation flags, stored as static residual metadata (no array leaves)."""
-
-
-def _host_pass_fwd(plan, *wrapped_inputs):
-    active = _ActiveInputs(value.perturbed for value in wrapped_inputs)
-    inputs = tuple(value.value for value in wrapped_inputs)
+def _host_pass_fwd(plan, *inputs):
     carrier, signal, noise, covariances, weights = _forward_call(plan, *inputs)
-    return (carrier, signal, noise), (active, inputs, (carrier, signal, noise, covariances, weights))
-
-
-def _backward_active(plan, active, *arguments):
-    # Keep all host derivative mathematics unchanged; only omit callback results
-    # for arguments which JAX says are not involved in this differentiation.
-    result = host_backward(plan, *arguments)
-    return tuple(value for value, needed in zip(result, active) if needed)
+    return (carrier, signal, noise), (inputs, (carrier, signal, noise, covariances, weights))
 
 
 def _host_pass_bwd(plan, residuals, cotangents):
-    active, inputs, outputs = residuals
-    if not any(active):
-        return (None,) * len(inputs)
-    # symbolic_zeros also exposes unused OUTPUT cotangents. Materialize those
-    # as before so host_backward receives exactly the same array interface.
-    cotangents = tuple(jnp.zeros_like(output) if isinstance(bar, jax.custom_derivatives.SymbolicZero)
-                       else bar for output, bar in zip(outputs[:3], cotangents))
-    shapes = tuple(jax.ShapeDtypeStruct(value.shape, value.dtype)
-                   for value, needed in zip(inputs, active) if needed)
-    result = iter(jax.pure_callback(partial(_backward_active, plan, active), shapes,
-                                   *inputs, *outputs, *cotangents, vmap_method="sequential"))
-    return tuple(next(result) if needed else None for needed in active)
+    inputs, outputs = residuals
+    shapes = tuple(jax.ShapeDtypeStruct(value.shape, value.dtype) for value in inputs)
+    return jax.pure_callback(partial(host_backward, plan), shapes, *inputs, *outputs, *cotangents,
+                             vmap_method="sequential")
 
 
-host_pass.defvjp(_host_pass_fwd, _host_pass_bwd, symbolic_zeros=True)
+host_pass.defvjp(_host_pass_fwd, _host_pass_bwd)
