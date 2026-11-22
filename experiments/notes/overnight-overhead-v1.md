@@ -527,3 +527,79 @@
 - Next decision: reject if numerical checks introduce discrepancies or complete first-run gains do
   not survive paired timing. Do not stack more readout algebra without measured graph/phase evidence;
   the next distinct investigation would require the previously requested import/build profile.
+
+
+### Candidate 9 feedback and retirement (2026-11-22)
+
+- Exact candidate `27c951e5cf854b1ff352e19fa706d81c794af37f`; evaluation
+  `53b3f5fd10724c96b85344729acd6f42`, grid-1/2/3 and aligo-1/2/3.
+- Large complete first-run samples: 0.823984342, 0.801257059, 0.800967131 s;
+  median **0.801257059**, range **0.800967131–0.823984342**.
+- Official aLIGO samples: 0.545446666, 0.547231529, 0.542567078 s;
+  median **0.545446666**, range **0.542567078–0.547231529**.
+- Unpaired median differences from admitted ee4fea2: -0.321 ms large and -3.108 ms aLIGO.
+  Large ranges overlap; no meaningful repeat-supported improvement. Source review absent.
+  Reject the readout experiment as an optimization, retaining its commit and diagnostic.
+- Target gradient trace/lower+compile samples large: 68.888, 69.791, 71.178 ms;
+  aLIGO: 69.257, 70.595, 70.437 ms. Sensitivity lower+compile samples large:
+  64.885, 66.256, 65.404 ms; aLIGO: 67.215, 67.225, 67.517 ms. No matched parent
+  phase samples supplied; no reliable target-phase delta established. Requested synthetic
+  readout diagnostic/primitive counts are not included in feedback, so remain unconfirmed.
+- Official 3/3 passes for both setups; all 14 generalization cases pass initial-seed comparison
+  tolerances. Official array hashes equal those recorded for candidates 7 and 8. Pristine strict
+  failures remain (including grid signal/three gradients/loss and uifo_rand1/rand3 sensitivity),
+  along with six unresolved grid FD coordinates. No new numerical discrepancy reported, but no
+  universal correctness claim. Whole-pass custom VJP still lacks forward-mode/Hessian support.
+- Sampled peak RSS large: 541880320, 618713088, 500736000 bytes; aLIGO: 281800704,
+  282968064, 289210368 bytes; generalization: 861216768 bytes. No infrastructure failure or
+  memory-budget exceedance reported. External job overlap remains unknown.
+- Restore components.py from reviewed ee4fea2. No additional readout-algebra variants and no
+  combination with candidates 7/8. Admitted best remains ee4fea2.
+
+## Candidate 10: compact coordinate-to-position metadata
+
+- Deliberate source parent: `ee4fea28c04d482566be16e916b609d7c6a99e5e`. Candidate SHA and
+  evaluation IDs pending supervisor. Net simulator delta against parent is sparse.py only,
+  25 insertions/7 deletions; all other nine simulator modules byte-identical. Despite the module
+  name, this changes structural setup metadata only, not sparse solving, refinement or adjoints.
+- Actual redundant allocation: every SparseSystem builds and retains an int64 dense matrix
+  `_position`, filling every element with -1 and replacing structural entries with their sparse
+  positions. It is only used for coordinate lookups (repository search found no external reader).
+  Each table costs 8*N*(N+augmented) bytes even when almost all positions are absent. This work
+  occurs during run_build_step; no cache or persisted state is involved.
+- Existing coordinates already arrive in CSC order, followed by RHS entries sorted by row.
+  Their column-major integer keys `col*N + row` are consequently sorted and distinct. Store
+  only these keys and resolve coordinate positions with np.searchsorted. Check bounds first,
+  normalize legal negative coordinates once, preserve NumPy coordinate broadcasting and
+  repeated queries, and reject missing pattern entries. Empty patterns/queries are supported.
+  Out-of-bounds and incompatible broadcast queries remain IndexError; absent entries remain
+  ValueError. Exception wording changes. `_position` was private and is replaced by private
+  `_position_keys`; the public positions method and its return dtype/shape are preserved.
+- Pattern discovery, explicit write/extra destinations (including current zero values), CSC
+  ordering, write order/duplicates, base-value gathers, structural hashes and all numerical
+  code are unchanged. No design-parameter dependence is pruned. Rebuilding a setup creates
+  a fresh key vector. There is no fixture/shape identity dispatch or numerical fallback.
+- Hypothesis: avoiding initialization and lifetime of dense inverse tables reduces setup time
+  and retained memory for sparse optical systems. The new lookup costs O(log nnz) per query
+  instead of direct indexing and adds validation, so small/dense setups may gain nothing or
+  regress. No speedup is measured. Existing build phase remains roughly 70–74 ms large and
+  38–40 ms aLIGO; table construction's share has not been profiled. This is a different mechanism
+  from the retired host/JAX conversion experiment, not a retry of generic sparse solving.
+- Local checks: all simulator/new diagnostic sources parse and git diff --check passes.
+  A pure-Python dense-dictionary versus sorted-key/bisect model matched 8,540 coordinates
+  across varied dimensions, square/augmented layouts and negative indices. This checks the
+  indexing argument, not actual NumPy execution. Local NumPy/JAX remain unavailable.
+- Added `experiments/notes/overnight-overhead-position-check.py`: compares real SparseSystem
+  construction and lookup to an independent dense-table reference over random/empty/full
+  patterns; tests duplicates, structural zeros, extra destinations, negative/out-of-bounds
+  coordinates, query broadcasting, zero-sized matrices, errors, rebuild invalidation, exact
+  hashes/order/dtypes and metadata bytes. Run alongside the existing gather diagnostic to
+  check structural-zero tangent contributions. Neither script has been executed locally.
+- Supervisor: run those focused diagnostics, then both unchanged full benchmarks on the same
+  SHA and saved-array/generalization comparisons against admitted parent and initial seed.
+  Expect unchanged physical arrays/gradients; investigate any discrepancy without changing
+  tolerances. Obtain independent review before promotion. If promising, use interleaved fresh
+  parent/candidate runs with separate medians/ranges, target build-phase deltas, RSS and job
+  overlap. A smaller metadata allocation alone does not establish first-run improvement.
+- Next decision: if setup gain is not stable, reject rather than tuning lookup algorithms blindly;
+  retain ee4fea2 and request a supervised build profile before another structural variant.
