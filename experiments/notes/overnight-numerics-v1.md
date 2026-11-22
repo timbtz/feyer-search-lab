@@ -3731,3 +3731,170 @@ provisional guard repair, not an admitted timing win. All existing strict
 signal/gradient33,161,180/loss, uifo_rand1/rand3 sensitivity discrepancies and
 six grid finite-difference questions remain unresolved; aligo29/29 checks and
 whole-pass first-order-only VJP limitations remain distinct.
+
+
+## Trial39 feedback: retired; default factorization restored (2026-11-22 06:13 UTC)
+
+Exact candidate39b57ea644ca3a66b10312643860ab5e5e5ea7af; dual-official job
+ a19653e8128f4f4790b9cb43698f906e, checks grid-1/2/3 and aligo-1/2/3.
+Receipt: experiments/runs/overnight-20261122/overnight-numerics-v1/
+a19653e8128f4f4790b9cb43698f906e.json. All6 official checks pass. No infrastructure
+failure, no source review, confirmed_improvement=false, promotion_ready=false.
+Strict/generalization review introduces failures against the seed; public
+passes do not override them. The self-comparison artifacts block is not the
+seed comparison and is not used to classify correctness here.
+
+Complete fresh-process large samples seconds:
+[0.8464956097304821,0.814726086333394,0.8166852854192257]; median0.8166852854192257,
+range0.814726086333394–0.8464956097304821. Official aligo samples:
+[0.5510201808065176,0.5470750704407692,0.5525509472936392]; median0.5510201808065176,
+range0.5470750704407692–0.5525509472936392. Keep every sample, including large1
+imports296.943476ms. Unpaired median delta versus35 is -2.598679ms large,
++1.291612ms aligo; versus admitted7 +15.107602ms large,+2.465025ms aligo.
+These are separate support measurements, not a score or organizer ranking.
+Hardware CPU2/thread1 policy matched; external overlap/contention unknown.
+
+Median phase milliseconds (delta versus35, unpaired):
+large imports267.115129(-0.438718), build73.041512(+3.106948),
+forward170.679498(-10.968415), reverse112.291532(+5.867632).
+aligo imports267.862130(+3.030688), build38.728241(+1.133258),
+forward29.261276(-3.507642), reverse18.874981(-0.100590).
+Forward samples large172.811493/170.679498/169.931905ms, reverse108.247908/
+113.245334/112.291532ms. Aligo forward30.080598/29.051308/29.261276ms,
+reverse18.896179/18.874981/18.850749ms. The forward reduction does not establish
+a stable complete-run gain; no paired confirmation exists. Sampled RSS bytes
+large[458428416,451596288,441843712],aligo[291561472,293355520,282533888],
+generalization669302784. Lower observed RSS is not an isolated allocation
+measurement or a guaranteed peak; sampler misses short peaks.
+
+Inspected all6 saved-output comparison records and hashes (not raw remote NPZ,
+which is unavailable locally). Large repeats share archive hash
+bcf61a2a3c1d54aa2cd604a5dccae864437393331341d9a1df546d2058eb1668;
+aligo repeats share cd688670a8296247d823b61ddf8e7f709b9a07f9752ed64501348a4ef1da8ef4.
+Both differ from35. Each official workload newly fails scalar loss against
+initial_seed (1 entry); carrier, signal, noise, powers, sensitivity and gradient
+remain within the recorded seed bounds. Large seed sensitivity log error
+5.344134024198866e-10; gradient max absolute5.809734284412116e-5,relativeL2
+9.855445510324898e-10. Aligo seed log7.105427357601002e-15; gradient max absolute
+1.2405507732182741e-9,relativeL2 3.3786387991494894e-14. The loss failures remain
+real failed checks, not waived because sensitivity differences are small.
+No raw loss values or high-precision optical oracle was supplied.
+
+Against pristine: large still131 signal,3 gradient and1 loss failures; gradient
+max absolute0.005136849416885525,relativeL2 8.656223740274297e-8; sensitivity log
+6.768129878764739e-8. Aligo still1 loss failure; gradient max absolute
+8.863251423463225e-6,relativeL2 2.730298045973809e-10; log1.1802825383711024e-10.
+These do not resolve any of the earlier numerical questions.
+
+Inspected all14 generalization case comparisons. Seed12/14 pass (35 had14/14):
+new dev loss failure and Voyager347 signal entries fail. Seed log errors are
+ dev5.344134024198866e-10,dev_perturbed2.1316282072803006e-14,
+ uifo_20_5000 4.689582056016661e-13,rand1 9.108802601076604e-11,
+ rand2 1.857713982644782e-11,rand3 2.5454962582216467e-8,
+ voyager1.9184653865522705e-13,aligo7.105427357601002e-15,
+ dev_randparams1.4210854715202004e-14,uifo_randparams1 7.105427357601002e-15,
+ uifo_randparams2 3.552713678800501e-14,uifo_randparams3 7.105427357601002e-15,
+ amod3.552713678800501e-15,fmod7.105427357601002e-15.
+All14 seed gradient checks pass, which does not cancel the output failures.
+Pristine4/14 pass; Voyager signal failure count increases395->396. Other failure
+counts remain as35, with changed log errors including rand1
+0.0002036099726296925 and rand3 5.810243685644423e-5. Amod/fmod pass seed/pristine.
+Generalization archive cec71a955050e9bc0b84af48da96412927921b45cce6e528c9cb25abbeac8670.
+
+Decision: RETIRE PanelSize8 and restore differometor source exactly to35
+7a9480332bad29b5aaeacc5a4628481581507e7a. No further panel-size or Relax sweep is
+justified by this evidence. The already recorded87 synthetic agreement failures
+and mixed independent Decimal accuracy align with changed arithmetic being a
+real concern, but they do not explain individual optical discrepancies. The
+new optical loss/Voyager failures remain unresolved, rather than declared
+rounding. Preserve39 and its synthetic diagnostic result in history.
+Historical panel-check.py intentionally expects39's source/PanelSize8; run it
+on39 to reproduce that experiment, not on the restored35 source.
+
+Next direction should use the outstanding first-callback profiles on35 and
+changed-adjoint capture before another execution rewrite. The precise profiler
+and guard-capture coordinator requests appear in the38 handoff above. If39 is
+investigated later, request matched35/39 raw losses and Voyager failing entries,
+and capture the same assembled matrices/RHS, factor permutations and refinement
+traces for an independent high-precision solve; do not submit a guessed panel
+repair or combine it with other changes. No new candidate proposed now.
+
+Admitted7 remains the reviewed timing reference.35 is retained as the compatible
+provisional exact-guard parent, not a promoted performance win. Existing strict
+signal/gradient33,161,180/loss,rand1/rand3 sensitivity and six grid finite-
+difference discrepancies remain unresolved; earlier aligo29/29 checks and the
+lack of JVP/Hessian support remain distinct. This stops the panel hypothesis,
+not the authorized campaign.
+
+## Trial40: masked base-cotangent reduction (prepared 2026-11-22 06:17 UTC)
+
+Candidate SHA/job identifiers pending supervisor. Numerical parent35 remains
+7a9480332bad29b5aaeacc5a4628481581507e7a.39's default-factorization restoration is
+preserved in the pending diff; the only additional simulator mechanism is in
+SystemPlan.backward and its static constructor mask. No panel/ordering tuning,
+component-interpreter, gather-layout or retained-input change is combined.
+
+Source-established redundant operation: every SystemPlan.backward copies the
+full(B,nnz_total) cotangent, zeros the columns overwritten by component writes,
+then sums the copy over batch. Those overwritten columns never contribute to
+the base cotangent, independent of their numerical values. For C-contiguous
+input,40 uses np.sum(axis=0,where=base_unwritten[None,:]) directly. A build-time
+boolean mask is derived from all_rows.size and written positions. All component
+parameter cotangents still follow the identical original Jacobian/scatter path,
+including zero-valued physical parameters. No output or base cotangent is dropped.
+No numerical arrays/factors/answers are newly cached. The mask is topology-only.
+
+Important layout finding: a preliminary324-layout synthetic reduction screen
+found29 bitwise differences when a Fortran-contiguous input was directly reduced;
+the parent first copies to C layout.40 therefore keeps the exact original
+copy/zero/reduce path for any non-C-contiguous cotangent. This is array-layout
+dispatch, not fixture or known-shape dispatch. A further360 C-layout reductions
+with wide magnitude range, all/none/alternating/random masks found no bitwise
+differences. The scientific acceptance tolerances remain unchanged. Masking
+prevents arithmetic on overwritten NaN/Inf entries rather than hiding numerical
+failures in surviving columns. There is no production errstate suppression.
+
+Hypothesis: eliminate a batch-sized complex allocation and zero-fill/reduction
+work on overwritten base columns in the reverse phase.35's measured large
+reverse median106.423900ms is the target phase, versus18.975571ms for aligo.
+Its fraction spent in this operation is unmeasured; no callback profile has
+been supplied. This is a narrow structural reduction experiment, not a claim
+that allocation alone dominates or that earlier failed buffer changes worked.
+The static mask adds nnz_total bytes per SystemPlan to build/storage; where-mask
+branching may offset the savings, especially on small cases. The evaluator
+must count both costs. No implementation tuning parameter is added.
+
+Synthetic audit: experiments/notes/overnight-numerics-base-reduction-check.py,
+existing local Python3.12 NumPy2.5.5 (no JAX/optical benchmark). Actual parent and
+candidate SystemPlan methods are AST-loaded with the source-derived component
+interpreter.2637 pullbacks passed:1941 C-path and696 non-C fallback checks;
+18 forward assemblies passed. Finite arrays agree bitwise including signed
+zeros, nonfinite arrays agree elementwise including NaNs. Tests cover batch0–257,
+width0–64, all/no/random/alternating overwritten positions, C/F/reversed/strided
+layouts, large/small magnitudes, NaN/Inf/overflow-range values and signed zeros.
+Full component checks cover all19 functions, repeated writes, repeated/negative
+parameter indices, zero-valued and boundary parameter inputs. Inputs are checked
+for mutation. Three additional all-written nonfinite/overflow tests passed with
+invalid/overflow set to raise. Their initial fixture accidentally mapped5 writes
+to4 component outputs and raised in the unchanged parent's np.add.at at1e308;
+fixed the synthetic fixture to5 distinct outputs, then reran all checks. This
+was a test construction error, not a hidden simulator failure.
+
+Allocation-only probe: actual whole SystemPlan.backward with empty derivative
+slot lists, batch97,width263. Parent copies408176 bytes;40 uses a263-byte static
+mask and avoids that copy. Tracemalloc peak first run757184->353304 bytes;
+repeat after test refinement757152->353304 bytes. No elapsed time was measured.
+These are small synthetic allocation measurements, not official process RSS or
+an optical runtime result. Both paths preserve full return values in this probe.
+AST syntax parsing and git diff --check pass.
+
+Request the same exact new SHA on both unchanged official benchmarks, complete
+saved outputs/gradients against35 and seed, varied-setup/parameter/frequency and
+amod/fmod generalization, memory and independent review. Existing pristine/guard
+questions remain unresolved;40 is intended to introduce no numerical delta.
+If promising, request matched fresh-process parent35/candidate repetitions and
+report workload samples, medians, ranges and phase tradeoffs separately, with
+overlap status. No40 official timing or numerical evidence exists yet.39 stays
+retired with its failures preserved. Admitted7 remains the reviewed timing
+reference;35 remains a provisional exact-guard parent. No universal transform
+or numerical-correctness claim is made.
