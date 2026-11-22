@@ -396,6 +396,28 @@ def _collinear_coefficient(vector, direction):
     return None
 
 
+# Relative least-squares residual below which alpha * direction is used only as
+# the starting iterate of a refined solve. It selects a starting point, never an
+# answer: the refinement still corrects the full residual.
+WARM_START_RESIDUAL = 1e-6
+
+
+def _near_collinear_coefficient(vector, direction):
+    """Least-squares alpha when vector is close to alpha * direction, else None."""
+    scale = np.max(np.abs(vector)) if vector.size else 0.0
+    if scale == 0 or not np.isfinite(scale) or not np.all(np.isfinite(direction)):
+        return None
+    norm = np.real(np.vdot(direction, direction))
+    if norm == 0 or not np.isfinite(norm):
+        return None
+    alpha = np.vdot(direction, vector) / norm
+    if not np.isfinite(alpha):
+        return None
+    if np.max(np.abs(vector - alpha * direction)) <= WARM_START_RESIDUAL * scale:
+        return alpha
+    return None
+
+
 def _is_hermitian(pattern, values):
     """Whether finite supplied coefficients equal their conjugate transpose exactly.
 
@@ -415,10 +437,19 @@ def _is_hermitian(pattern, values):
     return bool(np.array_equal(values, transposed))
 
 
-def _solve(products, values, factor, rhs, trans):
-    """Solve op(A) x = rhs with SuperLU and the iterative refinement of `differometor.sparse`."""
+def _solve(products, values, factor, rhs, trans, initial=None):
+    """Solve op(A) x = rhs with SuperLU and the iterative refinement of `differometor.sparse`.
+
+    `initial` optionally replaces the first SuperLU solve as the starting iterate.
+    The refinement loop is unchanged: every step solves for the full residual
+    rhs - op(A) x and applies the same correction-size stopping test, with at
+    least one correction, so a starting iterate never bypasses the residual.
+    """
     rhs = np.ascontiguousarray(rhs, dtype=np.complex128)
-    solution = factor.solve(rhs, trans=trans)
+    if initial is None:
+        solution = factor.solve(rhs, trans=trans)
+    else:
+        solution = np.array(initial, dtype=np.complex128, copy=True)
     for _ in range(REFINEMENT_STEPS):
         correction = factor.solve(np.ascontiguousarray(rhs - products.apply(values, solution, trans)), trans=trans)
         solution = solution + correction
@@ -576,7 +607,18 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
                 signal_rhs_bar = alpha * np.conj(weights[row, detector])
                 break
         if signal_rhs_bar is None:
-            signal_rhs_bar = _solve(products, coefficients[row], factor, signal_bar[row], "T")
+            # Not exactly representable: when the cotangent is close to some
+            # alpha conj(s_d), start refinement from alpha conj(w_d) instead of a
+            # fresh solve. Refinement then solves for the full residual (including
+            # the collinearity defect and w's own residual) with the unchanged
+            # correction-size stopping test.
+            start = None
+            for detector in range(detectors):
+                alpha = _near_collinear_coefficient(signal_bar[row], np.conj(selections[row, detector]))
+                if alpha is not None:
+                    start = alpha * np.conj(weights[row, detector])
+                    break
+            signal_rhs_bar = _solve(products, coefficients[row], factor, signal_bar[row], "T", initial=start)
         covariance_rhs_bar = np.conj(weights[row].T) * temporary_bar[:, row][None, :]           # (N, D)
         rhs_bar = np.concatenate([signal_rhs_bar[:, None], covariance_rhs_bar], axis=1)
         coefficient_bar = -np.sum(rhs_bar[pattern.rows] * solution[pattern.cols], axis=1)

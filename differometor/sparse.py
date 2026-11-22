@@ -215,13 +215,10 @@ class SparseSystem:
         # Prepare the gather operand once while building, rather than tracing
         # general advanced-index normalization/packing at every JAX boundary.
         self.base_coordinates = np.stack((all_rows, all_cols), axis=1)
-        # The private table stores only -1 and structural entry offsets. Use a
-        # narrower integer when every offset fits; public indices stay int64.
-        position_dtype = np.int32 if all_rows.size <= np.iinfo(np.int32).max else np.int64
-        position = np.full(base_matrix.shape, -1, dtype=position_dtype)
+        position = np.full(base_matrix.shape, -1, dtype=np.int64)
         position[all_rows, all_cols] = np.arange(all_rows.size)
         self._position = position
-        self.write_positions = position[write_rows, write_cols].astype(np.int64, copy=False)
+        self.write_positions = position[write_rows, write_cols]
         self.unique_writes = bool(np.unique(self.write_positions).size == self.write_positions.size)
         digest = hashlib.sha256()
         for array in (np.int64(size), np.int64(augmented), all_rows, all_cols, self.write_positions):
@@ -232,7 +229,7 @@ class SparseSystem:
         positions = self._position[np.asarray(rows, dtype=np.int64).ravel(), np.asarray(cols, dtype=np.int64).ravel()]
         if np.any(positions < 0):
             raise ValueError("Requested positions outside the sparse pattern")
-        return positions.astype(np.int64, copy=False)
+        return positions
 
     def mask(self, predicate):
         """Static boolean mask over pattern entries from predicate(rows, cols)."""

@@ -4319,3 +4319,35 @@ complete-run gain. If43 also offers no improvement, close position-table tuning
 until actual build profiling supplies stronger evidence. Existing optical numerical
 questions and missing coordinator captures remain unchanged. No independent
 benchmarks, imports cleanup, evaluator edits or new dependencies were used.
+
+### Trial43 evaluated: no gain; position-table tuning closed
+
+SHA `67888dfc37c594aab4cb449702fccbe29499fbfb`, request `b514a46fd24542a29ac6125248f11c2c`.
+Six official passes; arrays equal35 (grid e0f2069c..., aLIGO 1c27f50f...); 14/14 seed
+generalization pass; pristine profile unchanged. Large 0.84863, 0.82172, 0.81605 s
+(median 0.82172); aLIGO 0.55547, 0.54895, 0.60507 s (median 0.55547; third sample has
+gradient compile 108.7 ms, flagged unstable). Reverse 107.8/107.2/106.9 ms (=35).
+Decision: revert sparse.py to35's int64 table; close position-table tuning.
+
+## Trial44 (Claude, resumed): warm-started refinement for near-collinear signal cotangents
+
+Parent: numerical parent35 (`7a94803`), sparse.py reverted to35. Reason for35's reverse
+regression (~85 -> ~106 ms vs admitted7): the exact-equality collinearity guard rejects
+the grid rows (LS alpha * direction differs from the supplied cotangent in last bits),
+so every row runs a cold refined A^T solve. Candidate7's tolerance guard skipped the solve
+but could discard an amplified residual (synthetic counterexample in candidate34 notes).
+
+Change (host_pass.py only): the exact-equality reuse of35 is unchanged. When it fails
+but the cotangent is within relative 1e-6 of some alpha conj(s_d) (`WARM_START_RESIDUAL`,
+only selects a starting iterate), `_solve` starts from x0 = alpha conj(w_d) instead of
+the first SuperLU solve. The refinement loop is untouched: every step computes the full
+residual rhs - A^T x (which contains the collinearity defect and w's own residual),
+solves for the correction, and stops by the same correction-size test, with at least one
+correction. So no residual component is discarded; the 34-notes counterexample is
+corrected by the first refinement step (correction = A^-T residual, exact up to the
+usual solve accuracy). Cost saving: one triangular solve per row (the cold start).
+Hermitian exact guard unchanged.
+
+Expected: large reverse between 85 and 106 ms (one fewer solve per row, product +
+correction solve remain); arrays differ from35 at refinement level (different starting
+iterate); strict-vs-seed should pass. Unmeasured; no shell in this session.
