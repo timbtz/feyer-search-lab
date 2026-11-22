@@ -1,28 +1,14 @@
 import os as _os
 
-# Package-level XLA compiler settings (allowed by the Feyer organizers). The heavy
-# numerical work runs on the host (SuperLU and NumPy callbacks), so the XLA programs
-# are small gathers, scatters and readouts whose compile time far exceeds their run
-# time. Optimization level 0 without the CPU fusion emitters compiles them ~3x faster
-# with unchanged outputs (rounding-level differences only, no fast-math). XLA reads
-# XLA_FLAGS when JAX creates its CPU backend, so this has an effect only if
-# differometor is imported before the first JAX computation. Flags a user already
-# set in XLA_FLAGS are never overridden; DIFFEROMETOR_XLA_DEFAULTS=0 disables this.
-# These settings apply to every XLA program in the process.
-_XLA_DEFAULTS = ("--xla_backend_optimization_level=0", "--xla_cpu_use_fusion_emitters=false")
-
-
-def _apply_xla_defaults():
-    if _os.environ.get("DIFFEROMETOR_XLA_DEFAULTS", "1") == "0":
-        return
-    existing = _os.environ.get("XLA_FLAGS", "")
-    present = {flag.split("=", 1)[0] for flag in existing.split()}
-    added = [flag for flag in _XLA_DEFAULTS if flag.split("=", 1)[0] not in present]
-    if added:
-        _os.environ["XLA_FLAGS"] = " ".join(part for part in (existing, *added) if part)
-
-
-_apply_xla_defaults()
+# XLA only compiles small programs here: the physics runs in NumPy (differometor.host), and
+# what XLA still compiles is the caller's readout code and two callbacks. For such programs
+# LLVM's backend optimizations cost more compile time than they save at run time, so they
+# are switched off. Outputs are unchanged (checked entry by entry, scripts/compare.py).
+# The flag must be set before JAX initializes its backend. Opt out with
+# DIFFEROMETOR_XLA_DEFAULTS=1, or by setting --xla_backend_optimization_level in XLA_FLAGS.
+if (_os.environ.get("DIFFEROMETOR_XLA_DEFAULTS") != "1"
+        and "xla_backend_optimization_level" not in _os.environ.get("XLA_FLAGS", "")):
+    _os.environ["XLA_FLAGS"] = (_os.environ.get("XLA_FLAGS", "") + " --xla_backend_optimization_level=0").strip()
 
 from differometor.setups import Setup
 from differometor.simulate import run, run_build_step, run_simulation_step, simulate

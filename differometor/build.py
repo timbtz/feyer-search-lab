@@ -70,82 +70,7 @@ from differometor.components import (
     corrected_optomechanical_phase_left,
     corrected_optomechanical_phase_right,
     dummy_function,
-    C_LIGHT,
-    F0,
 )
-
-
-# ---------------------------------------------------------------------
-# Host-side (NumPy) initial values for base matrix entries.
-# Every off-diagonal mirror, beamsplitter and space entry written here is
-# overwritten at the identical (row, column) by the carrier and signal update
-# instructions before any solve, so these values only need the same structure;
-# computing them with NumPy avoids hundreds of eager JAX scalar dispatches and
-# device-to-host conversions during `build`.
-# ---------------------------------------------------------------------
-
-def _host_array(values, dtype):
-    """Convert host lists via NumPy first (same values/dtype as jnp.array(values, dtype)).
-
-    `jnp.array` on long Python lists inspects every element for dtype inference;
-    a single NumPy conversion avoids that per-element work during `build`.
-    """
-    np_dtype = {int: np.int64, complex: np.complex128}.get(dtype, dtype)
-    return jnp.asarray(np.asarray(values, dtype=np_dtype))
-
-
-def _np_phase_shift(tuning, frequency, refractive_index):
-    return 2 * np.radians(tuning) * refractive_index * (1 + frequency / F0)
-
-
-def _np_incidence_left(alpha):
-    return np.cos(np.radians(alpha))
-
-
-def _np_incidence_right(alpha, refractive_index_left, refractive_index_right):
-    return np.cos(np.arcsin(refractive_index_left / refractive_index_right * np.sin(np.radians(alpha))))
-
-
-def _np_surface_entries(loss, reflectivity, tuning, frequency, n_left, n_right, alpha=0.0):
-    n_left = np.real(n_left)
-    n_right = np.real(n_right)
-    absolute_reflectivity = (1 - loss) * reflectivity
-    absolute_transmissivity = (1 - loss) * (1 - reflectivity)
-    left_term = _np_phase_shift(tuning, frequency, n_left) * _np_incidence_left(alpha)
-    right_term_r = _np_phase_shift(tuning, frequency, n_right) * _np_incidence_right(alpha, n_right, n_left)
-    right_term_t = _np_phase_shift(tuning, frequency, n_right) * _np_incidence_right(alpha, n_left, n_right)
-    r_left = -np.sqrt(absolute_reflectivity) * np.exp(1j * left_term)
-    r_right = -np.sqrt(absolute_reflectivity) * np.exp(-1j * right_term_r)
-    t = -np.sqrt(absolute_transmissivity) * np.exp(1j * (np.pi / 2 + 0.5 * (left_term - right_term_t)))
-    return r_left, t, r_right
-
-
-def _np_mirror_matrix(loss, reflectivity, tuning, frequency, n_left, n_right):
-    r_left, t, r_right = _np_surface_entries(loss, reflectivity, tuning, frequency, n_left, n_right)
-    return np.array(
-        [[1, 0, 0, 0], [r_left, 1, t, 0], [0, 0, 1, 0], [t, 0, r_right, 1]], dtype=complex
-    )
-
-
-def _np_beamsplitter_matrix(loss, reflectivity, tuning, frequency, n_left, n_right, alpha):
-    r_left, t, r_right = _np_surface_entries(loss, reflectivity, tuning, frequency, n_left, n_right, alpha)
-    return np.array(
-        [
-            [1, 0, 0, 0, 0, 0, 0, 0],
-            [0, 1, r_left, 0, t, 0, 0, 0],
-            [0, 0, 1, 0, 0, 0, 0, 0],
-            [r_left, 0, 0, 1, 0, 0, t, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0],
-            [t, 0, 0, 0, 0, 1, r_right, 0],
-            [0, 0, 0, 0, 0, 0, 1, 0],
-            [0, 0, t, 0, r_right, 0, 0, 1],
-        ],
-        dtype=complex,
-    )
-
-
-def _np_space_entry(frequency, length, refractive_index):
-    return -np.exp(-1j * 2 * np.pi * frequency * length * refractive_index / C_LIGHT)
 
 # ---------------------------------------------------------------------
 # Global state for parameter linking
@@ -953,7 +878,7 @@ def build(setup: Setup):
                 refractive_index_left_position = surfaces_to_refractive_index_parameter_position[node].get("left", 1)
                 refractive_index_right_position = surfaces_to_refractive_index_parameter_position[node].get("right", 1)
 
-                matrix = _np_mirror_matrix(
+                matrix = mirror_matrix(
                     data["properties"]["loss"],
                     data["properties"]["reflectivity"],
                     data["properties"]["tuning"],
@@ -1000,7 +925,7 @@ def build(setup: Setup):
                 refractive_index_left_position = surfaces_to_refractive_index_parameter_position[node].get("left", 1)
                 refractive_index_right_position = surfaces_to_refractive_index_parameter_position[node].get("right", 1)
 
-                matrix = _np_beamsplitter_matrix(
+                matrix = beamsplitter_matrix(
                     data["properties"]["loss"],
                     data["properties"]["reflectivity"],
                     data["properties"]["tuning"],
@@ -1360,7 +1285,7 @@ def build(setup: Setup):
             target_output_index = target_index
 
         # Initialize the carrier matrix with the space propagation entry.
-        space_entry = _np_space_entry(F, data["properties"]["length"], data["properties"]["refractive_index"])
+        space_entry = space(np.array([F, data["properties"]["length"], data["properties"]["refractive_index"]]))[0]
         carrier_matrix[source_input_index, target_output_index] = space_entry
         carrier_matrix[target_input_index, source_output_index] = space_entry
 
@@ -1496,66 +1421,25 @@ def build(setup: Setup):
     return (
         (carrier_instructions, signal_instructions, noise_instructions, signal_components, parameter_names),
         (
-            _host_array([parameters], complex),
-            jnp.asarray(np.asarray(carrier_matrix)),
-            jnp.asarray(np.asarray(signal_matrix)),
-            _host_array(noise_matrix, complex),
-            _host_array(noise_selection_vectors, complex),
-            _host_array(qhd_parameter_indices, int),
-            _host_array(qhd_placing_indices, int),
-            _host_array(linked_indices, int),
-            _host_array(linking_function_indices, int),
-            _host_array(indices_to_link, int),
+            np.asarray([parameters], dtype=complex),
+            np.asarray(carrier_matrix),
+            np.asarray(signal_matrix),
+            np.asarray(noise_matrix, dtype=complex),
+            np.asarray(noise_selection_vectors, dtype=complex),
+            np.asarray(qhd_parameter_indices, dtype=int),
+            np.asarray(qhd_placing_indices, dtype=int),
+            np.asarray(linked_indices, dtype=int),
+            np.asarray(linking_function_indices, dtype=int),
+            np.asarray(indices_to_link, dtype=int),
         ),
         (
-            _host_array(detector_indices, int),
-            _host_array(mirror_indices, int),
-            _host_array(beamsplitter_indices, int),
-            _host_array(isolator_indices, int),
+            np.asarray(detector_indices, dtype=int),
+            np.asarray(mirror_indices, dtype=int),
+            np.asarray(beamsplitter_indices, dtype=int),
+            np.asarray(isolator_indices, dtype=int),
             port_to_index,
         ),
     )
-
-
-def _matrix_indices_are_unique(matrix_indices, matrix_shape):
-    """Prove non-overlap of host indices, including negative-index aliases."""
-    rows, columns = matrix_indices
-    height, width = matrix_shape
-    if len(rows) != len(columns):
-        return False
-    seen = set()
-    for row, column in zip(rows, columns):
-        row, column = int(row), int(column)
-        row = row + height if row < 0 else row
-        column = column + width if column < 0 else column
-        if not (0 <= row < height and 0 <= column < width):
-            return False
-        destination = (row, column)
-        if destination in seen:
-            return False
-        seen.add(destination)
-    return True
-
-
-def _group_component_indices(function_indices, function_input_indices=None):
-    """Classify instructions and map original rows to grouped output rows."""
-    groups = defaultdict(list)
-    for row, function_index in enumerate(function_indices):
-        groups[int(function_index)].append(row)
-    grouped_rows = [row for index in sorted(groups) for row in groups[index]]
-    output_rows = [0] * len(function_indices)
-    for grouped_row, original_row in enumerate(grouped_rows):
-        output_rows[original_row] = grouped_row
-    result = {
-        "function_rows": {index: _host_array(groups[index], int) for index in sorted(groups)},
-        "output_rows": _host_array(output_rows, int),
-    }
-    if function_input_indices is not None:
-        result["parameter_indices"] = {
-            index: _host_array([function_input_indices[row] for row in groups[index]], int)
-            for index in sorted(groups)
-        }
-    return result
 
 
 def pairs_to_arrays(
@@ -1566,9 +1450,6 @@ def pairs_to_arrays(
     parameter_names: list,
     optimization_pairs: list | None = None,
     changing_pairs: list | None = None,
-    *,
-    component_groups: dict | None = None,
-    matrix_shapes: dict | None = None,
 ):
     """
     Convert instruction dictionaries into dense index arrays for vectorized JAX execution.
@@ -1599,16 +1480,6 @@ def pairs_to_arrays(
         List of pairs `(component, parameter)` or list of lists to represent shared optimization values.
     changing_pairs:
         List of pairs `(component, parameter)` indicating parameters changed over a sweep.
-    component_groups:
-        Optional output dictionary filled with structural function groups for each
-        system. Each contains `function_rows` keyed by function ID and `output_rows`
-        mapping original rows to concatenated group rows. An empty-tuple
-        `unique_matrix_indices` marker is added only for verified unique destinations.
-        `parameter_indices` contains the input indices for each group.
-        Rebuild if selectors, input indices or matrix destination indices change.
-    matrix_shapes:
-        Optional system matrix shapes, used to verify destination uniqueness on the
-        host, including aliases between negative and positive indices.
 
     Returns
     -------
@@ -1741,7 +1612,7 @@ def pairs_to_arrays(
             carrier_changing_parameter_indices.append(parameter_names.index(f"{changing_component}_{changing_parameter}"))
             append_information(parameter_instructions, carrier_arrays, changing_component, carrier_components)
 
-    def combine_arrays(arrays: dict, system: str, signal: bool = False):
+    def combine_arrays(arrays: dict, signal: bool = False):
         """
         Stack per-component lists into dense arrays. Provide a dummy update if empty.
 
@@ -1762,25 +1633,16 @@ def pairs_to_arrays(
         """
         if len(arrays["function_input_indices"]) == 0:
             # Dummy update that leaves matrices unchanged.
-            if component_groups is not None:
-                component_groups[system] = _group_component_indices([FUNCTIONS.index(dummy_function)], [[0, 0, 0]])
             return (
-                _host_array([[0, 0, 0]], int),
-                _host_array([FUNCTIONS.index(dummy_function)], int),
-                _host_array([[0], [0]], int),
-                _host_array([[0], [0]], int),
+                np.asarray([[0, 0, 0]]),
+                np.asarray([FUNCTIONS.index(dummy_function)]),
+                np.asarray([[0], [0]]),
+                np.asarray([[0], [0]]),
             )
 
         function_input_indices = np.vstack(arrays["function_input_indices"])
-        if component_groups is not None:
-            component_groups[system] = _group_component_indices(arrays["function_indices"], function_input_indices)
         output_indices = np.stack((np.concatenate(arrays["output_row_indices"]), np.concatenate(arrays["output_column_indices"])))
         system_matrix_indices = np.stack((np.concatenate(arrays["system_matrix_row_indices"]), np.concatenate(arrays["system_matrix_column_indices"])))
-
-        if component_groups is not None and matrix_shapes is not None:
-            if _matrix_indices_are_unique(system_matrix_indices, matrix_shapes[system]):
-                # Key presence is static pytree structure, not a traced Boolean.
-                component_groups[system]["unique_matrix_indices"] = ()
 
         if signal:
             # Dummy carrier coupling values if none are required.
@@ -1793,36 +1655,32 @@ def pairs_to_arrays(
                     (np.concatenate(arrays["carrier_row_indices"]), np.concatenate(arrays["carrier_column_indices"]))
                 )
 
-            if component_groups is not None and matrix_shapes is not None:
-                if _matrix_indices_are_unique(carrier_solution_placing_indices, matrix_shapes[system]):
-                    component_groups[system]["unique_carrier_placing_indices"] = ()
-
             return (
-                _host_array(function_input_indices, int),
-                _host_array(arrays["function_indices"], int),
-                _host_array(output_indices, int),
-                _host_array(system_matrix_indices, int),
-                _host_array(carrier_solution_indices, int),
-                _host_array(carrier_solution_placing_indices, int),
+                np.asarray(function_input_indices, dtype=int),
+                np.asarray(arrays["function_indices"], dtype=int),
+                np.asarray(output_indices, dtype=int),
+                np.asarray(system_matrix_indices, dtype=int),
+                np.asarray(carrier_solution_indices, dtype=int),
+                np.asarray(carrier_solution_placing_indices, dtype=int),
             )
 
         return (
-            _host_array(function_input_indices, int),
-            _host_array(arrays["function_indices"], int),
-            _host_array(output_indices, int),
-            _host_array(system_matrix_indices, int),
+            np.asarray(function_input_indices, dtype=int),
+            np.asarray(arrays["function_indices"], dtype=int),
+            np.asarray(output_indices, dtype=int),
+            np.asarray(system_matrix_indices, dtype=int),
         )
 
     return (
         (
-            _host_array(optimized_parameter_indices, int),
-            _host_array(optimization_value_indices, int),
-            _host_array(carrier_changing_parameter_indices, int),
-            _host_array(signal_changing_parameter_indices, int),
+            np.asarray(optimized_parameter_indices, dtype=int),
+            np.asarray(optimization_value_indices, dtype=int),
+            np.asarray(carrier_changing_parameter_indices, dtype=int),
+            np.asarray(signal_changing_parameter_indices, dtype=int),
         ),
-        combine_arrays(carrier_arrays, "carrier"),
-        combine_arrays(signal_arrays, "signal", signal=True),
-        combine_arrays(noise_arrays, "noise"),
+        combine_arrays(carrier_arrays),
+        combine_arrays(signal_arrays, signal=True),
+        combine_arrays(noise_arrays),
     )
 
 
@@ -1871,30 +1729,28 @@ def prepare_arrays(
         or if `changing_values` has an incompatible shape.
     """
     optimized_parameters = None
-    # Host copies: eager jnp indexing here compiles one XLA program per operation.
-    host_parameters = np.asarray(parameters)
 
     # Ensure at least one optimized parameter index exists, using a dummy identity update if needed.
     if len(optimized_parameter_indices) == 0:
-        optimized_parameter_indices = _host_array([0], int)
-        optimized_parameters = jnp.asarray(host_parameters[0][np.array([0])])
-        optimized_value_indices = _host_array([0], int)
+        optimized_parameter_indices = np.asarray([0])
+        optimized_parameters = np.asarray(parameters[0][optimized_parameter_indices])
+        optimized_value_indices = np.asarray([0])
 
-    # Normalize changing_values to shape (V, R) if provided.
+    # Normalize changing_values to shape (V, R) if provided. Host (NumPy) copy: eager JAX
+    # reshapes/copies here would each dispatch and compile a small XLA program.
     if changing_values is not None:
         changing_values = np.asarray(changing_values)
         if len(changing_values.shape) == 1:
             changing_values = changing_values.reshape(1, -1)
-        changing_values = jnp.asarray(changing_values)
-        signal_changing_values = jnp.asarray(np.array(changing_values))
+        signal_changing_values = changing_values.copy()
 
     if len(carrier_changing_parameter_indices) != 0 and len(signal_changing_parameter_indices) != 0:
         raise ValueError("This combination of changing component-parameter pairs is not supported yet.")
 
     # Carrier changing defaults.
     if len(carrier_changing_parameter_indices) == 0:
-        carrier_changing_parameter_indices = _host_array([0], int)
-        carrier_changing_values = jnp.asarray(host_parameters[0][np.array([0])][None, :])
+        carrier_changing_parameter_indices = np.asarray([0])
+        carrier_changing_values = np.asarray([parameters[0][carrier_changing_parameter_indices]])
     else:
         carrier_changing_values = changing_values
         if carrier_changing_values.shape[0] != len(carrier_changing_parameter_indices):
@@ -1909,8 +1765,8 @@ def prepare_arrays(
 
     # Signal changing defaults.
     if len(signal_changing_parameter_indices) == 0:
-        signal_changing_parameter_indices = _host_array([0], int)
-        signal_changing_values = jnp.asarray(host_parameters[0][np.array([0])][None, :])
+        signal_changing_parameter_indices = np.asarray([0])
+        signal_changing_values = np.asarray([parameters[0][signal_changing_parameter_indices]])
 
     return (
         optimized_parameters,
