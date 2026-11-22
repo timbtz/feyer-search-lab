@@ -966,15 +966,9 @@ STATIC_PARAMETER_LAYOUT: bool = True
 
 def _static_take(values, indices):
     """values[indices] for a 1-D array and concrete nonnegative in-bounds indices."""
-    indices = np.asarray(indices, dtype=np.int64)
-    if values.ndim == 1 and values.shape[0] > 0 and indices.ndim == 1 and indices.size == 0:
-        # An empty selection has an empty primal and a zero transpose. Avoid
-        # constructing a gather and its scatter transpose for this static case.
-        # Keep the original gather's validation for other operand/index shapes.
-        return lax.slice_in_dim(values, 0, 0, axis=0)
     return lax.gather(
         values,
-        indices[:, None],
+        np.asarray(indices, dtype=np.int64)[:, None],
         lax.GatherDimensionNumbers(offset_dims=(), collapsed_slice_dims=(0,), start_index_map=(0,)),
         slice_sizes=(1,),
         mode=lax.GatherScatterMode.PROMISE_IN_BOUNDS,

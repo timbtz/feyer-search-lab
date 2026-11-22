@@ -2737,3 +2737,112 @@
   Do not accumulate more empty-boundary variants without attribution; use the pending
   supervisor profile and candidate30 confirmation evidence. Deadline remains
   2026-11-22 09:27:44 UTC. No benchmarks, installs, commits or agents launched here.
+
+### Candidate32 feedback — retire empty-gather refinement
+
+- Exact evaluated SHA301c46fa997dfbc763f4924b3068903f7fe4e938; evaluation
+  ecf529ba1ffb448dacd55c57b2727755, jobs grid-1/2/3 and aligo-1/2/3.
+  Receipt experiments/runs/overnight-20261122/overnight-overhead-v1/
+  ecf529ba1ffb448dacd55c57b2727755.json; publisher
+  bd9743e197878e3a281877b9b26aca867eaef62d. Both official benchmarks passed3/3.
+- Large complete fresh-process samples seconds:0.8293256852775812,
+  0.7961510177701712,0.805237153545022; median0.805237153545022,
+  range0.7961510177701712–0.8293256852775812, relative range4.1199%.
+  Official aLIGO:0.5476876273751259,0.5464055705815554,0.5480974521487951;
+  median0.5476876273751259, range0.5464055705815554–0.5480974521487951,
+  relative range0.3089%. No combined score. Historical admitted-parent median
+  differences are+3.659 ms large and-0.868 ms aLIGO; unpaired ranges overlap.
+  confirmed_improvement=false; no independent source review supplied. Publication
+  requires_source_review, large_gain_below_selection_threshold and
+  large_first_run_ranges_overlap_requires_paired_evidence.
+- Phase medians ms (large/aLIGO): imports270.699/267.001, initialize3.562/3.636,
+  load1.544/0.211, build70.022/37.780; forward lower19.962/19.194,
+  compile34.317/33.325, execute182.295/32.579; sensitivity lower25.552/26.201,
+  compile39.695/41.317, execute0.893/0.477; gradient lower17.199/16.566,
+  compile51.851/53.359, execute85.879/14.704; transfer0.189/0.155.
+  Against preceding31 observations, forward lower changes+0.426/-0.055 ms and
+  gradient lower+0.227/-0.054 ms; no clear target tracing benefit. Gradient compile
+  changes-1.942/-0.275 ms, forward compile+1.215/-0.181 ms. These are unpaired
+  observations, not causal phase gains. Build/import changes are not attributable
+  to the empty-gather mechanism. This result does not justify its extra branch.
+- Sampled process-group peak RSS bytes large540045312/518770688/489443328,
+  aLIGO315043840/295477248/312152064; generalization873996288. No budget exceedance.
+  CPU2, one logical CPU, EPYC9334, library threads1, x64, no persistent cache,
+  unchanged allowed compiler defaults. Other-host contention not excluded and no
+  specific slow sample is attributed to contention. ranking_eligible=false.
+- All saved official arrays and all14 generalization cases pass initial-seed
+  regression tolerances. Official array archives match preceding31's archives:
+  large112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5,
+  aLIGO9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195.
+  This does not imply bitwise equality to seed: maximum absolute gradient differences
+  are5.686350050382316e-6 large and3.637978807091713e-11 aLIGO. Generalization archive
+  2183cdbb7c64deda5e4189980018b057f6e8abc8f80aa971504fb8e98642d6bd.
+  Pristine comparisons still fail. No new seed-relative numerical discrepancy is
+  reported; inherited disagreements remain unresolved, not waived by official passes.
+  The54 primal/VJP and four invalid-shape focused checks remain unexecuted locally;
+  no supervisor result for that diagnostic was returned.
+- Decision: retire32; restored simulate.py to reviewed
+  ee4fea28c04d482566be16e916b609d7c6a99e5e and verified all ten simulator modules
+  byte-identical and syntactically valid. Preserve32's committed source, diagnostic
+  and full results. This restoration is not a new optimization submission.
+- Search-direction change: stop isolated empty-read/empty-boundary variants without
+  attribution. The concrete next investigation is the already-prepared supervisor
+  profiling script experiments/notes/overnight-overhead-profile.py --trace-forward
+  on the reviewed parent, with actual caller setup/optimization/sweep inputs for
+  large, official aLIGO and a third setup. Return import/build/trace call attribution
+  before selecting another builder or boundary rewrite. Candidate30 at7baa78dd remains
+  a separate pending confirmation request, not an admitted improvement or combination.
+- Inherited pristine signal/loss/gradient findings, gradients33/161/180,
+  uifo_rand1/3 sensitivity discrepancies, grid FD54/59/63/136/161/163 and first-order
+  reverse-only whole-pass custom VJP remain visible. Stopping this hypothesis does
+  not end the authorized campaign or extend deadline2026-11-22 09:27:44 UTC.
+
+### Candidate33 — directly initialize constant component-row labels
+
+- Supervisor resumed after32 retirement and requested a concrete new experiment.
+  New SHA and both benchmark job IDs pending. Isolated against reviewed
+  ee4fea28c04d482566be16e916b609d7c6a99e5e; only build.py differs from that parent.
+  simulate.py's working diff restores32 to the reviewed version, not a combined
+  optimization. All nine other simulator modules remain byte-identical to parent.
+- Source inspection found two repeated constructions in pairs_to_arrays:
+  np.ones(number_of_outputs) * component_row_offset. Both create constant row-label
+  metadata, not physical values. Replace them with np.full(number_of_outputs,
+  component_row_offset, dtype=float). This removes the length-N ones temporary and
+  elementwise multiplication while preserving float64 labels before _host_array's
+  final int64 conversion. The offset starts at0 and increments by nonnegative row
+  counts, or is len(components)-1 after append. Index ordering, duplicate component
+  handling, explicit output rows, grouping, linking and every simulation stage stay.
+- Mechanism is direct constant-array construction during setup; it does not repeat
+  retired32's empty-gather tracing or31's CSC validation. No unique/sort rewrite,
+  physical zero pruning, topology/fixture recognition, cached results or solver change.
+  Candidate30 and other unconfirmed mechanisms are not combined.
+- Cost context:32's observed build medians70.022 ms large /37.780 ms aLIGO, complete
+  medians0.805237154/0.547687627 s. Imports270.699/267.001 ms and compilation are not
+  targeted. Saving scales with instructions that synthesize output-row labels, for
+  arbitrary supplied setups; no known workload counts enter the implementation.
+  No33 timing, phase delta or memory measurement exists. np.full has its own Python
+  overhead; for these small arrays the allocation saving may not improve wall time.
+- Local checks: Python syntax and git diff whitespace checks; an AST transformation
+  replacing exactly the two np.full calls by the old expressions reproduces the
+  entire reviewed build.py AST.10004 Python scalar conversion comparisons pass,
+  including offsets around2**53 and at2**63-1. These checks do not execute NumPy.
+- Prepared experiments/notes/overnight-overhead-row-label-check.py, UNEXECUTED locally
+  (NumPy unavailable). Extracts actual pairs_to_arrays and its helpers and compares
+  to an AST reference restoring the two old expressions.48 synthetic instruction
+  collections vary component counts, output counts including empty, repeated/reversed
+  optimization requests, explicit versus implicit signal output rows, and sweep
+  selection. Compares all returned index arrays, group metadata and pre-cast arrays
+  including dtypes/sign bits.21 additional NumPy cases check scalar conversion near
+  float64 integer precision limits and empty lengths. No optical fixture or timing.
+- Request the focused diagnostic, both unchanged official full benchmarks, saved
+  arrays/gradients and generalization on the same exact SHA. Independent source review
+  and matched fresh-process parent/candidate confirmation remain required for promotion.
+  Report samples, separate medians/ranges, phase tradeoffs, RSS and known contention.
+- Inherited strict pristine signal/loss/gradient disagreements, gradients33/161/180,
+  uifo_rand1/3 sensitivity discrepancies and grid FD54/59/63/136/161/163 persist;
+  first-order reverse-only whole-pass custom VJP scope unchanged. Neither structural
+  equivalence nor official success is a universal correctness certificate.
+- Next: inspect33's setup and total costs; retire if gains are not repeat-supported.
+  Supervisor import/build/trace attribution and candidate30 confirmation remain
+  pending and preferable to further speculative allocation variants. Deadline remains
+  2026-11-22 09:27:44 UTC. No benchmarks, commits, installs or agents launched here.
