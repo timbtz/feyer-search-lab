@@ -78,10 +78,13 @@ def validate_request(request, config):
     return request
 
 
-def runner_request_for(request):
+def runner_request_for(request, config=None):
+    repetitions = (config or {}).get('fresh_process_repetitions', 3)
+    if type(repetitions) is not int or repetitions not in (1, 3, 5):
+        raise ValueError('Trusted fresh-process repetitions must be 1, 3 or 5')
     result = {key: request[key] for key in ('request_id', 'sha', 'deadline_unix', 'branch', 'session')}
     result.update(lane=str(request['lane']), schema_version='feyer-dual-benchmark-request-v1',
-                  timeout_seconds=900, fresh_process_repetitions=3, run_generalization=True)
+                  timeout_seconds=900, fresh_process_repetitions=repetitions, run_generalization=True)
     return result
 
 
@@ -353,7 +356,7 @@ print(json.dumps(result))
                 state['upload'] = self.upload(request, directory)
                 state['phase'] = 'uploaded'
                 write_json(path, state)
-            runner_request = runner_request_for(request)
+            runner_request = runner_request_for(request, self.config)
             if state['phase'] == 'uploaded':
                 # Registration itself is idempotent; this can safely replay after a lost SSH response.
                 remote = self.call_runner('register', value=runner_request)
