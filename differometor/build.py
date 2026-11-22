@@ -1736,23 +1736,20 @@ def pairs_to_arrays(
 
     # Compile optimized parameter indices and include any carrier-side components that need updating.
     for ix, optimization_pair in enumerate(optimization_pairs):
-        if not isinstance(optimization_pair[0], list):
-            optimized_component, optimized_parameter = optimization_pair
+        pairs = optimization_pair if isinstance(optimization_pair[0], list) else [optimization_pair]
+        for optimized_component, optimized_parameter in pairs:
             try:
                 optimized_parameter_indices.append(parameter_names.index(f"{optimized_component}_{optimized_parameter}"))
                 optimization_value_indices.append(ix)
             except ValueError:
                 pass
-        else:
-            for optimized_component, optimized_parameter in optimization_pair:
-                try:
-                    optimized_parameter_indices.append(parameter_names.index(f"{optimized_component}_{optimized_parameter}"))
-                    optimization_value_indices.append(ix)
-                except ValueError:
-                    pass
 
-        if optimized_component not in signal_components and optimized_component in parameter_instructions:
-            append_information(parameter_instructions, carrier_arrays, optimized_component, carrier_components)
+            # Every member reads the shared optimized value. Scheduling only the
+            # final member leaves earlier components at their base matrix values
+            # and loses their derivative contributions. append_information keeps
+            # repeated components in this or later groups from being added twice.
+            if optimized_component not in signal_components and optimized_component in parameter_instructions:
+                append_information(parameter_instructions, carrier_arrays, optimized_component, carrier_components)
 
     # Compile changing parameter indices for sweeps.
     for changing_component, changing_parameter in changing_pairs:
