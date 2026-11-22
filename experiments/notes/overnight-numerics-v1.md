@@ -3345,3 +3345,135 @@ are not promotion timings. If36 has a repeat-supported gain, obtain fresh paired
 parent/candidate cohorts; otherwise preserve35's demonstrated correctness repair
 provisionally, end this guard-tuning hypothesis, and pursue source profiling.
 Admitted7 remains the reviewed timing reference;35/36 are not shared winners.
+
+## Candidate36 feedback: retire scalar-estimator tuning, capture actual adjoints
+
+SHA dde758cd93bd2bc0f095082eb1ec63dea69ae2ac, dual job
+6ced453e5145434ebdd094a1e9719882 (grid-1/2/3, aligo-1/2/3).
+All six official checks pass; all14 initial-seed generalization cases pass.
+No confirmed improvement and no source review. Large fresh-process complete
+samples(s):[0.8587903287261724,0.8265353925526142,0.8264310099184513],
+median0.8265353925526142, range0.8264310099184513–0.8587903287261724.
+aLIGO separately:[0.5533250812441111,0.5524023324251175,0.5491189546883106],
+median0.5524023324251175, range0.5491189546883106–0.5533250812441111.
+Against35, medians +7.251428ms large/+2.673764ms aligo, unpaired cohorts;
+against admitted7 +24.957709ms/+3.847176ms. No combined score or ranking claim.
+Keep grid-1 imports292.867979ms; no sample discarded. CPU2, one logical CPU,
+threads1, no persistent cache; external contention/overlap remains unknown.
+
+Median phases(ms), deltas versus35: large imports270.716749 (+3.162902),
+build70.224682 (+0.290118), forward183.348812 (+1.700899),
+reverse108.974049 (+2.550149). Aligo imports264.478540 (-0.352902),
+build38.525157 (+0.930173), forward32.684714 (-0.084205),
+reverse19.309163 (+0.333592). Sampled RSS maxima large577851392 bytes,
+aligo294846464, generalization834052096; these are sampled, not guaranteed peaks.
+
+Inspected all six per-array output/gradient comparison records. Seed/pristine
+array pass/failure-count records equal35. Large seed gradient max difference
+3.978124732384458e-5, relativeL2 6.792175986724522e-10; pristine
+0.005234728007053491 and8.822670907724605e-8. Aligo seed gradient max
+8.803908713161945e-10, relativeL2 2.7363403601704576e-14; pristine
+8.865048584993929e-6 and2.730250441648164e-10. Changed gradient archives
+(large5a9aaeb9ad447ab42426262fa71a9f47b0981af9aa1ac76ac1ee8052e2069165,
+aligo54f735ca56dd1037d5bee41885db8edd27a785e07536c98e2aec1ee59943da66)
+are not claimed bitwise equal or independently more accurate. Raw remote arrays
+were not reopened locally. All14 generalization case comparison summaries match35
+for both references; seed14/14 pass, pristine4/14 pass. This does not prove
+unchanged literal gradients. Existing pristine signal/gradient33,161,180/loss,
+rand1/rand3 log sensitivity disagreements and grid FD54,59,63,136,161,163 remain
+unresolved. Earlier extraaligo coordinates29/29 passed; JVP/Hessians unsupported.
+
+Decision:36's added estimator has no measured benefit. Remove its eight-line
+branch; all simulator files now exactly equal35 SHA7a9480332bad29b5aaeacc5a4628481581507e7a
+(read-only Git diff against35 is empty). Preserve36 in history and its diagnostic.
+Retain35 provisionally as the simpler guard correctness repair, not a performance
+winner. Admitted7 remains the reviewed timing reference, but restoring its known
+synthetically unsafe approximate guards solely for speed is not justified.
+End this guard-tuning hypothesis:34/35/36 are three unconfirmed submissions,
+and no additional estimator trial is proposed without new evidence.
+
+Concrete next diagnostic delivered in own notes:
+experiments/notes/overnight-numerics-guard-diagnostics.py provides
+collect_guard_diagnostics(reference_source, module=None, max_records=8).
+On a supervisor-run separate serial diagnostic case, pass exact34 host_pass.py
+source while running35. It wraps host_backward, the scalar guard and _solve,
+returns all original callback results, and captures bounded changed guard
+records: flattened signal row/detector, vector/direction, both alpha decisions,
+forward weight, reference reused solution, actual adjoint solution, sparse
+coordinates/coefficients when cached assembly or fallback solve supplies them.
+Per-callback counts include accepted/reference-accepted, changed decisions and
+explicit signal solve rows. No extra factorization or solve is invoked, no case
+is launched, no file is written, and the context restores originals in finally.
+Extra guard work/copies make this unsuitable for official timing. It does not
+compare full gradients or certify accuracy; the coordinator must save its arrays
+and pair changed rows with literal gradient differences and independent residual
+or high-precision solution analysis. Missing cached coefficients on a reused
+path are explicitly None, not invented. Synchronize before leaving the context.
+
+Local synthetic plumbing check in guard-diagnostics-check.py passes: three
+callbacks, two detectors and three signal rows, both accepted/rejected paths,
+matching/missing assembly, bounded capture, byte-identical returned adjoints,
+and restoration after an exception. It captures the known diagonal discrepancy
+8.881784197001252e-4. This is a kernel/control-flow check, not an optical or
+JAX callback test. Syntax/diff checks pass. Supervisor next action: use this
+capture on35 versus34 for full large, official101-frequency aligo and varied
+amod/fmod/generalization inputs, then independently assess changed adjoints.
+Use the existing overnight-numerics-profile.py separately to locate remaining
+execution costs before another performance mechanism. No new benchmark
+submission is requested for the restoration to an already evaluated source.
+Stop ends this tuning hypothesis, not the authorized campaign.
+
+## Candidate37: contiguous component input gathers (prepared, unevaluated)
+
+New direction after closing guard tuning: align component input gathers with
+output/Jacobian memory order. Numerical parent is candidate35,
+7a9480332bad29b5aaeacc5a4628481581507e7a, retained provisionally for its stricter
+Hermitian and collinearity guards. This does not promote35 over admitted7;
+35's timing and accuracy caveats above still apply. Candidate36's scalar-ratio
+branch remains removed; its failed timing experiment and source stay in history.
+The current diff against35 changes only the two SystemPlan input gathers and
+an explanatory comment. No other lane is newly combined.
+
+Source finding: SystemPlan.values and SystemPlan.backward gather rows[:,indices]
+where rows is (batch, parameters) and indices is (components, slots). NumPy
+advanced indexing returns (batch, components, slots) backed in
+(components, slots, batch) order. Its component computations then feed C-order
+output/Jacobian buffers. Use np.take(rows, indices, axis=1) to produce C-order
+(batch, components, slots) directly. All gathered values, input indices,
+differentiated slots, operations, four output columns and scatter/reduction
+order remain present. No runtime-zero pruning or topology/shape dispatch.
+
+Small local inspection measured strides for a synthetic (17,41) parameter array
+and (5,7) index array: advanced indexing (16,1904,272) bytes versus take
+(560,112,16), with9520 bytes in each gathered result. This establishes the layout
+mismatch, not a measured official bottleneck or a speedup. The hypothesis is
+that aligning component input traversal with Jacobian writes lowers forward/
+reverse execution cost; np.take may instead lose on gather overhead or favor
+small cases differently. No new compilation/import changes are expected.
+Unlike retired derivative-buffer layout16, this changes the input gather in
+both primal and reverse paths and leaves Jacobian layout untouched. No local
+wall-clock benchmark was launched; actual callback profiling remains pending.
+
+Validation: overnight-numerics-gather-layout-check.py extracts actual source
+kernels and compares35 against current SystemPlan. Passed2831 component/Jacobian/
+contraction checks and96 full SystemPlan assembly/pullback checks. It covers
+all19 component functions, batches1/3/17, C/F/sliced/reversed parameter storage,
+repeated and negative indices, repeated output reads and overwritten writes,
+empty/all/reordered/repeated derivative slot selections, varying complex values,
+zero-valued differentiable inputs, signed zero, large/small values and nonfinite
+boundaries. Finite entries compare byte-for-byte (including zero signs), and
+nonfinite entries compare array-equal. This is synthetic kernel evidence; no
+optical workload, official timing, full JAX callback or universal certificate.
+Existing guard diagnostic and candidate35 collinearity checks also pass.
+
+Supervisor request: assign exact candidate SHA and run both unchanged official
+benchmarks, saved output/gradient comparisons and all14 generalization cases.
+Use35 as the immediate numerical parent and admitted7 as the reviewed timing
+reference. If promising, obtain paired repeated fresh-process results against35
+with the same CPU/resource policy and independent source review, then assess
+whether the complete candidate is useful relative to admitted7. Record each
+setup's samples, median/range, forward/reverse/build/compile deltas, RSS and job
+overlap separately; no combined score. No candidate37 job identifiers or phase
+deltas exist yet. Continue to retain pristine signal/gradient33,161,180/loss,
+rand1/rand3 sensitivity and grid FD54,59,63,136,161,163 disagreements; extraaligo
+29/29 checks remain bounded evidence. Whole-pass JVP/Hessian support unchanged.

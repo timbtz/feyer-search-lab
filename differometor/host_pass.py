@@ -86,7 +86,10 @@ class SystemPlan:
 
     def values(self, rows, base):
         """Structural values (B, nnz_total) after the ordered update writes."""
-        blocks = [evaluate_function(f, rows[:, indices]) for f, indices, _ in self.groups]
+        # Keep gathered inputs in (batch, component, slot) memory order, matching
+        # the output/Jacobian buffers. Advanced indexing here instead packs the
+        # batch axis innermost and leaves a transposed view for the component work.
+        blocks = [evaluate_function(f, np.take(rows, indices, axis=1)) for f, indices, _ in self.groups]
         outputs = np.concatenate(blocks, axis=1).reshape(rows.shape[0], -1)[:, self.flat_selection]
         values = np.repeat(np.asarray(base, dtype=np.complex128)[None, :], rows.shape[0], axis=0)
         values[:, self.writes[self.last]] = outputs[:, self.last]
@@ -109,7 +112,8 @@ class SystemPlan:
         for (function_index, indices, slots), start, stop in zip(self.groups, self.offsets[:-1], self.offsets[1:]):
             if not slots:
                 continue
-            _, linear, antilinear = function_jacobian(function_index, slots, rows[:, indices], with_outputs=False)
+            _, linear, antilinear = function_jacobian(
+                function_index, slots, np.take(rows, indices, axis=1), with_outputs=False)
             output_bar = flat[:, start:stop, :, None]                       # (B, R, 4, 1)
             inputs_bar = np.sum(linear * output_bar, axis=2) + np.conj(np.sum(antilinear * output_bar, axis=2))
             for position, slot in enumerate(slots):
@@ -391,14 +395,6 @@ def _collinear_coefficient(vector, direction):
     if norm == 0 or not np.isfinite(norm):
         return None
     alpha = np.vdot(direction, vector) / norm
-    if np.array_equal(vector, alpha * direction):
-        return alpha
-    # The reduction in the least-squares estimate can round away from a scalar
-    # that reconstructs the vector exactly. Try one component ratio before the
-    # refined solve, retaining the same full-vector equality requirement. The
-    # largest component avoids division by a zero or unnecessarily small entry.
-    pivot = np.argmax(np.abs(direction))
-    alpha = vector[pivot] / direction[pivot]
     if np.array_equal(vector, alpha * direction):
         return alpha
     return None
