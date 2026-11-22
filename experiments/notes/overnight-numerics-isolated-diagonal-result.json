@@ -1,0 +1,42 @@
+{
+  "parent": "534570265891b5782b8b55ef10b5b06eb778d1c3",
+  "host_pass_sha256": "89e980bb1139715be00c583d80edc58246563ff8e29b147419fe7bcf8ead1e9c",
+  "matrices": 120,
+  "refined_solve_checks": 1080,
+  "no_root_bitwise_checks": 432,
+  "invalid_diagonal_full_factor_fallbacks": 3,
+  "maximum_parent_scaled_difference": 2.218480486848203e-16,
+  "maximum_dense_scaled_difference": 2.00367475290496e-15,
+  "maximum_normwise_double_residual": 2.3866069730577494e-16,
+  "distinct_factor_size_reductions": [
+    [
+      1,
+      0
+    ],
+    [
+      4,
+      0
+    ],
+    [
+      4,
+      2
+    ],
+    [
+      4,
+      3
+    ],
+    [
+      9,
+      0
+    ],
+    [
+      9,
+      5
+    ],
+    [
+      9,
+      8
+    ]
+  ],
+  "scope": "Small synthetic source kernels, no JAX/optical workload/timings"
+}

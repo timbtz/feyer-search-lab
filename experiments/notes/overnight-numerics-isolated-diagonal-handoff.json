@@ -1,0 +1,43 @@
+{
+  "parent_sha": "534570265891b5782b8b55ef10b5b06eb778d1c3",
+  "candidate_sha": null,
+  "trial": 53,
+  "hypothesis": "Structurally isolated diagonal coordinates can be solved directly while freshly factoring only the coupled core.",
+  "host_pass_sha256": "89e980bb1139715be00c583d80edc58246563ff8e29b147419fe7bcf8ead1e9c",
+  "changed_simulator_paths": [
+    "differometor/host_pass.py"
+  ],
+  "official_jobs": {
+    "grid": null,
+    "aligo": null
+  },
+  "timing_gain_claimed": false,
+  "rejected_broader_variant": {
+    "patch": "experiments/notes/overnight-numerics-root-rows-rejected.patch",
+    "patch_sha256": "251c793e57209be70fc0c0f91af1ad7acb7973b80e4cd323a5ba25604a596ca5",
+    "precision_result": "experiments/notes/overnight-numerics-root-rows-precision-result.json",
+    "reason": "Independent Decimal comparison: sample17/H error increased from0.0303313 to0.670505."
+  },
+  "checks": {
+    "result": {
+      "path": "experiments/notes/overnight-numerics-isolated-diagonal-result.json",
+      "sha256": "286af3ceeaf2c407cbb16fd07c96ffcc14e4bbbf6932484caa258d41cebd859e"
+    },
+    "precision-result": {
+      "path": "experiments/notes/overnight-numerics-isolated-diagonal-precision-result.json",
+      "sha256": "25503924eaefc64fb8aeb0007f29cd435f449f216756eb183c1a5eb628f086c0"
+    },
+    "callback-result": {
+      "path": "experiments/notes/overnight-numerics-isolated-diagonal-callback-result.json",
+      "sha256": "ae603367be8f6288472cd81f282174f7dc457cb63bbfc0e42405d198f0de2524"
+    }
+  },
+  "request": "Both unchanged official benchmarks, saved outputs/gradients, generalization, independent source review. Capture eligible-coordinate counts separately; paired timing only if promising.",
+  "limits": [
+    "No JAX locally",
+    "No full optical builder check",
+    "No official timings for candidate",
+    "Inherited strict/finite-difference disagreements unresolved",
+    "First-order host VJP only"
+  ]
+}

@@ -1,0 +1,113 @@
+diff --git a/differometor/host_pass.py b/differometor/host_pass.py
+index cb8cf43..3505612 100644
+--- a/differometor/host_pass.py
++++ b/differometor/host_pass.py
+@@ -33,7 +33,7 @@ import numpy as np
+ 
+ from differometor.components import UNIT_VACUUM, H_PLANCK, F0
+ from differometor.host import evaluate_function, function_jacobian
+-from differometor.sparse import _scipy, REFINEMENT_STEPS, REFINEMENT_TOLERANCE
++from differometor.sparse import _scipy, SparsePattern, REFINEMENT_STEPS, REFINEMENT_TOLERANCE
+ 
+ _NOISE_SCALE = 2 * UNIT_VACUUM * H_PLANCK * F0 * 0.25
+ 
+@@ -356,7 +356,7 @@ def _superlu_gstrf():
+     return _GSTRF
+ 
+ 
+-def _factor(pattern, values):
++def _factor_full(pattern, values):
+     data = np.ascontiguousarray(values, dtype=np.complex128)
+     gstrf = _superlu_gstrf()
+     if gstrf:
+@@ -367,6 +367,90 @@ def _factor(pattern, values):
+                 permc_spec="COLAMD")
+ 
+ 
++class _RootRows:
++    """Static decomposition A = [[D, 0], [B, C]] after an index permutation.
++
++    D consists only of rows with exactly one structural entry, on the diagonal.
++    An off-diagonal entry that is currently zero still prevents elimination.
++    No coefficient, factor or solution is stored in this topology plan.
++    """
++
++    def __init__(self, pattern):
++        counts = np.bincount(pattern.rows, minlength=pattern.size)
++        diagonal = pattern.rows == pattern.cols
++        self.diagonal_positions = np.flatnonzero(diagonal & (counts[pattern.rows] == 1))
++        self.roots = pattern.rows[self.diagonal_positions]
++        self.size = pattern.size
++        if not self.roots.size:
++            return
++        is_root = np.zeros(pattern.size, dtype=bool)
++        is_root[self.roots] = True
++        self.core = np.flatnonzero(~is_root)
++        core_index = np.empty(pattern.size, dtype=np.int64)
++        core_index[self.core] = np.arange(self.core.size)
++        root_index = np.empty(pattern.size, dtype=np.int64)
++        root_index[self.roots] = np.arange(self.roots.size)
++        self.core_positions = np.flatnonzero(~is_root[pattern.rows] & ~is_root[pattern.cols])
++        self.cross_positions = np.flatnonzero(~is_root[pattern.rows] & is_root[pattern.cols])
++        self.cross_rows = core_index[pattern.rows[self.cross_positions]]
++        self.cross_cols = root_index[pattern.cols[self.cross_positions]]
++        self.core_pattern = SparsePattern(core_index[pattern.rows[self.core_positions]],
++                                          core_index[pattern.cols[self.core_positions]], self.core.size)
++
++
++class _RootFactor:
++    """Fresh numerical factors for a structural diagonal-row decomposition."""
++
++    def __init__(self, plan, values):
++        self.plan = plan
++        # Advanced indexing owns these numerical snapshots for this factor.
++        self.diagonal = values[plan.diagonal_positions]
++        self.cross = values[plan.cross_positions]
++        self.core_factor = _factor_full(plan.core_pattern, values[plan.core_positions]) if plan.core.size else None
++
++    def solve(self, rhs, trans="N"):
++        plan = self.plan
++        vector = rhs.ndim == 1
++        right = rhs[:, None] if vector else rhs
++        solution = np.empty(right.shape, dtype=np.complex128)
++        if trans == "N":
++            roots = right[plan.roots] / self.diagonal[:, None]
++            solution[plan.roots] = roots
++            if plan.core.size:
++                core_rhs = right[plan.core]
++                np.add.at(core_rhs, plan.cross_rows, -self.cross[:, None] * roots[plan.cross_cols])
++                solution[plan.core] = self.core_factor.solve(core_rhs, trans="N")
++        elif trans in ("T", "H"):
++            diagonal = np.conj(self.diagonal) if trans == "H" else self.diagonal
++            cross = np.conj(self.cross) if trans == "H" else self.cross
++            root_rhs = right[plan.roots]
++            if plan.core.size:
++                core = self.core_factor.solve(right[plan.core], trans=trans)
++                solution[plan.core] = core
++                np.add.at(root_rhs, plan.cross_cols, -cross[:, None] * core[plan.cross_rows])
++            solution[plan.roots] = root_rhs / diagonal[:, None]
++        else:
++            raise ValueError("trans must be N, T or H")
++        return solution[:, 0] if vector else solution
++
++
++_ROOT_ROWS = {}
++
++
++def _factor(pattern, values):
++    """Factor afresh, eliminating only structurally diagonal rows beforehand."""
++    if pattern not in _ROOT_ROWS:
++        _ROOT_ROWS[pattern] = _RootRows(pattern)
++    plan = _ROOT_ROWS[pattern]
++    values = np.asarray(values, dtype=np.complex128)
++    if plan.roots.size:
++        diagonal = values[plan.diagonal_positions]
++        # Keep SuperLU's existing singular/nonfinite handling for invalid pivots.
++        if np.all(np.isfinite(diagonal)) and np.all(diagonal != 0):
++            return _RootFactor(plan, values)
++    return _factor_full(pattern, values)
++
++
+ class _Products:
+     """NumPy sparse products for one static pattern (no scipy.sparse)."""
+ 

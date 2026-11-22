@@ -1,0 +1,11 @@
+{
+  "parent": "534570265891b5782b8b55ef10b5b06eb778d1c3",
+  "callback_cases": 384,
+  "arrays_per_case": 12,
+  "finite_difference_coordinates": 6912,
+  "maximum_fd_absolute_error": 1.5417320198274354e-10,
+  "maximum_parent_array_scaled_difference": 0.0,
+  "fresh_factorization_and_zero_derivative_checks": true,
+  "scope": "Tiny actual source callbacks; no JAX/full builder/official timing",
+  "host_pass_sha256": "89e980bb1139715be00c583d80edc58246563ff8e29b147419fe7bcf8ead1e9c"
+}

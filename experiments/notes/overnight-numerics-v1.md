@@ -5199,3 +5199,202 @@ No speedup is claimed; the callback profiler requested earlier is still missing.
 Existing pristine-reference discrepancies, the six unresolved grid finite-
 difference coordinates, and the first-order-only host VJP limitation remain.
 Do not promote this repair as a validated performance improvement.
+
+## Trial51 feedback: official behavior unchanged; no timing promotion
+
+Evaluated SHA534570265891b5782b8b55ef10b5b06eb778d1c3, request
+ db3df72dd1024cbea413b748540e7f4d, jobs grid-1/2/3 and aligo-1/2/3.
+All six official runs passed; source hashes match the submitted implementation.
+Independent source review remains absent and confirmed_improvement=false.
+
+Large fresh-process seconds: [0.8498562760651112, 0.8252214398235083,
+0.8150014914572239]; median0.8252214398235083, range
+0.8150014914572239–0.8498562760651112. Official aLIGO seconds:
+[0.5479947309941053, 0.5457404647022486, 0.5486580114811659];
+median0.5479947309941053, range0.5457404647022486–0.5486580114811659.
+No combined score is defined. The cohorts are unpaired and external contention
+is not excluded; lower medians than trial50 do not establish a causal speedup.
+
+Large/aligo phase medians(ms): build74.574/37.749, forward181.289/32.387,
+reverse108.518/18.774. Differences from trial50: total-9.432/-2.137 ms,
+build+0.690/-0.538, forward-2.771/-1.391, reverse+1.041/-0.024.
+Differences from original35 total medians: +5.937/-1.734 ms. The selected
+incumbent remains ee4fea28 under the coordinator policy; this repair is not
+proposed as a performance winner. Preserve its separate correctness rationale.
+Sampled peak RSS maxima: large647118848 bytes, aligo295649280 bytes,
+generalization982298624 bytes. No reported budget breach or infrastructure
+failure; RSS sampling can miss peaks.
+
+All six official archive hashes and complete strict-comparison records match
+trial50 and original35. Generalization case comparison records match both,
+with14/14 passing against the initial seed and4/14 against pristine. The new
+container archive hash is f7053f5c15558a3260a932282a79128233475c8112c0aff1e6ea33bb907bf91e.
+Raw generalization member arrays are unavailable locally; no byte-identity
+claim is inferred from case records. The evaluator self-comparison is not
+independent evidence. Detailed audit: overnight-numerics-connector-overwrite-feedback.json.
+
+Inherited pristine signal/gradient/loss disagreements, uifo_rand1/uifo_rand3
+sensitivity discrepancies, six unresolved grid finite differences and first-
+order-only custom VJP limitations remain visible. No new official/generalization
+discrepancy is identified in the supplied comparisons. The synthetic overwrite
+repair is independently motivated and does not resolve those inherited issues.
+
+Decision: retain trial51 as a bounded correctness repair pending independent
+review and close the overwrite audit. No simulator edits are required by this
+feedback. Before further implementation tuning, obtain the prepared callback
+profile on exact51 and the optical-builder duplicate-sweep/connector checks.
+These requested diagnostics have not yet been returned; do not infer their
+outcomes from public passes or restart retired allocation/solver variants.
+
+## Inspection52: reject per-RHS stopping alone (2026-11-22 08:10 UTC)
+
+Concrete next experiment after trial51: test whether the global refinement
+stopping norm lets a large RHS hide an unconverged small RHS. Source inspection
+confirms both host_pass._solve and sparse._host_solve compare one maximum over
+all solution/correction entries. No solver implementation was changed for this
+inspection, and there is no candidate SHA or new official job.
+
+The bounded diagnostic overnight-numerics-rhs-refinement-inspect.py loads the
+actual SparsePattern, factorization and sparse-product kernels from source
+without JAX. It creates120 five-dimensional block-diagonal systems: an exactly
+solved scalar block and a randomly generated, scaled, nearly dependent4x4 block.
+For each N/T/H solve it combines a1e20 scalar RHS with the difficult block RHS.
+It records all three existing refinement updates, then compares the original
+global stopping decision with requiring every RHS to meet the same1e-14 test.
+The original arithmetic, double precision, factorization and maximum of three
+corrections are identical in the two counterfactuals. This is a small synthetic
+inspection, not an optical benchmark or a timing measurement.
+
+Of360 solves,323 stopped after the first correction under the global norm even
+though the small column failed its individual stopping test. Among these323,
+continuing until every column passed (or the three-step limit) improved the
+maximum absolute small-column solution error in124, worsened it in134 and left
+it unchanged in65. References use separate80-digit Decimal Gaussian elimination
+on the exact supplied binary64 matrix/RHS values. Repeating at110 digits gives
+identical rounded binary64 references for all323 cases. T/H use real matrices
+here; complex optical cases and JAX are not exercised.
+
+Worst observed absolute solution errors: original0.13978520642232456 and
+per-column0.5009833582018814, on the same sample94/H. Its normwise double
+residuals were6.570729651296933e-17 and6.570674835283338e-17 respectively.
+Thus the nearly unchanged tiny double residual does not certify forward
+accuracy. A separate improvement example falls from3.913124855259298e-7 to
+2.5866983943689803e-8. Both matrices/RHS and correction traces are preserved in
+overnight-numerics-rhs-refinement-result.json; neither example is selected as
+the sole evidence. Across the sample, maximum normwise double residual changed
+from2.2088561280149554e-16 to1.4144168428846292e-16 while maximum forward error
+increased. No universal accuracy claim follows from either statistic.
+
+Decision: reject per-column stopping alone as an accuracy repair or performance
+candidate. Do not submit an implementation merely because the masked stopping
+test is real. Extra double-precision corrections can amplify residual rounding
+on these ill-conditioned systems. Production source remains exact trial51
+SHA534570265891b5782b8b55ef10b5b06eb778d1c3 (host_pass SHA256
+fab5290125270c2a37f612fb5ba5778f59f2c726f4316043e3704430945a1f77).
+This is a distinct rejected experiment, not a resubmission of trial51 or a
+restart of the retired residual-allocation/ordering variants.
+
+Next evidence needed before any refinement change: coordinator-only capture of
+per-RHS correction ratios and high-precision residual/error checks on arbitrary
+optical setups, including ill-conditioned/modulated cases, with the prepared
+callback profile to establish cost. Do not infer these captures from official
+passes. Neither unchanged official benchmark was rerun locally. Trial51's
+recorded six passes, lack of stable timing promotion, outstanding independent
+review and all inherited pristine-reference/finite-difference disagreements
+remain unchanged. The strongest compatible numerical branch is retained; the
+coordinator's admitted incumbent is not replaced by this inspection.
+
+## Trial53: isolated diagonal coordinates, after rejecting broader row elimination
+
+Parent: trial51, SHA534570265891b5782b8b55ef10b5b06eb778d1c3, request
+db3df72dd1024cbea413b748540e7f4d. Candidate SHA and both official job identifiers
+are pending supervisor submission. No other-lane change is combined. This is a
+structural factor-size experiment; the rejected stopping-rule inspection52 and
+retired factor-order/panel/zero-compaction variants remain closed.
+
+The first implementation eliminated rows with a structural diagonal alone,
+forming A=[[D,0],[B,C]]. Its tiny callback tests passed (192 cases, 3456 finite
+differences; maximum FD absolute error1.5408746500966686e-10). However, the
+independent ill-conditioned comparison exposed unacceptable new forward errors:
+of72 real/complex N/T/H solves,35 improved and37 worsened against80-digit Decimal
+references (110-digit repeats agreed). Sample17/H rose from scaled error
+0.03033127782189149 to0.6705045723650188. Its double residual decreased from
+6.905249131335074e-17 to1.9516383463607026e-18, so a double-residual guard would
+not justify accepting it. The largest parent/candidate scaled errors across
+the set were1.288074954304018/0.7429779566968728; reporting only these maxima
+would conceal the regression in sample17. All72 records are preserved in
+overnight-numerics-root-rows-precision-result.json. The full rejected production
+patch is overnight-numerics-root-rows-rejected.patch, against exact51; the
+row-only callback/precision check scripts reproduce that source when restored.
+It was not submitted or evaluated officially. Do not promote or transfer it.
+
+The final candidate requires BOTH the row and column to contain only their
+diagonal structural entry. Thus A=[[D,0],[0,C]] after an index permutation:
+there is no subtraction into the coupled RHS and no coupling arithmetic.
+_IsolatedDiagonalPlan caches only the coordinate partition and smaller CSC
+pattern. Every _factor constructs fresh diagonal coefficient snapshots and
+fresh SuperLU factors for C; a fully diagonal system gets fresh D snapshots.
+No outputs, numerical matrices or factors persist across evaluations beyond
+the parent's existing forward-to-backward state consumption.
+
+All supplied structural entries count, even if their value is currently zero.
+No function, fixture, known workload shape or physical parameter value selects
+the structure. Zero or nonfinite isolated pivots delegate to the unchanged
+full SuperLU path for its existing failure handling. No-root patterns also use
+the unchanged full factorization. N/T/H apply the proper diagonal conjugation
+and reinsert every coordinate. Full-system sparse residual products, stopping
+test, maximum3 refinement corrections, gradients, three JIT stages and public
+outputs are unchanged. Arithmetic in isolated complex division and internal
+SuperLU ordering can still differ; this is not a universal bitwise guarantee.
+
+Target cost: each fresh LU and triangular solve can omit isolated coordinates.
+Small inspection cases establish actual factor-size reductions1->0,4->3/2/0,
+9->8/5/0. The official large forward phase is about181 ms and reverse about109
+ms in51, but no callback profile or official eligible-coordinate count has been
+returned. The fraction saved is unknown. Index gathers/scatters, diagonal
+division and the extra static plan can outweigh the saved factor/solve work;
+no speedup or memory reduction is claimed from operation counts alone.
+
+Final candidate validation, local existing NumPy/SciPy environment only:
+
+- 120 small real/complex matrices,1080 refined N/T/H vector/one-/three-RHS solves
+  covering isolated and connected coordinates, zero stored entries and row or
+  column scaling spanning1e12. Maximum parent-scaled difference
+  2.218480486848203e-16; maximum dense-reference-scaled difference
+  2.00367475290496e-15; maximum normwise double residual
+  2.3866069730577494e-16. All432 no-isolated-coordinate solves match parent
+  bitwise. Singular/NaN/infinite isolated pivots demonstrably call full SuperLU.
+  Input buffers are unchanged; a factor owns its diagonal snapshot and every
+  new factor call constructs a distinct core factor when one exists.
+- 24 independently generated ill-conditioned real/complex systems,72 N/T/H
+  solves: all candidate solution values equal parent values. Decimal80/110
+  references agree. Both implementations retain a worst scaled error of
+  0.058464931249388605 in this deliberately ill-conditioned set. The experiment
+  does not resolve that inherited error or establish universal solver accuracy.
+- 384 tiny actual host callback cases compare all12 arrays (five forward
+  results/residuals plus seven input cotangents), with maximum scaled difference
+  zero. They cover one/three frequency points, four modulation functions,
+  two detectors, conjugation, Hermitian/non-Hermitian noise, zero/nonzero
+  coefficient derivatives, isolated and connected systems, matched/cleared/
+  interleaved forward state. All6912 real/imaginary finite-difference directions
+  pass at rtol2e-6/atol1e-9; maximum absolute difference
+  1.5417320198274354e-10. Fresh forward factor counts are checked.
+
+Evidence: overnight-numerics-isolated-diagonal-{result,precision-result,
+callback-result}.json and their check scripts. The regular-kernel helper retains
+the root-rows-check.py name and also supports reproducing the rejected row-only
+patch. These are small source-derived checks, without JAX tracing, the optical
+builder, official fixtures or independent benchmarks. Source hash and submission
+request are recorded in overnight-numerics-isolated-diagonal-handoff.json.
+
+Request: both unchanged full official benchmarks on the same supervisor commit,
+all saved physical outputs and gradients against51/seed/pristine, the14-case
+generalization set, and independent source review. In a separate diagnostic
+run, report each pattern's size, isolated-coordinate count and core size from
+host_pass._ISOLATED_DIAGONALS; record callback profiles. If neither official
+system has eligible coordinates, reject for lack of useful work reduction.
+If results are promising, require paired fresh-process complete runs against51
+with individual samples, medians/ranges separately for large and aLIGO, phase
+deltas, sampled memory and overlap status. Do not infer an improvement from a
+single observation. All pristine-reference disagreements, unresolved grid finite
+differences and first-order-only custom VJP limitations remain explicit.

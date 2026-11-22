@@ -1,0 +1,252 @@
+{
+  "sha": "534570265891b5782b8b55ef10b5b06eb778d1c3",
+  "request_id": "db3df72dd1024cbea413b748540e7f4d",
+  "official_passed": true,
+  "source_review": null,
+  "confirmed_improvement": false,
+  "timings": {
+    "grid": {
+      "fresh_process_seconds": [
+        0.8498562760651112,
+        0.8252214398235083,
+        0.8150014914572239
+      ],
+      "median_seconds": 0.8252214398235083,
+      "minimum_seconds": 0.8150014914572239,
+      "maximum_seconds": 0.8498562760651112,
+      "count": 3
+    },
+    "aligo": {
+      "fresh_process_seconds": [
+        0.5479947309941053,
+        0.5457404647022486,
+        0.5486580114811659
+      ],
+      "median_seconds": 0.5479947309941053,
+      "minimum_seconds": 0.5457404647022486,
+      "maximum_seconds": 0.5486580114811659,
+      "count": 3
+    }
+  },
+  "phase_medians": {
+    "grid": {
+      "imports": 0.26357324980199337,
+      "initialize": 0.0035571325570344925,
+      "load": 0.0015529412776231766,
+      "build": 0.07457390055060387,
+      "forward_lower": 0.019548960030078888,
+      "forward_compile": 0.03288084827363491,
+      "forward": 0.1812894344329834,
+      "sensitivity_lower": 0.025485241785645485,
+      "sensitivity_compile": 0.040324483066797256,
+      "sensitivity": 0.0008948501199483871,
+      "gradient_lower": 0.016754843294620514,
+      "gradient_compile": 0.052894532680511475,
+      "gradient": 0.10851830802857876,
+      "host_transfer": 0.00018831714987754822
+    },
+    "aligo": {
+      "imports": 0.2636090200394392,
+      "initialize": 0.003542369231581688,
+      "load": 0.00021101906895637512,
+      "build": 0.037748783826828,
+      "forward_lower": 0.01914563588798046,
+      "forward_compile": 0.03361050225794315,
+      "forward": 0.03238668479025364,
+      "sensitivity_lower": 0.02609904482960701,
+      "sensitivity_compile": 0.04130254499614239,
+      "sensitivity": 0.00047631561756134033,
+      "gradient_lower": 0.016476385295391083,
+      "gradient_compile": 0.053080711513757706,
+      "gradient": 0.018774110823869705,
+      "host_transfer": 0.0001478288322687149
+    }
+  },
+  "comparisons": {
+    "parent50": {
+      "sha": "a5d5a10c9e63ef00a532407a2ed3220905d6e34b",
+      "official": [
+        {
+          "setup": "grid",
+          "repetition": 1,
+          "archive_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "aligo",
+          "repetition": 1,
+          "archive_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "grid",
+          "repetition": 2,
+          "archive_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "aligo",
+          "repetition": 2,
+          "archive_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "grid",
+          "repetition": 3,
+          "archive_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "aligo",
+          "repetition": 3,
+          "archive_equal": true,
+          "strict_records_equal": true
+        }
+      ],
+      "generalization_case_records_equal": {
+        "initial_seed": true,
+        "pristine": true
+      },
+      "median_deltas_ms": {
+        "grid": {
+          "total": -9.431662037968636,
+          "imports": -3.6665964871644974,
+          "initialize": 0.03666989505290985,
+          "load": 0.025795772671699524,
+          "build": 0.6904099136590958,
+          "forward_lower": -0.15287473797798157,
+          "forward_compile": -0.4233997315168381,
+          "forward": -2.7707573026418686,
+          "sensitivity_lower": -0.07438845932483673,
+          "sensitivity_compile": -1.0830201208591461,
+          "sensitivity": -0.0020209699869155884,
+          "gradient_lower": 0.01977197825908661,
+          "gradient_compile": -0.2731475979089737,
+          "gradient": 1.0414700955152512,
+          "host_transfer": -0.001911073923110962
+        },
+        "aligo": {
+          "total": -2.1368078887462616,
+          "imports": -0.28813257813453674,
+          "initialize": 0.018304213881492615,
+          "load": -0.007819384336471558,
+          "build": -0.5377717316150665,
+          "forward_lower": -0.16122125089168549,
+          "forward_compile": 0.31787343323230743,
+          "forward": -1.3914797455072403,
+          "sensitivity_lower": -0.035431236028671265,
+          "sensitivity_compile": 0.2118963748216629,
+          "sensitivity": 0.01337006688117981,
+          "gradient_lower": -0.1743696630001068,
+          "gradient_compile": -0.09550713002681732,
+          "gradient": -0.0235140323638916,
+          "host_transfer": -0.007858499884605408
+        }
+      }
+    },
+    "original35": {
+      "sha": "7a9480332bad29b5aaeacc5a4628481581507e7a",
+      "official": [
+        {
+          "setup": "grid",
+          "repetition": 1,
+          "archive_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "aligo",
+          "repetition": 1,
+          "archive_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "grid",
+          "repetition": 2,
+          "archive_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "aligo",
+          "repetition": 2,
+          "archive_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "grid",
+          "repetition": 3,
+          "archive_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "aligo",
+          "repetition": 3,
+          "archive_equal": true,
+          "strict_records_equal": true
+        }
+      ],
+      "generalization_case_records_equal": {
+        "initial_seed": true,
+        "pristine": true
+      },
+      "median_deltas_ms": {
+        "grid": {
+          "total": 5.937475711107254,
+          "imports": -3.9805974811315536,
+          "initialize": 0.027410686016082764,
+          "load": 0.11314451694488525,
+          "build": 4.6393368393182755,
+          "forward_lower": -0.12654997408390045,
+          "forward_compile": -0.8946582674980164,
+          "forward": -0.3584790974855423,
+          "sensitivity_lower": -0.480039045214653,
+          "sensitivity_compile": 0.2557355910539627,
+          "sensitivity": 0.016851350665092468,
+          "gradient_lower": -0.0498499721288681,
+          "gradient_compile": 0.8500106632709503,
+          "gradient": 2.0944084972143173,
+          "host_transfer": -0.008689239621162415
+        },
+        "aligo": {
+          "total": -1.7338376492261887,
+          "imports": -1.2224223464727402,
+          "initialize": -0.030511990189552307,
+          "load": 3.91155481338501e-05,
+          "build": 0.15380047261714935,
+          "forward_lower": -0.21262839436531067,
+          "forward_compile": 0.1892540603876114,
+          "forward": -0.3822334110736847,
+          "sensitivity_lower": -0.12176483869552612,
+          "sensitivity_compile": -0.06746500730514526,
+          "sensitivity": -0.012347474694252014,
+          "gradient_lower": -0.23034773766994476,
+          "gradient_compile": -0.463876873254776,
+          "gradient": -0.20145997405052185,
+          "host_transfer": -0.0012889504432678223
+        }
+      }
+    }
+  },
+  "generalization": {
+    "archive_sha256": "f7053f5c15558a3260a932282a79128233475c8112c0aff1e6ea33bb907bf91e",
+    "passes": {
+      "initial_seed": 14,
+      "pristine": 4
+    },
+    "raw_array_members_inspected": false
+  },
+  "memory": {
+    "grid": [
+      520663040,
+      647118848,
+      519430144
+    ],
+    "aligo": [
+      295649280,
+      295239680,
+      294707200
+    ],
+    "generalization": 982298624
+  },
+  "source_hash_matches": true,
+  "scope": "Saved evaluator hashes and comparison records; separate unpaired fresh-process cohorts, no causal timing or universal correctness claim. External contention not excluded."
+}
