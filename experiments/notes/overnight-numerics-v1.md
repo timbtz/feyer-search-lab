@@ -437,3 +437,66 @@ Candidate 1 is not intended to touch any of them.
   `57c7de44-c9ff-460f-88f1-9ffa79a35479`. Stop is for this hypothesis, not the campaign or budget.
   The authorized campaign deadline remains 2026-11-22 09:27:44 UTC. Strongest admitted source
   remains candidate 7; candidate 9 is an unadmitted promising trial, candidate 10 unconfirmed.
+
+## Restored-parent recalibration and new direction (2026-11-22)
+
+- Restored simulator SHA `cb04c3c2b5aa7e6ff2b44b298a102e7511aee81e` has source equal
+  to admitted candidate 7. Evaluation `d12a722629874f57a7f578a9c0b981e7`, grid-1/2/3 and
+  aligo-1/2/3: all official PASS. This was a recalibration, not an optimization claim.
+- Large fresh samples: 0.8287269529, 0.8084255047, 0.7973537017 s; median 0.8084255047,
+  range 0.7973537017–0.8287269529. Forward 184.44/185.22/183.41 ms; reverse
+  89.05/85.79/83.50 ms. aLIGO samples: 0.5420756359, 0.5420307629, 0.5428591091 s;
+  median 0.5420756359, range 0.5420307629–0.5428591091. Forward 32.37/32.44/33.67 ms;
+  reverse 14.22/14.22/13.83 ms. No paired phase delta establishes a gain.
+- Official archives match candidate 7. All seed physical-array/gradient checks and 14 additional
+  seed comparisons pass. Pristine discrepancies remain: grid signal/gradient/loss, aLIGO loss,
+  and the documented random-case disagreements. Generalization archive timing metadata remains
+  excluded from numerical conclusions. Raw remote arrays are not locally available; this inspection
+  uses evaluator per-array reports, not a new independent array audit.
+- Peak sampled RSS large 632836096 B, aLIGO 309452800 B, generalization 873349120 B.
+  One logical CPU (2), single library threads, external overlap not excluded. No independent
+  review or requested execution profile accompanied this feedback. No promotion expected.
+- Residual-allocation exploration stays closed after three unconfirmed proposals. The following
+  is a separate conservative source-level coefficient optimization, on restored admitted source;
+  it does not introduce a new derivative evaluator or combine candidates 9/10.
+
+## Candidate 11: share surface coefficient intermediates
+
+- Candidate SHA and evaluator job IDs pending supervisor. Only production delta is
+  `differometor/components.py::surface`; scientific parent is `ee4fea2`, recalibrated as `cb04c3c`.
+- Source establishes repeated phase shifts for the left/right indices, left incidence cosine,
+  and reflection amplitude square root in the three scalar coefficient helper calls. Surface now
+  computes each shared intermediate once per invocation. Each coefficient keeps its original
+  multiplication grouping, exponential arguments, and sign conventions. Right reflection and
+  transmission deliberately retain their distinct Snell-law argument orders. No numerical values
+  persist between invocations; no value-based pruning or topology/fixture dispatch is introduced.
+- Target phases: forward component assembly and reverse `function_jacobian`, which invokes the
+  surface separately for each differentiated slot. Under a seven-slot synthetic Jacobian, measured
+  shim call counts change: sqrt 21->14, phase_shift 28->14, radians 56->35, cos 28->21;
+  exp 21, sin 14, arcsin 14 unchanged. This is operation-count evidence, not a timed profile.
+  The fraction of official forward/reverse spent in this component remains unmeasured. Benefit
+  may be small; require fresh-process paired complete timings before claiming improvement.
+- `experiments/notes/overnight-numerics-surface-check.py` executes source-derived component/dual
+  definitions without JAX, against committed parent. Twelve synthetic array cases, 33 parameter
+  rows each: unequal refractive indices, positive/negative frequency, complex perturbations,
+  zero tuning/frequency/loss, reflectivity 0/1, loss 1, zero indices, grazing incidence and total
+  internal reflection. Across four slot menus (including all seven), all 48 output/J/K comparisons
+  pass; finite entries match bit-for-bit, nonfinite entries compare equal. Every slot is retained.
+- Fourteen independent central-difference directions (real and imaginary for each input) at a
+  nonsingular random point pass; maximum error scaled by max(1, derivative magnitude) is
+  1.6010981992459505e-9. This is bounded local derivative evidence, not a certificate for ill-
+  conditioned optical networks. Local existing NumPy environment only; no official workload,
+  simulator benchmark, dependency installation, or timing run performed.
+- The JAX dense path also sees the shared source. Its reverse accumulation graph may change
+  even though host Dual arithmetic matched exactly. Request a small dense-versus-parent component
+  value/VJP check under evaluator JAX, including unequal indices and zero tuning. Production
+  host path still uses the same first-order Dual/J/K and scatter routines.
+- Request both unchanged full official benchmarks on the new exact SHA, every saved output and
+  gradient comparison against parent and seed, all 14 generalization cases including modulation,
+  and independent source review. If promising, pair/interleave at least five fresh dual runs
+  against restored parent under matching CPU/thread/resource policy. Keep all samples, phase
+  deltas, peak RSS and overlap records. No change to refinement, package flags, JIT stages,
+  physical design variables, imported other-lane code, or workload.
+- Existing strict signal/gradient findings (33,161,180), rand1/rand3 sensitivity disagreements,
+  six unresolved grid finite-difference coordinates and lack of whole-pass JVP/Hessian support
+  remain explicitly unresolved. Candidate 7 remains strongest admitted until new evidence.

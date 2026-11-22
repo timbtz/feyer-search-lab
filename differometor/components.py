@@ -909,24 +909,23 @@ def surface(parameters: jnp.ndarray) -> jnp.ndarray:
     absolute_reflectivity = (1 - parameters[0]) * parameters[1]
     absolute_transmissivity = (1 - parameters[0]) * (1 - parameters[1])
 
-    reflectivity_left_entry = reflectivity_left(
-        absolute_reflectivity, parameters[2], parameters[3], parameters[4], parameters[6]
+    # Reflection and transmission share these intermediates. Keep each
+    # coefficient's multiplication order identical to the scalar helpers below;
+    # this also avoids repeating the work in each host dual evaluation.
+    reflection_amplitude = -jnp.sqrt(absolute_reflectivity)
+    left_phase = phase_shift(parameters[2], parameters[3], parameters[4])
+    right_phase = phase_shift(parameters[2], parameters[3], parameters[5])
+    left_incidence = incidence_angle_left(parameters[6])
+    reflectivity_left_entry = reflection_amplitude * jnp.exp(1j * left_phase * left_incidence)
+
+    left_term = left_phase * left_incidence
+    right_term = right_phase * incidence_angle_right(parameters[6], parameters[4], parameters[5])
+    transmissivity_entry = -jnp.sqrt(absolute_transmissivity) * jnp.exp(
+        1j * (jnp.pi / 2 + 0.5 * (left_term - right_term))
     )
-    transmissivity_entry = transmissivity(
-        absolute_transmissivity,
-        parameters[2],
-        parameters[3],
-        parameters[4],
-        parameters[5],
-        parameters[6],
-    )
-    reflectivity_right_entry = reflectivity_right(
-        absolute_reflectivity,
-        parameters[2],
-        parameters[3],
-        parameters[4],
-        parameters[5],
-        parameters[6],
+    # Right reflection uses the reverse index order from transmission.
+    reflectivity_right_entry = reflection_amplitude * jnp.exp(
+        -1j * right_phase * incidence_angle_right(parameters[6], parameters[5], parameters[4])
     )
 
     return standardize_output([reflectivity_left_entry, transmissivity_entry, reflectivity_right_entry])
