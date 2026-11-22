@@ -1538,12 +1538,7 @@ def _matrix_indices_are_unique(matrix_indices, matrix_shape):
 
 
 def _group_component_indices(function_indices, function_input_indices=None):
-    """Classify instructions and map original rows to grouped output rows.
-
-    Keep structural metadata on the host: plan construction reads these arrays
-    with NumPy. JAX accepts them as array leaves if a simulation path uses them;
-    converting them to device arrays here would add an unnecessary round trip.
-    """
+    """Classify instructions and map original rows to grouped output rows."""
     groups = defaultdict(list)
     for row, function_index in enumerate(function_indices):
         groups[int(function_index)].append(row)
@@ -1552,12 +1547,12 @@ def _group_component_indices(function_indices, function_input_indices=None):
     for grouped_row, original_row in enumerate(grouped_rows):
         output_rows[original_row] = grouped_row
     result = {
-        "function_rows": {index: np.asarray(groups[index], dtype=np.int64) for index in sorted(groups)},
-        "output_rows": np.asarray(output_rows, dtype=np.int64),
+        "function_rows": {index: _host_array(groups[index], int) for index in sorted(groups)},
+        "output_rows": _host_array(output_rows, int),
     }
     if function_input_indices is not None:
         result["parameter_indices"] = {
-            index: np.asarray([function_input_indices[row] for row in groups[index]], dtype=np.int64)
+            index: _host_array([function_input_indices[row] for row in groups[index]], int)
             for index in sorted(groups)
         }
     return result

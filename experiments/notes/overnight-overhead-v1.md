@@ -1435,3 +1435,109 @@
   compiler policy, fixture, benchmark, three-stage structure or shared environment changes.
   If this narrower staging trial is also unsuccessful, request the pending import/build
   profile before another staging variant. Deadline09:27:44 UTC unchanged.
+
+
+### Candidate18 feedback and staging-hypothesis handoff
+
+- Evaluated SHA **f1acd5ba7f2f80dba8076599ead8c01aef6545be**, request
+  **5b7dff8c3ca6444ca76139f97a5307ca**, jobs grid-1/2/3 and aligo-1/2/3.
+  Both unchanged official benchmarks passed 3/3. All saved physical-array/gradient
+  comparisons against the initial seed passed the evaluator tolerances, as did all14
+  generalization cases. Pristine comparisons still fail the inherited checks; no new
+  discrepancy was reported. Independent source review is absent. The prepared synthetic
+  metadata/JAX diagnostic has no reported execution result.
+- Large complete first-run samples seconds: 0.8362261410802603, 0.7882700376212597,
+  0.7978439573198557; median0.7978439573198557, range0.7882700376212597–0.8362261410802603.
+  Official aLIGO samples: 0.5429688971489668, 0.5398643594235182, 0.5404376741498709;
+  median0.5404376741498709, range0.5398643594235182–0.5429688971489668.
+  Against historical reviewed ee4fea2 medians, observed reductions are3.734 ms large
+  (about0.466%) and8.117 ms aLIGO. These are unmatched cohorts, not confirmed gains.
+  Supervisor confirmed_improvement=false; large gain below selection threshold,
+  overlapping ranges, and independent review still required.
+- Phase medians ms large/aLIGO: imports266.906/262.858; build74.421/36.499;
+  forward lowering19.663/19.105, compile30.391/33.380, execution179.801/32.940;
+  sensitivity lowering25.522/26.278, compile39.955/41.369;
+  gradient lowering16.484/16.556, compile52.628/53.214, execution85.952/14.748.
+  Relative to candidate17's separate cohort, build rose1.902 ms large and fell2.006 ms
+  aLIGO. Large forward execution fell6.635 ms despite this candidate changing only build
+  metadata. Attribution to the three conversions is therefore not established.
+- Sampled peak RSS bytes: large583942144/501895168/508186624;
+  aLIGO284164096/294166528/282296320; generalization722591744. No infrastructure failure
+  or memory-budget exceedance. EPYC9334, CPU2, one logical CPU and library threads1,
+  x64, unchanged package flags, no persistent compilation cache. Other-host contention
+  was not excluded; ranking_eligible=false. No combined benchmark score is used.
+- Decision: retire candidate18 without further staging variants. Restored build.py bytes
+  from **ee4fea28c04d482566be16e916b609d7c6a99e5e**; all10 simulator Python modules are
+  checked against that reviewed parent. This is a working-tree source restoration for
+  supervisor bookkeeping, not a Git reset or a proposed new performance candidate.
+  Candidate18 and every earlier trial remain in history, and diagnostic files remain
+  explicitly provisional. No automatic combination with candidates15/16/17.
+- Next experiment requires attribution: run the already prepared
+  `experiments/notes/overnight-overhead-profile.py` through the supervisor in fresh fixed
+  evaluator processes, using the actual caller inputs for large, official aLIGO and one
+  different optical setup. Obtain import/setup/build self and cumulative profiles before
+  proposing another builder staging change. Its scope excludes simulation and benchmark-
+  owned imports such as optax; it is diagnostic evidence, not an official timing score.
+  Existing candidates15/16 still lack requested independent review and paired confirmation.
+- Source inspection also finds `prepare_arrays` immediately converts changing_values
+  NumPy→JAX→NumPy→JAX. This is a real redundant copy, but its recoverable cost is unmeasured;
+  do not submit another tiny transfer variant without attribution after this unsuccessful
+  sequence. Required JAX/SciPy imports dominate remaining dependencies; reviewed lazy
+  Plotly and dense-path JAX SciPy loading are already present.
+- Preserve unresolved pristine signal/gradient/loss discrepancies, grid gradients33/161/180,
+  uifo_rand1/rand3 log sensitivity disagreements, grid finite-difference coordinates
+  54/59/63/136/161/163, and first-order reverse-only custom-VJP compatibility. Prior aLIGO
+  finite differences29/29 remain distinct evidence. No universal correctness claim.
+- End this hypothesis with ready_for_evaluation=false, stop=true. The eight-hour campaign
+  remains separately authorized until09:27:44 UTC; this handoff does not extend its deadline
+  or claim that the overall optimization objective is complete.
+
+### Candidate19 — direct complex power magnitude squared
+
+- Resumed under the explicit request for a concrete experiment. Change direction from
+  builder staging to scalar readout arithmetic. Semantic baseline remains reviewed
+  **ee4fea28c04d482566be16e916b609d7c6a99e5e**. Candidate18 restoration remains in the
+  working diff against latest evaluated f1acd5b; it is not retained or combined.
+- Only components.py differs from ee4fea2: power_detector uses real(z)**2 + imag(z)**2
+  for complex inputs, then the identical0.5*EPSILON_0C scale. Real inputs retain the
+  original abs-square implementation and dtype conventions. Dispatch uses dtype alone,
+  never workload identity or physical parameter values. Every field and power output is
+  still computed. No solver, refinement, adjoint, cache, compiler or harness changes.
+- Actual redundancy: complex abs computes a magnitude, which power_detector immediately
+  squares. Removing that magnitude/square-root operation may reduce the sensitivity-stage
+  compiled graph and execution. Last official sensitivity lower/compile medians were
+  25.522/39.955 ms large and26.278/41.369 ms aLIGO, with execution below1 ms. These whole
+  phase costs are NOT estimates of recoverable savings. Both unchanged full benchmarks
+  must establish whether this small arithmetic rewrite helps complete first-run time.
+- Important attribution: official readout returns power_detector(carrier) as has_aux=True
+  data, so its derivative is not part of the official loss pullback. Do not claim official
+  gradient-stage savings from this change. Direct callers differentiating power_detector
+  still require correct reverse derivatives, including complex zero; no custom derivative
+  rule or host interpreter is introduced.
+- An initial detector-first utility idea was rejected before editing: the official harness
+  calls df.signal_detector directly, bypassing calculate_sensitivities. Changing that
+  utility alone would miss this measured workload. No utility modification is submitted.
+- Numerical classification: mathematically equivalent finite complex power, but rounding
+  can differ from magnitude-then-square. This is a numerical candidate requiring full
+  saved power/output/gradient inspection, not a bitwise-preserving metadata change.
+  Stdlib math.hypot comparison over2,000 random scalar pairs with scales1e-150..1e150
+  found maximum relative power difference6.325459876663449e-16. This is only a small
+  scalar sanity check, not a JAX/XLA, extreme-domain or optical correctness certificate.
+- Prepared supervisor diagnostic `experiments/notes/overnight-overhead-power-square-check.py`:
+  48 JIT primal/VJP comparisons covering float32/64 and complex64/128, scalar/empty/vector/
+  matrix shapes, signed zeros, tiny/ordinary/large finite scales; additional imaginary-axis
+  and equal-component cases check the analytical reverse derivative. UNEXECUTED locally
+  because NumPy/JAX are unavailable; no dependencies installed or benchmarks launched.
+  AST removal of the single new complex branch matches parent components.py exactly;
+  all nine other simulator modules match parent bytes. Syntax and diff checks pass.
+- Candidate SHA/job identifiers pending supervisor commit. Request both unchanged full
+  official benchmarks on that exact SHA, saved arrays and full gradient comparisons,
+  14-case varied-setup/frequency/modulation checks, the synthetic diagnostic and independent
+  review. If promising, request paired fresh parent/candidate complete timings, individual
+  samples, separate medians/ranges/phases, memory and overlap status before promotion.
+- Inherited pristine signal/gradient/loss disagreements, uifo_rand1/rand3 sensitivities,
+  unresolved grid finite differences54/59/63/136/161/163, and first-order-only host VJP
+  remain open. Investigate any new disagreement rather than loosening tolerances. If the
+  sensitivity-phase saving is absent or lost in total variance, retire this direct-square
+  trial and use the still-pending import/build attribution before further micro-variants.
+  No measured gain is claimed. Campaign deadline09:27:44 UTC unchanged.

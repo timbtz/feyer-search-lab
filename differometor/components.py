@@ -825,6 +825,12 @@ def power_detector(solution: jnp.ndarray) -> jnp.ndarray:
     Uses the scaling:
         0.5 * EPSILON_0C * |field|^2
     """
+    if jnp.iscomplexobj(solution):
+        # Power needs the squared magnitude, so avoid computing a complex
+        # magnitude (and its square root) only to square it again. Keep the
+        # real-input path's existing dtype and abs conventions.
+        magnitude_squared = jnp.real(solution) ** 2 + jnp.imag(solution) ** 2
+        return 0.5 * EPSILON_0C * magnitude_squared
     return 0.5 * EPSILON_0C * jnp.abs(solution) ** 2
 
 
