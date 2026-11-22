@@ -1,0 +1,1029 @@
+{
+  "matrices": 96,
+  "solves": 864,
+  "factor_bit_differences": 45,
+  "permutation_differences": 1,
+  "refined_bit_differences": 203,
+  "correction_count_differences": 0,
+  "fallback_bit_differences": 0,
+  "max_scaled_solution_difference": 12.044951079571337,
+  "max_backward_error": 0.9999935141366271,
+  "max_known_solution_error": 1.4146660025516801e+37,
+  "agreement_failures": [
+    [
+      31,
+      "scaled",
+      0,
+      "N",
+      0,
+      2.0310348517571153e-06
+    ],
+    [
+      31,
+      "scaled",
+      0,
+      "N",
+      1,
+      2.14049965001665e-06
+    ],
+    [
+      31,
+      "scaled",
+      0,
+      "N",
+      3,
+      1.1838565613249725e-06
+    ],
+    [
+      31,
+      "scaled",
+      0,
+      "T",
+      0,
+      1.5629882326134725e-06
+    ],
+    [
+      31,
+      "scaled",
+      0,
+      "T",
+      1,
+      4.2756645080172203e-07
+    ],
+    [
+      31,
+      "scaled",
+      0,
+      "T",
+      3,
+      1.8406751983706735e-06
+    ],
+    [
+      31,
+      "scaled",
+      0,
+      "H",
+      0,
+      9.695848380273459e-07
+    ],
+    [
+      31,
+      "scaled",
+      0,
+      "H",
+      1,
+      1.390625793836701e-06
+    ],
+    [
+      31,
+      "scaled",
+      0,
+      "H",
+      3,
+      1.8838219846038178e-06
+    ],
+    [
+      31,
+      "scaled",
+      1,
+      "N",
+      0,
+      1.2149414995800612e-06
+    ],
+    [
+      31,
+      "scaled",
+      1,
+      "N",
+      1,
+      1.3586912818158886e-06
+    ],
+    [
+      31,
+      "scaled",
+      1,
+      "N",
+      3,
+      4.030313945195857e-06
+    ],
+    [
+      31,
+      "scaled",
+      1,
+      "T",
+      0,
+      1.1843636909382375e-06
+    ],
+    [
+      31,
+      "scaled",
+      1,
+      "T",
+      1,
+      1.1014862812406339e-06
+    ],
+    [
+      31,
+      "scaled",
+      1,
+      "T",
+      3,
+      1.138331137840453e-06
+    ],
+    [
+      31,
+      "scaled",
+      1,
+      "H",
+      0,
+      5.33579874972959e-07
+    ],
+    [
+      31,
+      "scaled",
+      1,
+      "H",
+      1,
+      6.571773649537147e-07
+    ],
+    [
+      31,
+      "scaled",
+      1,
+      "H",
+      3,
+      5.428646394192046e-07
+    ],
+    [
+      31,
+      "scaled",
+      2,
+      "N",
+      0,
+      4.318835872665321e-12
+    ],
+    [
+      31,
+      "scaled",
+      2,
+      "N",
+      1,
+      2.018186308585236e-12
+    ],
+    [
+      31,
+      "scaled",
+      2,
+      "N",
+      3,
+      8.904377164460861e-11
+    ],
+    [
+      31,
+      "scaled",
+      2,
+      "T",
+      0,
+      3.9373170837162114e-08
+    ],
+    [
+      31,
+      "scaled",
+      2,
+      "T",
+      1,
+      6.79038389527231e-08
+    ],
+    [
+      31,
+      "scaled",
+      2,
+      "T",
+      3,
+      3.35298110228358e-08
+    ],
+    [
+      31,
+      "scaled",
+      2,
+      "H",
+      0,
+      5.403479980028077e-08
+    ],
+    [
+      31,
+      "scaled",
+      2,
+      "H",
+      1,
+      1.3127543461901237e-07
+    ],
+    [
+      31,
+      "scaled",
+      2,
+      "H",
+      3,
+      1.5110954128257327e-07
+    ],
+    [
+      31,
+      "triangular",
+      2,
+      "T",
+      0,
+      1.3281591360147306e-08
+    ],
+    [
+      31,
+      "triangular",
+      2,
+      "T",
+      1,
+      1.189457779196096e-08
+    ],
+    [
+      31,
+      "triangular",
+      2,
+      "T",
+      3,
+      8.820031165028383e-09
+    ],
+    [
+      31,
+      "triangular",
+      2,
+      "H",
+      0,
+      2.8859563306557888e-08
+    ],
+    [
+      31,
+      "triangular",
+      2,
+      "H",
+      1,
+      9.39420340188396e-08
+    ],
+    [
+      31,
+      "triangular",
+      2,
+      "H",
+      3,
+      1.752938622882241e-08
+    ],
+    [
+      65,
+      "scaled",
+      0,
+      "N",
+      0,
+      1.6214072629917535e-06
+    ],
+    [
+      65,
+      "scaled",
+      0,
+      "N",
+      1,
+      1.691549997807475e-05
+    ],
+    [
+      65,
+      "scaled",
+      0,
+      "N",
+      3,
+      2.3509395297259034e-06
+    ],
+    [
+      65,
+      "scaled",
+      0,
+      "T",
+      0,
+      2.2373102439522282e-06
+    ],
+    [
+      65,
+      "scaled",
+      0,
+      "T",
+      1,
+      3.1175230689134997e-06
+    ],
+    [
+      65,
+      "scaled",
+      0,
+      "T",
+      3,
+      2.3385333097614904e-06
+    ],
+    [
+      65,
+      "scaled",
+      0,
+      "H",
+      0,
+      2.9922129249864662e-06
+    ],
+    [
+      65,
+      "scaled",
+      0,
+      "H",
+      1,
+      3.40207498012912e-06
+    ],
+    [
+      65,
+      "scaled",
+      0,
+      "H",
+      3,
+      5.87345662941725e-06
+    ],
+    [
+      65,
+      "scaled",
+      1,
+      "N",
+      0,
+      1.2835130802741931e-06
+    ],
+    [
+      65,
+      "scaled",
+      1,
+      "N",
+      1,
+      5.839529571369699e-07
+    ],
+    [
+      65,
+      "scaled",
+      1,
+      "N",
+      3,
+      1.4047338871079445e-06
+    ],
+    [
+      65,
+      "scaled",
+      1,
+      "T",
+      0,
+      2.3562446467359784e-06
+    ],
+    [
+      65,
+      "scaled",
+      1,
+      "T",
+      1,
+      4.188170844346194e-06
+    ],
+    [
+      65,
+      "scaled",
+      1,
+      "T",
+      3,
+      2.4657779815801196e-06
+    ],
+    [
+      65,
+      "scaled",
+      1,
+      "H",
+      0,
+      1.3088254288484405e-06
+    ],
+    [
+      65,
+      "scaled",
+      1,
+      "H",
+      1,
+      6.226157628710886e-07
+    ],
+    [
+      65,
+      "scaled",
+      1,
+      "H",
+      3,
+      2.952485540455732e-06
+    ],
+    [
+      65,
+      "scaled",
+      2,
+      "N",
+      0,
+      7.520093287522251e-07
+    ],
+    [
+      65,
+      "scaled",
+      2,
+      "N",
+      1,
+      7.394356622766429e-07
+    ],
+    [
+      65,
+      "scaled",
+      2,
+      "N",
+      3,
+      1.39552009100782e-06
+    ],
+    [
+      65,
+      "scaled",
+      2,
+      "T",
+      0,
+      3.905428944361857e-06
+    ],
+    [
+      65,
+      "scaled",
+      2,
+      "T",
+      1,
+      2.623065685266987e-07
+    ],
+    [
+      65,
+      "scaled",
+      2,
+      "T",
+      3,
+      1.3895954143439954e-06
+    ],
+    [
+      65,
+      "scaled",
+      2,
+      "H",
+      0,
+      1.2876805788616187e-06
+    ],
+    [
+      65,
+      "scaled",
+      2,
+      "H",
+      1,
+      8.231329239634323e-07
+    ],
+    [
+      65,
+      "scaled",
+      2,
+      "H",
+      3,
+      1.2414505619052406e-06
+    ],
+    [
+      65,
+      "triangular",
+      0,
+      "N",
+      0,
+      1.8825145897901856
+    ],
+    [
+      65,
+      "triangular",
+      0,
+      "N",
+      1,
+      1.881771107522932
+    ],
+    [
+      65,
+      "triangular",
+      0,
+      "N",
+      3,
+      1.8820778908377709
+    ],
+    [
+      65,
+      "triangular",
+      0,
+      "T",
+      0,
+      1.5100866559209483
+    ],
+    [
+      65,
+      "triangular",
+      0,
+      "T",
+      1,
+      1.5278283525291854
+    ],
+    [
+      65,
+      "triangular",
+      0,
+      "T",
+      3,
+      1.5192547251468467
+    ],
+    [
+      65,
+      "triangular",
+      0,
+      "H",
+      0,
+      1.4338746076501088
+    ],
+    [
+      65,
+      "triangular",
+      0,
+      "H",
+      1,
+      1.2783594625359143
+    ],
+    [
+      65,
+      "triangular",
+      0,
+      "H",
+      3,
+      1.8398527324697533
+    ],
+    [
+      65,
+      "triangular",
+      1,
+      "N",
+      0,
+      1.1299672444696747
+    ],
+    [
+      65,
+      "triangular",
+      1,
+      "N",
+      1,
+      0.930224335759314
+    ],
+    [
+      65,
+      "triangular",
+      1,
+      "N",
+      3,
+      1.0705705255290476
+    ],
+    [
+      65,
+      "triangular",
+      1,
+      "T",
+      0,
+      0.47134881637790393
+    ],
+    [
+      65,
+      "triangular",
+      1,
+      "T",
+      1,
+      12.044951079571337
+    ],
+    [
+      65,
+      "triangular",
+      1,
+      "T",
+      3,
+      0.8556731137081154
+    ],
+    [
+      65,
+      "triangular",
+      1,
+      "H",
+      0,
+      1.5042078886810086
+    ],
+    [
+      65,
+      "triangular",
+      1,
+      "H",
+      1,
+      1.2446825287970218
+    ],
+    [
+      65,
+      "triangular",
+      1,
+      "H",
+      3,
+      2.1239314402283016
+    ],
+    [
+      65,
+      "triangular",
+      2,
+      "N",
+      0,
+      0.516226476707332
+    ],
+    [
+      65,
+      "triangular",
+      2,
+      "N",
+      1,
+      0.5064244973892306
+    ],
+    [
+      65,
+      "triangular",
+      2,
+      "N",
+      3,
+      0.510770137683458
+    ],
+    [
+      65,
+      "triangular",
+      2,
+      "T",
+      0,
+      0.3726051059582916
+    ],
+    [
+      65,
+      "triangular",
+      2,
+      "T",
+      1,
+      0.4891526520458201
+    ],
+    [
+      65,
+      "triangular",
+      2,
+      "T",
+      3,
+      0.42170190042593453
+    ],
+    [
+      65,
+      "triangular",
+      2,
+      "H",
+      0,
+      0.40116148396436113
+    ],
+    [
+      65,
+      "triangular",
+      2,
+      "H",
+      1,
+      0.4490405739348794
+    ],
+    [
+      65,
+      "triangular",
+      2,
+      "H",
+      3,
+      0.3708647836387264
+    ]
+  ],
+  "worst_case": [
+    65,
+    "triangular",
+    1,
+    "T",
+    1
+  ],
+  "decimal_diagnostics": [
+    {
+      "case": [
+        31,
+        "scaled",
+        0,
+        "N",
+        0
+      ],
+      "parent_relative_max_error": 1.3364461490085093e-06,
+      "candidate_relative_max_error": 8.915632604776659e-07,
+      "reference_max_abs": 4.238897525864118,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    },
+    {
+      "case": [
+        31,
+        "scaled",
+        0,
+        "T",
+        0
+      ],
+      "parent_relative_max_error": 2.283858254330213e-06,
+      "candidate_relative_max_error": 1.0211463463784571e-06,
+      "reference_max_abs": 1.9497934807583848,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    },
+    {
+      "case": [
+        31,
+        "scaled",
+        0,
+        "H",
+        0
+      ],
+      "parent_relative_max_error": 3.033617442460543e-06,
+      "candidate_relative_max_error": 2.3675483918630055e-06,
+      "reference_max_abs": 3.0610550877145037,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    },
+    {
+      "case": [
+        31,
+        "scaled",
+        1,
+        "N",
+        0
+      ],
+      "parent_relative_max_error": 1.073329841527633e-06,
+      "candidate_relative_max_error": 1.679705571061797e-06,
+      "reference_max_abs": 3.1875459311668566,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    },
+    {
+      "case": [
+        31,
+        "scaled",
+        1,
+        "T",
+        0
+      ],
+      "parent_relative_max_error": 1.7144267086558211e-06,
+      "candidate_relative_max_error": 1.3675738543148846e-06,
+      "reference_max_abs": 2.7044040137456817,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    },
+    {
+      "case": [
+        31,
+        "scaled",
+        1,
+        "H",
+        0
+      ],
+      "parent_relative_max_error": 7.34799197569885e-07,
+      "candidate_relative_max_error": 1.2587452516607251e-06,
+      "reference_max_abs": 3.2169669346910625,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    },
+    {
+      "case": [
+        31,
+        "scaled",
+        2,
+        "N",
+        0
+      ],
+      "parent_relative_max_error": 4.304779159679462e-07,
+      "candidate_relative_max_error": 4.304779159679462e-07,
+      "reference_max_abs": 2.4337639373363427,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    },
+    {
+      "case": [
+        31,
+        "scaled",
+        2,
+        "T",
+        0
+      ],
+      "parent_relative_max_error": 4.535298896405289e-07,
+      "candidate_relative_max_error": 4.5606051587642916e-07,
+      "reference_max_abs": 3.3664458171265697,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    },
+    {
+      "case": [
+        31,
+        "scaled",
+        2,
+        "H",
+        0
+      ],
+      "parent_relative_max_error": 7.316211585816121e-07,
+      "candidate_relative_max_error": 7.318014016664143e-07,
+      "reference_max_abs": 2.6085583360282523,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    },
+    {
+      "case": [
+        65,
+        "scaled",
+        0,
+        "N",
+        0
+      ],
+      "parent_relative_max_error": 3.103107710821313e-06,
+      "candidate_relative_max_error": 2.733756182333672e-06,
+      "reference_max_abs": 2.8542304128942235,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    },
+    {
+      "case": [
+        65,
+        "scaled",
+        0,
+        "T",
+        0
+      ],
+      "parent_relative_max_error": 3.3864512735556712e-06,
+      "candidate_relative_max_error": 2.185992090725269e-06,
+      "reference_max_abs": 2.7086613913038775,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    },
+    {
+      "case": [
+        65,
+        "scaled",
+        0,
+        "H",
+        0
+      ],
+      "parent_relative_max_error": 4.395372781975528e-06,
+      "candidate_relative_max_error": 5.12885700740828e-06,
+      "reference_max_abs": 3.0567082037432396,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    },
+    {
+      "case": [
+        65,
+        "scaled",
+        1,
+        "N",
+        0
+      ],
+      "parent_relative_max_error": 4.069548766922132e-06,
+      "candidate_relative_max_error": 2.7870330821522733e-06,
+      "reference_max_abs": 3.146749323789712,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    },
+    {
+      "case": [
+        65,
+        "scaled",
+        1,
+        "T",
+        0
+      ],
+      "parent_relative_max_error": 1.326447408152805e-06,
+      "candidate_relative_max_error": 2.0463499686793643e-06,
+      "reference_max_abs": 3.175705029374336,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    },
+    {
+      "case": [
+        65,
+        "scaled",
+        1,
+        "H",
+        0
+      ],
+      "parent_relative_max_error": 1.571403488583251e-06,
+      "candidate_relative_max_error": 9.878771222712336e-07,
+      "reference_max_abs": 3.054209674980597,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    },
+    {
+      "case": [
+        65,
+        "scaled",
+        2,
+        "N",
+        0
+      ],
+      "parent_relative_max_error": 1.394555348558357e-06,
+      "candidate_relative_max_error": 1.7532782336963559e-06,
+      "reference_max_abs": 2.776629228430187,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    },
+    {
+      "case": [
+        65,
+        "scaled",
+        2,
+        "T",
+        0
+      ],
+      "parent_relative_max_error": 1.9598534412582155e-06,
+      "candidate_relative_max_error": 1.992084547869533e-06,
+      "reference_max_abs": 3.485318751342956,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    },
+    {
+      "case": [
+        65,
+        "scaled",
+        2,
+        "H",
+        0
+      ],
+      "parent_relative_max_error": 5.637132777975339e-06,
+      "candidate_relative_max_error": 6.924385917389842e-06,
+      "reference_max_abs": 3.035614840767296,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    },
+    {
+      "case": [
+        65,
+        "triangular",
+        1,
+        "T",
+        1
+      ],
+      "parent_relative_max_error": 1.0000000000000069,
+      "candidate_relative_max_error": 0.999999999999976,
+      "reference_max_abs": 1.28092529931205e+40,
+      "precision_agrees": [
+        100,
+        160
+      ]
+    }
+  ],
+  "parent_max_backward_error": 0.9999984955051643,
+  "agreement_passed": false,
+  "agreement_criterion": {
+    "rtol": 1e-12,
+    "atol_parent_max_scale": 1e-14
+  }
+}

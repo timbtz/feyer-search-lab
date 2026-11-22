@@ -3569,3 +3569,165 @@ pristine signal/gradient33,161,180/loss, rand1/rand3 log-sensitivity and grid
 FD54,59,63,136,161,163 questions. Earlier extraaligo29/29 and whole-pass lack of
 JVP/Hessians remain unchanged. If this reuse has no benefit, retire it rather
 than combine it with the unsuccessful layout37.
+
+## Candidate38 feedback: retire input retention, close gather mechanism
+
+Evaluated SHA cc42c43d4aab5db16d342feac8d8ad358617a0cd, request
+85b09297990e4aaeb8f69eda94a817b4, jobs grid-1/2/3 and aligo-1/2/3.
+Official6/6 passed; confirmed_improvement=false, source_review=null. No
+infrastructure failure. Large fresh samples seconds
+[0.8531891498714685,0.8228680770844221,0.8195917624980211],
+median0.8228680770844221, range0.8195917624980211–0.8531891498714685.
+Official aligo samples
+[0.5512276981025934,0.5510545819997787,0.5601755231618881],
+median0.5512276981025934, range0.5510545819997787–0.5601755231618881.
+Unpaired medians versus35: large+3.584113ms, aligo+1.499129ms; versus admitted7:
+large+21.290394ms, aligo+2.672542ms. These observations establish no speed gain.
+Preserve grid-1 imports294.450240ms and aligo-3 total0.560175523s; no samples
+removed. CPU2, one logical CPU, threads1, no persistent cache; other-host job
+overlap remains unknown. Neither averaging setups nor ranking interpretation.
+
+Median phases(ms), deltas versus35: large imports267.264562(-0.289286),
+build69.613378(-0.321185), forward184.157575(+2.509661),
+reverse106.940243(+0.516344). Aligo imports267.280463(+2.449021),
+build38.179947(+0.584964), forward33.110444(+0.341525),
+reverse18.657673(-0.317898). Sampled RSS maxima large566038528,
+aligo295378944, generalization871677952 bytes. Sampled RSS cannot establish the
+small input-retention cost separately; its direct byte count was synthetic only.
+
+Inspected all6 array/gradient comparison dictionaries and output archive hashes:
+exactly equal35 for each official workload. Large hash
+ e0f2069ccab917ac4575f484a6c9b5f0ae2457bb59f736185a52cd309a6c03e2;
+aligo hash1c27f50feafb3149eb9c2f4b48f767cc4c3ddbc1d64810c332dd5a7a260781f8.
+All14 generalization case records also equal35 for both seed and pristine
+comparisons: seed14/14 pass, pristine4/14 pass. No new numerical discrepancy
+identified. Raw remote arrays were not reopened locally; archive hash equality
+is evidence for identical saved official outputs, not universal correctness.
+The generalization archive includes timing data, so its changed hash is not
+itself a numerical discrepancy. Pristine failures and35's gradient differences
+from earlier guards remain unresolved, as recorded above.
+
+Decision: restore simulator source exactly to35
+7a9480332bad29b5aaeacc5a4628481581507e7a; verified empty read-only Git diff across
+all differometor files. This removes38's extra memory lifetime/API complexity
+and does not restore37's np.take layout or36's scalar-ratio estimator. Preserve
+37/38 commits and checks as failed performance trials. Their measured phase
+changes do not justify another gather variant or combining them. Candidate35
+remains a provisional numerical repair, not a promoted speed winner. Admitted7
+remains the bounded reviewed timing reference; approximate guards were rejected
+by the independent synthetic examples, not restored merely for speed.
+
+Concrete coordinator action before another execution hypothesis:
+1. On exact35, run one synchronized first forward/backward for each unchanged
+   full optical setup in a separate diagnostic driver using
+   overnight-numerics-profile.py:collect_host_profiles. Return its JSON records,
+   especially self/cumulative time and call counts for SystemPlan.backward,
+   function_jacobian, _solve, _Products.apply, factor.solve, _assemble and
+   np.add.at. Keep callback ordinal1 separate. Do not use profiled totals as
+   official timing. No benchmark/evaluator file changes are requested.
+2. Separately run overnight-numerics-guard-diagnostics.py:
+   collect_guard_diagnostics(reference_source=<exact34 host_pass source>,
+   max_records=8) on35. Exact34 is86860bdcbf4b02888b5db6ca2aa563234db0721a.
+   Return guard counts, changed rows/detectors and captured sparse coefficients,
+   right-hand sides and actual/reference adjoints. Include varied parameters,
+   frequencies and amplitude/frequency modulation in the diagnostic scope.
+   Pair with the saved35/34 gradient differences and independent high-precision
+   residual/solution checks before any proposed approximation or guard tuning.
+3. Choose one next mechanism from the actual first-callback profile; no new
+   performance submission is proposed here. Both unchanged official benchmarks,
+   generalization and independent review remain required for any later change.
+
+The diagnostic hooks are already implemented and synthetically validated; no
+actual optical callback profile or changed-adjoint capture has been supplied
+in this conversation. End this gather hypothesis rather than spend another
+trial on an unmeasured bottleneck. This stop is a handoff within the continuing
+authorized campaign, not an extension of or claim about its deadline. Existing
+signal/gradient33,161,180/loss, rand1/rand3 sensitivity and gridFD54,59,63,136,
+161,163 questions remain visible; earlier extraaligo29/29 checks and lack of
+whole-pass JVP/Hessians remain unchanged.
+
+
+## Trial39: bounded SuperLU panel size (prepared 2026-11-22 06:08 UTC)
+
+Candidate SHA/job identifiers: pending supervisor; no official evaluation yet.
+Numerical parent35: 7a9480332bad29b5aaeacc5a4628481581507e7a. The worktree
+already contained the recorded restoration from38 to35. Trial39 changes only
+host_pass._SUPERLU_OPTIONS.PanelSize from None to8, and passes that same value
+as panel_size in the public splu fallback. The direct gstrf entry receives the
+same options dictionary as before except PanelSize. No import/JAX-wrapper or
+other-lane change was transferred. The admitted7 review does not cover this
+trial, and35's exact numerical guards remain present.
+
+Hypothesis: a smaller SuperLU column panel may reduce factorization workspace
+and work on sparse optical systems, affecting forward execution. Every signal
+row still factors freshly. This is a bounded solver-work-block experiment,
+not factor reuse or ordering reuse (closed25/26), and not another gather or
+component-interpreter variant. The35 measured forward median was181.647914ms
+and reverse106.423900ms; their factorization share remains unmeasured. No actual
+optical callback profile has been supplied, so neither dominance nor speedup
+is claimed. Existing callback-profile request remains useful.
+
+Source inspection: installed SciPy splu accepts panel_size and passes it to
+_superlu.gstrf as PanelSize. ColPerm remains COLAMD, DiagPivotThresh/Relax
+remain library defaults; coefficients, double precision and all3 refinement
+steps with tolerance1e-14 are unchanged. This changes numerical factorization
+blocking and CAN change arithmetic order and pivots; it is not a bitwise claim.
+No fixture dispatch, physical tuning, new cache, or evaluator setting changes.
+Source menu for this experiment: None restores library default;8 is this trial.
+Other panel sizes have not been tested and are not proposed as a tuning sweep.
+
+Local synthetic evidence (existing Python3.12 NumPy2.5.5 SciPy1.18.1 on Mac;
+not evaluator timings): overnight-numerics-panel-check.py AST-extracts actual
+factor/refinement/product kernels from35 and candidate and tests96 matrices,
+sizes2,3,7,8,9,17,31,65,3 random draws each,4 families: sparse diagonally dominant,
+diagonally similarity-scaled, extreme triangular, explicit structural zeros.
+All N/T/H operations and vector/1-column/3-column RHS give864 refined solves.
+Both direct gstrf and forced public-splu fallback are exercised. Coefficient
+and RHS immutability is checked; no numerical entries or outputs are dropped.
+
+Results: 45 L/U representation differences (of192 L/U comparisons),1 permutation
+array difference,203/864 refined results differ bitwise; refinement solve-call
+counts unchanged. Direct/fallback results are bitwise identical864/864. Initial
+assertion at rtol1e-12, atol1e-14*max|parent_solution| failed on a31x31 scaled
+matrix. Kept the same criterion and collected all failures rather than stopping
+at the first:87/864 fail it. This is NOT a passing synthetic equivalence test.
+Full case list and metrics: overnight-numerics-panel-result.json. No test or
+official tolerance was loosened. Diagnostic completion is not test passage.
+
+Independent numerical investigation: real-block Decimal Gaussian elimination
+with partial pivoting solves the exact rounded binary64 matrix/RHS, with100
+and160 decimal digits giving identical rounded reference answers in all19
+selected cases. Across18 scaled cases (31/65 sizes,3 draws,N/T/H,vector RHS),
+candidate is closer8, farther9, tied1. Worst relative max-norm solution error
+is5.637132777975339e-6 parent versus6.924385917389842e-6 candidate. Thus arithmetic
+changes cannot be dismissed as harmless rounding, and no universal accuracy
+improvement is supported. On the worst parent/candidate difference case
+(65x65 extreme triangular,draw1,T,1-column), Decimal solution max norm is
+1.28092529931205e40; both computed answers have relative error approximately1.
+This records a common failure under extreme inverse growth, not a justification
+for removing that case. Maximum componentwise binary64 residual ratios across
+the entire stress suite are0.9999984955051643 parent and0.9999935141366271 candidate.
+The original test comment mistakenly suggested bounded inverse growth; it has
+been corrected without changing the tested matrices. Raw stress comparison
+max relative-to-parent difference12.044951079571337 is preserved.
+
+Decision: submit as an UNVALIDATED numerical/performance experiment, not an
+admitted improvement. Its panel change remains an exact-LU implementation
+choice, but newly observed solve differences and worse errors on some synthetic
+systems require review. Request both unchanged full official workloads at the
+same SHA, every saved output/gradient against35, seed and pristine, the varied
+parameter/frequency/amod/fmod generalization suite, memory, and independent
+source/numerical review. Keep existing inherited pristine failures separate
+from anything newly introduced by39. No synthetic stress result substitutes
+for either official workload. If new optical failures appear, retire this
+panel change; do not tune away those cases or loosen tolerances. Any promising
+speed result needs matched fresh-process parent35/candidate repetitions and
+incumbent7 context, separate workload samples/ranges/phases and overlap status.
+
+No new official samples, phase deltas, memory measurements or numerical archive
+hashes exist for39. Earlier38 feedback and its failure to establish a gain are
+retained above. The current best admitted timing reference remains7;35 is a
+provisional guard repair, not an admitted timing win. All existing strict
+signal/gradient33,161,180/loss, uifo_rand1/rand3 sensitivity discrepancies and
+six grid finite-difference questions remain unresolved; aligo29/29 checks and
+whole-pass first-order-only VJP limitations remain distinct.
