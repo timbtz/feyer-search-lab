@@ -1792,3 +1792,95 @@
   it to more builder loops without profiling. Pending import/build attribution remains the
   next evidence request. No benchmarks, commits, external calls or agents launched locally.
   Absolute campaign deadline09:27:44 UTC unchanged.
+
+### Candidate22 feedback — sideband concatenation retired
+
+- SHA **18d8799ac7e4d5ad6a4463c399e9a26e6a3e5842**, request/evaluation
+  **08dee50b38a644b4aa857e409b2f615d**, grid-1/2/3 and aligo-1/2/3. Both official
+  benchmarks pass3/3. All reported output/gradient categories and14 generalization
+  cases pass initial-seed tolerances; pristine comparisons still fail. Independent
+  source review and the480 synthetic NumPy comparisons were not supplied.
+- Large fresh seconds0.8339520487934351,0.8138816673308611,0.87968092225492;
+  median0.8339520487934351, range0.8138816673308611–0.87968092225492.
+  Official aLIGO0.5574252754449844,0.5896702744066715,0.5418223775923252;
+  median0.5574252754449844, range0.5418223775923252–0.5896702744066715.
+  Historical reviewed-parent medians are32.374 ms lower large and8.870 ms lower
+  aLIGO; this is unpaired evidence, not a causal regression estimate.
+  Admission confirmed_improvement=false: requires_source_review,
+  large_gain_below_selection_threshold, ranges overlap requiring paired evidence.
+- Phase medians ms large/aLIGO: imports282.322/268.555; build74.095/44.053;
+  forward lower20.053/19.329, compile33.407/34.356, execute182.275/32.646;
+  sensitivity lower25.715/26.134, compile40.174/41.407, execute0.902/0.467;
+  gradient lower17.251/16.586, compile52.056/53.284, execute86.401/14.485.
+  Build samples ms large73.970/74.095/75.558, aLIGO44.053/52.959/37.356.
+  There is no measured build-time benefit. Grid3 forward227.135 ms and sensitivity
+  lowering47.060 ms are elevated; their cause is unknown. Do not attribute to
+  contention without evidence or remove samples to improve the result.
+- Sampled peak RSS bytes large519794688/526860288/588611584;
+  aLIGO282181632/287334400/315400192; generalization781201408. No infrastructure
+  failure or memory exceedance. EPYC9334, CPU2, one logical CPU, threads1, x64,
+  unchanged reviewed flags, no persistent cache. Overlap unknown; ranking_eligible=false.
+- Generalization archive033c0555b6a71a0a7a127254c4c5a207cab87689dff921fc6740bee121bb903d.
+  Seed gradient max absolute differences remain5.686350050382316e-6 large and
+  3.637978807091713e-11 aLIGO. Pristine signal/gradient/loss disagreements, random
+  setup sensitivity failures, grid FD54/59/63/136/161/163 and first-order-only host
+  VJP limitations remain unresolved. No tolerance changes or new correctness claim.
+- Decision: retire this builder mechanism and restore build.py from reviewed ee4fea2.
+  Preserve22 in history; do not extend adjacent concatenation/staging loops without
+  the pending profile attribution. The next experiment below uses a distinct boundary
+  mechanism and does not combine any unpromoted phase or builder modifications.
+
+### Candidate23 — return only active input cotangents across the callback
+
+- Semantic parent **ee4fea28c04d482566be16e916b609d7c6a99e5e**. Only host_pass.py differs
+  from that source; nine other simulator modules match it byte-for-byte. Candidate SHA
+  and benchmark job IDs pending supervisor commit/evaluation. Actual host_forward,
+  host_backward, assembly, solver, refinement and adjoint mathematics are unchanged.
+- Source inspection: the backward pure_callback declares seven input-cotangent results
+  unconditionally. Differentiation of a subset of inputs discards inactive cotangents
+  after the callback. New code opts into JAX's symbolic_zeros metadata, saves the seven
+  perturbed flags as a hashable static tuple with no array leaves, and unwraps every
+  primal before the same forward callback. The backward still evaluates the COMPLETE
+  host_backward and selects only active results before returning across the callback.
+  Its outer VJP returns None for inactive inputs, as allowed by JAX. When all inputs
+  participate, all seven are returned. No argument is assumed inactive by identity,
+  size, setup, name, value or benchmark. Numerical zero values remain differentiable.
+- Unused output cotangents can now be symbolic too; these are materialized with each
+  output's shape/dtype before calling the unchanged host derivative. All three physical
+  public outputs and all five forward residual arrays remain. Forward assembly/factors
+  are unchanged, no new cache is introduced, and no work leaves the timed evaluation.
+  Every requested design-variable gradient is retained through its active parameter row.
+- Target: callback result descriptors, result buffer handling and gradient lowering/compile,
+  currently17.251+52.056 ms large and16.586+53.284 ms aLIGO in22. These phase totals are
+  not recoverable-cost estimates. Actual active-result counts in the official trace have
+  NOT been measured locally. The toy diagnostic asserts expected callback arities for
+  arbitrary active subsets. This is a hypothesis about boundary overhead, not a measured
+  speedup; CPU callback transfers may be cheap and metadata handling may offset savings.
+- Public API references inspected (documentation may be newer than evaluator JAX0.9.0):
+  [custom_vjp.defvjp](https://docs.jax.dev/en/latest/_autosummary/jax.custom_vjp.defvjp.html)
+  documents perturbed primal flags and symbolic output cotangents;
+  [register_static](https://docs.jax.dev/en/latest/_autosummary/jax.tree_util.register_static.html)
+  documents hashable no-leaf metadata. Exact-version execution is still required.
+- Local verification:1,024 stdlib stub executions of the ACTUAL new boundary functions
+  cover all128 active-input masks and all8 symbolic-output masks. They check forward
+  value/residual preservation, callback result shape/count, cotangent routing and the
+  no-active-input case. These verify Python routing ONLY, not JAX semantics. Syntax and
+  git diff checks pass. AST comparison verifies all non-boundary definitions/statements
+  in host_pass.py match reviewed parent (apart from defvjp registration).
+- Prepared `experiments/notes/overnight-overhead-active-cotangents-check.py`:44 synthetic
+  comparisons against the parent callback rule, including40 JIT gradients and JAXPR
+  arity assertions for every single input, all inputs and mixed subsets, each output
+  alone and all outputs; zero-valued primals with nonzero derivatives; stop_gradient;
+  explicit VJP with complex/zero cotangents; sequential vmap; plain JIT primal equality.
+  It executes the actual boundary AST in an isolated toy namespace, without patching
+  simulator or validation modules. UNEXECUTED locally: NumPy/JAX unavailable. No installs.
+- Request supervisor run this diagnostic first, then both unchanged official benchmarks,
+  full saved output/gradient and14 generalization comparisons on the exact new SHA,
+  and independent source review. If promising, obtain matched fresh parent/candidate
+  repetitions, separate samples/medians/ranges, phase deltas, memory and overlap evidence.
+  Do not promote on public passes or archive self-comparison alone. Inherited pristine
+  numerical questions and JVP/Hessian limitations remain; no transform expansion claimed.
+- If this does not produce a meaningful phase reduction, retire result filtering; do not
+  begin deleting host adjoint calculations or suppressing zero-valued derivative paths.
+  The pending import/build profile is the next evidence request. No local benchmark,
+  commit, GitHub/SSH, evaluator change or agent spawning. Deadline09:27:44 UTC unchanged.

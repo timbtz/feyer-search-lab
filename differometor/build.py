@@ -166,23 +166,6 @@ Notes
 """
 
 
-def _append_sideband_indices(arrays, masks, shifts):
-    """Append sideband index blocks in order, allocating each result only once.
-
-    ``shifts`` gives one offset per array for each mask. The original arrays
-    already contain the appended-signal shifts; select from those originals,
-    never from an expanded result. Even without duplicates, return fresh copies.
-    """
-    blocks = [[array] for array in arrays]
-    for mask, offsets in zip(masks, shifts):
-        if mask.any():
-            for parts, array, offset in zip(blocks, arrays, offsets):
-                selected = array[mask]
-                parts.append(selected + offset if offset else selected)
-    return tuple(np.concatenate(parts) if len(parts) > 1 else parts[0].copy()
-                 for parts in blocks)
-
-
 def set_instructions(
     instructions: dict,
     node: str,
@@ -298,21 +281,64 @@ def set_instructions(
         system_matrix_column_indices[only_row_mask] += system_size_for_sidebands
         system_matrix_row_indices[only_column_mask] += system_size_for_sidebands
 
-        # Append each ordered sideband block without copying the growing prefix.
-        arrays = (system_matrix_row_indices, system_matrix_column_indices, output_column_indices)
-        if output_row_indices is not None:
-            arrays += (output_row_indices,)
-        unchanged = (0,) * (len(arrays) - 2)
-        expanded = _append_sideband_indices(
-            arrays,
-            (only_row_mask, only_column_mask, row_and_column_mask),
-            ((system_size_for_sidebands, 0) + unchanged,
-             (0, system_size_for_sidebands) + unchanged,
-             (system_size_for_sidebands, system_size_for_sidebands) + unchanged),
-        )
-        system_matrix_row_indices, system_matrix_column_indices, output_column_indices = expanded[:3]
-        if output_row_indices is not None:
-            output_row_indices = expanded[3]
+        new_system_matrix_row_indices = system_matrix_row_indices.copy()
+        new_system_matrix_column_indices = system_matrix_column_indices.copy()
+        new_output_column_indices = output_column_indices.copy()
+        new_output_row_indices = output_row_indices.copy() if output_row_indices is not None else None
+
+        # Duplicate entries for the second sideband where needed.
+        if only_row_mask.any():
+            new_system_matrix_row_indices = np.concatenate(
+                [new_system_matrix_row_indices, system_matrix_row_indices[only_row_mask] + system_size_for_sidebands]
+            )
+            new_system_matrix_column_indices = np.concatenate(
+                [new_system_matrix_column_indices, system_matrix_column_indices[only_row_mask]]
+            )
+            new_output_column_indices = np.concatenate(
+                [new_output_column_indices, output_column_indices[only_row_mask]]
+            )
+            if output_row_indices is not None:
+                new_output_row_indices = np.concatenate([new_output_row_indices, output_row_indices[only_row_mask]])
+
+        if only_column_mask.any():
+            new_system_matrix_column_indices = np.concatenate(
+                [
+                    new_system_matrix_column_indices,
+                    system_matrix_column_indices[only_column_mask] + system_size_for_sidebands,
+                ]
+            )
+            new_system_matrix_row_indices = np.concatenate(
+                [new_system_matrix_row_indices, system_matrix_row_indices[only_column_mask]]
+            )
+            new_output_column_indices = np.concatenate(
+                [new_output_column_indices, output_column_indices[only_column_mask]]
+            )
+            if output_row_indices is not None:
+                new_output_row_indices = np.concatenate([new_output_row_indices, output_row_indices[only_column_mask]])
+
+        if row_and_column_mask.any():
+            new_system_matrix_column_indices = np.concatenate(
+                [
+                    new_system_matrix_column_indices,
+                    system_matrix_column_indices[row_and_column_mask] + system_size_for_sidebands,
+                ]
+            )
+            new_system_matrix_row_indices = np.concatenate(
+                [
+                    new_system_matrix_row_indices,
+                    system_matrix_row_indices[row_and_column_mask] + system_size_for_sidebands,
+                ]
+            )
+            new_output_column_indices = np.concatenate(
+                [new_output_column_indices, output_column_indices[row_and_column_mask]]
+            )
+            if output_row_indices is not None:
+                new_output_row_indices = np.concatenate([new_output_row_indices, output_row_indices[row_and_column_mask]])
+
+        output_column_indices = new_output_column_indices
+        output_row_indices = new_output_row_indices
+        system_matrix_row_indices = new_system_matrix_row_indices
+        system_matrix_column_indices = new_system_matrix_column_indices
 
         # Apply the same duplication and shifting logic to carrier-index instructions.
         if carrier_indices is not None:
@@ -334,13 +360,49 @@ def set_instructions(
             carrier_column_indices[only_row_mask] += system_size_for_sidebands
             carrier_row_indices[only_column_mask] += system_size_for_sidebands
 
-            carrier_row_indices, carrier_column_indices, carrier_indices = _append_sideband_indices(
-                (carrier_row_indices, carrier_column_indices, carrier_indices),
-                (only_row_mask, only_column_mask, row_and_column_mask),
-                ((system_size_for_sidebands, 0, 0),
-                 (0, system_size_for_sidebands, 0),
-                 (system_size_for_sidebands, system_size_for_sidebands, 0)),
-            )
+            new_carrier_row_indices = carrier_row_indices.copy()
+            new_carrier_column_indices = carrier_column_indices.copy()
+            new_carrier_indices = carrier_indices.copy()
+
+            if only_row_mask.any():
+                new_carrier_row_indices = np.concatenate(
+                    [new_carrier_row_indices, carrier_row_indices[only_row_mask] + system_size_for_sidebands]
+                )
+                new_carrier_column_indices = np.concatenate(
+                    [new_carrier_column_indices, carrier_column_indices[only_row_mask]]
+                )
+                new_carrier_indices = np.concatenate([new_carrier_indices, carrier_indices[only_row_mask]])
+
+            if only_column_mask.any():
+                new_carrier_column_indices = np.concatenate(
+                    [
+                        new_carrier_column_indices,
+                        carrier_column_indices[only_column_mask] + system_size_for_sidebands,
+                    ]
+                )
+                new_carrier_row_indices = np.concatenate(
+                    [new_carrier_row_indices, carrier_row_indices[only_column_mask]]
+                )
+                new_carrier_indices = np.concatenate([new_carrier_indices, carrier_indices[only_column_mask]])
+
+            if row_and_column_mask.any():
+                new_carrier_column_indices = np.concatenate(
+                    [
+                        new_carrier_column_indices,
+                        carrier_column_indices[row_and_column_mask] + system_size_for_sidebands,
+                    ]
+                )
+                new_carrier_row_indices = np.concatenate(
+                    [
+                        new_carrier_row_indices,
+                        carrier_row_indices[row_and_column_mask] + system_size_for_sidebands,
+                    ]
+                )
+                new_carrier_indices = np.concatenate([new_carrier_indices, carrier_indices[row_and_column_mask]])
+
+            carrier_indices = new_carrier_indices
+            carrier_row_indices = new_carrier_row_indices
+            carrier_column_indices = new_carrier_column_indices
 
     assert (
         function_input_indices.shape[1] == function_input_indices_shape
