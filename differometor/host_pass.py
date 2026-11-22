@@ -251,11 +251,20 @@ def _expand(array, indices, values):
     return tiled
 
 
-def _expand_backward(array_rows, indices, values, tiled_bar):
+def _expand_backward(array_rows, indices, values, tiled_bar, *, consume=False):
+    """Pull back expansion; optionally consume a private, dead row cotangent.
+
+    Gather the sweep cotangents before clearing their destinations. The caller
+    may transfer ownership with consume=True when no later operation needs the
+    original row cotangent. The default preserves the supplied array. Retain the
+    original C-order copy for noncontiguous, Fortran-order or read-only inputs,
+    since layout can affect NumPy's summation order.
+    """
     count = values.shape[1]
     rows, columns = np.repeat(np.arange(count), indices.size), np.tile(indices, count)
     values_bar = tiled_bar[rows, columns].reshape(count, indices.size).T
-    tiled_bar = tiled_bar.copy()
+    if not consume or not tiled_bar.flags.c_contiguous or not tiled_bar.flags.writeable:
+        tiled_bar = tiled_bar.copy()
     tiled_bar[rows, columns] = 0
     return tiled_bar.reshape(count, array_rows, tiled_bar.shape[1]).sum(axis=0), values_bar
 
@@ -323,47 +332,8 @@ def _factor(pattern, values):
                 permc_spec="COLAMD")
 
 
-_CSR_MATVECS = None
-
-
-def _csr_matvecs():
-    """Load SciPy's native CSR product; retain NumPy if unavailable.
-
-    Like the SuperLU entry point above, load the extension without importing the
-    full sparse solver package. Loading occurs inside the first host evaluation.
-    """
-    global _CSR_MATVECS
-    if _CSR_MATVECS is None:
-        import sys
-        name = "scipy.sparse._sparsetools"
-        try:
-            module = sys.modules.get(name)
-            if module is None:
-                import importlib.machinery
-                import importlib.util
-                import os
-                scipy_spec = importlib.util.find_spec("scipy")
-                directory = os.path.join(os.path.dirname(scipy_spec.origin), "sparse")
-                suffixes = tuple(importlib.machinery.EXTENSION_SUFFIXES)
-                filename = next(f for f in sorted(os.listdir(directory))
-                                if f.startswith("_sparsetools.") and f.endswith(suffixes))
-                path = os.path.join(directory, filename)
-                loader = importlib.machinery.ExtensionFileLoader(name, path)
-                module = importlib.util.module_from_spec(
-                    importlib.util.spec_from_file_location(name, path, loader=loader))
-                loader.exec_module(module)
-            _CSR_MATVECS = module.csr_matvecs
-        except Exception:
-            _CSR_MATVECS = False
-    return _CSR_MATVECS
-
-
 class _Products:
-    """Sparse products with static CSR layouts for A and its transpose.
-
-    Only coordinates are retained. Every product uses its supplied coefficients,
-    including structural entries whose current numerical value is zero.
-    """
+    """NumPy sparse products for one static pattern (no scipy.sparse)."""
 
     def __init__(self, pattern):
         self.size = pattern.size
@@ -371,13 +341,6 @@ class _Products:
         self.row_order = np.argsort(pattern.rows, kind="stable")
         self.row_ids, self.row_starts = np.unique(pattern.rows[self.row_order], return_index=True)
         self.col_ids, self.col_starts = np.unique(pattern.cols, return_index=True)  # CSC order
-        self.native = _csr_matvecs()
-        if self.native:
-            self.normal_indptr = np.searchsorted(pattern.rows[self.row_order],
-                                                 np.arange(self.size + 1)).astype(np.int64)
-            self.normal_indices = np.ascontiguousarray(pattern.cols[self.row_order], dtype=np.int64)
-            self.transpose_indptr = np.searchsorted(pattern.cols, np.arange(self.size + 1)).astype(np.int64)
-            self.transpose_indices = np.ascontiguousarray(pattern.rows, dtype=np.int64)
 
     def apply(self, values, x, trans="N"):
         """op(A) x for x (N,) or (N, K); op in {A, A^T, A^H}."""
@@ -385,20 +348,6 @@ class _Products:
         vector = x.ndim == 1
         x = x[:, None] if vector else x
         result = np.zeros((self.size, x.shape[1]), dtype=np.complex128)
-        if self.native:
-            if trans == "N":
-                indptr, indices = self.normal_indptr, self.normal_indices
-                weights = values[self.row_order]
-            else:
-                indptr, indices = self.transpose_indptr, self.transpose_indices
-                weights = values if trans == "T" else np.conj(values)
-            # The native loop accumulates in complex128, with no nnz-by-RHS
-            # gather/product array. Its summation order can differ from reduceat;
-            # the existing iterative refinement and stopping rule remain intact.
-            self.native(self.size, self.size, x.shape[1], indptr, indices,
-                        np.ascontiguousarray(weights, dtype=np.complex128),
-                        np.ascontiguousarray(x, dtype=np.complex128).ravel(), result.ravel())
-            return result[:, 0] if vector else result
         if trans == "N":
             contributions = (values[:, None] * x[self.cols])[self.row_order]
             result[self.row_ids] = np.add.reduceat(contributions, self.row_starts, axis=0)
@@ -700,11 +649,13 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
     signal_rows_bar, signal_base_bar = plan.signal.backward(state["signal_rows"], raw_bar)
     noise_rows_bar, noise_base_bar = plan.noise.backward(state["noise_rows"], noise_values_bar)
     signal_rows_bar[: noise_rows_bar.shape[0]] += noise_rows_bar
+    # SystemPlan.backward allocated this row cotangent; it is dead after the
+    # expansion pullback, so clearing sweep destinations needs no full copy.
     carrier_rows_bar, signal_values_bar_in = _expand_backward(
-        state["carrier_rows"].shape[0], plan.signal_changing, signal_values, signal_rows_bar)
+        state["carrier_rows"].shape[0], plan.signal_changing, signal_values, signal_rows_bar, consume=True)
     component_bar, carrier_base_bar = plan.carrier.backward(state["carrier_rows"], carrier_values_bar)
     parameters_bar, carrier_values_bar_in = _expand_backward(
-        parameters.shape[0], plan.carrier_changing, carrier_values, carrier_rows_bar + component_bar)
+        parameters.shape[0], plan.carrier_changing, carrier_values, carrier_rows_bar + component_bar, consume=True)
     return (parameters_bar.astype(parameters.dtype), _cast_bar(carrier_values_bar_in, carrier_values.dtype),
             _cast_bar(signal_values_bar_in, signal_values.dtype), carrier_base_bar, signal_base_bar,
             noise_base_bar, selection_vectors_bar.astype(np.complex128))

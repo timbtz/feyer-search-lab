@@ -2337,3 +2337,183 @@ complete timings support this candidate. If promising, request parent/candidate
 paired runs with separate grid/aLIGO samples, medians, ranges, phase deltas, RSS
 and overlap records. If native accumulation causes new unresolved optical errors
 or no stable gain, close this backend hypothesis rather than multiply variants.
+
+### Candidate28 feedback: faster forward phase, new strict failures; not admitted
+
+Exact SHA a1e10d9a0cf9a8aa022e597abb0c69f69593121d; both official workloads under
+job8f48011306b24a4f8a784b3325c11ee8 (grid-1/2/3, aligo-1/2/3). All6 official
+runs pass, confirmed_improvement=false, promotion_ready=false, source_review=null.
+Full supplied per-array comparison records and phase samples retained in
+experiments/notes/overnight-numerics-native-feedback.json. This is an inspection
+of evaluator records/hashes, not a claim that remote NPZ arrays were reopened.
+
+Grid fresh seconds [.8082562908530235,.7692052610218525,.7723937276750803], median
+.7723937276750803, range [.7692052610218525,.8082562908530235]. aLIGO fresh seconds
+[.5430818609893322,.5420670192688704,.5386770088225603], median .5420670192688704,
+range [.5386770088225603,.5430818609893322]. Versus historical admitted7 medians,
+large -29.184ms (about3.64%), aLIGO -6.488ms (about1.18%). Large ranges overlap;
+there is no matched parent/candidate cohort, so this is not a confirmed stable
+gain. First large import293.696ms versus266.244/268.350ms in subsequent fresh
+processes remains included, not discarded as an outlier. No combined score.
+
+Median phases ms: grid forward151.080, reverse86.050, build71.120, imports268.350;
+aLIGO forward27.510, reverse14.319, build38.115, imports265.292. Versus historical
+admitted7 these are grid -30.083,+.693,-2.874,+2.749; aLIGO -5.380,-.065,+.152,
++1.783ms respectively. Forward is consistently150.777--153.618ms across28's
+three runs, making native products a credible execution mechanism to investigate,
+but numerical correctness takes precedence. Peak sampled RSS grid624418816,
+aLIGO296755200, generalization947744768 bytes. No infrastructure failure or memory
+limit exceedance. Other-host contention is not excluded.
+
+New numerical failures versus initial seed: both official setups fail the scalar
+loss comparison (one entry each) while carrier, signal, noise, powers, sensitivity
+and gradients pass their elementwise bounds. Grid log sensitivity difference
+6.577778322025551e-10; gradient maxabs2.4814275093376637e-05, relative L2
+4.533077315746321e-10. aLIGO log sensitivity1.2150280781497713e-12; gradient
+maxabs3.73624061467126e-07, relative L21.0167147507959856e-11. These increased
+versus27; public PASS does not erase them. All three fresh output hashes match
+within each setup: grid b3e3b0bf0cf4c67f99251753cad956b39aa949cdd39a15e06099e0ddf1be7f76,
+aLIGO ee3e6c4fe784f32b46d2f50444a5a474fe945a71e041b4263404aa5fb6b785a6.
+
+Generalization initial-seed failures: dev loss1 and voyager signal363. The other
+12 cases pass bounds, but all14 sensitivity differences are now nonzero. Largest
+log sensitivity difference is rand3 3.5302113232660304e-08. rand1
+1.1826273293991107e-10; rand2 2.9174884730309714e-11. Voyager log sensitivity is
+3.055333763768431e-13 despite its363 signal failures: sensitivity alone would hide
+the new output discrepancy. All14 gradients pass initial-seed bounds. The
+candidate-self artifacts section is NOT independent evidence; this decision uses
+the initial_seed and pristine comparisons explicitly.
+
+Pristine differences persist: grid131 signal/3 gradient/1 loss and aLIGO1 loss;
+Voyager398 signal failures versus395 previously. Rand1/rand3 pristine log errors
+.00020360991047141397/.00005811041570424891 with previous failure counts retained.
+The complete per-case records preserve other unchanged and changed discrepancies.
+No new numerical differences are dismissed as harmless or resolved by local
+Hilbert examples. Existing grid FD54/59/63/136/161/163, gradient33/161/180,
+rand1/rand3 dense-reference disagreements, aLIGO29/29 prior FD confirmation and
+first-order reverse-only support remain distinct caveats.
+
+Decision: do not promote28 or stack further tuning onto it. Restore production
+host_pass.py to admitted7, leaving28 and its tests/results in committed history.
+All production files now match admitted7. No new official evaluation requested
+for the restoration. This closes the native backend optimization hypothesis
+pending actual-matrix diagnostics; it does not end the overnight campaign.
+
+### Concrete diagnostic handoff for28's numerical failures
+
+Added experiments/notes/overnight-numerics-product-diagnostics.py. This opt-in
+context runs no workload by itself and writes no files. The supervisor can load
+it in a separate synchronized diagnostic driver on exact candidate28, supplying
+exact admitted7 host_pass.py source as reference_source. It wraps _Products.apply
+and _solve, compares the actual candidate against the parent's product and
+refinement at identical current coefficients/RHS and the SAME SuperLU factor,
+and returns original candidate results unchanged. It records every call count,
+changed refinement counts, and the largest product/solution discrepancies
+(default8 of each per context) with complete structural coordinates, numerical
+values, RHS, both outputs and every initial/correction factor-solve RHS/result.
+Products outside _solve are included, so noise-source products are not omitted.
+The supervisor must retain a fresh context for each optical case and serialize
+its arrays separately. It adds substantial computation/copying; NEVER treat an
+instrumented run as an official timing or promotion result. It requires no
+fixture detection, numerical pruning or tolerance change.
+
+Local synthetic inspection of the helper used actual28 kernels, a9x9 random
+complex matrix and N/T/H with2 RHS. All3 instrumented refined outputs remained
+bitwise identical to uninstrumented28;4 product calls and3 solves were captured,
+including an external product. Both record lists respected max_records=2;
+original methods were restored after normal exit and a deliberately raised
+exception. This checks the diagnostic plumbing, not the optical disagreements.
+
+Coordinator request: run the diagnostic on dev, official101-frequency aLIGO,
+voyager and rand3, separately from timing. Also return exact candidate/seed scalar
+loss values and per-entry signal/gradient difference maxima/indices from the
+existing saved arrays (not only pass counts). Use captured identical coefficients
+and RHS to compute genuinely extended-precision or arbitrary-precision residuals
+and forward-error estimates for BOTH solutions, documenting actual precision.
+Trace the first changed correction/stopping decision through the differing signal,
+noise, loss and gradient. If upstream assembly differs because carrier solutions
+changed, compare carrier first; do not conflate identical-RHS probe results with
+whole-simulation equivalence. Local longdouble52 cannot provide that evidence.
+
+Only after resolving the new loss and Voyager failures should the supervisor
+request independent source review and repeated matched fresh-process dual-official
+runs of28 versus admitted7. No such diagnostic, source review or paired cohort
+has been supplied yet. A source-portable way of preserving NumPy's reduction
+semantics would need proof/testing; do not guess its internal pairwise summation
+order or selectively fall back on known fixtures. If the numerical investigation
+does not justify28, retain admitted7 and use the already-requested callback
+profile to select a different conservative execution mechanism.
+
+### Candidate29: consume private parameter-row cotangents
+
+Supervisor resumed after28's stop handoff and requested one concrete next
+experiment. No actual-matrix diagnostics, independent review or paired cohort for
+28 were supplied. Its loss/Voyager failures remain open and its native backend
+is excluded. Source starts from restored admitted7. Pending candidate SHA and
+both official benchmark job IDs. All preserved28 feedback and diagnostic files
+remain; the working diff includes its production restoration, not a history reset.
+
+Selected a separate conservative allocation mechanism: _expand_backward gathers
+sweep cotangents, copies the entire tiled row cotangent, clears the overwritten
+sweep destinations, then sums over replicas. Both production callers relinquish
+their input immediately. The signal call receives signal_rows_bar freshly created
+by SystemPlan.backward with np.zeros(rows.shape), after adding noise_rows_bar;
+no operation uses its old contents after this call. The carrier call receives
+the new temporary carrier_rows_bar + component_bar. Neither input aliases saved
+forward state, callback inputs or public outputs. The gather is advanced indexing
+and already allocates values_bar independently before clearing destinations.
+Thus the full C-order row-cotangent copies are redundant at these two callers.
+
+Implementation adds a keyword-only consume=False to the private helper and sets
+consume=True at those two call sites. Writable C-contiguous inputs can be cleared
+in place. The default still copies, and Fortran, strided or read-only inputs retain
+the original C-order copy even when consume=True. All index construction, gather,
+clearing and sum operations remain, in the same order. This is a storage-ownership
+change, not parameter pruning: every sweep cotangent including zero-valued
+physical parameters is gathered as before. Duplicate and negative indices retain
+the existing helper's behavior. No sparse product, factor, refinement, component
+Jacobian, import or JAX wrapper changes are included.
+
+Hypothesis: eliminate one full expanded parameter-row copy for each of the two
+expansion pullbacks, reducing allocation/memory traffic in reverse execution.
+The admitted large/aLIGO reverse medians were85.357/14.384ms; the fraction spent
+on these copies remains unprofiled, so no expected millisecond or total speedup
+is claimed. This targets parameter-expansion ownership, rather than27's sideband
+coefficient conjugation or28's changed sparse-product arithmetic.
+
+Retained check experiments/notes/overnight-numerics-expansion-ownership-check.py
+AST-extracts actual parent/current _expand_backward and verifies both production
+call sites explicitly request consumption.960 synthetic cases cover1/2/5 base
+rows,0/1/3/17 replica counts,9/31 parameter columns, empty/single/multiple/full,
+repeated and negative indices, random complex/signed-zero/NaN/infinite values,
+C/F/strided/read-only storage. Both returned arrays match parent bitwise for
+consume=False and consume=True; default inputs remain unchanged, eligible
+consumed inputs change exactly the cleared destinations, and gathered values_bar
+never shares storage with the consumed input. Input layouts requiring the copy
+are explicitly exercised. No optical benchmark or timings were run locally.
+
+Initial unguarded ownership implementation failed a synthetic Fortran-layout
+case (base_rows1,count17,columns9,empty indices) because ndarray.copy() defaults
+to C order and the changed reduction layout altered addition behavior. This
+failure motivated the C-contiguity guard; it is not dismissed as rounding. The
+repaired960-case check passes bitwise, including that case. Read-only copying was
+also retained for compatibility. Production-owned inputs are C-contiguous and
+writable by their allocation sites; the guards preserve arbitrary helper usage.
+
+One small allocation inspection,37 replicas x1024 parameters with7 sweep entries:
+parent peak632648 bytes, consumed candidate26400 bytes, reduction606248 bytes.
+The removed full complex row copy is606208 bytes. The caller's initial allocation
+is outside this per-kernel probe and must remain inside complete official timing.
+There is no answer cache, persisted numerical state or new numerical fallback.
+
+Request both unchanged official workloads on the same new SHA; inspect all
+physical outputs/gradients and all14 frequency/parameter/modulation cases against
+admitted7 and initial seed, keeping pristine disagreement separate. Specifically
+verify that28's new loss/Voyager mismatches disappear after its removal, without
+claiming that29 itself explained or repaired native accumulation. Independent
+source review must verify buffer ownership and operation-order preservation.
+If promising, obtain matched repeated fresh-process parent/candidate full runs,
+separate grid/aLIGO samples, medians, ranges, phase/RSS/overlap evidence. Retire
+this allocation variant if gains are below noise; do not combine it with other
+unconfirmed trials. Existing pristine disagreements, six unresolved grid FD
+coordinates and first-order reverse-only transform limits remain unchanged.
