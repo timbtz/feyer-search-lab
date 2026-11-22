@@ -117,30 +117,38 @@ class SystemPlan:
         return rows_bar, base_bar.sum(axis=0)
 
 
+def _layout_indices(values, shape=(-1,)):
+    """Own a read-only index snapshot so its contents cannot drift from the plan key."""
+    indices = np.array(values, dtype=np.int64, copy=True).reshape(shape)
+    indices.setflags(write=False)
+    return indices
+
+
 class ParameterLayout:
-    """Static parameter-row index layout of one built setup (host NumPy copies).
+    """Static parameter-row index layout of one built setup (owned read-only NumPy snapshots).
 
     Holds the concrete optimized-parameter insertion, linking and detector-phase
     indices that `run_build_step` produced, so `simulate` can index the parameter
     row with explicit, unique, in-bounds gathers/scatters instead of generic traced
     indexing. Like the rest of the host plan it describes the built arrays; rebuild
-    it (re-run `run_build_step`) whenever those index arrays change.
+    it (re-run `run_build_step`) whenever those index arrays change. Updating the
+    caller's arrays for a new build does not mutate an existing layout or its key.
     """
 
     def __init__(self, parameter_count, optimized_parameter_indices, optimized_value_indices,
                  linked_indices, indices_to_link, qhd_parameter_indices, qhd_placing_indices,
                  linking_function_indices=None):
         self.parameter_count = int(parameter_count)
-        self.optimized_parameter_indices = np.asarray(optimized_parameter_indices, dtype=np.int64).ravel()
-        self.optimized_value_indices = np.asarray(optimized_value_indices, dtype=np.int64).ravel()
-        self.linked_indices = np.asarray(linked_indices, dtype=np.int64).ravel()
-        self.indices_to_link = np.asarray(indices_to_link, dtype=np.int64).ravel()
-        self.qhd_parameter_indices = np.asarray(qhd_parameter_indices, dtype=np.int64).ravel()
-        self.qhd_placing_indices = np.asarray(qhd_placing_indices, dtype=np.int64).reshape(-1, 3)
+        self.optimized_parameter_indices = _layout_indices(optimized_parameter_indices)
+        self.optimized_value_indices = _layout_indices(optimized_value_indices)
+        self.linked_indices = _layout_indices(linked_indices)
+        self.indices_to_link = _layout_indices(indices_to_link)
+        self.qhd_parameter_indices = _layout_indices(qhd_parameter_indices)
+        self.qhd_placing_indices = _layout_indices(qhd_placing_indices, (-1, 3))
         # None: unknown, so linking is never treated as a no-op.
         self.linking_function_indices = (
             None if linking_function_indices is None
-            else np.asarray(linking_function_indices, dtype=np.int64).ravel()
+            else _layout_indices(linking_function_indices)
         )
         self._key = _digest(np.int64(self.parameter_count), self.optimized_parameter_indices,
                             self.optimized_value_indices, self.linked_indices, self.indices_to_link,

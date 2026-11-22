@@ -4136,3 +4136,106 @@
 - Decision: ready for supervisor validation as a repair; no speedup or promotion claimed. Next step is inspect
   that feedback and independent review, not more registry variants. No benchmarks, commits, agents or network
   operations launched here. Deadline remains2026-11-22 09:27:44UTC.
+
+
+### Submission 46 feedback — repair preserved; timing hypothesis closed
+
+- Exact simulator SHA: ec8a6bc5446c55657b2e0d218f82b5ed1f190f80; evaluation d62312fc52be474994394b6fb2fa32c7; publication fca205dc2c5933d2d36fc78feaf8fe35242e3343. All ten worktree simulator hashes match the evaluator receipt. Only build.py differs from c723457. No simulator edits made while inspecting this feedback.
+- Both unchanged official benchmarks passed 3/3. Jobs: d62312fc52be474994394b6fb2fa32c7/grid-{1,2,3} and d62312fc52be474994394b6fb2fa32c7/aligo-{1,2,3}. All carrier, signal, noise, powers, sensitivity, loss and gradient checks pass against initial_seed tolerances. Official archive hashes match submission45 exactly for each setup; this is parent archive equality, NOT initial_seed byte equality. Maximum seed gradient differences remain 5.686350050382316e-6 (large) and 3.637978807091713e-11 (aLIGO).
+- All 14 additional cases pass initial_seed tolerances. Generalization archive332899d2ccf1ed894a7ab57480e06b5aececf7c16e87fd06a7de1f0117e60e92. Pristine comparisons still fail for the previously documented signal/loss/gradient and random-setup sensitivity disagreements. The aggregate strict_passed=false remains explicit; no universal correctness claim.
+- No infrastructure failure: all jobs returned0. Source review remains null. Receipt provides no execution result for the optional placeholder-check --jax diagnostic, so its six cases remain unverified; ordinary generalization cases do not establish coverage of custom-link-first construction order.
+- Large samples (seconds): [0.8996799644082785, 0.8631236609071493, 0.7686468418687582]; median 0.863123660907; range 0.768646841869–0.899679964408; relative range 15.181%. Maximum sampled process-group RSS 519258112 bytes.
+
+Large phase medians and observed differences from submission45 (ms; unmatched cohorts, not causal estimates):
+
+| Phase | Current median | Difference |
+|---|---:|---:|
+| imports | 295.546 | +6.821 |
+| initialize | 3.572 | -0.026 |
+| load | 1.511 | +0.090 |
+| build | 75.063 | +2.492 |
+| forward_lower | 11.806 | +0.047 |
+| forward_compile | 27.182 | -0.181 |
+| forward | 189.713 | +11.054 |
+| sensitivity_lower | 30.358 | +4.774 |
+| sensitivity_compile | 52.436 | +12.760 |
+| sensitivity | 0.872 | +0.030 |
+| gradient_lower | 11.837 | +0.061 |
+| gradient_compile | 46.345 | -0.214 |
+| gradient | 86.356 | -5.970 |
+| host_transfer | 0.194 | +0.003 |
+
+- Official aLIGO samples (seconds): [0.5587791912257671, 0.6649731621146202, 0.6365449726581573]; median 0.636544972658; range 0.558779191226–0.664973162115; relative range 16.683%. Maximum sampled process-group RSS 295858176 bytes.
+
+Official aLIGO phase medians and observed differences from submission45 (ms; unmatched cohorts, not causal estimates):
+
+| Phase | Current median | Difference |
+|---|---:|---:|
+| imports | 314.512 | +48.470 |
+| initialize | 3.539 | +0.014 |
+| load | 0.211 | +0.000 |
+| build | 37.999 | -1.450 |
+| forward_lower | 11.444 | +0.036 |
+| forward_compile | 33.801 | +5.722 |
+| forward | 46.368 | +12.156 |
+| sensitivity_lower | 27.225 | +0.616 |
+| sensitivity_compile | 51.538 | +9.956 |
+| sensitivity | 0.633 | +0.143 |
+| gradient_lower | 13.478 | +1.264 |
+| gradient_compile | 48.338 | -1.809 |
+| gradient | 16.248 | +1.844 |
+| host_transfer | 0.156 | +0.004 |
+
+- Generalization peak sampled RSS771448832bytes. Fixed CPU2/one logical CPU, thread limits1, x64 and no persistent cache are recorded. Other-host job overlap is unknown. Broad phase variation is observed, but this receipt cannot establish contention as its cause; no samples were discarded.
+- Selection rejected promotion: both timing ranges exceed10%; missing source review; insufficient large gain; aLIGO median regression above2%; large ranges overlap. confirmed_improvement=false. The registry repair was not proposed as a first-fresh-process speedup, and these results do not validate a performance gain for the combined candidate7 source.
+- Decision: freeze ec8a6bc as the evaluated compatibility repair to candidate7. Do not repeat this mechanism or request another unpaired cohort. Keep ee4fea2 as the admitted best; the repaired variant stays preserved in this isolated worktree/history, not promoted or merged. Removing a demonstrated correctness repair merely to recover an older timing would be unjustified.
+- Concrete coordinator handoff: first run experiments/notes/overnight-overhead-placeholder-check.py --jax in the fixed environment and independently review the candidate7+repair diff against ee4fea2. Only if that review supports proceeding, collect interleaved fresh-process ec8a6bc/ee4fea2 pairs for BOTH workloads, reporting full samples, phases, memory and overlap. These actions require supervisor orchestration under the managed rules and were not launched here.
+- Further import/build changes need the already prepared experiments/notes/overnight-overhead-profile.py results (large, aLIGO and a third supplied setup) before choosing another mechanism. Repeated tiny builder/import variants without attribution have not produced stable improvements. This is the search-direction change: evidence acquisition and review, rather than another speculative simulator variant.
+- Inherited caveats retained: grid gradients33/161/180 and signal/pristine disagreements; uifo_rand1/rand3 log differences~2.04e-4/~5.81e-5; unresolved grid finite-difference54/59/63/136/161/163; prior additional aLIGO29/29; no JVP/Hessians. This closes the registry-repair hypothesis, not the user-authorized campaign. Deadline2026-11-22 09:27:44UTC unchanged.
+
+
+### Submission 47: own static parameter-index snapshots (compatibility refinement)
+
+- Parent ec8a6bc5446c55657b2e0d218f82b5ed1f190f80, evaluation d62312fc52be474994394b6fb2fa32c7.
+  Strongest admitted revision remains ee4fea28c04d482566be16e916b609d7c6a99e5e. This is a metadata
+  ownership repair, not another registry optimization or unpaired replay. Candidate SHA and both official
+  job identifiers are pending supervisor submission. The evaluated registry fix remains intact.
+- Concrete issue: ParameterLayout documents NumPy copies, but asarray(..., dtype=int64).ravel()/reshape()
+  can alias caller-owned int64 arrays. The digest is computed once. A caller updating those arrays for a
+  later rebuild can thereby mutate an OLD layout while its key stays unchanged. This can invalidate the
+  relationship between a static plan, cached JAX tracing, and the indices used at a subsequent trace.
+  This problem exists even if the caller correctly creates a new plan after updating the source arrays.
+- Repair: a private _layout_indices helper takes an explicit NumPy copy, reshapes it, and marks the view
+  read-only. All seven ParameterLayout index arrays use it; optional linking metadata still accepts None.
+  Existing layout values are now snapshots; callers still must rebuild to use changed structural indices.
+  No claim of automatic invalidation or protection from deliberate mutation of private backing storage.
+- Focus stays within static parameter metadata. No solver, adjoint, refinement, numerical formula, tolerance,
+  dtype, output, variable or frequency change. No compilation-cache setting changes. The three stages remain.
+  This does NOT audit/fix every other static structure in the package; that broader work is separate.
+- Expected cost: seven small owned index buffers per layout, allocated inside timed setup. No first-run
+  speedup is claimed; memory/build overhead must be measured. The goal is dependable structural metadata
+  for the pending compilation candidate. Reject a material performance regression and investigate it rather
+  than hiding copies outside the timer or weakening snapshot ownership.
+- Diagnostic experiments/notes/overnight-overhead-layout-snapshot-check.py extracts the actual class,
+  helper and digest from source. --structural-only passes39 ownership cases with a stdlib aliasing-array
+  stand-in. The same diagnostic against --parent-ref ec8a6bc5446c55657b2e0d218f82b5ed1f190f80 fails at
+  optimized_parameter_indices aliases caller storage, establishing a regression counterexample within
+  that model. Cases cover empty/nonempty inputs, optional linking metadata, source mutation, rejected
+  snapshot writes, and new digest on rebuilding. This stand-in is not a numerical/backend certificate.
+- The default diagnostic uses real NumPy, including an additional non-contiguous shared-view case (40 cases
+  total). UNEXECUTED locally; supervisor should run it in the fixed environment. No NumPy/JAX installation
+  or independent benchmark was attempted. The previous optional placeholder --jax test also remains pending.
+- Parent performance outcome is already recorded above, not evidence for this revision: large samples
+  0.8996799644082785/0.8631236609071493/0.7686468418687582s, median0.8631236609071493,
+  range0.7686468418687582–0.8996799644082785; aLIGO0.5587791912257671/0.6649731621146202/
+  0.6365449726581573s, median0.6365449726581573, range0.5587791912257671–0.6649731621146202.
+  New phase deltas and memory are unmeasured. Parent timing was unstable, with overlap unknown; matched
+  repetitions against a reviewed parent remain necessary for any future performance claim.
+- Required validation: default NumPy diagnostic, unchanged dual official benchmarks on the new exact SHA,
+  every saved output/gradient comparison and all14 generalization cases, then independent source review.
+  Known pristine signal/gradient/loss disagreements, uifo_rand1/rand3 log sensitivity~2.04e-4/~5.81e-5,
+  unresolved grid finite differences54/59/63/136/161/163 and lack of JVP/Hessian support remain unchanged
+  open questions. Official/seed-relative passing does not resolve them or prove bitwise seed identity.
+- Decision: ready as a focused compatibility repair; no promotion claim. Next step: inspect repair feedback
+  and the NumPy ownership diagnostic before modifying metadata further. Import/build profiling and independent
+  review are still requested; no fourth speculative variant of a failed performance mechanism is proposed.
