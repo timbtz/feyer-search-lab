@@ -222,15 +222,20 @@ class ParameterLayout:
 
 
 class HostPlan:
-    """Static host plan for one built setup (no array leaves)."""
+    """Static host plan for one built setup (no array leaves).
+
+    Sweep and carrier-selection indices are owned read-only snapshots, as in
+    ParameterLayout. Rebuilding from modified caller arrays must not change the
+    contents of an earlier plan while leaving its digest unchanged.
+    """
 
     def __init__(self, structure, carrier, signal, noise, carrier_changing, signal_changing,
                  signal_carrier_indices, noise_row_reuse, parameter_layout=None):
         self.structure = structure
         self.carrier, self.signal, self.noise = carrier, signal, noise
-        self.carrier_changing = np.asarray(carrier_changing, dtype=np.int64).ravel()
-        self.signal_changing = np.asarray(signal_changing, dtype=np.int64).ravel()
-        self.signal_carrier_indices = np.asarray(signal_carrier_indices, dtype=np.int64).ravel()
+        self.carrier_changing = _layout_indices(carrier_changing)
+        self.signal_changing = _layout_indices(signal_changing)
+        self.signal_carrier_indices = _layout_indices(signal_carrier_indices)
         self.noise_row_reuse = bool(noise_row_reuse)
         self.parameter_layout = parameter_layout
         self._key = (_digest(self.carrier_changing, self.signal_changing, self.signal_carrier_indices,
