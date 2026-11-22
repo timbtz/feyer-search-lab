@@ -25,10 +25,11 @@ CAMPAIGN = 'overnight-20261122'
 BRANCH = 'control/' + CAMPAIGN
 PREFIX = 'experiments/campaigns/' + CAMPAIGN
 BEST = PREFIX + '/current-best.json'
-POLICY = {'version': 'overnight-selection-v1', 'minimum_repetitions': 3,
+POLICY = {'version': 'overnight-selection-v2', 'minimum_repetitions': 3,
           'large_minimum_absolute_gain_seconds': .003,
           'large_minimum_relative_gain': .005, 'aligo_maximum_ratio': 1.02,
           'maximum_relative_range': .10,
+          'large_candidate_maximum_must_be_below_incumbent_minimum': True,
           'scope': 'Team search-selection heuristic, not organizer judging policy.'}
 
 
@@ -91,7 +92,7 @@ def read_receipt(path, evidence_root):
 
 def assess(receipt, current):
     """Fail closed; a false admission is evidence, not a publisher exception."""
-    reasons = []; metrics = {}
+    reasons = []; metrics = {}; timing_comparison = {}
     admission = receipt.get('admission', {})
     if admission.get('promotion_ready') is not True: reasons.append('runner_not_promotion_ready')
     if admission.get('candidate_sha') != receipt['candidate_sha']: reasons.append('admission_source_mismatch')
@@ -144,15 +145,31 @@ def assess(receipt, current):
             try: sha(review.get(key), length)
             except ValueError: valid_review = False
         if not valid_review: reasons.append('requires_source_review')
-    if not reasons and current['status'] != 'seed_pending_fresh_calibration':
+    # Report independent timing objections even when source review is still
+    # missing, so callers need not spend a model review on a clearly slower trial.
+    if (current['status'] != 'seed_pending_fresh_calibration'
+            and cohort == current.get('cohort_digest') and 'missing_cohort' not in reasons
+            and set(metrics) == {'grid', 'aligo'}):
         old = current['metrics']; new = metrics
         threshold = max(.003, old['grid']['median_seconds'] * .005)
         if old['grid']['median_seconds'] - new['grid']['median_seconds'] < threshold:
             reasons.append('large_gain_below_selection_threshold')
         if new['aligo']['median_seconds'] > old['aligo']['median_seconds'] * 1.02:
             reasons.append('aligo_regression_over_two_percent')
+        # Three samples and a small median shift are not a confidence interval.
+        # This conservative observed-range heuristic prevents automatic promotion
+        # when the apparent gain still falls within incumbent timing variation.
+        incumbent_min = old['grid'].get('min_seconds')
+        if type(incumbent_min) not in (int, float) or not math.isfinite(incumbent_min) or incumbent_min <= 0:
+            reasons.append('incumbent_timing_range_unavailable')
+        else:
+            timing_comparison = {'incumbent_grid_min_seconds': incumbent_min,
+                                 'candidate_grid_max_seconds': new['grid']['max_seconds'],
+                                 'observed_ranges_nonoverlapping': new['grid']['max_seconds'] < incumbent_min}
+            if not timing_comparison['observed_ranges_nonoverlapping']:
+                reasons.append('large_first_run_ranges_overlap_requires_paired_evidence')
     return {'promote': not reasons, 'reasons': reasons, 'metrics': metrics,
-            'policy': POLICY}
+            'policy': POLICY, 'timing_comparison': timing_comparison}
 
 
 def caveat_summaries(previous, receipt):
@@ -186,6 +203,8 @@ def markdown(best):
     if best.get('record_path'): lines.append('- [Selected candidate evidence](' + best['record_path'] + ')')
     lines += ['', 'Search selection requires at least three fresh runs of each official benchmark, a large-case gain '
               'of at least max(3 ms, 0.5%), no more than 2% aLIGO regression, and relative timing range at most 10%. '
+              'Under selection-v2, the candidate large-case maximum must also be strictly below the incumbent minimum. '
+              'Overlapping candidates remain provisional for further paired investigation. Observed nonoverlap is not statistical proof. '
               'These are team heuristics, not organizer scoring rules. Failed and provisional trials remain in the candidate receipts.', '']
     return '\n'.join(lines).encode()
 

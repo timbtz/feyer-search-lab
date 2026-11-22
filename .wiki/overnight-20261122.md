@@ -35,6 +35,9 @@ The publisher uses these explicit **team selection heuristics**, not organizer s
 - At least three distinct fresh runs per benchmark; relative timing range at most 10%.
 - Same comparison cohort: hardware, affinity, environment, dependencies, harness, runner/resource policy and timing regime. Package compiler options are candidate changes and stay visible in evidence.
 - Large-case median improvement of at least `max(3 ms, 0.5%)`, with aLIGO median no more than 2% slower than current best.
+- For new promotions under `overnight-selection-v2`, the candidate large-case maximum must be strictly below the incumbent minimum. Overlapping ranges remain provisional for further controlled paired measurements; code and evidence are retained.
+
+The observed-range gate is deliberately conservative, not a statistical confidence claim. It prevents automatic promotion of a small median shift inside existing timing variation; it does not prove a universal speedup. Prior admissions and the known seed calibration are not retroactively invalidated.
 
 Large and aLIGO medians/ranges are shown separately. We do not invent a combined score or claim the organizers choose winners by our median. Final quiet confirmation should be distinguished from exploratory timing with possible external contention.
 
