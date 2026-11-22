@@ -212,8 +212,12 @@ def function_jacobian(function_index, slots, inputs, with_outputs=True):
     inputs, columns = _columns(inputs)
     shape = inputs.shape[:-1]
     outputs = evaluate_function(function_index, inputs) if with_outputs else None
-    linear = np.zeros(shape + (4, len(slots)), dtype=np.complex128)
-    antilinear = np.zeros(shape + (4, len(slots)), dtype=np.complex128)
+    # Each derivative plane is filled as one contiguous array. Expose the same
+    # (..., 4, slots) API using views; contraction and scatter order are unchanged.
+    linear_planes = np.zeros((len(slots), 4) + shape, dtype=np.complex128)
+    antilinear_planes = np.zeros_like(linear_planes)
+    linear = np.moveaxis(linear_planes, (0, 1), (-1, -2))
+    antilinear = np.moveaxis(antilinear_planes, (0, 1), (-1, -2))
     for position, slot in enumerate(slots):
         seeded = list(columns)
         seeded[slot] = Dual(columns[slot], 1.0, 0.0)

@@ -880,3 +880,81 @@ Candidate 1 is not intended to touch any of them.
   copy reduction alone is not sufficient evidence of improvement. If timing stays
   indistinguishable, reject this variant and keep candidate 7 admitted; pending
   candidate 13 confirmation remains a separate useful next action.
+
+
+## Candidate 15 feedback: no demonstrated benefit
+
+- SHA bedb89e6b0360042f60e7519fa0a24983c715ea8, request
+  981c3b3fbcd241c2b32a03c563639a64 (grid-1/2/3 and aligo-1/2/3).
+  Six official passes. No confirmed improvement or independent source review.
+- Large complete first runs [0.8455780781805515, 0.7983885705471039,
+  0.8056562822312117] s; median 0.8056562822312117, range
+  [0.7983885705471039, 0.8455780781805515]. Forward
+  [190.654168, 178.886898, 187.850546] ms, reverse
+  [88.974800, 84.959472, 84.344190] ms; build
+  [71.519103, 73.717209, 68.958111] ms. Unpaired median deltas versus admitted
+  candidate 7: total +4.078599 ms, forward +6.687459 ms, reverse -0.397952 ms.
+- Official aLIGO first runs [0.5537967570126057, 0.5524643007665873,
+  0.5420569684356451] s; median 0.5524643007665873, range
+  [0.5420569684356451, 0.5537967570126057]. Forward
+  [32.594452, 32.848397, 32.486092] ms, reverse
+  [14.728509, 14.703605, 14.281003] ms; build
+  [39.204380, 38.183991, 37.798736] ms. Unpaired median deltas versus admitted
+  candidate 7: total +3.909145 ms, forward -0.295698 ms, reverse +0.319453 ms.
+- Sampled peak RSS maxima: large 653504512 B, aLIGO 295723008 B,
+  generalization 872075264 B. No infrastructure failure or memory-budget exceedance;
+  CPU2, one thread, no persistent cache; external contention not excluded.
+  Ranges overlap, large gain below selection threshold, source review absent.
+- Read the local stored evaluation receipt and all supplied per-array comparisons:
+  both official setups and all 14 extra cases pass against initial seed; official
+  archive hashes remain 112c0407... (grid) and 9c1ce936... (aLIGO) as recorded above.
+  No local reopening of remote raw arrays. Pristine mismatches remain (grid signal,
+  gradient, loss; official aLIGO loss; additional random and perturbed cases).
+  In particular random1/random3 sensitivity log errors and six unresolved grid FD
+  coordinates are not resolved by these passes. First-order-only VJP unchanged.
+- Decision: retire CSC index-copy variant. The actual allocation saving is too small
+  to establish a complete-run benefit in this evidence. Restore admitted factor
+  routine without rewriting history. Do not keep stacking unconfirmed small changes.
+
+## Candidate 16: full Jacobian storage with contiguous derivative planes
+
+- Parent: admitted candidate 7, ee4fea28c04d482566be16e916b609d7c6a99e5e.
+  All simulator source equals that parent except function_jacobian's two buffer
+  layouts in host.py. host_pass.py restored from parent; no candidate 14/15 changes.
+  Candidate 13 remains a separate preserved experiment, not an admitted parent.
+- Source observation: for each seeded slot, function_jacobian assigns each output's
+  derivative over all batch/component rows into (...,4,slots) C-order arrays. Those
+  planes are strided by 4*slots complex entries. The contraction also traverses these
+  full arrays. Candidate 13's earlier reverse-phase reduction suggests contiguous
+  derivative storage is worth isolating, but its complete-run gain was unconfirmed.
+- Narrower implementation: allocate (slots,4)+input_batch_shape arrays, then expose
+  (...,4,slots) views with moveaxis. Full Jacobian API, shapes, values, precision,
+  zero initialization and full allocation size are unchanged. Each derivative plane
+  now fills contiguous storage. Original component seeding, all Dual operations,
+  four-output contraction expressions, slot iteration and np.add.at scatters remain.
+  No streamed function_pullback API or hand-written derivative is introduced.
+- This is a simpler isolated layout trial, not a combination with candidate 13.
+  No claim of fewer mathematical operations. Stride layout can alter NumPy reduction
+  kernels, so equivalence and full numerical evaluation are required even though
+  source-level contraction order is unchanged. The extra moveaxis views have overhead
+  counted in reverse execution. No persistent or cross-evaluation numerical cache.
+- Small synthetic overnight-numerics-jacobian-layout-check.py: 3078 comparisons of
+  all 19 functions and contractions passed; scalar, vector and batched inputs,
+  real/complex parameters, each zero-valued parameter slot, empty/reordered/full
+  differentiation slots and noncontiguous cotangents. Eight SystemPlan.backward
+  comparisons passed across 1/5 batch rows, repeated parameter indices, repeated
+  output selections/destinations, and nonfinite cotangents. Finite entries bitwise
+  equal; nonfinite entries array-equal. These are component checks, not a new optical
+  certificate or resolution of the existing ill-conditioned-system disagreements.
+- Structural measurement on a small (7,31,7) synthetic input: each Jacobian retains
+  97216 bytes. Old exposed strides (13888,448,112,16); new (496,16,3472,13888).
+  Fixed-output/fixed-slot planes are now C-contiguous. No timing run was performed
+  locally, and no expected millisecond gain is asserted.
+- Candidate SHA/job IDs pending. Request both unchanged official full workloads on
+  the same exact SHA, complete saved outputs/gradients and 14-case generalization
+  comparisons, followed by independent source review and paired fresh-process
+  confirmation against admitted candidate 7 if promising. Report large and aLIGO
+  separately, including reverse/build/compile tradeoffs and RSS. Keep preserved
+  candidate 13's pending paired confirmation separate. If this narrower layout does
+  not show a stable gain, close derivative-storage tuning until profiling or paired
+  evidence supplies a stronger reason to revisit it. Retain admitted candidate 7.

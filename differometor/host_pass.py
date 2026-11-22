@@ -316,11 +316,7 @@ def _factor(pattern, values):
     data = np.ascontiguousarray(values, dtype=np.complex128)
     gstrf = _superlu_gstrf()
     if gstrf:
-        # SparsePattern already stores CSC indices as int32. Reuse those static
-        # arrays when they match the extension's C-int dtype; convert otherwise.
-        # SuperLU reads the CSC structure while building fresh numerical factors.
-        return gstrf(pattern.size, data.size, data,
-                     pattern.indices.astype(np.intc, copy=False), pattern.indptr.astype(np.intc, copy=False),
+        return gstrf(pattern.size, data.size, data, pattern.indices.astype(np.intc), pattern.indptr.astype(np.intc),
                      csc_construct_func=_construct_csc, ilu=False, options=dict(_SUPERLU_OPTIONS))
     splu, csc_matrix = _scipy()
     return splu(csc_matrix((data, pattern.indices, pattern.indptr), shape=(pattern.size, pattern.size)),
