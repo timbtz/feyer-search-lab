@@ -741,3 +741,81 @@
   uifo_rand1/rand3 log sensitivity differences ~2.04e-4/~5.81e-5; grid finite-difference coordinates
   54,59,63,136,161,163. Earlier aLIGO coordinate checks passed 29/29. Whole-pass custom VJP
   still does not provide JVP/Hessian support. This proposal makes no universal correctness claim.
+
+### Candidate 11 feedback: no observed compilation benefit; retire
+
+- Evaluated SHA **f53dc8ced6ac62bf053010fe28fd80b2037a8502**, job
+  **90acd518b01f4f549cbc4f7a9f66c754**; reports grid-1/2/3 and aligo-1/2/3 under
+  that request. Both unchanged official benchmarks passed 3/3. No infrastructure failure.
+- Large complete fresh-process seconds: **0.834042285, 0.808584839, 0.797800824**;
+  median **0.808584839**, range **0.797800824–0.834042285**. aLIGO separately:
+  **0.541520478, 0.544266449, 0.553098986**; median **0.544266449**, range
+  **0.541520478–0.553098986**. Relative to the unmatched admitted ee4fea2 cohort,
+  large median is 7.007 ms slower and aLIGO is 4.289 ms faster. Neither comparison
+  establishes a stable improvement; ranges overlap and source review is absent.
+- Phase medians (ms), large / aLIGO: imports 264.525 / 264.277; build 72.931 / 37.721;
+  forward lower 19.500 / 19.064, compile 33.462 / 33.451, execute 182.421 / 32.775;
+  sensitivity lower 25.473 / 26.195, compile 40.653 / 41.129;
+  gradient lower 16.645 / 16.720, compile 53.227 / 53.358, execute 88.165 / 14.586.
+  These compilation costs are essentially the preceding candidate's scale. No evidence
+  supports the proposed switch removal as a useful official-workload optimization.
+- Sampled peak RSS bytes: large 510935040, 608702464, 512163840; aLIGO 283422720,
+  284921856, 287924224; generalization 705449984. Budget not exceeded; sampling limitations
+  and unknown external contention persist. CPU2, one logical CPU, library threads1, x64,
+  package flags unchanged, no persistent cache. These are support timings, not ranking samples.
+- All 14 generalization cases pass initial-seed tolerances. Official archive hashes match
+  candidate 10's; generalization archive hash differs, so do not assert byte-identical arrays.
+  Direct saved-array comparison with ee4fea2 is still requested. Maximum absolute official
+  seed gradient differences remain 5.686350050e-6 large and 3.637978807e-11 aLIGO.
+  Pristine strict review still fails with the inherited signal/gradient/loss and random-case
+  discrepancies recorded above. No new tolerance failure is reported; this is not a proof
+  of general correctness. Link diagnostic results are absent and remain unexecuted here.
+- Decision: preserve f53dc8c, remove its added static dispatch metadata/code from the working
+  source, and retain reviewed ee4fea2 as the parent. Do not expand homogeneous dispatch into
+  mixed-link grouping or stack it with another experiment.
+
+### Candidate 12: isolate callback output orientation from candidate 7
+
+- Parent simulator source: **ee4fea28c04d482566be16e916b609d7c6a99e5e**. Selective source
+  transfer: only the callback-boundary suffix of host_pass.py from preserved candidate 7,
+  **1ea70bfbde9bcf42fce836846a4e1e92aee36a3b**, plus removal of the two corresponding
+  public-output transposes in _simulate_host_pass. New candidate SHA/jobs pending supervisor.
+  No branch reset or Git merge; all failed trials remain in history.
+- This is a narrower refinement of measured boundary evidence, not a promotion of candidate 7.
+  Candidate 7 combined callback orientation with no-op skipping and had forward lower/compile
+  medians 12.002/27.872 ms and gradient lower/compile 11.575/45.929 ms on large, compared with
+  roughly 19.5/33.5 and 16.6/53.2 ms now. Its large total median 0.779120542 s had overlapping
+  ranges with the incumbent and no source review, so these unmatched observations cannot
+  attribute the benefit to transposes alone. Candidate 11 found no useful reduction from
+  direct linking-function dispatch; this trial isolates a different boundary operation.
+- Mechanism: return carrier and signal in the public (node, batch) orientation from the timed
+  NumPy callback, retaining separate (batch, node) callback outputs as backward residuals.
+  Transpose incoming carrier/signal cotangents inside the backward callback before passing
+  them to the unchanged host_backward. Exact array permutation, no arithmetic or reduction
+  changes. Residual arrays and public outputs retain every entry; all three JIT stages remain.
+- Tradeoff: forward callback outputs increase from five to seven; NumPy transposes may copy
+  arrays, and residual/public orientations may use additional memory and transfer bandwidth.
+  The execution and memory costs must be counted against lower/compile savings in complete
+  fresh-process runs. No work moves outside the timer, and no cross-evaluation state is added.
+  Hypothesis is transferable to arbitrary carrier/signal batch sizes and detector counts.
+- Scope checks: host_pass.py prefix through all solver, refinement, assembly, backward math
+  and ParameterLayout definitions is byte-identical to ee4fea2. build.py is unchanged; no
+  placeholder identity recognition or empty detector-phase scatter skipping is transferred.
+  Relative to ee4fea2 only host_pass.py callback boundary and simulate.py return orientation
+  change. Candidate 11's homogeneous dispatch is absent.
+- Added `experiments/notes/overnight-overhead-callback-check.py`: extracts the actual callback
+  boundary functions into an isolated namespace with toy host math and compares them with
+  the original boundary under JIT, VJP over every callback input, and sequential vmap. Cases
+  include singleton/batched carrier and signal sweeps and multiple detectors. The toy backward
+  checks every saved residual and cotangent shape. This does not patch simulator/benchmark
+  modules and does not exercise or replace optical solver validation. Runtime execution is
+  pending the fixed NumPy/JAX environment; AST syntax and source-prefix checks passed locally.
+- Request supervisor synthetic boundary check, both unchanged full official benchmarks on the
+  exact same new SHA, saved outputs/full gradients against parent and seed, the 14-case
+  generalization review, and independent source review. If promising, require interleaved
+  parent/candidate fresh-process confirmation, separate large/aLIGO medians and ranges,
+  phase/RSS accounting and job-overlap status. No gain is claimed before those results.
+- All inherited pristine disagreements and six unresolved grid finite-difference coordinates
+  remain open. The whole-pass custom VJP still does not support JVP/Hessians. If this isolated
+  boundary trial fails to improve robustly, restore ee4fea2 and obtain the prepared import/build
+  attribution rather than another permutation of unconfirmed boundary changes.
