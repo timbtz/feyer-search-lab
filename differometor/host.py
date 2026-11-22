@@ -235,9 +235,11 @@ def function_pullback(function_index, slots, inputs, output_bar):
     """
     inputs, columns = _columns(inputs)
     shape = inputs.shape[:-1]
-    output_bar = np.asarray(output_bar, dtype=np.complex128)
+    output_bar = np.moveaxis(np.asarray(output_bar, dtype=np.complex128), -1, 0)
     result = np.empty(shape + (len(slots),), dtype=np.complex128)
-    linear = np.empty(shape + (4,), dtype=np.complex128)
+    # Each output derivative spans contiguous component rows. Reduce the four
+    # output planes after multiplication, retaining every output contribution.
+    linear = np.empty((4,) + shape, dtype=np.complex128)
     antilinear = np.empty_like(linear)
     for position, slot in enumerate(slots):
         linear.fill(0)
@@ -247,11 +249,11 @@ def function_pullback(function_index, slots, inputs, output_bar):
         stack = HOST_FUNCTIONS[function_index](_Slots(seeded))
         for column, item in enumerate(stack.items):
             if isinstance(item, Dual):
-                linear[..., column] = np.broadcast_to(item.a, shape)
-                antilinear[..., column] = np.broadcast_to(item.b, shape)
+                linear[column] = np.broadcast_to(item.a, shape)
+                antilinear[column] = np.broadcast_to(item.b, shape)
         np.multiply(linear, output_bar, out=linear)
         np.multiply(antilinear, output_bar, out=antilinear)
-        result[..., position] = np.sum(linear, axis=-1) + np.conj(np.sum(antilinear, axis=-1))
+        result[..., position] = np.sum(linear, axis=0) + np.conj(np.sum(antilinear, axis=0))
     return result
 
 

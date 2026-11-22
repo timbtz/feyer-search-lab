@@ -611,3 +611,71 @@ Candidate 1 is not intended to touch any of them.
   dense-reference sensitivity disagreements, six grid finite-difference coordinates, and first-order
   whole-pass custom-VJP compatibility limits. No changes to tolerances, fixtures, frequencies,
   variable counts, arithmetic precision, compiler options or the three JIT stages.
+
+
+## Candidate 12 feedback and candidate 13: contiguous derivative output planes
+
+- Candidate 12 exact SHA `75825cda098864218c0431d2e12d5dbfdfeb4bb0`, dual request
+  `ec814a60fa034b4dbab804b00d2f2cdc` (grid-1/2/3 and aligo-1/2/3), completed with
+  all six official passes. Large fresh complete samples: 0.8300696089863777,
+  0.8003530371934175, 0.794034855440259 s; median 0.8003530371934175, range
+  0.794034855440259–0.8300696089863777. Official aLIGO samples: 0.5444993507117033,
+  0.5506514385342598, 0.5417988393455744 s; median 0.5444993507117033, range
+  0.5417988393455744–0.5506514385342598. These are separate workloads, not a score.
+- Large forward phases 182.765/184.455/179.476 ms; reverse 81.903/82.717/83.264 ms.
+  aLIGO forward 32.069/34.193/32.596 ms; reverse 14.310/14.154/14.276 ms.
+  Relative to the restored-parent cb04c3c cohort, unpaired median reverse deltas are
+  approximately -3.072 ms large and +0.056 ms aLIGO. Large forward median also fell
+  1.677 ms despite unchanged forward code, demonstrating the limitation of attributing
+  small unpaired phase differences. Complete large median improves only 1.225 ms versus
+  admitted candidate 7's recorded median, below the selection threshold, with overlapping
+  ranges. This is NOT a confirmed improvement. Source review is still absent.
+- Maximum sampled process-group RSS: large 585527296 B, aLIGO 302116864 B,
+  generalization 924569600 B. No reported infrastructure failure or budget exceedance.
+  CPU 2, one logical CPU, all library threads one, no persistent compilation cache;
+  external contention was not excluded. Sampling can miss short peaks.
+- Both official output archive hashes are unchanged from prior candidate receipts:
+  large 112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5,
+  aLIGO 9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195.
+  All reported physical-array/gradient comparisons against initial seed pass, including
+  all 14 generalization cases. Generalization archive hashing also includes timing metadata;
+  a differing archive hash does not alone identify a physical-array difference. The receipt's
+  candidate-self artifact comparison is not independent seed evidence. Raw remote arrays
+  were not independently reopened locally; the per-array receipt and official hashes are
+  the available evidence. All inherited pristine discrepancies remain: grid 131 signal,
+  three gradient and one loss mismatches; official aLIGO one loss mismatch; random1/3
+  sensitivity log errors about 2.0361e-4 and 5.8101e-5. Other recorded pristine failures,
+  six unresolved grid finite-difference coordinates and whole-pass JVP/Hessian limitations
+  remain open. No new physical discrepancy is reported by this receipt.
+- Decision: preserve candidate 12 in history without promotion. Candidate 13 is one narrow
+  refinement of the same new contraction mechanism, not a return to the closed residual
+  allocation or surface common-subexpression trials. Scientific baseline remains admitted
+  candidate 7 ee4fea2. Candidate 13 retains only candidate 12's contraction implementation
+  on that baseline, with no new cross-lane transfer or combined numerical shortcut.
+- Candidate 13 changes host.function_pullback derivative buffers from (batch, rows, 4)
+  to (4, batch, rows), with the analogous arrangement for arbitrary leading dimensions.
+  A single output derivative plane is now contiguous: the 217-row synthetic group has
+  a 16-byte row stride instead of 64 bytes. The cotangent uses a moveaxis view, all four
+  derivatives are multiplied, and sum(axis=0) contracts the same four outputs. Buffers
+  remain local to the call; no numerical values or outputs persist across evaluations.
+  All slots, zeros, nonfinite products and both Wirtinger terms remain present. No solver,
+  factorization, iterative refinement, physics formula, scatter or JAX wrapper changes.
+- Hypothesis: contiguous derivative writes and reductions reduce memory access costs in
+  the large reverse phase. Cotangent strides may offset this benefit. Neither execution
+  gain nor a first-run gain is established. This is a storage-layout experiment, not a
+  further allocation reduction: synthetic tracemalloc peak 155344 B versus candidate 12's
+  155152 B and the materialized-Jacobian baseline's 415352 B.
+- Local check: overnight-numerics-pullback-check.py, NumPy 2.5.5, 3078 component
+  comparisons across all 19 functions plus four SystemPlan integration cases pass;
+  finite entries bitwise equal, nonfinite entries array-equal to the unchanged full-Jacobian
+  oracle/admitted-parent scatter. Includes complex and zero parameters, reordered/empty
+  slots, noncontiguous cotangents, duplicate writes and parameter indices, NaN/infinite
+  cotangents. No official workloads or local timing benchmarks were launched.
+- Candidate 13 SHA and job identifiers pending supervisor. Request both unchanged full
+  official benchmarks on the same exact SHA, all output/gradient comparisons and 14-case
+  generalization against admitted parent and seed, with pristine discrepancies retained,
+  followed by independent source review. If promising, require paired/interleaved fresh
+  complete runs against candidate 7 (and candidate 12 to isolate the layout delta), with
+  every sample, phases, RSS and overlap conditions recorded. If this contraction direction
+  remains unhelpful, return to admitted parent and obtain the already requested callback
+  profile before expanding the mechanism. No performance promotion on synthetic evidence.
