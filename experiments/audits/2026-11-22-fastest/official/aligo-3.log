@@ -1,0 +1,35 @@
+Initialize CPU backend: 0.003124 s
+CPU: AMD EPYC 9334 32-Core Processor; affinity: 1; devices: [CpuDevice(id=0)]
+Read and parse public inputs: 0.000315 s
+Build optical setup and prepare inputs: 0.037357 s
+Workload: 101 frequencies; 29 physical design variables; no optimizer
+Forward: trace / lower: 0.037367 s
+Forward: compile: 0.075663 s
+Forward simulation + AD residuals: 0.033631 s
+Sensitivity: trace / lower: 0.025607 s
+Sensitivity: compile: 0.039569 s
+Sensitivity, powers and scalar loss: 0.000464 s
+Gradient: trace / lower: 0.016900 s
+Gradient: compile: 0.054557 s
+Reverse-mode gradient: 0.028878 s
+Transfer results to host: 0.000169 s
+Complete first-run total (excluding validation): 0.623395 s
+Forward: 0.025285 s
+Sensitivity: 0.000214 s
+Gradient: 0.027808 s
+Host transfer: 0.000104 s
+Repeat 01/3: 0.053411 s
+Forward: 0.024655 s
+Sensitivity: 0.000156 s
+Gradient: 0.027039 s
+Host transfer: 0.000105 s
+Repeat 02/3: 0.051956 s
+Forward: 0.023143 s
+Sensitivity: 0.000237 s
+Gradient: 0.026833 s
+Host transfer: 0.000112 s
+Repeat 03/3: 0.050325 s
+Validating outputs, reference sensitivity and finite-difference gradient...
+PASS: reference sensitivity and gradient spot check; full runtime median 0.051956 s
+JSON: /workspace/feyer-transfer/53f38d3-recheck-v1/official-aligo-3.json
+Plot: /workspace/feyer-transfer/53f38d3-recheck-v1/official-aligo-3.png

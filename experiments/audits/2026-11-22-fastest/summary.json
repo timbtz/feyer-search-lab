@@ -1,0 +1,159 @@
+{
+  "candidate_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+  "selection": "Fast candidate retained for final review; no fallback activated",
+  "official_benchmarks": {
+    "grid": {
+      "all_passed": true,
+      "requested_and_effective_logical_cpus": 1,
+      "reference_seconds": 36.01378769800067,
+      "median_candidate_seconds": 0.9869915377348661,
+      "runs": [
+        {
+          "repeat": 1,
+          "first_run_seconds": 0.9973438009619713,
+          "report_sha256": "01d4b509e608be4883d08b1b4e8334a7d36352f4f73ce3d3b72119e903ab7ae0",
+          "passed": true,
+          "issues": [],
+          "package_xla_flags": "--xla_backend_optimization_level=0 --xla_cpu_use_fusion_emitters=false",
+          "scope": "Pinned official transfer benchmark; package compiler settings recorded, not blanket-rejected."
+        },
+        {
+          "repeat": 2,
+          "first_run_seconds": 0.9869915377348661,
+          "report_sha256": "d32b26045192724e325bf019907a03598fc8b4600709da0c35676291f50ea01a",
+          "passed": true,
+          "issues": [],
+          "package_xla_flags": "--xla_backend_optimization_level=0 --xla_cpu_use_fusion_emitters=false",
+          "scope": "Pinned official transfer benchmark; package compiler settings recorded, not blanket-rejected."
+        },
+        {
+          "repeat": 3,
+          "first_run_seconds": 0.9864342752844095,
+          "report_sha256": "5730d0ed6c21f20d83bc023d0061ee5927a851b08f93061f05f3f202d8954889",
+          "passed": true,
+          "issues": [],
+          "package_xla_flags": "--xla_backend_optimization_level=0 --xla_cpu_use_fusion_emitters=false",
+          "scope": "Pinned official transfer benchmark; package compiler settings recorded, not blanket-rejected."
+        }
+      ]
+    },
+    "aligo": {
+      "all_passed": true,
+      "requested_and_effective_logical_cpus": 1,
+      "reference_seconds": 21.946608109399676,
+      "median_candidate_seconds": 0.6260263714939356,
+      "runs": [
+        {
+          "repeat": 1,
+          "first_run_seconds": 0.6260263714939356,
+          "report_sha256": "2fa04251f956bc5ac6a2bc561001443df3824bedf1c5b51c054dc9e2be5f25c0",
+          "passed": true,
+          "issues": [],
+          "package_xla_flags": "--xla_backend_optimization_level=0 --xla_cpu_use_fusion_emitters=false",
+          "scope": "Pinned official transfer benchmark; package compiler settings recorded, not blanket-rejected."
+        },
+        {
+          "repeat": 2,
+          "first_run_seconds": 0.6327169891446829,
+          "report_sha256": "8c40d556cb67370097a120ed457e99ed03ef23c7c583ec24f5d9df19554e7954",
+          "passed": true,
+          "issues": [],
+          "package_xla_flags": "--xla_backend_optimization_level=0 --xla_cpu_use_fusion_emitters=false",
+          "scope": "Pinned official transfer benchmark; package compiler settings recorded, not blanket-rejected."
+        },
+        {
+          "repeat": 3,
+          "first_run_seconds": 0.6233954820781946,
+          "report_sha256": "27ff577397e217243450338b023623078744a91129076549b45d2bbb856980e6",
+          "passed": true,
+          "issues": [],
+          "package_xla_flags": "--xla_backend_optimization_level=0 --xla_cpu_use_fusion_emitters=false",
+          "scope": "Pinned official transfer benchmark; package compiler settings recorded, not blanket-rejected."
+        }
+      ]
+    }
+  },
+  "ranking_eligible": false,
+  "claude_headless": "User stop remains in effect; no model sessions launched",
+  "shared_worker_policy": "Unchanged; old no-XLA-flags guard remains deployed. These are separate official support runs.",
+  "upstream": "83f8d2f40fc75218a1d8ec7908cc0bf1c8f99a75",
+  "fallback_activated": false,
+  "gradient_sanity": {
+    "grid": {
+      "tested": 193,
+      "confirmed": 187,
+      "unresolved": [
+        {
+          "index": 54,
+          "parameter": [
+            "center22",
+            "reflectivity"
+          ],
+          "status": "unresolved"
+        },
+        {
+          "index": 59,
+          "parameter": [
+            "mr22",
+            "reflectivity"
+          ],
+          "status": "unresolved"
+        },
+        {
+          "index": 63,
+          "parameter": [
+            "mb22",
+            "reflectivity"
+          ],
+          "status": "unresolved"
+        },
+        {
+          "index": 136,
+          "parameter": [
+            "m20",
+            "reflectivity"
+          ],
+          "status": "unresolved"
+        },
+        {
+          "index": 161,
+          "parameter": [
+            "boundary01",
+            "power"
+          ],
+          "status": "unresolved"
+        },
+        {
+          "index": 163,
+          "parameter": [
+            "m41",
+            "reflectivity"
+          ],
+          "status": "unresolved"
+        }
+      ],
+      "scope": "Additional finite difference sanity at fixed alternative steps; .01 relative/1e-6 absolute, not a high-precision gradient certificate."
+    },
+    "aligo": {
+      "tested": 29,
+      "confirmed": 29,
+      "unresolved": [],
+      "scope": "Additional finite difference sanity at fixed alternative steps; .01 relative/1e-6 absolute, not a high-precision gradient certificate."
+    }
+  },
+  "generalization": {
+    "cases_executed": 14,
+    "all_complete_finite_and_identical_inputs": true,
+    "dense_reference_log_tolerance_exceeded": [
+      "uifo_rand1",
+      "uifo_rand3"
+    ],
+    "scope": "New exact-candidate run against preserved historical pristine archives; reference checkout verified clean at original SHA, archive provenance was historical."
+  },
+  "verdict": {
+    "public_official_correctness": "PASS on both official workloads, three fresh processes each",
+    "extended_numerical_review": "Six grid finite-difference coordinates unresolved; two ill-conditioned random cases differ from dense reference. Both precision diagnostics favor the refined sparse solver.",
+    "all_diagnostics_passed": false,
+    "automatic_fallback": false
+  }
+}

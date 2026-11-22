@@ -1,0 +1,62 @@
+{
+  "reference_sha": "02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f",
+  "probe_sha256": "1dbd627cb5accf9ae2abeaeb25e98bc0e8101915d9afeb8a36a3194e9de97d64",
+  "scope": "Independent pristine JAX matrix assembly; same-input extended residual signal solve, not exact arithmetic.",
+  "ranking_eligible": false,
+  "started_at": 1795306393.5663438,
+  "tasks": [
+    {
+      "case": "uifo_rand1",
+      "command": [
+        "taskset",
+        "-c",
+        "2",
+        "/workspace/venv-feyer/bin/python",
+        "-u",
+        "/workspace/feyer-transfer/independent_accuracy_probe.py",
+        "uifo_rand1",
+        "signal",
+        "/workspace/feyer-transfer/53f38d3-independent-assembly-v1/uifo_rand1/arrays.npz"
+      ],
+      "returncode": 0,
+      "failure": null,
+      "wall_seconds": 15.078942902386189,
+      "memory": {
+        "budget_bytes": 16000000000,
+        "enforcement": "sampled_process_group_rss",
+        "kernel_memory_limit_enforced": false,
+        "sampled_process_group_peak_rss_bytes": 3585187840,
+        "samples": 56,
+        "exceeded": false,
+        "notes": "RSS sampling can miss brief peaks and counts shared pages in each process. It excludes GPU VRAM and does not reserve RAM or constrain other instance work."
+      }
+    },
+    {
+      "case": "uifo_rand3",
+      "command": [
+        "taskset",
+        "-c",
+        "2",
+        "/workspace/venv-feyer/bin/python",
+        "-u",
+        "/workspace/feyer-transfer/independent_accuracy_probe.py",
+        "uifo_rand3",
+        "signal",
+        "/workspace/feyer-transfer/53f38d3-independent-assembly-v1/uifo_rand3/arrays.npz"
+      ],
+      "returncode": 0,
+      "failure": null,
+      "wall_seconds": 14.815291048958898,
+      "memory": {
+        "budget_bytes": 16000000000,
+        "enforcement": "sampled_process_group_rss",
+        "kernel_memory_limit_enforced": false,
+        "sampled_process_group_peak_rss_bytes": 3435376640,
+        "samples": 55,
+        "exceeded": false,
+        "notes": "RSS sampling can miss brief peaks and counts shared pages in each process. It excludes GPU VRAM and does not reserve RAM or constrain other instance work."
+      }
+    }
+  ],
+  "finished_at": 1795306423.4624717
+}

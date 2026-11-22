@@ -1,0 +1,3 @@
+[uifo_amod1] ok n_params=179 n_freq=101 ports=[255] loss=-10.65291633 first_run(no imports)=32.063s build=0.695 forward_lower=1.078 forward_compile=13.193 forward=9.261 sensitivity_lower=0.079 sensitivity_compile=0.497 sensitivity=0.001 gradient_lower=0.286 gradient_compile=4.590 gradient=2.384
+[uifo_fmod1] ok n_params=179 n_freq=101 ports=[255] loss=-5.432005697 first_run(no imports)=30.465s build=0.089 forward_lower=0.800 forward_compile=12.716 forward=9.214 sensitivity_lower=0.046 sensitivity_compile=0.368 sensitivity=0.001 gradient_lower=0.283 gradient_compile=4.579 gradient=2.370
+saved pristine-new.npz

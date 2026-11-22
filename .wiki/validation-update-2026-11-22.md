@@ -1,5 +1,15 @@
 # Validation update after organizer clarification
 
+**Latest target is the fast `53f38d3`, not a fallback to dense `aac9904`.** The
+[final verification packet](../experiments/audits/2026-11-22-fastest/README.md)
+contains three fresh official passes on each public benchmark, the 14-case rerun,
+all-coordinate gradient diagnostics and independent precision investigation.
+Large/aLIGO medians are 0.987/0.626 seconds on one CPU including compilation.
+No fallback was activated. Six additional large-grid finite differences remain
+inconclusive; two ill-conditioned random-reference disagreements are documented
+with precision evidence favoring the fast solver. Earlier evidence below is
+retained history, not the current submission recommendation.
+
 The user supplied the organizers' Discord answers and asked to stop managed Claude
 headless sessions to free compute. At inspection all six managed Claude sessions
 were complete and no Claude headless process was running locally, on AMD, or on

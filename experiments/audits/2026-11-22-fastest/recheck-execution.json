@@ -1,0 +1,213 @@
+{
+  "candidate_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+  "ranking_eligible": false,
+  "scope": "Additional diagnostics and fresh-process official repetitions",
+  "started_at": 1795306208.951238,
+  "deadline_unix": 1795307108.9512384,
+  "harness_sha256": "a1110a4efe81c370e198085b605fbf7409f6b1de47c968d32c9bda747a7d3094",
+  "official_harness": {
+    "upstream_commit": "83f8d2f40fc75218a1d8ec7908cc0bf1c8f99a75",
+    "source": "https://github.com/feyerlabs/start-hack-munich-2026",
+    "files": {
+      "benchmark.py": "b2e8c5367705e220f83c3d5f2bb95301e3148b102dc0d34f5c2c6f5792b9984e",
+      "benchmark_aligo.py": "8c1018592e33f66b0913490159f7e2c20f5a2acec614b95b9bbbda18d90d99fc",
+      "plot_timings.py": "21e19966f36fbffc6bd0e416b5fb99e8d7d6b4593bf5b14b7a0d4e3b5216ca8a"
+    }
+  },
+  "tasks": [
+    {
+      "name": "gradient-grid",
+      "command": [
+        "taskset",
+        "-c",
+        "2",
+        "/workspace/venv-feyer/bin/python",
+        "-u",
+        "-m",
+        "lab.gradient_sanity",
+        "--tree",
+        "/workspace/feyer-transfer/53f38d3-official-v1/candidate-code",
+        "--sha",
+        "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+        "--setup",
+        "grid",
+        "--output",
+        "/workspace/feyer-transfer/53f38d3-recheck-v1/gradient-grid.json",
+        "--recheck",
+        "/workspace/feyer-transfer/53f38d3-extra-v1/gradient-grid.json"
+      ],
+      "returncode": 0,
+      "failure": null,
+      "wall_seconds": 83.60355563648045,
+      "memory": {
+        "budget_bytes": 16000000000,
+        "enforcement": "sampled_process_group_rss",
+        "kernel_memory_limit_enforced": false,
+        "sampled_process_group_peak_rss_bytes": 892522496,
+        "samples": 311,
+        "exceeded": false,
+        "notes": "RSS sampling can miss brief peaks and counts shared pages in each process. It excludes GPU VRAM and does not reserve RAM or constrain other instance work."
+      }
+    },
+    {
+      "name": "gradient-aligo",
+      "command": [
+        "taskset",
+        "-c",
+        "2",
+        "/workspace/venv-feyer/bin/python",
+        "-u",
+        "-m",
+        "lab.gradient_sanity",
+        "--tree",
+        "/workspace/feyer-transfer/53f38d3-official-v1/candidate-code",
+        "--sha",
+        "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+        "--setup",
+        "aligo",
+        "--output",
+        "/workspace/feyer-transfer/53f38d3-recheck-v1/gradient-aligo.json",
+        "--recheck",
+        "/workspace/feyer-transfer/53f38d3-extra-v1/gradient-aligo.json"
+      ],
+      "returncode": 0,
+      "failure": null,
+      "wall_seconds": 3.7663990668952465,
+      "memory": {
+        "budget_bytes": 16000000000,
+        "enforcement": "sampled_process_group_rss",
+        "kernel_memory_limit_enforced": false,
+        "sampled_process_group_peak_rss_bytes": 268128256,
+        "samples": 14,
+        "exceeded": false,
+        "notes": "RSS sampling can miss brief peaks and counts shared pages in each process. It excludes GPU VRAM and does not reserve RAM or constrain other instance work."
+      }
+    },
+    {
+      "name": "official-grid-2",
+      "command": [
+        "taskset",
+        "-c",
+        "2",
+        "/workspace/venv-feyer/bin/python",
+        "-u",
+        "/workspace/feyer-transfer/releases/fb9f79c/experiments/vendor/official-transfer/benchmark.py",
+        "--repo",
+        "/workspace/feyer-transfer/53f38d3-official-v1/candidate-code",
+        "--cpus",
+        "1",
+        "--repeats",
+        "3",
+        "--output",
+        "/workspace/feyer-transfer/53f38d3-recheck-v1/official-grid-2.json"
+      ],
+      "returncode": 0,
+      "failure": null,
+      "wall_seconds": 3.4977488070726395,
+      "memory": {
+        "budget_bytes": 16000000000,
+        "enforcement": "sampled_process_group_rss",
+        "kernel_memory_limit_enforced": false,
+        "sampled_process_group_peak_rss_bytes": 524738560,
+        "samples": 13,
+        "exceeded": false,
+        "notes": "RSS sampling can miss brief peaks and counts shared pages in each process. It excludes GPU VRAM and does not reserve RAM or constrain other instance work."
+      }
+    },
+    {
+      "name": "official-aligo-2",
+      "command": [
+        "taskset",
+        "-c",
+        "2",
+        "/workspace/venv-feyer/bin/python",
+        "-u",
+        "/workspace/feyer-transfer/releases/fb9f79c/experiments/vendor/official-transfer/benchmark_aligo.py",
+        "--repo",
+        "/workspace/feyer-transfer/53f38d3-official-v1/candidate-code",
+        "--cpus",
+        "1",
+        "--repeats",
+        "3",
+        "--output",
+        "/workspace/feyer-transfer/53f38d3-recheck-v1/official-aligo-2.json"
+      ],
+      "returncode": 0,
+      "failure": null,
+      "wall_seconds": 1.6148639805614948,
+      "memory": {
+        "budget_bytes": 16000000000,
+        "enforcement": "sampled_process_group_rss",
+        "kernel_memory_limit_enforced": false,
+        "sampled_process_group_peak_rss_bytes": 306032640,
+        "samples": 6,
+        "exceeded": false,
+        "notes": "RSS sampling can miss brief peaks and counts shared pages in each process. It excludes GPU VRAM and does not reserve RAM or constrain other instance work."
+      }
+    },
+    {
+      "name": "official-grid-3",
+      "command": [
+        "taskset",
+        "-c",
+        "2",
+        "/workspace/venv-feyer/bin/python",
+        "-u",
+        "/workspace/feyer-transfer/releases/fb9f79c/experiments/vendor/official-transfer/benchmark.py",
+        "--repo",
+        "/workspace/feyer-transfer/53f38d3-official-v1/candidate-code",
+        "--cpus",
+        "1",
+        "--repeats",
+        "3",
+        "--output",
+        "/workspace/feyer-transfer/53f38d3-recheck-v1/official-grid-3.json"
+      ],
+      "returncode": 0,
+      "failure": null,
+      "wall_seconds": 3.4974804017692804,
+      "memory": {
+        "budget_bytes": 16000000000,
+        "enforcement": "sampled_process_group_rss",
+        "kernel_memory_limit_enforced": false,
+        "sampled_process_group_peak_rss_bytes": 503713792,
+        "samples": 13,
+        "exceeded": false,
+        "notes": "RSS sampling can miss brief peaks and counts shared pages in each process. It excludes GPU VRAM and does not reserve RAM or constrain other instance work."
+      }
+    },
+    {
+      "name": "official-aligo-3",
+      "command": [
+        "taskset",
+        "-c",
+        "2",
+        "/workspace/venv-feyer/bin/python",
+        "-u",
+        "/workspace/feyer-transfer/releases/fb9f79c/experiments/vendor/official-transfer/benchmark_aligo.py",
+        "--repo",
+        "/workspace/feyer-transfer/53f38d3-official-v1/candidate-code",
+        "--cpus",
+        "1",
+        "--repeats",
+        "3",
+        "--output",
+        "/workspace/feyer-transfer/53f38d3-recheck-v1/official-aligo-3.json"
+      ],
+      "returncode": 0,
+      "failure": null,
+      "wall_seconds": 1.614151056855917,
+      "memory": {
+        "budget_bytes": 16000000000,
+        "enforcement": "sampled_process_group_rss",
+        "kernel_memory_limit_enforced": false,
+        "sampled_process_group_peak_rss_bytes": 304480256,
+        "samples": 6,
+        "exceeded": false,
+        "notes": "RSS sampling can miss brief peaks and counts shared pages in each process. It excludes GPU VRAM and does not reserve RAM or constrain other instance work."
+      }
+    }
+  ],
+  "status": "completed",
+  "finished_at": 1795306306.5500386
+}

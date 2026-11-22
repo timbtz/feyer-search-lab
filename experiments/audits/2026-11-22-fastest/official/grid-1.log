@@ -1,0 +1,35 @@
+Initialize CPU backend: 0.002932 s
+CPU: AMD EPYC 9334 32-Core Processor; affinity: 1; devices: [CpuDevice(id=0)]
+Read and parse public inputs: 0.001458 s
+Build optical setup and prepare inputs: 0.073310 s
+Workload: 101 frequencies; 193 physical design variables; no optimizer
+Forward: trace / lower: 0.036633 s
+Forward: compile: 0.077042 s
+Forward simulation + AD residuals: 0.181084 s
+Sensitivity: trace / lower: 0.025916 s
+Sensitivity: compile: 0.039369 s
+Sensitivity, powers and scalar loss: 0.000873 s
+Gradient: trace / lower: 0.016720 s
+Gradient: compile: 0.053620 s
+Reverse-mode gradient: 0.187442 s
+Transfer results to host: 0.000190 s
+Complete first-run total (excluding validation): 0.997344 s
+Forward: 0.168241 s
+Sensitivity: 0.000604 s
+Gradient: 0.190352 s
+Host transfer: 0.000132 s
+Repeat 01/3: 0.359329 s
+Forward: 0.173672 s
+Sensitivity: 0.000270 s
+Gradient: 0.187421 s
+Host transfer: 0.000134 s
+Repeat 02/3: 0.361497 s
+Forward: 0.172356 s
+Sensitivity: 0.000271 s
+Gradient: 0.187728 s
+Host transfer: 0.000126 s
+Repeat 03/3: 0.360480 s
+Validating outputs, reference sensitivity and finite-difference gradient...
+PASS: reference sensitivity and gradient spot check; full runtime median 0.360480 s
+JSON: /workspace/feyer-transfer/53f38d3-official-v1/candidate-grid/report.json
+Plot: /workspace/feyer-transfer/53f38d3-official-v1/candidate-grid/report.png

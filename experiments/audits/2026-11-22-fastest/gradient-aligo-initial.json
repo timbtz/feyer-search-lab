@@ -1,0 +1,774 @@
+{
+  "schema": "feyer-all-coordinate-gradient-sanity-v1",
+  "candidate_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+  "harness_sha256": "d83dcf4a5a5cfb524c1225e82916e932b5812cded45d0d3c70983aec255b77de",
+  "setup": "aligo",
+  "frequencies": 101,
+  "variables": 29,
+  "cpu_affinity": [
+    2
+  ],
+  "objective": 4.342884072426958e-12,
+  "rtol": 0.01,
+  "atol": 1e-06,
+  "checks": [
+    {
+      "index": 0,
+      "autodiff": -0.00046327013519951684,
+      "samples": [
+        {
+          "step": 0.125,
+          "finite_difference": -0.0004632704396708026
+        },
+        {
+          "step": 0.0625,
+          "finite_difference": -0.0004632702124657441
+        },
+        {
+          "step": 0.03125,
+          "finite_difference": -0.00046327015360300835
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "L0",
+        "power"
+      ]
+    },
+    {
+      "index": 1,
+      "autodiff": -0.052023520058244135,
+      "samples": [
+        {
+          "step": 0.0005,
+          "finite_difference": -0.052023516359717685
+        },
+        {
+          "step": 0.00025,
+          "finite_difference": -0.05202349533029353
+        },
+        {
+          "step": 0.000125,
+          "finite_difference": -0.052023439950928604
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "bs",
+        "reflectivity"
+      ]
+    },
+    {
+      "index": 2,
+      "autodiff": -0.5348957473062622,
+      "samples": [
+        {
+          "step": 0.001,
+          "finite_difference": -0.5348784383777508
+        },
+        {
+          "step": 0.0005,
+          "finite_difference": -0.5348914224208141
+        },
+        {
+          "step": 0.00025,
+          "finite_difference": -0.5348946495127455
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "bs",
+        "tuning"
+      ]
+    },
+    {
+      "index": 3,
+      "autodiff": -0.2830613287834985,
+      "samples": [
+        {
+          "step": 0.0009699988749578109,
+          "finite_difference": -0.28266608790619596
+        },
+        {
+          "step": 0.00048499943747890543,
+          "finite_difference": -0.2829625910013377
+        },
+        {
+          "step": 0.00024249971873945272,
+          "finite_difference": -0.28303664891834834
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "prm",
+        "reflectivity"
+      ]
+    },
+    {
+      "index": 4,
+      "autodiff": 0.723269514069993,
+      "samples": [
+        {
+          "step": 0.09,
+          "finite_difference": 0.542118583212422
+        },
+        {
+          "step": 0.045,
+          "finite_difference": 0.6586654203602379
+        },
+        {
+          "step": 0.0225,
+          "finite_difference": 0.7050000658561807
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "inconclusive",
+      "finite": true,
+      "step_ladder_stable": false,
+      "parameter": [
+        "prm",
+        "tuning"
+      ]
+    },
+    {
+      "index": 5,
+      "autodiff": 190.04764078988612,
+      "samples": [
+        {
+          "step": 0.0009859994749803118,
+          "finite_difference": 86.16059193308999
+        },
+        {
+          "step": 0.0004929997374901559,
+          "finite_difference": 128.81959351393584
+        },
+        {
+          "step": 0.00024649986874507795,
+          "finite_difference": 164.81698356989511
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "inconclusive",
+      "finite": true,
+      "step_ladder_stable": false,
+      "parameter": [
+        "itmx",
+        "reflectivity"
+      ]
+    },
+    {
+      "index": 6,
+      "autodiff": 103.56349588125728,
+      "samples": [
+        {
+          "step": 0.09,
+          "finite_difference": 0.0006470515470942869
+        },
+        {
+          "step": 0.045,
+          "finite_difference": 0.009450874831598257
+        },
+        {
+          "step": 0.0225,
+          "finite_difference": 0.1416607002422706
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "inconclusive",
+      "finite": true,
+      "step_ladder_stable": false,
+      "parameter": [
+        "itmx",
+        "tuning"
+      ]
+    },
+    {
+      "index": 7,
+      "autodiff": -32660.981730254865,
+      "samples": [
+        {
+          "step": 5.000187507042675e-07,
+          "finite_difference": -31884.356556057784
+        },
+        {
+          "step": 2.5000937535213373e-07,
+          "finite_difference": -32460.22908973046
+        },
+        {
+          "step": 1.2500468767606687e-07,
+          "finite_difference": -32610.359929082304
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "etmx",
+        "reflectivity"
+      ]
+    },
+    {
+      "index": 8,
+      "autodiff": -103.9182915221996,
+      "samples": [
+        {
+          "step": 0.08999987500000001,
+          "finite_difference": -0.0007180090234646047
+        },
+        {
+          "step": 0.044999937500000003,
+          "finite_difference": -0.009628634345322379
+        },
+        {
+          "step": 0.022499968750000002,
+          "finite_difference": -0.14127053023945166
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "inconclusive",
+      "finite": true,
+      "step_ladder_stable": false,
+      "parameter": [
+        "etmx",
+        "tuning"
+      ]
+    },
+    {
+      "index": 9,
+      "autodiff": -184.12371355435616,
+      "samples": [
+        {
+          "step": 0.0009859994749803118,
+          "finite_difference": -63.90873105420464
+        },
+        {
+          "step": 0.0004929997374901559,
+          "finite_difference": -110.51482983892008
+        },
+        {
+          "step": 0.00024649986874507795,
+          "finite_difference": -152.4309078680446
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "inconclusive",
+      "finite": true,
+      "step_ladder_stable": false,
+      "parameter": [
+        "itmy",
+        "reflectivity"
+      ]
+    },
+    {
+      "index": 10,
+      "autodiff": 103.56053236616735,
+      "samples": [
+        {
+          "step": 0.001,
+          "finite_difference": 61.17610191556349
+        },
+        {
+          "step": 0.0005,
+          "finite_difference": 84.42574705784314
+        },
+        {
+          "step": 0.00025,
+          "finite_difference": 97.37858406137278
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "inconclusive",
+      "finite": true,
+      "step_ladder_stable": false,
+      "parameter": [
+        "itmy",
+        "tuning"
+      ]
+    },
+    {
+      "index": 11,
+      "autodiff": 32034.8256116085,
+      "samples": [
+        {
+          "step": 5.000187507042675e-07,
+          "finite_difference": 31243.75700135142
+        },
+        {
+          "step": 2.5000937535213373e-07,
+          "finite_difference": 31830.363594748575
+        },
+        {
+          "step": 1.2500468767606687e-07,
+          "finite_difference": 31983.270005784292
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "etmy",
+        "reflectivity"
+      ]
+    },
+    {
+      "index": 12,
+      "autodiff": -103.91531767907705,
+      "samples": [
+        {
+          "step": 0.001,
+          "finite_difference": -61.26169613775302
+        },
+        {
+          "step": 0.0005,
+          "finite_difference": -84.6264125009667
+        },
+        {
+          "step": 0.00025,
+          "finite_difference": 10.197547097176269
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "inconclusive",
+      "finite": true,
+      "step_ladder_stable": false,
+      "parameter": [
+        "etmy",
+        "tuning"
+      ]
+    },
+    {
+      "index": 13,
+      "autodiff": -0.5099951450874698,
+      "samples": [
+        {
+          "step": 0.0007999924997187395,
+          "finite_difference": -0.5099929076364073
+        },
+        {
+          "step": 0.00039999624985936975,
+          "finite_difference": -0.5099945867354283
+        },
+        {
+          "step": 0.00019999812492968487,
+          "finite_difference": -0.5099950045387457
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "srm",
+        "reflectivity"
+      ]
+    },
+    {
+      "index": 14,
+      "autodiff": 0.013688560218002879,
+      "samples": [
+        {
+          "step": 0.09,
+          "finite_difference": 0.013291483575980203
+        },
+        {
+          "step": 0.045,
+          "finite_difference": 0.0135824047189285
+        },
+        {
+          "step": 0.0225,
+          "finite_difference": 0.013661533179912179
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "srm",
+        "tuning"
+      ]
+    },
+    {
+      "index": 15,
+      "autodiff": -0.012906610255085105,
+      "samples": [
+        {
+          "step": 0.01,
+          "finite_difference": -0.012906610314404961
+        },
+        {
+          "step": 0.005,
+          "finite_difference": -0.01290661026992549
+        },
+        {
+          "step": 0.0025,
+          "finite_difference": -0.012906610258830858
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "sq1",
+        "db"
+      ]
+    },
+    {
+      "index": 16,
+      "autodiff": 0.00975453702042895,
+      "samples": [
+        {
+          "step": 0.09,
+          "finite_difference": 0.009753793693988785
+        },
+        {
+          "step": 0.045,
+          "finite_difference": 0.009754351169569105
+        },
+        {
+          "step": 0.0225,
+          "finite_difference": 0.009754490556507494
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "sq1",
+        "angle"
+      ]
+    },
+    {
+      "index": 17,
+      "autodiff": -0.000991728408334713,
+      "samples": [
+        {
+          "step": 0.04,
+          "finite_difference": -0.0009917292288543801
+        },
+        {
+          "step": 0.02,
+          "finite_difference": -0.0009917286134684144
+        },
+        {
+          "step": 0.01,
+          "finite_difference": -0.0009917284596123136
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "itmxsus",
+        "mass"
+      ]
+    },
+    {
+      "index": 18,
+      "autodiff": -0.0009987812093081546,
+      "samples": [
+        {
+          "step": 0.04,
+          "finite_difference": -0.0009987820345269164
+        },
+        {
+          "step": 0.02,
+          "finite_difference": -0.0009987814156144136
+        },
+        {
+          "step": 0.01,
+          "finite_difference": -0.000998781260881222
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "etmxsus",
+        "mass"
+      ]
+    },
+    {
+      "index": 19,
+      "autodiff": -0.000991671010915659,
+      "samples": [
+        {
+          "step": 0.04,
+          "finite_difference": -0.000991671831375151
+        },
+        {
+          "step": 0.02,
+          "finite_difference": -0.0009916712160285255
+        },
+        {
+          "step": 0.01,
+          "finite_difference": -0.000991671062198957
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "itmysus",
+        "mass"
+      ]
+    },
+    {
+      "index": 20,
+      "autodiff": -0.0009987812228130348,
+      "samples": [
+        {
+          "step": 0.04,
+          "finite_difference": -0.0009987820480308208
+        },
+        {
+          "step": 0.02,
+          "finite_difference": -0.000998781429116599
+        },
+        {
+          "step": 0.01,
+          "finite_difference": -0.0009987812743864075
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "etmysus",
+        "mass"
+      ]
+    },
+    {
+      "index": 21,
+      "autodiff": 0.0,
+      "samples": [
+        {
+          "step": 1e-06,
+          "finite_difference": -4.0389678347315804e-22
+        },
+        {
+          "step": 5e-07,
+          "finite_difference": -8.077935669463161e-22
+        },
+        {
+          "step": 2.5e-07,
+          "finite_difference": -1.6155871338926322e-21
+        }
+      ],
+      "difference_scheme": "second-order one-sided",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "L0_prm",
+        "length"
+      ]
+    },
+    {
+      "index": 22,
+      "autodiff": -2.6648795965930137e-16,
+      "samples": [
+        {
+          "step": 0.053,
+          "finite_difference": -1.2520223972529634e-15
+        },
+        {
+          "step": 0.0265,
+          "finite_difference": -1.441176860147296e-15
+        },
+        {
+          "step": 0.01325,
+          "finite_difference": 1.2610297526593668e-15
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "prm_bs",
+        "length"
+      ]
+    },
+    {
+      "index": 23,
+      "autodiff": -1.6864481978638884e-05,
+      "samples": [
+        {
+          "step": 0.0045000000000000005,
+          "finite_difference": -1.6864481973620807e-05
+        },
+        {
+          "step": 0.0022500000000000003,
+          "finite_difference": -1.686448196997905e-05
+        },
+        {
+          "step": 0.0011250000000000001,
+          "finite_difference": -1.6864481936354136e-05
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "bs_itmx",
+        "length"
+      ]
+    },
+    {
+      "index": 24,
+      "autodiff": -3.592349097436955e-05,
+      "samples": [
+        {
+          "step": 3.995,
+          "finite_difference": -3.592352566702134e-05
+        },
+        {
+          "step": 1.9975,
+          "finite_difference": -3.5923499647544626e-05
+        },
+        {
+          "step": 0.99875,
+          "finite_difference": -3.5923493142625065e-05
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "itmx_etmx",
+        "length"
+      ]
+    },
+    {
+      "index": 25,
+      "autodiff": -1.686458830979107e-05,
+      "samples": [
+        {
+          "step": 0.00445,
+          "finite_difference": -1.6864588314225695e-05
+        },
+        {
+          "step": 0.002225,
+          "finite_difference": -1.686458830029731e-05
+        },
+        {
+          "step": 0.0011125,
+          "finite_difference": -1.6864588271014705e-05
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "bs_itmy",
+        "length"
+      ]
+    },
+    {
+      "index": 26,
+      "autodiff": -3.594112918019461e-05,
+      "samples": [
+        {
+          "step": 3.995,
+          "finite_difference": -3.594116387848511e-05
+        },
+        {
+          "step": 1.9975,
+          "finite_difference": -3.594113785473867e-05
+        },
+        {
+          "step": 0.99875,
+          "finite_difference": -3.5941131348855275e-05
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "itmy_etmy",
+        "length"
+      ]
+    },
+    {
+      "index": 27,
+      "autodiff": -3.372907028816346e-05,
+      "samples": [
+        {
+          "step": 0.050525,
+          "finite_difference": -3.3729070239419365e-05
+        },
+        {
+          "step": 0.0252625,
+          "finite_difference": -3.372907027409717e-05
+        },
+        {
+          "step": 0.01263125,
+          "finite_difference": -3.372907028523271e-05
+        }
+      ],
+      "difference_scheme": "central",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "bs_srm",
+        "length"
+      ]
+    },
+    {
+      "index": 28,
+      "autodiff": -1.0493367681603357e-21,
+      "samples": [
+        {
+          "step": 1e-06,
+          "finite_difference": 1.5753864548042264e-11
+        },
+        {
+          "step": 5e-07,
+          "finite_difference": -1.3366915376250583e-11
+        },
+        {
+          "step": 2.5e-07,
+          "finite_difference": 3.4372068113705215e-10
+        }
+      ],
+      "difference_scheme": "second-order one-sided",
+      "status": "passed",
+      "finite": true,
+      "step_ladder_stable": true,
+      "parameter": [
+        "sq1_srm",
+        "length"
+      ]
+    }
+  ],
+  "started_at": 1795306047.1492212,
+  "scope": "Additional finite-difference sanity, not scored and not a 1e-7 precision certificate.",
+  "passed": false,
+  "finished_at": 1795306051.178612
+}

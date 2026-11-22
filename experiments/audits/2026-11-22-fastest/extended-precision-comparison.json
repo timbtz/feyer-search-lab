@@ -1,0 +1,49 @@
+{
+  "scope": "Same candidate assembly and adjoint formulas; only solves refined with extended-precision residuals. Supports solver-rounding diagnosis, not an independent exact physics oracle.",
+  "cases": [
+    {
+      "case": "dev",
+      "candidate": {
+        "max_log_sensitivity_difference_from_extended": 3.872600018439698e-10,
+        "gradient_relative_l2_from_extended": 8.620720970176e-10
+      },
+      "dense_reference": {
+        "max_log_sensitivity_difference_from_extended": 6.786410722270375e-08,
+        "gradient_relative_l2_from_extended": 8.668707606753626e-08
+      }
+    },
+    {
+      "case": "uifo_rand1",
+      "candidate": {
+        "max_log_sensitivity_difference_from_extended": 7.524292300331581e-11,
+        "gradient_relative_l2_from_extended": 5.53089070860774e-13
+      },
+      "dense_reference": {
+        "max_log_sensitivity_difference_from_extended": 0.00020360994614421202,
+        "gradient_relative_l2_from_extended": 4.862573247104275e-06
+      }
+    },
+    {
+      "case": "uifo_rand3",
+      "candidate": {
+        "max_log_sensitivity_difference_from_extended": 2.7419975623388382e-08,
+        "gradient_relative_l2_from_extended": 2.922244031245927e-09
+      },
+      "dense_reference": {
+        "max_log_sensitivity_difference_from_extended": 5.81016782081889e-05,
+        "gradient_relative_l2_from_extended": 1.5005984614424152e-05
+      }
+    },
+    {
+      "case": "aligo",
+      "candidate": {
+        "max_log_sensitivity_difference_from_extended": 7.460698725481052e-13,
+        "gradient_relative_l2_from_extended": 6.228043362852956e-12
+      },
+      "dense_reference": {
+        "max_log_sensitivity_difference_from_extended": 1.283169126509165e-10,
+        "gradient_relative_l2_from_extended": 2.564632192303485e-10
+      }
+    }
+  ]
+}

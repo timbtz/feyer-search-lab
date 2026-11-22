@@ -1,0 +1,560 @@
+{
+  "schema": "feyer-all-coordinate-gradient-sanity-v1",
+  "candidate_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+  "harness_sha256": "5705ccf29284bf483f55f055fba4dd1ce72a10d5ad9e5abf74bfcd50ea3ea93c",
+  "setup": "aligo",
+  "frequencies": 101,
+  "variables": 29,
+  "cpu_affinity": [
+    2
+  ],
+  "objective": 4.342884072426958e-12,
+  "rtol": 0.01,
+  "atol": 1e-06,
+  "checks": [
+    {
+      "index": 4,
+      "autodiff": 0.723269514069993,
+      "attempts": [
+        {
+          "index": 4,
+          "autodiff": 0.723269514069993,
+          "samples": [
+            {
+              "step": 0.0009,
+              "finite_difference": 0.7232389032473968
+            },
+            {
+              "step": 0.00045,
+              "finite_difference": 0.7232618585319194
+            },
+            {
+              "step": 0.000225,
+              "finite_difference": 0.7232676035415727
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "passed",
+          "finite": true,
+          "step_ladder_stable": true
+        },
+        {
+          "index": 4,
+          "autodiff": 0.723269514069993,
+          "samples": [
+            {
+              "step": 9e-06,
+              "finite_difference": 0.7232689150044813
+            },
+            {
+              "step": 4.5e-06,
+              "finite_difference": 0.723270224852173
+            },
+            {
+              "step": 2.25e-06,
+              "finite_difference": 0.7232714710358393
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "passed",
+          "finite": true,
+          "step_ladder_stable": true
+        },
+        {
+          "index": 4,
+          "autodiff": 0.723269514069993,
+          "samples": [
+            {
+              "step": 9.0,
+              "finite_difference": 4.7602680424474464e-05
+            },
+            {
+              "step": 4.5,
+              "finite_difference": 0.0003788078619108139
+            },
+            {
+              "step": 2.25,
+              "finite_difference": 0.004275948444062699
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "inconclusive",
+          "finite": true,
+          "step_ladder_stable": false
+        }
+      ],
+      "status": "passed",
+      "parameter": [
+        "prm",
+        "tuning"
+      ]
+    },
+    {
+      "index": 5,
+      "autodiff": 190.04764078988612,
+      "attempts": [
+        {
+          "index": 5,
+          "autodiff": 190.04764078988612,
+          "samples": [
+            {
+              "step": 9.859994749803118e-06,
+              "finite_difference": 189.994256817588
+            },
+            {
+              "step": 4.929997374901559e-06,
+              "finite_difference": 190.03429060891403
+            },
+            {
+              "step": 2.4649986874507796e-06,
+              "finite_difference": 190.04430177608066
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "passed",
+          "finite": true,
+          "step_ladder_stable": true
+        },
+        {
+          "index": 5,
+          "autodiff": 190.04764078988612,
+          "samples": [
+            {
+              "step": 9.859994749803118e-08,
+              "finite_difference": 190.04761163042693
+            },
+            {
+              "step": 4.929997374901559e-08,
+              "finite_difference": 190.04761193896474
+            },
+            {
+              "step": 2.4649986874507796e-08,
+              "finite_difference": 190.04781904050998
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "passed",
+          "finite": true,
+          "step_ladder_stable": true
+        },
+        {
+          "index": 5,
+          "autodiff": 190.04764078988612,
+          "samples": [
+            {
+              "step": 0.01,
+              "finite_difference": -135.55534290951562
+            },
+            {
+              "step": 0.005,
+              "finite_difference": -198.22927435254834
+            },
+            {
+              "step": 0.0025,
+              "finite_difference": -264.0213465305136
+            }
+          ],
+          "difference_scheme": "second-order one-sided",
+          "status": "inconclusive",
+          "finite": true,
+          "step_ladder_stable": false
+        }
+      ],
+      "status": "passed",
+      "parameter": [
+        "itmx",
+        "reflectivity"
+      ]
+    },
+    {
+      "index": 6,
+      "autodiff": 103.56349588125728,
+      "attempts": [
+        {
+          "index": 6,
+          "autodiff": 103.56349588125728,
+          "samples": [
+            {
+              "step": 0.0009,
+              "finite_difference": 65.08550547584143
+            },
+            {
+              "step": 0.00045,
+              "finite_difference": 87.14070317171522
+            },
+            {
+              "step": 0.000225,
+              "finite_difference": 98.43817131372226
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "inconclusive",
+          "finite": true,
+          "step_ladder_stable": false
+        },
+        {
+          "index": 6,
+          "autodiff": 103.56349588125728,
+          "samples": [
+            {
+              "step": 9e-06,
+              "finite_difference": 103.5545080637965
+            },
+            {
+              "step": 4.5e-06,
+              "finite_difference": 103.56124887169668
+            },
+            {
+              "step": 2.25e-06,
+              "finite_difference": 103.56293294525088
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "passed",
+          "finite": true,
+          "step_ladder_stable": true
+        },
+        {
+          "index": 6,
+          "autodiff": 103.56349588125728,
+          "samples": [
+            {
+              "step": 9.0,
+              "finite_difference": -9.8495775131793e-06
+            },
+            {
+              "step": 4.5,
+              "finite_difference": -5.811551226475586e-06
+            },
+            {
+              "step": 2.25,
+              "finite_difference": -7.045125018577557e-06
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "inconclusive",
+          "finite": true,
+          "step_ladder_stable": false
+        }
+      ],
+      "status": "passed",
+      "parameter": [
+        "itmx",
+        "tuning"
+      ]
+    },
+    {
+      "index": 8,
+      "autodiff": -103.9182915221996,
+      "attempts": [
+        {
+          "index": 8,
+          "autodiff": -103.9182915221996,
+          "samples": [
+            {
+              "step": 0.0008999987500000001,
+              "finite_difference": -65.18609136774168
+            },
+            {
+              "step": 0.00044999937500000005,
+              "finite_difference": -87.35928666761485
+            },
+            {
+              "step": 0.00022499968750000002,
+              "finite_difference": -98.74524953892103
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "inconclusive",
+          "finite": true,
+          "step_ladder_stable": false
+        },
+        {
+          "index": 8,
+          "autodiff": -103.9182915221996,
+          "samples": [
+            {
+              "step": 8.999987500000001e-06,
+              "finite_difference": -103.90921560537728
+            },
+            {
+              "step": 4.4999937500000005e-06,
+              "finite_difference": -103.9160207022819
+            },
+            {
+              "step": 2.2499968750000003e-06,
+              "finite_difference": -103.9177222496267
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "passed",
+          "finite": true,
+          "step_ladder_stable": true
+        },
+        {
+          "index": 8,
+          "autodiff": -103.9182915221996,
+          "samples": [
+            {
+              "step": 8.999987500000001,
+              "finite_difference": -6.22627781387566e-06
+            },
+            {
+              "step": 4.499993750000001,
+              "finite_difference": -7.801123376275835e-06
+            },
+            {
+              "step": 2.2499968750000003,
+              "finite_difference": -3.024439832622443e-06
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "inconclusive",
+          "finite": true,
+          "step_ladder_stable": false
+        }
+      ],
+      "status": "passed",
+      "parameter": [
+        "etmx",
+        "tuning"
+      ]
+    },
+    {
+      "index": 9,
+      "autodiff": -184.12371355435616,
+      "attempts": [
+        {
+          "index": 9,
+          "autodiff": -184.12371355435616,
+          "samples": [
+            {
+              "step": 9.859994749803118e-06,
+              "finite_difference": -184.053870234645
+            },
+            {
+              "step": 4.929997374901559e-06,
+              "finite_difference": -184.10624437755408
+            },
+            {
+              "step": 2.4649986874507796e-06,
+              "finite_difference": -184.11934722609237
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "passed",
+          "finite": true,
+          "step_ladder_stable": true
+        },
+        {
+          "index": 9,
+          "autodiff": -184.12371355435616,
+          "samples": [
+            {
+              "step": 9.859994749803118e-08,
+              "finite_difference": -184.12362066967765
+            },
+            {
+              "step": 4.929997374901559e-08,
+              "finite_difference": -184.1235621907672
+            },
+            {
+              "step": 2.4649986874507796e-08,
+              "finite_difference": -184.12341376102137
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "passed",
+          "finite": true,
+          "step_ladder_stable": true
+        },
+        {
+          "index": 9,
+          "autodiff": -184.12371355435616,
+          "samples": [
+            {
+              "step": 0.01,
+              "finite_difference": -158.92893781621655
+            },
+            {
+              "step": 0.005,
+              "finite_difference": -249.10931426967858
+            },
+            {
+              "step": 0.0025,
+              "finite_difference": -363.12066985852664
+            }
+          ],
+          "difference_scheme": "second-order one-sided",
+          "status": "inconclusive",
+          "finite": true,
+          "step_ladder_stable": false
+        }
+      ],
+      "status": "passed",
+      "parameter": [
+        "itmy",
+        "reflectivity"
+      ]
+    },
+    {
+      "index": 10,
+      "autodiff": 103.56053236616735,
+      "attempts": [
+        {
+          "index": 10,
+          "autodiff": 103.56053236616735,
+          "samples": [
+            {
+              "step": 1e-05,
+              "finite_difference": 103.54943908266816
+            },
+            {
+              "step": 5e-06,
+              "finite_difference": 103.55775655775237
+            },
+            {
+              "step": 2.5e-06,
+              "finite_difference": 103.5598350165269
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "passed",
+          "finite": true,
+          "step_ladder_stable": true
+        },
+        {
+          "index": 10,
+          "autodiff": 103.56053236616735,
+          "samples": [
+            {
+              "step": 1.0000000000000001e-07,
+              "finite_difference": 103.56056336223766
+            },
+            {
+              "step": 5.0000000000000004e-08,
+              "finite_difference": 103.56031695210065
+            },
+            {
+              "step": 2.5000000000000002e-08,
+              "finite_difference": 103.56070853173522
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "passed",
+          "finite": true,
+          "step_ladder_stable": true
+        },
+        {
+          "index": 10,
+          "autodiff": 103.56053236616735,
+          "samples": [
+            {
+              "step": 0.1,
+              "finite_difference": 0.0004593319535739493
+            },
+            {
+              "step": 0.05,
+              "finite_difference": 0.006285564280406053
+            },
+            {
+              "step": 0.025,
+              "finite_difference": 0.09410532670147909
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "inconclusive",
+          "finite": true,
+          "step_ladder_stable": false
+        }
+      ],
+      "status": "passed",
+      "parameter": [
+        "itmy",
+        "tuning"
+      ]
+    },
+    {
+      "index": 12,
+      "autodiff": -103.91531767907705,
+      "attempts": [
+        {
+          "index": 12,
+          "autodiff": -103.91531767907705,
+          "samples": [
+            {
+              "step": 1e-05,
+              "finite_difference": -103.9041142995121
+            },
+            {
+              "step": 5e-06,
+              "finite_difference": -103.9125158708454
+            },
+            {
+              "step": 2.5e-06,
+              "finite_difference": -103.91461789376476
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "passed",
+          "finite": true,
+          "step_ladder_stable": true
+        },
+        {
+          "index": 12,
+          "autodiff": -103.91531767907705,
+          "samples": [
+            {
+              "step": 1.0000000000000001e-07,
+              "finite_difference": -103.91531536710627
+            },
+            {
+              "step": 5.0000000000000004e-08,
+              "finite_difference": -103.91525377463653
+            },
+            {
+              "step": 2.5000000000000002e-08,
+              "finite_difference": -103.91526946901493
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "passed",
+          "finite": true,
+          "step_ladder_stable": true
+        },
+        {
+          "index": 12,
+          "autodiff": -103.91531767907705,
+          "samples": [
+            {
+              "step": 0.1,
+              "finite_difference": -0.0005147646585990096
+            },
+            {
+              "step": 0.05,
+              "finite_difference": -0.006438406794508911
+            },
+            {
+              "step": 0.025,
+              "finite_difference": -0.09399397157504819
+            }
+          ],
+          "difference_scheme": "central",
+          "status": "inconclusive",
+          "finite": true,
+          "step_ladder_stable": false
+        }
+      ],
+      "status": "passed",
+      "parameter": [
+        "etmy",
+        "tuning"
+      ]
+    }
+  ],
+  "started_at": 1795306293.1443374,
+  "scope": "Additional finite-difference sanity, not scored and not a 1e-7 precision certificate. Predeclared alternative step sizes on previously nonpassing coordinates; original results retained.",
+  "prior_sha256": "f2e7451ef10d8c57f12000c726548bc4093c9d316e8c1450a574373c58637ba5",
+  "passed": true,
+  "finished_at": 1795306296.0505626
+}
