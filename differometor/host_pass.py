@@ -357,11 +357,6 @@ def _products(pattern):
     return _PRODUCTS[pattern]
 
 
-# Legacy relative tolerance for the signal-cotangent collinearity shortcut.
-# Noise-source Hermiticity below requires exact equality: a small asymmetry
-# can be amplified by the inverse signal system in the adjoint solve.
-HERMITIAN_TOLERANCE = 8 * np.finfo(np.float64).eps
-
 _TRANSPOSES = {}
 
 
@@ -380,22 +375,23 @@ def _transpose_index(pattern):
 
 
 def _collinear_coefficient(vector, direction):
-    """alpha with vector == alpha * direction (to roundoff), else None.
+    """alpha whose computed product equals the supplied vector exactly, else None.
 
-    Least-squares alpha, accepted only if the residual is within
-    HERMITIAN_TOLERANCE * max|vector| (a few units of double roundoff). A zero
-    vector gives alpha = 0; a zero direction never matches a nonzero vector.
+    A small collinearity residual can be amplified by the inverse system. Keep
+    the refined transpose solve for every nonzero computed residual, including
+    roundoff-sized differences. A zero vector matches any finite direction;
+    a zero direction never matches a nonzero vector.
     """
     scale = np.max(np.abs(vector)) if vector.size else 0.0
     if scale == 0:
-        return 0.0
+        return 0.0 if np.all(np.isfinite(direction)) else None
     if not np.isfinite(scale):
         return None
     norm = np.real(np.vdot(direction, direction))
     if norm == 0 or not np.isfinite(norm):
         return None
     alpha = np.vdot(direction, vector) / norm
-    if np.max(np.abs(vector - alpha * direction)) <= HERMITIAN_TOLERANCE * scale:
+    if np.array_equal(vector, alpha * direction):
         return alpha
     return None
 

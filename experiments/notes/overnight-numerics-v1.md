@@ -3151,3 +3151,102 @@ best or performance claim is made for34 before that evidence.
 All previous pristine signal/gradient33,161,180 and rand1/rand3 disagreements,
 unresolved grid FD54,59,63,136,161,163 and first-order reverse-only compatibility
 limits remain visible. Earlier aLIGO extra coordinate confirmation was29/29.
+
+## Candidate34 feedback and candidate35 collinearity repair
+
+Candidate34 SHA86860bdcbf4b02888b5db6ca2aa563234db0721a, dual job
+0040cde2d2cd4b8b8be168f2ae794354 (grid-1/2/3 and aligo-1/2/3).
+All six official runs pass. Large complete fresh-process samples in seconds:
+[0.830339940264821,0.8017230369150639,0.8163026496767998], median
+0.8163026496767998, range0.8017230369150639–0.830339940264821.
+Official aLIGO samples separately:
+[0.5522543229162693,0.5516744591295719,0.5491008665412664], median
+0.5516744591295719, range0.5491008665412664–0.5522543229162693.
+No confirmed improvement; independent review absent, ranges overlap admitted7.
+Against7's earlier unpaired medians this is +14.724966ms large/+3.119303ms
+aligo, not a causal regression estimate. No new paired parent cohort was supplied.
+Retain all samples, including grid-1 imports294.057457ms and grid-3
+forward200.199405ms. CPU2/one logical CPU/library threads1/no persistent cache;
+external job overlap remains unknown. No combined score or organizer ranking claim.
+
+Median measured phases (ms), with deltas against7's earlier cohort:
+large forward186.227094 (+5.064007), reverse84.672386 (-0.685038),
+build72.366131 (-1.627949), imports266.551157 (+0.950543).
+aLIGO forward33.085752 (+0.195602), reverse14.608346 (+0.224194),
+build38.302202 (+0.339657), imports266.015533 (+2.506725).
+Sampled peak RSS maxima large535625728 bytes, aligo313241600 bytes,
+generalization881901568 bytes. Sampling is not a peak-memory guarantee.
+
+Inspected every saved per-array comparison record (carrier, signal, noise,
+powers, sensitivity, loss, gradient). All six official array archive hashes and
+strict comparison records are identical to33. All14 generalization initial-seed
+case records and pristine case records are also identical to33; seed14/14 pass,
+pristine4/14 pass. Raw remote NPZ arrays were not reopened locally. Candidate and
+seed are within comparison bounds, not asserted bitwise identical: official
+large gradient max difference5.686350050382316e-6, relativeL2
+8.181451454702114e-11; aligo3.637978807091713e-11 and1.294943745154708e-15.
+Pristine grid131 signal/3 gradient/1 loss failures and official aligo1 loss
+failure persist. Generalization rand1/rand3 log sensitivity errors remain
+2.036099068405406e-4/5.8100919558157216e-5; other inherited failures remain.
+No requested noise-guard trigger counts or source review were returned.
+
+Decision: retain34 provisionally for its demonstrated synthetic correctness
+repair, not as a timing winner or admitted shared improvement. Candidate35 fixes
+the separate collinearity issue recorded in34. This is a conservative guard
+repair on34, not a renewed allocation/interpreter optimization or an automatic
+combination of phase winners. Admitted7 remains the strongest reviewed timing
+reference. Candidate35 SHA pending supervisor commit. Other simulator files
+remain as in7; only host_pass.py has these two guard repairs.
+
+The old _collinear_coefficient admits vector[1,e], direction[1,0] with alpha1,
+e=4*binary64_eps, discarding the second cotangent coordinate. For
+A=diag(1,1e-12), A^-T vector has second coordinate8.881784197001252e-4,
+which the reused solution omits. The component scales linearly with input scale.
+This is a generic numeric example, not a claim that the official workload
+triggers the failure.
+
+Change35: keep the least-squares alpha calculation but accept reuse only when
+np.array_equal(vector, alpha*direction). Every nonzero computed residual keeps
+the existing refined transpose solve. Zero vectors accept finite directions;
+nonfinite directions now reject even for a zero vector. Remove the now unused
+HERMITIAN_TOLERANCE constant. No numerical input, derivative contribution,
+factorization, correction-count limit, correction tolerance, transpose convention,
+physical workload or JAX stage changes. This computed equality test is a narrower
+sufficient condition for this implementation's reuse decision, not a proof of
+exact real-arithmetic collinearity or universal accuracy of reused solutions.
+Floating multiplication and the already computed forward solve retain their
+normal numerical errors. Mathematically collinear vectors can be rejected when
+the least-squares alpha or product rounds differently; overhead must be counted.
+
+Local small synthetic evidence:
+experiments/notes/overnight-numerics-collinearity-check.py AST-loads actual35
+and34 guard functions plus unchanged sparse product/refined solver; no JAX or
+optical benchmark is executed and no timings are collected.
+-480 random guard checks across sizes2/5/13, complex strided directions, four
+ scaling coefficients and changed numeric inputs.171 accepted products equal
+ supplied vectors exactly;309 reject, including all240 deliberately perturbed
+ vectors. Thus69 of240 unperturbed computed scalar multiples fall back too.
+-23 special checks cover zero directions/vectors, signed zero, real/complex
+ values, exact accepted scalars, NaN and infinities.
+-18 transpose-solve repair checks vary diagonal conditioning1/1e8/1e12,
+ input scales2^-20/1/2^20 and real/imaginary perturbations. Old guard accepts
+ and new guard rejects all18. Fallback results agree with independent70-digit
+ Decimal central differences of a diagonal linear loss (max absolute difference
+0.0 in binary64 comparison); maximum old absolute error931.3225746154785 at
+ largest input scale and conditioning. This is an absolute error, not normalized
+ optical accuracy. Subsequent exactly collinear inputs retain reuse.
+-git diff --check and syntax parsing pass. Historical hermitian-check.py records
+ candidate34's then-unrepaired collinearity assertion and is revision-specific;
+ it is not a current35 test. No historical failure has been erased.
+
+Request supervisor evaluation on one exact new SHA: both unchanged official
+benchmarks, all saved output/gradient comparisons, all14 generalization cases
+including amod/fmod, and independent review of both guard repairs. Separately
+measure old-accepted/new-rejected signal vectors and noise rows, guard/fallback
+cost and gradient changes on varied parameters/frequencies/modulation. Investigate
+any new discrepancy before attributing it to improved accuracy. Timing impact
+unknown; this is ready for correctness/performance evaluation, not promotion.
+If promising, obtain paired fresh-process candidate/parent repetitions under
+matching resource policy. Keep all existing pristine disagreements and unresolved
+grid FD54,59,63,136,161,163 visible; earlier extra aligo coordinates29/29 passed.
+Whole-pass custom VJP still lacks forward-mode JVP and Hessian support.
