@@ -48,8 +48,10 @@ def _digest(*arrays):
     for array in arrays:
         array = np.ascontiguousarray(array)
         digest.update(str(array.dtype).encode())
-        digest.update(np.asarray(array.shape, dtype=np.int64).tobytes())
-        digest.update(array.tobytes())
+        # hashlib reads contiguous buffers directly. Keep the dtype/shape/data
+        # byte stream unchanged without allocating temporary bytes objects.
+        digest.update(np.asarray(array.shape, dtype=np.int64))
+        digest.update(array)
     return digest.hexdigest()
 
 
@@ -87,11 +89,9 @@ class SystemPlan:
     def values(self, rows, base):
         """Structural values (B, nnz_total) after the ordered update writes."""
         blocks = [evaluate_function(f, rows[:, indices]) for f, indices, _ in self.groups]
-        outputs = np.concatenate(blocks, axis=1).reshape(rows.shape[0], -1)
+        outputs = np.concatenate(blocks, axis=1).reshape(rows.shape[0], -1)[:, self.flat_selection]
         values = np.repeat(np.asarray(base, dtype=np.complex128)[None, :], rows.shape[0], axis=0)
-        # Compose the output selection with the last-write mask using the
-        # existing static indices; avoid materializing outputs for overwritten writes.
-        values[:, self.last_positions] = outputs[:, self.last_selection]
+        values[:, self.writes[self.last]] = outputs[:, self.last]
         return values
 
     def backward(self, rows, values_bar):
