@@ -13,6 +13,7 @@ def main():
     p.add_argument('--tree', required=True, type=Path)
     p.add_argument('--output', required=True, type=Path)
     p.add_argument('--harness', required=True, type=Path)
+    p.add_argument('--recheck-from', type=Path)
     args = p.parse_args()
     sha = '53f38d342c3228c052785e8c9d63b6ce9c832dd1'
     args.output.mkdir(parents=True, exist_ok=False)
@@ -22,12 +23,15 @@ def main():
     tasks = []
     for setup in ('grid', 'aligo'):
         tasks.append((f'gradient-{setup}', [python, '-u', '-m', 'lab.gradient_sanity', *common,
-                      '--setup', setup, '--output', str(args.output/f'gradient-{setup}.json')]))
+                      '--setup', setup, '--output', str(args.output/f'gradient-{setup}.json'),
+                      *(['--recheck', str(args.recheck_from/f'gradient-{setup}.json')] if args.recheck_from else [])]))
     tasks.append(('precision', [python, '-u', '-m', 'lab.solver_precision_probe', *common,
                   '--harness', str(args.harness), '--output', str(args.output/'precision-arrays')]))
     cases = 'dev,dev_perturbed,uifo_20_5000,uifo_rand1,uifo_rand2,uifo_rand3,voyager,aligo,dev_randparams,uifo_randparams1,uifo_randparams2,uifo_randparams3,uifo_amod1,uifo_fmod1'
     tasks.append(('generalization', [python, '-u', str(args.harness), 'run', '--tree', str(args.tree),
                   '--out', str(args.output/'generalization.npz'), '--cases', cases]))
+    if args.recheck_from:
+        tasks = [task for task in tasks if task[0].startswith('gradient-')]
     for repeat in (2, 3):
         for setup in ('grid', 'aligo'):
             entry = 'benchmark.py' if setup == 'grid' else 'benchmark_aligo.py'
@@ -48,11 +52,13 @@ def main():
                 folder = args.output/name
                 folder.mkdir()
                 command = ['taskset', '-c', '2', *command]
-                result = execute(command, runtime, folder, deadline-time.monotonic(), fds)
+                # Official benchmark verifies its import comes from --repo.
+                cwd = args.tree if name.startswith('official-') else runtime
+                result = execute(command, cwd, folder, deadline-time.monotonic(), fds)
                 receipt['tasks'].append({'name': name, 'command': command, **result})
                 atomic_json(args.output/'execution.json', receipt)
                 print(name, result, flush=True)
-            receipt['status'] = 'completed'
+            receipt['status'] = 'completed' if all(t['returncode'] == 0 and t['failure'] is None for t in receipt['tasks']) else 'completed_with_execution_errors'
     except Exception as error:
         receipt.update(status='blocked', error=repr(error))
         raise
