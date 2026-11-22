@@ -248,3 +248,75 @@ Candidate 1 is not intended to touch any of them.
   change (different rounding), needs strict comparison; gain probably small at D = 1.
 - Measure refinement step counts per solve; only consider a different stop criterion with
   ill-conditioned/modulated evidence.
+
+## Codex continuation: candidate 8 feedback and preserved turn 10
+
+- Session remains `overnight-numerics-v1`; inherited Claude thread
+  `57c7de44-c9ff-460f-88f1-9ffa79a35479`. Fixed deadline remains 2026-11-22 09:27:44 UTC.
+  Codex continuation has shell access. No agents, installs, commits, network calls or official
+  workload executions were used. Local synthetic inspection uses the existing read-only
+  `.lab/venv-topology-smac` Python (NumPy/SciPy, no JAX), not the official timing environment.
+- Candidate 8 SHA `f950024546139ea943c5ddeda948e015aef235d2`, request
+  `a3a819f27eab41379d9ecf9fa05c0092`: all six official runs passed.
+  Grid samples 0.8341007065, 0.8038977999, 0.7956203520 s; median 0.8038977999,
+  range 0.7956203520–0.8341007065 s. Forward 185.06/183.26/181.00 ms;
+  gradient 85.82/86.95/85.48 ms. No gradient reduction versus candidate 7's 84.6–86.9 ms.
+  aLIGO samples 0.5483614039, 0.5439532716, 0.5498941857 s; median 0.5483614039,
+  range 0.5439532716–0.5498941857 s; gradient 13.24/13.64/13.61 ms.
+  Peak sampled RSS: grid up to 609701888 B, aLIGO up to 306778112 B,
+  generalization 841793536 B. Other-host contention not excluded.
+- Seed comparisons pass for all physical arrays and gradients on both benchmarks and 14 extra
+  cases. Grid gradient max difference 5.68635e-6, relL2 8.18145e-11 versus initial seed;
+  aLIGO 3.63798e-11, relL2 1.29494e-15. Pristine comparisons still fail: grid signal 131,
+  gradient 3, loss 1; aLIGO loss 1; random-topology sensitivity disagreements persist.
+  Generalization top-level `passed=false` reflects the pristine comparison; its seed comparison
+  passes. No new numerical regression is reported. Source review was not supplied.
+- Correction to earlier byte-identity shorthand: initial-seed generalization archive in this
+  receipt is `a64192e8...`, whereas candidate 8 is `4a1ca4c5...`. Passing tolerance checks do
+  not establish byte identity to the original seed. The separately labelled artifact reference
+  equals the candidate archive; do not confuse these references.
+- Decision: reject candidate 8 as an unconfirmed speed experiment. Its ranges overlap candidate
+  7 and large median is slightly slower. Do not repeat whole-row batching. The partial turn 10
+  edit had already removed both candidate 8 changes. Verified that the resulting simulator
+  sources were exactly candidate 7 (`git diff ee4fea2 -- differometor` empty) before new edits.
+  History is preserved; no reset or cross-lane transfer occurred.
+
+## Candidate 9: prepare residual-product coefficients once per refined solve
+
+- Scientific parent/source is admitted candidate 7 `ee4fea28c04d482566be16e916b609d7c6a99e5e`;
+  Git parent is feedback commit `a1ab6a8` after candidate 8. Candidate SHA/job IDs pending
+  supervisor commit/evaluation. Only production change versus candidate 7 is in host_pass.py.
+- Concrete redundant work: `_Products.apply` in each refinement iteration formed N products in
+  CSC order, then gathered the entire (nnz, RHS-count) product into stable row order. H products
+  conjugated the same coefficients every iteration. `_solve` can perform three iterations with
+  unchanged coefficients; the solution vector changes each time.
+- Add one topology-derived `row_columns` index array. `_Products.bind` prepares row-ordered
+  coefficients for N, conjugated coefficients for H, or unchanged coefficients for T once per
+  solve. Its callable still gathers the current solution, multiplies complex128 entries and
+  uses the same stable `np.add.reduceat` segments in the same order. The original `apply` remains
+  for one-off products. Coefficients stay local to a solve; factors, matrices and outputs are
+  still recomputed each forward. No zero-valued entry or derivative is removed.
+- Allocation accounting, not elapsed-time evidence: for m nonzeros, K RHS columns and r
+  corrections, N previously copied r*m*K complex products in permutations; now it copies m
+  coefficients once. H conjugations fall from r*m to m entries. At the recorded grid m=2533,
+  K=2, r=1..3 this removes 40528..202640 bytes of permutation allocation per N solve.
+  This is generic in m/K/r, not a dispatch condition. Closure/setup overhead may erase the gain,
+  especially for one correction or a small setup. No claimed millisecond improvement yet.
+- Refinement limit 3, tolerance 1e-14, stop criterion, SuperLU ordering, solve RHS and correction
+  arithmetic are unchanged. Both fallback/shortcut derivative paths remain candidate 7's.
+- Local validation: `experiments/notes/overnight-numerics-products-check.py` extracts only the
+  actual `_Products` and `_solve` AST definitions, comparing candidate against committed
+  candidate 7. 144 products and 144 solves are byte-identical, with identical refinement counts
+  (111 one-correction, 33 two-correction). Sizes 5/13/37, N/T/H, vector and 1/2/4 RHS, ordinary
+  and badly scaled matrices, perturbed values and structural zero entries. Maximum product
+  difference against independent dense multiplication divided by max(1,max|dense result|)
+  was 4.3028432462288176e-16. This is kernel evidence, not an optical/gradient certificate.
+  `git diff --check` passes. No local official benchmark was run.
+- Supervisor next step: both unchanged full official benchmarks on the new exact SHA, all saved
+  arrays/gradients versus candidate 7 and seed, 14-case diagnostics including modulation and
+  difficult random cases, independent review. Expect byte identity to candidate 7 on this
+  evaluator; investigate any difference rather than labelling it rounding. For a promising phase
+  result, obtain matching paired fresh-process repeats versus candidate 7. Keep candidate 7 as
+  strongest admitted revision unless the new exact revision clears all acceptance requirements.
+- Existing strict-reference and finite-difference questions above remain unresolved. First-order
+  reverse-only compatibility is unchanged. This submission does not claim a universal certificate.
