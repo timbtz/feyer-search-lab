@@ -24,10 +24,6 @@ dy = a dz + b conj(dz): holomorphic operations keep b = 0 and conjugation swaps
 a and b. Non-holomorphic outputs (squeezer lower terms, corrected right
 optomechanical phase) are therefore exact, and the same source code defines the
 values on both paths.
-
-Jacobian evaluation shares primal intermediates across requested directions.
-Each direction retains the scalar-seed arithmetic rules, including the distinction
-between an inactive input and an active derivative that currently equals zero.
 """
 
 from __future__ import annotations
@@ -97,136 +93,8 @@ class Dual:
         return Dual(self.v ** exponent, slope * self.a, slope * self.b)
 
 
-class _Directions:
-    """Shared primal with independent scalar-seed Wirtinger directions.
-
-    Dictionary membership tracks structural activity, never a numerical zero.
-    An absent direction must use the scalar operand rule, rather than adding
-    zero derivatives: the latter changes singular/nonfinite propagation.
-    """
-
-    __slots__ = ("v", "directions")
-    __array_ufunc__ = None
-
-    def __init__(self, value, directions):
-        self.v, self.directions = value, directions
-
-    def __neg__(self):
-        return _Directions(-self.v, {s: (-a, -b) for s, (a, b) in self.directions.items()})
-
-    def _binary(self, other, operation):
-        # Ordinary operands have no active directions. Apply the existing scalar
-        # rules directly, without constructing an empty map and a union of keys.
-        if not isinstance(other, _Directions):
-            if operation == "add":
-                return _Directions(self.v + other, self.directions.copy())
-            if operation == "sub":
-                return _Directions(self.v - other, self.directions.copy())
-            if operation == "mul":
-                return _Directions(self.v * other,
-                                   {s: (a * other, b * other) for s, (a, b) in self.directions.items()})
-            return _Directions(self.v / other,
-                               {s: (a / other, b / other) for s, (a, b) in self.directions.items()})
-        left, right = self.v, other.v
-        right_directions = other.directions
-        if operation == "add":
-            value = left + right
-        elif operation == "sub":
-            value = left - right
-        elif operation == "mul":
-            value = left * right
-        else:
-            value = left / right
-        directions = {}
-        for slot in self.directions.keys() | right_directions.keys():
-            l = self.directions.get(slot)
-            r = right_directions.get(slot)
-            if l is not None and r is not None:
-                a, b = l
-                c, d = r
-                if operation == "add":
-                    result = (a + c, b + d)
-                elif operation == "sub":
-                    result = (a - c, b - d)
-                elif operation == "mul":
-                    result = (a * right + left * c, b * right + left * d)
-                else:
-                    result = ((a - value * c) / right, (b - value * d) / right)
-            elif l is not None:
-                a, b = l
-                if operation in ("add", "sub"):
-                    result = (a, b)
-                elif operation == "mul":
-                    result = (a * right, b * right)
-                else:
-                    result = (a / right, b / right)
-            else:
-                c, d = r
-                if operation == "add":
-                    result = (c, d)
-                elif operation == "sub":
-                    result = (-c, -d)
-                elif operation == "mul":
-                    result = (left * c, left * d)
-                else:
-                    slope = -value / right
-                    result = (slope * c, slope * d)
-            directions[slot] = result
-        return _Directions(value, directions)
-
-    def __add__(self, other):
-        return self._binary(other, "add")
-
-    def __radd__(self, other):
-        if isinstance(other, _Directions):
-            return other._binary(self, "add")
-        return _Directions(other + self.v, self.directions.copy())
-
-    def __sub__(self, other):
-        return self._binary(other, "sub")
-
-    def __rsub__(self, other):
-        if isinstance(other, _Directions):
-            return other._binary(self, "sub")
-        return _Directions(other - self.v,
-                           {s: (-a, -b) for s, (a, b) in self.directions.items()})
-
-    def __mul__(self, other):
-        return self._binary(other, "mul")
-
-    def __rmul__(self, other):
-        if isinstance(other, _Directions):
-            return other._binary(self, "mul")
-        return _Directions(other * self.v,
-                           {s: (other * a, other * b) for s, (a, b) in self.directions.items()})
-
-    def __truediv__(self, other):
-        return self._binary(other, "div")
-
-    def __rtruediv__(self, other):
-        if isinstance(other, _Directions):
-            return other._binary(self, "div")
-        value = other / self.v
-        if not self.directions:
-            return _Directions(value, {})
-        slope = -value / self.v
-        return _Directions(value,
-                           {s: (slope * a, slope * b) for s, (a, b) in self.directions.items()})
-
-    def __pow__(self, exponent):
-        if isinstance(exponent, (Dual, _Directions)):
-            raise TypeError("Dual exponents are not supported")
-        slope = exponent * self.v ** (exponent - 1)
-        return _Directions(self.v ** exponent,
-                           {s: (slope * a, slope * b) for s, (a, b) in self.directions.items()})
-
-
 def _holomorphic(function, derivative):
     def apply(x):
-        if isinstance(x, _Directions):
-            value = function(x.v)
-            slope = derivative(x.v, value)
-            return _Directions(value, {s: (slope * a, slope * b) for s, (a, b) in x.directions.items()})
         if isinstance(x, Dual):
             value = function(x.v)
             slope = derivative(x.v, value)
@@ -236,8 +104,6 @@ def _holomorphic(function, derivative):
 
 
 def _conjugate(x):
-    if isinstance(x, _Directions):
-        return _Directions(np.conj(x.v), {s: (np.conj(b), np.conj(a)) for s, (a, b) in x.directions.items()})
     if isinstance(x, Dual):
         return Dual(np.conj(x.v), np.conj(x.b), np.conj(x.a))
     return np.conj(x)
@@ -250,7 +116,7 @@ def _radians(x):
 
 def _value_only(function):
     def apply(x):
-        if isinstance(x, (Dual, _Directions)):
+        if isinstance(x, Dual):
             raise TypeError(f"{function.__name__} has no dual rule")
         return function(x)
     return apply
@@ -341,28 +207,21 @@ def function_jacobian(function_index, slots, inputs, with_outputs=True):
     """Outputs (..., 4) and Wirtinger blocks J, K (..., 4, len(slots)) on the host.
 
     `with_outputs=False` skips the (unused) primal evaluation and returns None
-    for the outputs. Directions share primal intermediates, while their scalar
-    seed derivative rules and the full Jacobian layout are preserved.
+    for the outputs; the Jacobian blocks are computed identically.
     """
     inputs, columns = _columns(inputs)
     shape = inputs.shape[:-1]
     outputs = evaluate_function(function_index, inputs) if with_outputs else None
     linear = np.zeros(shape + (4, len(slots)), dtype=np.complex128)
     antilinear = np.zeros(shape + (4, len(slots)), dtype=np.complex128)
-    if len(slots):
-        # Normalize negative aliases and preserve duplicate requested columns.
-        slot_keys = tuple(range(len(columns))[slot] for slot in slots)
+    for position, slot in enumerate(slots):
         seeded = list(columns)
-        for slot in slot_keys:
-            seeded[slot] = _Directions(columns[slot], {slot: (1.0, 0.0)})
+        seeded[slot] = Dual(columns[slot], 1.0, 0.0)
         stack = HOST_FUNCTIONS[function_index](_Slots(seeded))
         for column, item in enumerate(stack.items):
-            if isinstance(item, _Directions):
-                for position, slot in enumerate(slot_keys):
-                    if slot in item.directions:
-                        a, b = item.directions[slot]
-                        linear[..., column, position] = np.broadcast_to(a, shape)
-                        antilinear[..., column, position] = np.broadcast_to(b, shape)
+            if isinstance(item, Dual):
+                linear[..., column, position] = np.broadcast_to(item.a, shape)
+                antilinear[..., column, position] = np.broadcast_to(item.b, shape)
     return outputs, linear, antilinear
 
 

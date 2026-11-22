@@ -56,10 +56,21 @@ def _digest(*arrays):
 class SystemPlan:
     """Static component groups, output selection and ordered writes for one system."""
 
-    def __init__(self, sparse_system, groups, selected_rows, selected_columns):
+    def __init__(self, sparse_system, groups, selected_rows, selected_columns,
+                 sweep_indices=None, parameter_count=None):
         self.system = sparse_system
         # (function_index, (R, S) parameter indices, slots that carry derivatives)
         self.groups = tuple((int(f), np.asarray(i, dtype=np.int64), tuple(int(s) for s in d)) for f, i, d in groups)
+        self.parameter_count = parameter_count
+        self.sweep_partition = None
+        if sweep_indices is not None and parameter_count is not None:
+            sweep_indices = np.asarray(sweep_indices, dtype=np.int64).ravel()
+            sweep_indices = np.where(sweep_indices < 0, sweep_indices + parameter_count, sweep_indices)
+            self.sweep_partition = []
+            for _, indices, _ in self.groups:
+                normalized = np.where(indices < 0, indices + parameter_count, indices)
+                independent = ~np.any(np.isin(normalized, sweep_indices), axis=1)
+                self.sweep_partition.append((np.flatnonzero(independent), np.flatnonzero(~independent)))
         self.offsets = np.cumsum([0] + [indices.shape[0] for _, indices, _ in self.groups])
         self.total_rows = int(self.offsets[-1])
         self.flat_selection = (np.asarray(selected_rows, dtype=np.int64) * 4
@@ -83,10 +94,35 @@ class SystemPlan:
             np.asarray([s for _, _, d in self.groups for s in d] + [-1], dtype=np.int64),
             self.flat_selection, writes,
         ) + sparse_system._key
+        if self.sweep_partition is not None:
+            self._key += _digest(np.int64(parameter_count), sweep_indices)
 
-    def values(self, rows, base):
-        """Structural values (B, nnz_total) after the ordered update writes."""
-        blocks = [evaluate_function(f, rows[:, indices]) for f, indices, _ in self.groups]
+    def values(self, rows, base, repeated_rows=0):
+        """Structural values (B, nnz_total) after the ordered update writes.
+
+        `repeated_rows` is the original block length when the caller tiled its
+        parameter rows and changed only this plan's sweep indices. Components
+        excluding those indices may be evaluated on that block and replicated.
+        This is a within-call structural reuse, with no retained numeric values.
+        """
+        reuse = (self.sweep_partition is not None and rows.shape[1] == self.parameter_count
+                 and 0 < repeated_rows < rows.shape[0] and rows.shape[0] % repeated_rows == 0)
+        if not reuse:
+            blocks = [evaluate_function(f, rows[:, indices]) for f, indices, _ in self.groups]
+        else:
+            blocks = []
+            repeats = rows.shape[0] // repeated_rows
+            for (f, indices, _), (independent, dependent) in zip(self.groups, self.sweep_partition):
+                if not independent.size:
+                    block = evaluate_function(f, rows[:, indices])
+                elif not dependent.size:
+                    block = np.tile(evaluate_function(f, rows[:repeated_rows, indices]), (repeats, 1, 1))
+                else:
+                    block = np.empty((rows.shape[0], indices.shape[0], 4), dtype=np.complex128)
+                    block[:, dependent] = evaluate_function(f, rows[:, indices[dependent]])
+                    block[:, independent] = np.tile(
+                        evaluate_function(f, rows[:repeated_rows, indices[independent]]), (repeats, 1, 1))
+                blocks.append(block)
         outputs = np.concatenate(blocks, axis=1).reshape(rows.shape[0], -1)[:, self.flat_selection]
         values = np.repeat(np.asarray(base, dtype=np.complex128)[None, :], rows.shape[0], axis=0)
         values[:, self.writes[self.last]] = outputs[:, self.last]
@@ -234,7 +270,11 @@ def build_host_plan(simulation_arrays, structure, component_groups):
             groups.append((function_index, indices, sorted(diff_slots.get(function_index, range(indices.shape[1])))))
         output_rows = np.asarray(group["output_rows"])
         output_indices = np.asarray(simulation_arrays[output_key])
-        plans[name] = SystemPlan(getattr(structure, name), groups, output_rows[output_indices[0]], output_indices[1])
+        plans[name] = SystemPlan(
+            getattr(structure, name), groups, output_rows[output_indices[0]], output_indices[1],
+            sweep_indices=(np.asarray(simulation_arrays["signal_changing_parameter_indices"])
+                           if name == "signal" else None),
+            parameter_count=np.asarray(simulation_arrays["parameters"]).shape[1])
     return HostPlan(structure, plans["carrier"], plans["signal"], plans["noise"],
                     np.asarray(simulation_arrays["carrier_changing_parameter_indices"]),
                     np.asarray(simulation_arrays["signal_changing_parameter_indices"]),
@@ -475,7 +515,7 @@ def _assemble(plan, parameters, carrier_values, signal_values, carrier_base, sig
         carrier_factors.append(factor)
         carrier[row] = _solve(carrier_products, carrier_coefficients[row], factor, carrier_rhs[row], "N")
     signal_rows = _expand(carrier_rows, plan.signal_changing, signal_values)
-    raw_signal = plan.signal.values(signal_rows, signal_base)
+    raw_signal = plan.signal.values(signal_rows, signal_base, repeated_rows=carrier_rows.shape[0])
     placing = structure.signal_placing_positions
     placed = raw_signal.copy()
     placed[:, placing] = -raw_signal[:, placing] * carrier[:, plan.signal_carrier_indices]

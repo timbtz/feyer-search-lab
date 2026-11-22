@@ -1340,3 +1340,106 @@ and range separate. No candidate-19 official measurements exist yet. Existing
 pristine signal/gradient/loss mismatches, rand1/rand3 sensitivity disagreements,
 six unresolved grid finite-difference coordinates and JVP/Hessian limitations
 remain unresolved. Failed trials and the superseded freeze request remain above.
+
+## Candidate 19 feedback: no confirmed incremental reverse gain
+
+Simulator SHA 11c37f92622e8eace7a62656d7f9dbb4ee3f37e6, evaluator request
+b7c860a7c71c417b941859d7ca12c5ba. Jobs grid-1/2/3 and aligo-1/2/3 all passed
+the unchanged official benchmarks. Complete fresh-process seconds:
+
+- Grid: [0.8205914627760649, 0.78706637583673, 0.7878785859793425], median
+  0.7878785859793425, range [0.78706637583673, 0.8205914627760649].
+- aLIGO: [0.5410497728735209, 0.5445662662386894, 0.5395652372390032], median
+  0.5410497728735209, range [0.5395652372390032, 0.5445662662386894].
+
+Phase samples in milliseconds:
+
+- Grid forward [183.165085, 176.607188, 182.860600], reverse [79.894790,
+  76.238820, 76.452700], imports [289.420856, 267.301988, 265.002145], build
+  [75.174522, 73.072582, 69.090500]. Relative to candidate 18's unpaired medians:
+  forward +2.359426 ms, reverse +0.621511 ms, imports +1.492839 ms,
+  build -0.314357 ms. Complete median -9.502601 ms.
+- aLIGO forward [32.699630, 32.751160, 32.216866], reverse [13.741620,
+  13.411511, 13.235277], imports [263.004463, 266.489267, 263.894254], build
+  [37.354199, 37.972262, 37.107212]. Unpaired deltas versus 18: forward
+  -0.129268 ms, reverse -0.566391 ms, imports -2.253484 ms, build -0.325061 ms.
+  Complete median -4.147058 ms.
+- Versus admitted candidate 7, unpaired complete medians are lower by
+  13.699098 ms grid and 7.505383 ms aLIGO. These are observations, not a
+  confirmed gain. All samples are retained; overlapping grid ranges remain.
+- Max sampled process-group RSS bytes: grid 627326976, aLIGO 295616512,
+  generalization 809222144. CPU2 / one logical CPU / threads1 / no persistent
+  cache. No infrastructure failure or memory exceedance. Other-host contention
+  remains possible; no additional overlap evidence was supplied.
+
+Inspected every per-array strict-comparison receipt and programmatically checked
+against candidate 18: all six official comparison records and all fourteen
+seed/pristine generalization case records are exactly unchanged. All seed
+comparisons pass. Official saved-array hashes match candidate 18 for both setups;
+remote raw NPZ files were not reopened. Pristine comparisons still fail: grid
+131 signal/3 gradient/1 loss entries, aLIGO 1 loss entry; rand1/rand3 log sensitivity
+errors remain 2.036099068405406e-4 and 5.8100919558157216e-5. Seed gradient max
+absolute differences remain 5.686350050382316e-6 grid and 3.637978807091713e-11
+aLIGO. Generalization self-comparison is not independent seed evidence. The six
+unresolved grid FD coordinates and whole-pass JVP/Hessian limitation remain.
+
+Decision: confirmed_improvement=false, source_review=null, ranking_eligible=false.
+Admission requires source review and paired evidence for overlapping ranges.
+The scalar allocation refinement has no observed incremental grid reverse gain.
+Stop tuning this representation now; preserve candidates 18/19 and their pending
+confirmation requests. Return production host.py to admitted candidate 7 for a
+distinct structural forward-assembly experiment. No history is reset or hidden.
+
+## Candidate 20: reuse sweep-independent component values within assembly
+
+New candidate SHA and both official job IDs pending supervisor commit/evaluation.
+Production source is exactly admitted ee4fea28c04d482566be16e916b609d7c6a99e5e
+except the following host_pass.py change. Candidate 18/19 derivative changes are
+absent. No transfer of another lane's unreviewed source is involved.
+
+Concrete redundancy: `_assemble` tiles carrier parameter rows for the signal
+sweep; `SystemPlan.values` evaluates every component at every resulting row,
+including components whose entire input-index list excludes the changing
+parameter indices. Those component inputs are identical in repeated blocks.
+The measured parent forward phase (~181 ms grid, ~33 ms aLIGO) includes this
+assembly. Its exact fraction and official invariant multiplicities remain
+unmeasured; the evaluator determines whether avoiding this work outweighs the
+new plan construction, splitting and replication costs.
+
+Implementation:
+
+- During signal SystemPlan construction, partition each group by whether any
+  input index refers to a swept parameter. Normalize negative aliases for this
+  comparison. Numerical values and derivative slots do not influence it.
+- `_assemble` supplies the original carrier-row block length. On a matching
+  parameter width and repeated-block shape, evaluate independent components on
+  the original block and tile their outputs; evaluate dependent components on
+  every row. Mixed groups preserve original component/output order. The normal
+  values path remains for calls without a repeated-block contract.
+- Plan identity includes the parameter count and sweep indices. There is no
+  numerical cache, retained output, cross-evaluation reuse or work outside the
+  evaluation. Each forward still assembles all matrices and factors afresh.
+- Backward Jacobians and scatters are unchanged. A swept input at numerical zero
+  remains structurally dependent. All input slots are inspected conservatively,
+  even unused padding. No coefficient, gradient or physical output is dropped.
+
+Local validation via `overnight-numerics-sweep-check.py`, in the existing NumPy
+venv with AST-extracted kernels; no benchmarks or timings:
+
+- Existing 37 assembly/backward cases pass.
+- 240 new forward/backward comparisons against admitted source pass, covering
+  all 19 functions, 1/2 original rows, 1/3/7 repetitions, no/partial/all swept
+  columns, negative aliases, duplicate reads/writes, complex inputs, zero-valued
+  swept parameters, entirely zero rows and nonfinite invariant inputs. Finite
+  results are bitwise equal including signed zeros; nonfinite entries use array
+  equality. The same plan is reevaluated with changed inputs in these checks.
+- A small arbitrary sweep reduces evaluated component rows from 798 to 342.
+  This establishes redundant arithmetic elimination, not an official speedup or
+  the multiplicity of either official optical setup.
+
+Request both unchanged official benchmarks and all saved outputs/gradients,
+14-case generalization and independent source review on the new exact SHA.
+For promising results obtain paired fresh-process complete runs against admitted
+candidate 7, including phase/memory/overlap evidence. Keep all inherited numerical
+findings explicit. Do not combine pending derivative/residual candidates. If
+splitting overhead erases this saving, reject it rather than infer a warm gain.
