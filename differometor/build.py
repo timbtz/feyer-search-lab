@@ -1681,11 +1681,13 @@ def pairs_to_arrays(
 
         if "output_row_indices" in instruction:
             signal_arrays["output_row_indices"].append(instruction["output_row_indices"].flatten() + signal_component_number)
-            individual_rows = len(np.unique(instruction["output_row_indices"]))
-            signal_component_number += individual_rows
         else:
             signal_arrays["output_row_indices"].append(np.ones(len(instruction["output_column_indices"])) * signal_component_number)
-            signal_component_number += 1
+
+        # Every function call contributes a stacked output row, even when none of
+        # its entries are selected. The next instruction starts after all calls,
+        # not after only the distinct rows referenced by this instruction.
+        signal_component_number += len(instruction["function_indices"])
 
         signal_arrays["system_matrix_row_indices"].append(instruction["system_matrix_row_indices"])
         signal_arrays["system_matrix_column_indices"].append(instruction["system_matrix_column_indices"])
