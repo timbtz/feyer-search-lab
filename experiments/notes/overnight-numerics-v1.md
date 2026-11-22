@@ -4762,3 +4762,127 @@ All previously recorded pristine-reference disagreements, rand1/rand3 errors,
 six unresolved grid finite-difference coordinates and first-order-only host VJP
 limitations remain unresolved. The evaluator callback profile request remains
 open for future performance work; this repair does not substitute for that data.
+
+
+## Trial47 feedback and builder-entry reproduction — 2026-11-22 07:30 UTC
+
+Evaluated candidate ed2c9d27ac4a106959f6cfab7d61ae7ba51a0058, request
+9b0859f4689c4bfaa61fb97fb373b25a, jobs grid-1/2/3 and aligo-1/2/3.
+All six unchanged official runs passed. Fresh complete large samples:
+0.899272097275, 0.872463997453, 0.861908653751 seconds; median
+0.872463997453, range [0.861908653751, 0.899272097275]. Official aLIGO:
+0.580779168755, 0.560446966439, 0.587124660611; median 0.580779168755,
+range [0.560446966439, 0.587124660611]. No confirmed improvement or source
+review was returned. This remains a bounded correctness repair, not a speed
+candidate or promotion. The supervisor retained admitted7.
+
+The feedback audit in overnight-numerics-slot-key-feedback.json compares every
+saved official archive hash and complete strict comparison record to both
+original35 (7a948033, request5f61bfb3e2d441598e8e0733a9dd8cc9) and restored35
+(e5cbeba0, requestde3724fedfe5438b810a3629c48c7fed). All six hashes and records
+match both parents. All14 generalization cases pass the seed comparison, while
+only4 pass pristine; both sets of detailed case records equal both parents.
+The generalization archive container hash differs, so byte identity of its raw
+members is not established locally. No new discrepancy appears in the reported
+comparisons. Existing pristine signal/gradient/loss disagreements, rand1/rand3
+log-sensitivity discrepancies, unresolved grid finite differences and the
+first-order-only VJP limitation remain open.
+
+Relative to restored35, complete medians increased30.852ms large and23.181ms
+aLIGO. Phase medians (large/aLIGO) are imports313.782/269.380ms,
+build76.480/38.508ms, forward178.398/33.025ms and reverse110.374/19.469ms.
+Their deltas versus restored35 are +25.341/+2.910ms imports,
++0.753/-0.064ms build, +1.841/-0.210ms forward and +1.666/+0.685ms reverse.
+Full phase deltas versus both parent cohorts are in the JSON. Medians of phases
+do not add to the median total. These are unpaired cohorts, not causal estimates
+of the tiny hashing change. The aLIGO first reverse took36.678ms; it is retained.
+Other-host overlap is unknown. Sampled RSS bytes: large515710976/530833408/
+521707520; aLIGO301428736/293945344/297041920; generalization794243072.
+No infrastructure failure or memory-budget breach was reported.
+
+Follow-up synthetic work now constructs the colliding plans through actual
+source-derived build_host_plan, with all three system groups and a valid,
+identical ParameterLayout. Explicit masks still produce gradients0 and0.5 with
+identical primals; the parent regards the plans as equal and trial47 distinguishes
+them. The existing36-partition/72-case bitwise checks still pass. This improves
+entry-point coverage without claiming ordinary run_build_step generates those
+masks. Updated result: overnight-numerics-slot-key-result.json. The optional
+--jax check now uses this same entry point; it remains unexecuted locally because
+JAX is absent, and no coordinator diagnostic result has been returned.
+
+Decision: retain trial47's three-line key repair on this branch pending independent
+review; do not revert a reproduced identity repair solely because this unpaired
+cohort is slower. No simulator code changed during this feedback turn, so no new
+dual-benchmark submission is requested. The concrete next diagnostic is the
+prepared slot-key-check.py --jax A/B/A check in the fixed evaluator environment,
+followed by independent review of ed2c9d27 versus e5cbeba0. Before another
+performance proposal, request the prepared first-callback profiler on this exact
+numerical implementation, separately from official timing. It should report
+component/Jacobian/scatter self times and solve/refinement counts. The many
+retired allocation/product variants are not reopened without that evidence.
+This closes trial47's implementation/feedback work, not the authorized campaign.
+
+
+## Trial48: snapshot component indices and write positions
+
+Parent: ed2c9d27ac4a106959f6cfab7d61ae7ba51a0058 (trial47), dual request
+9b0859f4689c4bfaa61fb97fb373b25a. Candidate SHA and official job identifiers
+are pending supervisor submission. This resumes with a distinct reproduced
+ownership defect rather than another allocation timing variant. Trial47's
+feedback and strengthened diagnostic edits remain preserved in this submission.
+
+SystemPlan previously used np.asarray on caller-owned int64 component indices
+and sparse_system.write_positions. These often alias the supplied arrays. Its
+hash, last-write mask and reverse destinations are derived only at construction.
+Editing the source arrays to construct another plan therefore silently changed
+an existing plan's execution while retaining its original identity and derived
+metadata. In the small signal-source reproduction, output changes from [2,0]
+to [0,5] after changing its amplitude source index and write destination; the
+key is unchanged and its base pullback remains [0,1] despite now overwriting
+base destination1. That is an internal forward/reverse inconsistency, not a
+rounding discrepancy. Rebuilding a new plan alone does not repair the retained
+old plan that still aliases the edited arrays.
+
+The focused repair uses explicit private int64 copies for those two borrowed
+index families and marks the copies read-only. Derived index arrays were already
+new arrays. Caller buffers stay writable. Numerical inputs, matrices and factors
+are not copied into a cache or reused across evaluations. The key's bytes are
+unchanged for the same initial structure; every new build snapshots its own
+indices. No arithmetic, refinement, reduction order or derivative eligibility
+changes. Scope is SystemPlan's component-index and write-position ownership,
+not a claim that every nested HostPlan/SparseStructure object is immutable.
+Rebuild when topology changes; do not mutate retained plans directly. Ordinary
+unchanged official fixtures are not asserted to trigger this mutation defect.
+
+Source-derived local check overnight-numerics-plan-snapshot-check.py compares
+actual parent47 and candidate constructors and kernels. It reproduces the parent
+fault, verifies retained candidate behavior, and tests48 combinations of batch
+sizes1/3, component counts1/2/4, contiguous/strided source arrays, repeated/unique
+write destinations and zero/nonzero parameter values. Initial and rebuilt
+primal/pullback results match the corresponding parent bitwise and are finite.
+Candidate results stay bitwise unchanged after caller-array edits. Retained base
+pullbacks pass real-direction finite differences. Caller arrays retain write
+access while the two private index arrays reject ordinary writes. Total copied
+index storage across these48 tiny plans is7168bytes, an allocation count only.
+The saved result is overnight-numerics-plan-snapshot-result.json.
+
+The existing96 tiny host callback cases also pass:12 arrays per case, finite
+bitwise equality against original35 numerical code,192 zero/nonzero derivative
+checks, identical fresh-factor counts, and matched/cleared/interleaved forward
+state paths. This comparison uses original35 by the preserved script's explicit
+parent constant; trial47 only changed key metadata. The slot-boundary diagnostic
+still passes its36 distinct partitions and72 bitwise cases, including its
+build_host_plan entry-point reproduction. The optional JAX check remains pending.
+No official benchmark or local timing workload was launched.
+
+Candidate host_pass.py SHA256:
+f9e07d0747f9dd0d0f8f5f7c0d05894a384dadf2fab33c50b7cf236cc57123a8.
+
+This is a correctness repair with extra build-time copies, not an expected or
+measured speedup. Request both unchanged official benchmarks on the exact new
+SHA, full saved output/gradient comparisons, generalization and independent
+source review. Assess build time and memory as well as complete totals; compare
+against47 on matching resources if a performance claim is considered. Keep all
+inherited pristine-reference/finite-difference disagreements visible. The next
+performance experiment still needs callback profiling evidence; no retired
+solver/product/allocation family is reopened by this repair.

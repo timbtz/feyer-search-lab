@@ -26,7 +26,7 @@ def load(source):
     ns["hashlib"] = hashlib
     nodes = [n for n in ast.parse(source).body
              if isinstance(n, (ast.ClassDef, ast.FunctionDef))
-             and n.name in {"SystemPlan", "HostPlan", "_digest"}]
+             and n.name in {"SystemPlan", "HostPlan", "ParameterLayout", "build_host_plan", "_digest"}]
     exec(compile(ast.Module(body=nodes, type_ignores=[]), "plan-kernels", "exec"), ns)
     return ns
 
@@ -42,6 +42,37 @@ def system(ns, slots, functions=("laser", "signal_function")):
 def host(ns, carrier, unchanged):
     return ns["HostPlan"](SimpleNamespace(_key="tiny-structure"), carrier,
                           unchanged, unchanged, [], [], [], False)
+
+
+def built_host(ns, slots):
+    """Exercise the accepted explicit-mask entry point with a valid layout.
+
+    These supplied masks are intentionally independent of optimized indices;
+    this does not demonstrate a collision from ordinary run_build_step.
+    """
+    lookup = {f.__name__: i for i, f in enumerate(ns["HOST_FUNCTIONS"])}
+    functions = [lookup["laser"], lookup["signal_function"]]
+    assert functions == sorted(functions)
+    empty = np.empty(0, dtype=np.int64)
+    arrays = {key: empty.copy() for key in (
+        "carrier_changing_parameter_indices", "signal_changing_parameter_indices",
+        "signal_carrier_indices", "optimized_parameter_indices", "optimized_value_indices",
+        "linked_indices", "indices_to_link", "qhd_parameter_indices")}
+    arrays["parameters"] = np.zeros((1, 7), dtype=np.complex128)
+    arrays["qhd_placing_indices"] = np.empty((0, 3), dtype=np.int64)
+    systems, groups = {}, {}
+    for name in ("carrier", "signal", "noise"):
+        arrays[name + "_output_indices"] = np.array([[0, 1], [0, 0]])
+        systems[name] = SimpleNamespace(write_positions=np.arange(2), _key="tiny-system")
+        groups[name] = dict(
+            function_rows={f: np.array([i]) for i, f in enumerate(functions)},
+            parameter_indices={f: np.arange(7)[None, :] for f in functions},
+            output_rows=np.arange(2),
+            diff_slots=dict(zip(functions, slots if name == "carrier" else ((), ()))))
+    structure = SimpleNamespace(**systems, _key="tiny-structure", unique_placing=True)
+    plan = ns["build_host_plan"](arrays, structure, groups)
+    assert plan is not None and plan.parameter_layout is not None
+    return plan
 
 
 def same(expected, actual):
@@ -71,6 +102,17 @@ def main():
     assert len(dict(zip(pairs[0], ("a", "b")))) == 1
     assert pairs[1][0] != pairs[1][1]
     assert len(dict(zip(pairs[1], ("a", "b")))) == 2
+
+    built_pairs = []
+    for ns in (old, new):
+        a, b = built_host(ns, ((), (0,))), built_host(ns, ((0,), ()))
+        assert a.parameter_layout._key == b.parameter_layout._key
+        ga, gb = a.carrier.backward(rows, bar)[0], b.carrier.backward(rows, bar)[0]
+        assert ga[0, 0] == 0 and gb[0, 0] == .5
+        same(a.carrier.values(rows, np.zeros(2)), b.carrier.values(rows, np.zeros(2)))
+        built_pairs.append((a, b))
+    assert built_pairs[0][0] == built_pairs[0][1]
+    assert built_pairs[1][0] != built_pairs[1][1]
 
     # Every partition has the same flat [0,...,6] but different group boundaries.
     # Include empty groups' derivative lists and confirm equal plans still share
@@ -108,8 +150,8 @@ def main():
         assert Path(host_pass.__file__).resolve() == ROOT / "differometor/host_pass.py"
         jax.config.update("jax_enable_x64", True)
         ns = dict(vars(host_pass), HOST_FUNCTIONS=HOST_FUNCTIONS)
-        a, b = system(ns, ((), (0,))), system(ns, ((0,), ()))
-        ha, hb = host(ns, a, a), host(ns, b, a)
+        ha, hb = built_host(ns, ((), (0,))), built_host(ns, ((0,), ()))
+        a, b = ha.carrier, hb.carrier
 
         @jax.jit
         def pullback(plan, r, v):
@@ -124,6 +166,9 @@ def main():
         candidate_host_pass_sha256=hashlib.sha256(source.encode()).hexdigest(),
         parent_collision_reproduced=True, parent_gradient_pair=[0., .5],
         candidate_distinguishes_pair=True, slot_partitions=36,
+        build_host_plan_collision_reproduced=True,
+        build_host_plan_candidate_distinguishes_pair=True,
+        build_host_plan_parameter_layout_present=True,
         parent_unique_keys=len(old_keys), candidate_unique_keys=len(new_keys),
         primal_and_pullback_cases=count, finite_results_bitwise_equal=True,
         equal_plan_hashes_preserved=True, jax_check=jax_result,

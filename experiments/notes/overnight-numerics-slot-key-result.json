@@ -1,16 +1,21 @@
 {
   "parent_sha": "e5cbeba07943b6c797932263ff9deb721bf3ca89",
-  "candidate_sha": null,
   "candidate_host_pass_sha256": "a135b95a3cdcb4e16823215b24bd52cadedfb30632cc77386ee5de0f3db92762",
   "parent_collision_reproduced": true,
-  "parent_gradient_pair": [0.0, 0.5],
+  "parent_gradient_pair": [
+    0.0,
+    0.5
+  ],
   "candidate_distinguishes_pair": true,
   "slot_partitions": 36,
+  "build_host_plan_collision_reproduced": true,
+  "build_host_plan_candidate_distinguishes_pair": true,
+  "build_host_plan_parameter_layout_present": true,
   "parent_unique_keys": 1,
   "candidate_unique_keys": 36,
   "primal_and_pullback_cases": 72,
   "finite_results_bitwise_equal": true,
   "equal_plan_hashes_preserved": true,
-  "jax_check": "Not run locally: JAX unavailable. Optional --jax check prepared for evaluator.",
-  "scope": "Small synthetic source-derived NumPy checks only; explicitly supplied derivative masks. No claim of normal-builder trigger, official timing gain or universal correctness."
+  "jax_check": "not run (optional evaluator check)",
+  "scope": "Synthetic correctness only; no timing or official workload"
 }

@@ -59,12 +59,18 @@ class SystemPlan:
     def __init__(self, sparse_system, groups, selected_rows, selected_columns):
         self.system = sparse_system
         # (function_index, (R, S) parameter indices, slots that carry derivatives)
-        self.groups = tuple((int(f), np.asarray(i, dtype=np.int64), tuple(int(s) for s in d)) for f, i, d in groups)
+        # Snapshot caller-owned indices: the digest and derived write masks must
+        # keep describing this plan if the caller edits arrays to build another.
+        self.groups = tuple((int(f), np.array(i, dtype=np.int64, copy=True), tuple(int(s) for s in d))
+                            for f, i, d in groups)
+        for _, indices, _ in self.groups:
+            indices.flags.writeable = False
         self.offsets = np.cumsum([0] + [indices.shape[0] for _, indices, _ in self.groups])
         self.total_rows = int(self.offsets[-1])
         self.flat_selection = (np.asarray(selected_rows, dtype=np.int64) * 4
                                + np.asarray(selected_columns, dtype=np.int64))
-        writes = np.asarray(sparse_system.write_positions, dtype=np.int64)
+        writes = np.array(sparse_system.write_positions, dtype=np.int64, copy=True)
+        writes.flags.writeable = False
         # The reference scatter applies writes in order: the last write to a position wins.
         _, first_in_reverse = np.unique(writes[::-1], return_index=True)
         last = np.zeros(writes.shape, dtype=bool)

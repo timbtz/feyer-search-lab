@@ -1,0 +1,12 @@
+{
+  "parent_sha": "ed2c9d27ac4a106959f6cfab7d61ae7ba51a0058",
+  "candidate_host_pass_sha256": "f9e07d0747f9dd0d0f8f5f7c0d05894a384dadf2fab33c50b7cf236cc57123a8",
+  "parent_key_unchanged_after_semantic_mutation": true,
+  "parent_base_pullback_inconsistency_reproduced": true,
+  "candidate_snapshot_retained": true,
+  "equivalence_and_mutation_cases": 48,
+  "finite_results_bitwise_equal": true,
+  "finite_difference_base_pullbacks_passed": true,
+  "copied_index_bytes_across_synthetic_plans": 7168,
+  "scope": "SystemPlan input-index and write-position ownership only; no whole-plan immutability or performance claim"
+}

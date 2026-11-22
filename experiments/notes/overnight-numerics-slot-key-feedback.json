@@ -1,0 +1,196 @@
+{
+  "candidate_sha": "ed2c9d27ac4a106959f6cfab7d61ae7ba51a0058",
+  "request_id": "9b0859f4689c4bfaa61fb97fb373b25a",
+  "official_passed": true,
+  "confirmed_improvement": false,
+  "source_review": null,
+  "strict_passed": false,
+  "timings": {
+    "grid": {
+      "fresh_process_seconds": [
+        0.8992720972746611,
+        0.8724639974534512,
+        0.8619086537510157
+      ],
+      "median_seconds": 0.8724639974534512,
+      "minimum_seconds": 0.8619086537510157,
+      "maximum_seconds": 0.8992720972746611,
+      "count": 3
+    },
+    "aligo": {
+      "fresh_process_seconds": [
+        0.580779168754816,
+        0.5604469664394855,
+        0.5871246606111526
+      ],
+      "median_seconds": 0.580779168754816,
+      "minimum_seconds": 0.5604469664394855,
+      "maximum_seconds": 0.5871246606111526,
+      "count": 3
+    }
+  },
+  "comparisons": {
+    "restored35": {
+      "sha": "e5cbeba07943b6c797932263ff9deb721bf3ca89",
+      "request_id": "de3724fedfe5438b810a3629c48c7fed",
+      "all_six_official_archives_equal": true,
+      "all_six_strict_records_equal": true,
+      "generalization_case_records_equal": {
+        "initial_seed": true,
+        "pristine": true
+      },
+      "phase_median_deltas_ms": {
+        "grid": {
+          "imports": 25.341404601931572,
+          "initialize": 1.5840474516153336,
+          "load": 0.046776607632637024,
+          "build": 0.7534492760896683,
+          "forward_lower": 1.2381672859191895,
+          "forward_compile": 4.343265667557716,
+          "forward": 1.8408317118883133,
+          "sensitivity_lower": 0.12018904089927673,
+          "sensitivity_compile": -0.14465302228927612,
+          "sensitivity": 0.03347918391227722,
+          "gradient_lower": 0.056628137826919556,
+          "gradient_compile": -0.5334801971912384,
+          "gradient": 1.6661472618579865,
+          "host_transfer": 0.01885928213596344
+        },
+        "aligo": {
+          "imports": 2.9102303087711334,
+          "initialize": -0.0699944794178009,
+          "load": 0.0007934868335723877,
+          "build": -0.06407313048839569,
+          "forward_lower": -0.021247193217277527,
+          "forward_compile": 0.10898523032665253,
+          "forward": -0.21005049347877502,
+          "sensitivity_lower": -0.23355334997177124,
+          "sensitivity_compile": -0.14245137572288513,
+          "sensitivity": -0.015601515769958496,
+          "gradient_lower": -0.037711113691329956,
+          "gradient_compile": 0.14900043606758118,
+          "gradient": 0.6852168589830399,
+          "host_transfer": 0.010441988706588745
+        }
+      },
+      "total_median_delta_ms": {
+        "grid": 30.85186332464218,
+        "aligo": 23.18079024553299
+      }
+    },
+    "original35": {
+      "sha": "7a9480332bad29b5aaeacc5a4628481581507e7a",
+      "request_id": "5f61bfb3e2d441598e8e0733a9dd8cc9",
+      "all_six_official_archives_equal": true,
+      "all_six_strict_records_equal": true,
+      "generalization_case_records_equal": {
+        "initial_seed": true,
+        "pristine": true
+      },
+      "phase_median_deltas_ms": {
+        "grid": {
+          "imports": 46.2277065962553,
+          "initialize": 1.655159518122673,
+          "load": 0.06481446325778961,
+          "build": 6.545467302203178,
+          "forward_lower": 1.1839233338832855,
+          "forward_compile": 0.5397703498601913,
+          "forward": -3.249816596508026,
+          "sensitivity_lower": -0.321144238114357,
+          "sensitivity_compile": -0.21450594067573547,
+          "sensitivity": -0.008478760719299316,
+          "gradient_lower": -0.11976994574069977,
+          "gradient_compile": 0.10222569108009338,
+          "gradient": 3.950543701648712,
+          "host_transfer": 0.01479126513004303
+        },
+        "aligo": {
+          "imports": 4.548775032162666,
+          "initialize": -0.021580606698989868,
+          "load": 0.00028870999813079834,
+          "build": 0.9128432720899582,
+          "forward_lower": 0.029478222131729126,
+          "forward_compile": 0.5559530109167099,
+          "forward": 0.25595352053642273,
+          "sensitivity_lower": 0.025933608412742615,
+          "sensitivity_compile": 0.14521554112434387,
+          "sensitivity": -0.01058913767337799,
+          "gradient_lower": 0.0863783061504364,
+          "gradient_compile": 0.3439188003540039,
+          "gradient": 0.493369996547699,
+          "host_transfer": 0.01078285276889801
+        }
+      },
+      "total_median_delta_ms": {
+        "grid": 53.18003334105015,
+        "aligo": 31.050600111484528
+      }
+    }
+  },
+  "phase_medians_ms": {
+    "grid": {
+      "imports": 313.7815538793802,
+      "initialize": 5.184881389141083,
+      "load": 1.504611223936081,
+      "build": 76.48003101348877,
+      "forward_lower": 20.859433338046074,
+      "forward_compile": 34.31527689099312,
+      "forward": 178.39809693396091,
+      "sensitivity_lower": 25.64413659274578,
+      "sensitivity_compile": 39.85424153506756,
+      "sensitivity": 0.8695200085639954,
+      "gradient_lower": 16.684923321008682,
+      "gradient_compile": 52.14674770832062,
+      "gradient": 110.37444323301315,
+      "host_transfer": 0.21179765462875366
+    },
+    "aligo": {
+      "imports": 269.3802174180746,
+      "initialize": 3.5513006150722504,
+      "load": 0.21126866340637207,
+      "build": 38.50782662630081,
+      "forward_lower": 19.3877425044775,
+      "forward_compile": 33.97720120847225,
+      "forward": 33.02487172186375,
+      "sensitivity_lower": 26.24674327671528,
+      "sensitivity_compile": 41.51522554457188,
+      "sensitivity": 0.47807395458221436,
+      "gradient_lower": 16.793111339211464,
+      "gradient_compile": 53.888507187366486,
+      "gradient": 19.468940794467926,
+      "host_transfer": 0.15990063548088074
+    }
+  },
+  "sampled_peak_rss_bytes": {
+    "grid": [
+      515710976,
+      530833408,
+      521707520
+    ],
+    "aligo": [
+      301428736,
+      293945344,
+      297041920
+    ],
+    "generalization": 794243072
+  },
+  "generalization_case_pass_counts": {
+    "initial_seed": 14,
+    "pristine": 4
+  },
+  "generalization_archive_sha256": "31816459fbe4e60c47ebeb89b7c77601e5b01305d0fce87e30abac280b7998e6",
+  "official_archive_sha256": {
+    "grid": [
+      "e0f2069ccab917ac4575f484a6c9b5f0ae2457bb59f736185a52cd309a6c03e2"
+    ],
+    "aligo": [
+      "1c27f50feafb3149eb9c2f4b48f767cc4c3ddbc1d64810c332dd5a7a260781f8"
+    ]
+  },
+  "limitations": [
+    "Unpaired cohorts; external contention not excluded.",
+    "Generalization archive hashes differ; raw members unavailable locally.",
+    "No optional JAX diagnostic or independent source review supplied.",
+    "No speedup claim; existing pristine and finite-difference disagreements unresolved."
+  ]
+}
