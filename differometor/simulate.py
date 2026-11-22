@@ -25,7 +25,7 @@ import numpy as np
 from jax import lax, vmap, jit
 
 from differometor.setups import Setup
-from differometor.build import build, pairs_to_arrays, prepare_arrays, LINKING_FUNCTIONS
+from differometor.build import build, pairs_to_arrays, prepare_arrays, LINKING_FUNCTIONS, identity_link
 from differometor.components import FUNCTIONS, UNIT_VACUUM, H_PLANCK, F0
 from differometor import components as _components
 from differometor.sparse import SparseStructure, SparseSystem, sparse_solve
@@ -421,12 +421,20 @@ def simulate(
         row = parameters.reshape(parameters.shape[1:])
         row = _static_set(row, layout.optimized_parameter_indices,
                           _static_take(optimized_parameters, layout.optimized_value_indices))
-        inputs_to_link = _static_take(row, layout.linked_indices)
-        outputs_to_link = vmap(lambda i, x: lax.switch(i, LINKING_FUNCTIONS, x))(
-            linking_function_indices, inputs_to_link
-        )
-        row = _static_set(row, layout.indices_to_link, outputs_to_link)
-        qhd_phase_values = jnp.exp(1j * jnp.radians(_static_take(row, layout.qhd_parameter_indices)))
+        # Omit structurally exact no-ops (decided from the static layout, never from
+        # parameter values): the builder's placeholder link writes each parameter
+        # back onto itself through `identity_link`, and a setup without detector
+        # phases scatters nothing into the selection vectors.
+        if not (SKIP_STATIC_NOOPS and layout.linking_is_identity(LINKING_FUNCTIONS, identity_link)):
+            inputs_to_link = _static_take(row, layout.linked_indices)
+            outputs_to_link = vmap(lambda i, x: lax.switch(i, LINKING_FUNCTIONS, x))(
+                linking_function_indices, inputs_to_link
+            )
+            row = _static_set(row, layout.indices_to_link, outputs_to_link)
+        if SKIP_STATIC_NOOPS and not layout.has_detector_phases:
+            qhd_phase_values = None
+        else:
+            qhd_phase_values = jnp.exp(1j * jnp.radians(_static_take(row, layout.qhd_parameter_indices)))
         return _simulate_host_pass(
             host_plan,
             row.reshape(1, -1),
@@ -962,6 +970,9 @@ HOST_PASS: bool = True
 # builder-verified unique destinations a scatter's derivative is a plain
 # gather/scatter. Values are identical. False keeps the generic indexing.
 STATIC_PARAMETER_LAYOUT: bool = True
+# With the static layout, omit the placeholder identity link and an empty
+# detector-phase scatter (both exact no-ops for values and derivatives).
+SKIP_STATIC_NOOPS: bool = True
 
 
 def _static_take(values, indices):
@@ -1001,19 +1012,26 @@ def _simulate_host_pass(
     noise_selection_vectors,
     qhd_placing_indices,
 ):
-    """`_simulate_sparse` evaluated on the host behind one custom VJP."""
+    """`_simulate_sparse` evaluated on the host behind one custom VJP.
+
+    `qhd_phase_values=None` means the builder placed no detector phases: a
+    scatter_mul with no updates returns the selection vectors unchanged, so it is
+    omitted.
+    """
     structure = plan.structure
-    noise_selection_vectors = lax.scatter_mul(
-        noise_selection_vectors,
-        qhd_placing_indices.reshape(-1, 3),
-        qhd_phase_values,
-        lax.ScatterDimensionNumbers(
-            update_window_dims=(),
-            inserted_window_dims=(0, 1, 2),
-            scatter_dims_to_operand_dims=(0, 1, 2),
-        ),
-        unique_indices=True,
-    )
+    if qhd_phase_values is not None:
+        noise_selection_vectors = lax.scatter_mul(
+            noise_selection_vectors,
+            qhd_placing_indices.reshape(-1, 3),
+            qhd_phase_values,
+            lax.ScatterDimensionNumbers(
+                update_window_dims=(),
+                inserted_window_dims=(0, 1, 2),
+                scatter_dims_to_operand_dims=(0, 1, 2),
+            ),
+            unique_indices=True,
+        )
+    # host_pass returns carrier (CN, Bc) and signal (N, Bs) already transposed.
     carrier, signal, noise = _host_pass.host_pass(
         plan,
         parameters.astype(jnp.complex128),
@@ -1024,7 +1042,7 @@ def _simulate_host_pass(
         structure.noise.base_values(noise_matrix).astype(jnp.complex128),
         noise_selection_vectors.astype(jnp.complex128),
     )
-    return carrier.T, signal.T, noise.squeeze()
+    return carrier, signal, noise.squeeze()
 
 
 def _build_sparse_structure(simulation_arrays):
@@ -1376,24 +1394,23 @@ def run_build_step(
     # Predicate S: real (pre-dummy) carrier/signal changing indices are disjoint from
     # every noise-function input index, including padding and grouped indices. Then all
     # expanded rows share bitwise-identical noise inputs. Key presence is static.
-    # Vectorized integer set tests (same int() truncation as the former set comprehensions).
-    def host_ints(*arrays):
-        parts = [np.asarray(array).astype(np.int64).ravel() for array in arrays]
-        return np.concatenate(parts) if parts else np.zeros((0,), dtype=np.int64)
-
-    real_changing = host_ints(arrays_to_prepare[2], arrays_to_prepare[3])
-    noise_inputs = host_ints(
-        noise_arrays[0], *component_groups.get("noise", {}).get("parameter_indices", {}).values()
-    )
-    if not np.isin(noise_inputs, real_changing).any():
+    real_changing = {int(i) for i in np.asarray(arrays_to_prepare[2]).ravel()}
+    real_changing |= {int(i) for i in np.asarray(arrays_to_prepare[3]).ravel()}
+    noise_inputs = {int(i) for i in np.asarray(noise_arrays[0]).ravel()}
+    for indices in component_groups.get("noise", {}).get("parameter_indices", {}).values():
+        noise_inputs |= {int(i) for i in np.asarray(indices).ravel()}
+    if real_changing.isdisjoint(noise_inputs):
         component_groups["noise_row_reuse"] = ()
 
     # Static differentiable-slot masks (dict keys only; empty-tuple values add no
     # pytree leaves). A slot is differentiable when any row of the group reads an
     # optimized index or a linking output; other slots read constants only.
-    differentiable_indices = host_ints(
-        simulation_arrays["optimized_parameter_indices"], simulation_arrays["indices_to_link"]
-    )
+    differentiable_indices = {
+        int(i) for i in np.asarray(simulation_arrays["optimized_parameter_indices"]).ravel()
+    }
+    differentiable_indices |= {
+        int(i) for i in np.asarray(simulation_arrays["indices_to_link"]).ravel()
+    }
     for name in ("carrier", "signal", "noise"):
         group = component_groups.get(name)
         if not isinstance(group, dict) or "parameter_indices" not in group:
@@ -1403,8 +1420,11 @@ def run_build_step(
             indices = np.asarray(indices)
             if indices.ndim != 2:
                 continue
-            reads_differentiable = np.isin(indices.astype(np.int64), differentiable_indices).any(axis=0)
-            diff_slots[function_index] = {int(slot): () for slot in np.flatnonzero(reads_differentiable)}
+            diff_slots[function_index] = {
+                slot: ()
+                for slot in range(indices.shape[1])
+                if any(int(i) in differentiable_indices for i in indices[:, slot])
+            }
         group["diff_slots"] = diff_slots
 
     simulation_arrays["component_groups"] = component_groups

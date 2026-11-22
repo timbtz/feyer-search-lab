@@ -214,3 +214,49 @@
 - Local validation: none executable. `experiments/notes/overnight-overhead-build-check.py` compares the new
   helpers with verbatim seed copies on 3000 randomized cases (negative/out-of-bounds/duplicate/empty/float indices).
 - Decision rule: reject on any built/output/gradient difference, or if `build` does not drop.
+
+### Candidate 4 feedback (inspected by Claude): rejected, no measurable gain
+
+- Candidate SHA `e5affda7cf786113b86e6724f37c4f286e90cd7f`; request `9200caeda0664274a596b934baadfdd1`; publication
+  `c924bc2`. Official passed 3/3 both setups; official arrays and all 14 generalization cases bitwise equal to seed.
+  `confirmed_improvement=false`; policy reasons: aligo_unstable_timing, requires_source_review,
+  large_gain_below_selection_threshold, aligo_regression_over_two_percent, ranges overlap.
+- Large: 0.963635, 0.918378, 0.918064 s (median 0.918378) vs parent 2b4654f median 0.911267. aLIGO: 0.575421,
+  0.561713, 0.631368 s (median 0.575421); the 0.631 s sample has a forward compile of 104.5 ms (vs ~33.5 ms in every
+  other run of this code) — an isolated outlier, not attributable to a build-only change, but it is recorded.
+- Build phase: large 75.27/73.08/73.15 ms (median 73.15) vs parent 75.76/75.18/73.64 (median 75.18); aLIGO
+  40.72/38.14/38.50 (median 38.50) vs 37.21/42.39/37.97 (median 37.97). ≈2 ms on large, nothing on aLIGO: within noise.
+  The per-element loops were not where build time goes; without a profile the real build hotspot is unknown
+  (likely the per-component instruction construction in `build()`, the device puts, and the benchmark's own eager
+  conversions, which are outside our code).
+- Decision: reject. Code reverted to the parent's implementations (preserved in history at e5affda).
+  `experiments/notes/overnight-overhead-build-check.py` now compares identical code and is kept only as history.
+  Consecutive evaluated submissions without a confirmed gain since the last promotion: 1.
+
+## Candidate 5: remove structurally redundant XLA ops at the host-pass boundary
+
+- Parent `2b4654f` (campaign best); candidate 4 reverted. Candidate SHA pending supervisor commit.
+- Mechanism: the same op-count lever that gave candidate 3's ~54 ms (compile cost here scales with the number of
+  HLO ops in tiny programs), applied to the ops that remain around the callback:
+  1. Transposes: `simulate` returned `carrier.T`, `signal.T`, so the forward program had transpose kernels and the
+     gradient program transposes of their cotangents. The host callback now returns (CN, Bc)/(N, Bs) directly, plus
+     separate untransposed copies used only as residuals, so no buffer is both a primal output and a residual
+     (avoids XLA copy insertion). The backward callback transposes the incoming cotangents to C-contiguous copies,
+     so `host_backward` sees identical values and memory layout.
+  2. Placeholder link: when a setup has no linked parameters the builder adds a link from parameter 0 to itself.
+     It now uses a named `build.identity_link` (it was `lambda x: x`). The static layout records the builder's
+     linking-function indices; if every link uses `identity_link` and reads/writes the same index, the gather,
+     `vmap(switch)` and scatter are omitted. That is exactly the identity for values and derivatives (up to the
+     sign of a zero cotangent, which compares equal). Any real link, or a stale global index that points at another
+     function, keeps the original path.
+  3. Empty detector phases: with no qhd placings, the `exp(radians(...))` of an empty gather and the `scatter_mul`
+     with zero updates are omitted (scatter_mul with no updates returns its operand).
+  All decisions use static builder structure, never parameter values. `simulate.SKIP_STATIC_NOOPS` toggles 2–3.
+- Hypothesis: a few fewer ops in the forward and gradient programs → a few ms less forward/gradient lower+compile on
+  both setups. Small; may be within noise. Host-side transposes add microseconds of copying.
+- Expected numerics: bitwise identical outputs and gradients vs seed/2b4654f.
+- Local validation: none executable (no JAX). `overnight-overhead-layout-check.py` now compares (static off),
+  (static on, skip off), (static on, skip on) bitwise on aLIGO in three modes, and reports whether the identity-link
+  and detector-phase conditions apply and the forward-vjp jaxpr equation counts.
+- Decision rule: reject on any array difference, or if forward+gradient lower+compile does not drop vs 2b4654f
+  (forward 19.5/33.4 ms, gradient 17.3/52.0 ms large medians).

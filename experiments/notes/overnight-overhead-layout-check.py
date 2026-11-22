@@ -1,4 +1,4 @@
-"""Focused check for candidate 3 (static parameter layout). Run in the fixed environment:
+"""Focused check for candidates 3 and 5 (static layout; static no-op skipping). Run in the fixed environment:
 
     PYTHONPATH=<repo> /workspace/venv-feyer/bin/python experiments/notes/overnight-overhead-layout-check.py
 
@@ -49,21 +49,27 @@ for mode in ("space_modulation", "amplitude_modulation", "frequency_modulation")
     for label, params in (("default", base), ("perturbed", base * (1 + 1e-3 * rng.standard_normal(base.shape)))):
         params = jnp.asarray(params)
         results = {}
-        for flag in (False, True):
-            sim.STATIC_PARAMETER_LAYOUT = flag
-            results[flag] = loss_and_grad(arrays, params)
-        (v0, o0, g0), (v1, o1, g1) = results[False], results[True]
-        same = bool(np.array_equal(np.asarray(v0), np.asarray(v1))) and all(
-            np.array_equal(np.asarray(a), np.asarray(b)) for a, b in zip(o0, o1)
-        ) and bool(np.array_equal(np.asarray(g0), np.asarray(g1)))
-        if not same:
-            failures += 1
-            print("  MISMATCH", label, "max |dgrad|", float(np.max(np.abs(np.asarray(g0) - np.asarray(g1)))))
-        else:
-            print("  bitwise equal:", label)
-    for flag in (False, True):
-        sim.STATIC_PARAMETER_LAYOUT = flag
-        print("  forward-vjp jaxpr eqns, static layout =", flag, ":", count_eqns(arrays, jnp.asarray(base)))
-sim.STATIC_PARAMETER_LAYOUT = True
+        configs = ((False, False), (True, False), (True, True))  # (static layout, skip no-ops)
+        for static, skip in configs:
+            sim.STATIC_PARAMETER_LAYOUT, sim.SKIP_STATIC_NOOPS = static, skip
+            results[(static, skip)] = loss_and_grad(arrays, params)
+        v0, o0, g0 = results[configs[0]]
+        for config in configs[1:]:
+            v1, o1, g1 = results[config]
+            same = bool(np.array_equal(np.asarray(v0), np.asarray(v1))) and all(
+                np.array_equal(np.asarray(a), np.asarray(b)) for a, b in zip(o0, o1)
+            ) and bool(np.array_equal(np.asarray(g0), np.asarray(g1)))
+            if not same:
+                failures += 1
+                print("  MISMATCH", label, config, "max |dgrad|",
+                      float(np.max(np.abs(np.asarray(g0) - np.asarray(g1)))))
+            else:
+                print("  bitwise equal:", label, config)
+    print("  links identity:", layout is not None and layout.linking_is_identity(sim.LINKING_FUNCTIONS, sim.identity_link),
+          "detector phases:", layout is not None and layout.has_detector_phases)
+    for static, skip in configs:
+        sim.STATIC_PARAMETER_LAYOUT, sim.SKIP_STATIC_NOOPS = static, skip
+        print("  forward-vjp jaxpr eqns", (static, skip), ":", count_eqns(arrays, jnp.asarray(base)))
+sim.STATIC_PARAMETER_LAYOUT, sim.SKIP_STATIC_NOOPS = True, True
 print("FAILURES:", failures)
 raise SystemExit(1 if failures else 0)
