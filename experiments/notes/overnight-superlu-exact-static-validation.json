@@ -1,0 +1,197 @@
+{
+  "manifest_digest": "a000f361512782c27a67ccc81f60f58cee45022e8fd029e46766a67bd07d7a8a",
+  "parent_sha": "3b107d69d9d083f7aaa5f11b952f0098ed0ba528",
+  "configuration_count": 6,
+  "defaults_byte_exact": true,
+  "rows": [
+    {
+      "parameters": {
+        "factor_layout": "default"
+      },
+      "effective_options": {
+        "DiagPivotThresh": null,
+        "ColPerm": "COLAMD",
+        "PanelSize": null,
+        "Relax": null
+      },
+      "public_fallback_keywords": {
+        "permc_spec": "COLAMD"
+      },
+      "changed_files": [],
+      "source_sha256": {
+        "differometor/__init__.py": "c6360288610bd57f2313ce3c2d6c04935ae8be0c511822349ccc8e281e213a06",
+        "differometor/build.py": "ee0e0e787fb70d85fe7cf11e41aa7fc50e18deb7a2a05c6f2b80b9613344ebe6",
+        "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+        "differometor/host.py": "595ff7858807656e7ee882c485aa5f7d4b0e7b15e12233a813dbe289a08b55d3",
+        "differometor/host_pass.py": "dac6e9703cd8e77cbe6318f796fd3dd217ec8e3dd99de5f8b598e81de3789afe",
+        "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+        "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+        "differometor/simulate.py": "a14a3c37cc7b9964c8c24d3277f1fcb4e0ea916674464befeb15c474bd560135",
+        "differometor/sparse.py": "6eaa9949440af240b936e35e30726c338f3abba9b0fd4764eec2ce806a9577d0",
+        "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+      },
+      "static_validation_passed": true
+    },
+    {
+      "parameters": {
+        "factor_layout": "default_relax4"
+      },
+      "effective_options": {
+        "DiagPivotThresh": null,
+        "ColPerm": "COLAMD",
+        "PanelSize": null,
+        "Relax": 4
+      },
+      "public_fallback_keywords": {
+        "permc_spec": "COLAMD",
+        "panel_size": null,
+        "relax": 4
+      },
+      "changed_files": [
+        "differometor/host_pass.py"
+      ],
+      "source_sha256": {
+        "differometor/__init__.py": "c6360288610bd57f2313ce3c2d6c04935ae8be0c511822349ccc8e281e213a06",
+        "differometor/build.py": "ee0e0e787fb70d85fe7cf11e41aa7fc50e18deb7a2a05c6f2b80b9613344ebe6",
+        "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+        "differometor/host.py": "595ff7858807656e7ee882c485aa5f7d4b0e7b15e12233a813dbe289a08b55d3",
+        "differometor/host_pass.py": "8b3c61db5235e28fc6566f01a1f39473a405fa66fe608ea81c3a4cda4aa086e0",
+        "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+        "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+        "differometor/simulate.py": "a14a3c37cc7b9964c8c24d3277f1fcb4e0ea916674464befeb15c474bd560135",
+        "differometor/sparse.py": "6eaa9949440af240b936e35e30726c338f3abba9b0fd4764eec2ce806a9577d0",
+        "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+      },
+      "static_validation_passed": true
+    },
+    {
+      "parameters": {
+        "factor_layout": "panel8"
+      },
+      "effective_options": {
+        "DiagPivotThresh": null,
+        "ColPerm": "COLAMD",
+        "PanelSize": 8,
+        "Relax": null
+      },
+      "public_fallback_keywords": {
+        "permc_spec": "COLAMD",
+        "panel_size": 8,
+        "relax": null
+      },
+      "changed_files": [
+        "differometor/host_pass.py"
+      ],
+      "source_sha256": {
+        "differometor/__init__.py": "c6360288610bd57f2313ce3c2d6c04935ae8be0c511822349ccc8e281e213a06",
+        "differometor/build.py": "ee0e0e787fb70d85fe7cf11e41aa7fc50e18deb7a2a05c6f2b80b9613344ebe6",
+        "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+        "differometor/host.py": "595ff7858807656e7ee882c485aa5f7d4b0e7b15e12233a813dbe289a08b55d3",
+        "differometor/host_pass.py": "fbe8414623c6c4e82cf5d388d9328f87c4529f78d4d25afd74e6f3c98936c6d2",
+        "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+        "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+        "differometor/simulate.py": "a14a3c37cc7b9964c8c24d3277f1fcb4e0ea916674464befeb15c474bd560135",
+        "differometor/sparse.py": "6eaa9949440af240b936e35e30726c338f3abba9b0fd4764eec2ce806a9577d0",
+        "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+      },
+      "static_validation_passed": true
+    },
+    {
+      "parameters": {
+        "factor_layout": "panel8_relax4"
+      },
+      "effective_options": {
+        "DiagPivotThresh": null,
+        "ColPerm": "COLAMD",
+        "PanelSize": 8,
+        "Relax": 4
+      },
+      "public_fallback_keywords": {
+        "permc_spec": "COLAMD",
+        "panel_size": 8,
+        "relax": 4
+      },
+      "changed_files": [
+        "differometor/host_pass.py"
+      ],
+      "source_sha256": {
+        "differometor/__init__.py": "c6360288610bd57f2313ce3c2d6c04935ae8be0c511822349ccc8e281e213a06",
+        "differometor/build.py": "ee0e0e787fb70d85fe7cf11e41aa7fc50e18deb7a2a05c6f2b80b9613344ebe6",
+        "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+        "differometor/host.py": "595ff7858807656e7ee882c485aa5f7d4b0e7b15e12233a813dbe289a08b55d3",
+        "differometor/host_pass.py": "a16fc8317ae3e3363a54fa3671b90e9894d6b373467c1f3ee2f176d617eba932",
+        "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+        "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+        "differometor/simulate.py": "a14a3c37cc7b9964c8c24d3277f1fcb4e0ea916674464befeb15c474bd560135",
+        "differometor/sparse.py": "6eaa9949440af240b936e35e30726c338f3abba9b0fd4764eec2ce806a9577d0",
+        "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+      },
+      "static_validation_passed": true
+    },
+    {
+      "parameters": {
+        "factor_layout": "panel16"
+      },
+      "effective_options": {
+        "DiagPivotThresh": null,
+        "ColPerm": "COLAMD",
+        "PanelSize": 16,
+        "Relax": null
+      },
+      "public_fallback_keywords": {
+        "permc_spec": "COLAMD",
+        "panel_size": 16,
+        "relax": null
+      },
+      "changed_files": [
+        "differometor/host_pass.py"
+      ],
+      "source_sha256": {
+        "differometor/__init__.py": "c6360288610bd57f2313ce3c2d6c04935ae8be0c511822349ccc8e281e213a06",
+        "differometor/build.py": "ee0e0e787fb70d85fe7cf11e41aa7fc50e18deb7a2a05c6f2b80b9613344ebe6",
+        "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+        "differometor/host.py": "595ff7858807656e7ee882c485aa5f7d4b0e7b15e12233a813dbe289a08b55d3",
+        "differometor/host_pass.py": "46c12c1b35eec357b6217ad42b017ea567e515cfdde94c0c47e746c39dbdc39c",
+        "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+        "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+        "differometor/simulate.py": "a14a3c37cc7b9964c8c24d3277f1fcb4e0ea916674464befeb15c474bd560135",
+        "differometor/sparse.py": "6eaa9949440af240b936e35e30726c338f3abba9b0fd4764eec2ce806a9577d0",
+        "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+      },
+      "static_validation_passed": true
+    },
+    {
+      "parameters": {
+        "factor_layout": "panel16_relax4"
+      },
+      "effective_options": {
+        "DiagPivotThresh": null,
+        "ColPerm": "COLAMD",
+        "PanelSize": 16,
+        "Relax": 4
+      },
+      "public_fallback_keywords": {
+        "permc_spec": "COLAMD",
+        "panel_size": 16,
+        "relax": 4
+      },
+      "changed_files": [
+        "differometor/host_pass.py"
+      ],
+      "source_sha256": {
+        "differometor/__init__.py": "c6360288610bd57f2313ce3c2d6c04935ae8be0c511822349ccc8e281e213a06",
+        "differometor/build.py": "ee0e0e787fb70d85fe7cf11e41aa7fc50e18deb7a2a05c6f2b80b9613344ebe6",
+        "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+        "differometor/host.py": "595ff7858807656e7ee882c485aa5f7d4b0e7b15e12233a813dbe289a08b55d3",
+        "differometor/host_pass.py": "8d84dd39fb44845854a3e21954bd0d0f1954dc409eef9d3d8ca3a972d8e6fb79",
+        "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+        "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+        "differometor/simulate.py": "a14a3c37cc7b9964c8c24d3277f1fcb4e0ea916674464befeb15c474bd560135",
+        "differometor/sparse.py": "6eaa9949440af240b936e35e30726c338f3abba9b0fd4764eec2ce806a9577d0",
+        "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+      },
+      "static_validation_passed": true
+    }
+  ],
+  "scope": "Static source binding, syntax and matching native/fallback options only. No numerical evaluation or performance evidence."
+}
