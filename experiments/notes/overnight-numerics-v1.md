@@ -1101,3 +1101,100 @@ Inherited strict disagreements remain unresolved: grid signal entries and
 Prior aLIGO 29/29 extra coordinate checks and official passes do not erase them.
 The host custom VJP still lacks forward-mode JVP/Hessian support. Deadline stays
 2026-11-22 09:27:44 UTC.
+
+## Candidate 17 feedback: no execution gain established
+
+SHA 3dee003b7b8c913f57c5856e84cb181677d55378; dual request
+0d14134c56fa4302ae0e2adbce4dca11 (grid-1/2/3 and aligo-1/2/3).
+
+- Grid fresh complete seconds: 0.8217093646526337, 0.8099264372140169,
+  0.8075800202786922; median 0.8099264372140169; range
+  [0.8075800202786922, 0.8217093646526337].
+- aLIGO fresh complete seconds: 0.5588315296918154, 0.5449592173099518,
+  0.5497273728251457; median 0.5497273728251457; range
+  [0.5449592173099518, 0.5588315296918154].
+- Grid build ms 70.328653/76.730838/74.885411, forward
+  182.568124/182.243131/181.025848, reverse 84.167758/87.277632/85.448883.
+  Unpaired median deltas from admitted candidate 7: complete +8.348754 ms,
+  build +0.891331 ms, forward +1.080044 ms, reverse +0.091459 ms.
+- aLIGO build ms 41.913426/38.833935/38.502777, forward
+  32.094724/32.546908/32.641437, reverse 14.585467/14.755264/14.688604.
+  Unpaired median deltas: complete +1.172217 ms, build +0.871390 ms,
+  forward -0.343242 ms, reverse +0.304452 ms. No stable improvement claimed.
+- Maximum sampled RSS bytes: grid 604778496, aLIGO 289603584,
+  generalization 872001536. No infrastructure failures. Fixed CPU2/thread-one
+  policy; other-host contention not excluded. No paired parent cohort supplied.
+- All six official runs passed. Inspected receipt comparison records for every
+  output/gradient and all 14 generalization cases: all seed comparisons pass.
+  Both official arrays archive hashes match previous candidates (grid 112c0407...,
+  aLIGO 9c1ce936...). All six strict-comparison records and both seed/pristine
+  14-case comparison lists equal candidate 16's records exactly. Raw remote
+  archives were not reopened locally. The generalization archive hash includes
+  timing metadata and is not treated as proof of numerical identity.
+- Pristine strict failures remain unchanged, including rand1/rand3 sensitivity
+  discrepancies. Independent source review is absent; confirmed_improvement=false;
+  admission declined for missing review, insufficient large gain and range overlap.
+
+Decision: retire exact-index row deduplication and restore host_pass.py to admitted
+candidate 7. Do not combine it with the next experiment. Failed source remains in
+its committed history. The prior candidate-13 paired-confirmation and callback
+profiling requests remain outstanding.
+
+## Candidate 18 — share primal arithmetic across derivative directions
+
+Candidate SHA and both benchmark/job identifiers pending supervisor. Relative to
+admitted ee4fea28c04d482566be16e916b609d7c6a99e5e, only host.py changes. The
+candidate-17 host_pass.py restoration is part of the submission. No other-lane
+transfer or combination with candidate 13 is included.
+
+Hypothesis and proof of redundant work: function_jacobian currently calls the same
+component function once for every requested differentiated input slot. Each call
+recomputes its primal intermediates. Candidate 18 calls the component once with
+independent Wirtinger directions sharing those intermediates. A new internal
+_Directions object holds a primal and a dictionary of (a,b) per active seed.
+Operators implement the existing Dual formulas independently for each seed.
+Membership is structural: a derivative currently equal to zero stays present.
+When a direction exists in only one operand, use the corresponding original
+scalar-operand/reflected rule; do not replace absent derivatives with zero arrays.
+That distinction preserves singular/nonfinite propagation. Conjugation still
+swaps and conjugates a/b. Slot aliases and duplicate requests preserve all columns.
+The full J/K interface, output layout, contractions and parameter scatter remain.
+No values or derivative results are cached between calls. All forward assembly,
+factors, refinement settings, physical formulas and JAX boundaries remain those
+of admitted candidate 7.
+
+This is a computation-sharing experiment, not another derivative-storage variant.
+It adds interpreter bookkeeping and may lose for cheap functions or small groups;
+only complete exact-SHA official results can decide. There are no tuning knobs.
+
+Local evidence from overnight-numerics-directions-check.py:
+
+- 4104 component/Jacobian/contraction comparisons against separately extracted
+  admitted host source, all 19 functions, scalar/2-D/3-D batches, complex inputs,
+  each slot at zero, empty/partial/full/reordered/duplicate/negative/numpy-array
+  slot specifications. Finite values match bitwise including signed zeros;
+  nonfinite values compare array-equal.
+- Eight SystemPlan backward integration checks, including duplicate writes and
+  nonfinite cotangents, match the admitted Jacobian implementation.
+- 133 extra all-zero/one/negative/extreme (1e-12,1e12)/infinite/NaN input checks.
+- 1596 independent component central-difference checks (real and imaginary
+  coordinates, three points/function, both step sizes required) pass the unchanged
+  2e-7 normalized bound. Worst normalized error 1.7286649972079704e-9. This does
+  not resolve any full-system finite-difference question.
+- Seven-direction synthetic surface evaluation: transcendental shim calls
+  98 -> 14, argument elements 3234 -> 462. No official workload or timing run.
+  This count omits derivative-slope internals and is not a speedup estimate.
+- Local NumPy AST checks do not exercise JAX callbacks/JIT; no dependencies were
+  installed. git diff --check passes. The shared diagnostic loader now recognizes
+  _Directions so its source extraction remains usable with the candidate.
+
+Request both unchanged full official benchmarks and all saved-output/gradient and
+14-case comparisons on the new exact SHA, independent source review, and at least
+five paired fresh-process complete candidate/parent runs if phase and total results
+are promising. Inspect reverse execution and all first-run costs separately for
+grid and aLIGO, memory and contention. Investigate any newly introduced numerical
+mismatch before further tuning. No gain or universal compatibility claimed.
+
+All inherited strict/pristine discrepancies and unresolved grid FD coordinates
+54/59/63/136/161/163 remain open; prior aLIGO extra checks were 29/29. Whole-pass
+custom VJP JVP/Hessian limits remain. Deadline is 2026-11-22 09:27:44 UTC.
