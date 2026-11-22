@@ -87,9 +87,11 @@ class SystemPlan:
     def values(self, rows, base):
         """Structural values (B, nnz_total) after the ordered update writes."""
         blocks = [evaluate_function(f, rows[:, indices]) for f, indices, _ in self.groups]
-        outputs = np.concatenate(blocks, axis=1).reshape(rows.shape[0], -1)[:, self.flat_selection]
+        outputs = np.concatenate(blocks, axis=1).reshape(rows.shape[0], -1)
         values = np.repeat(np.asarray(base, dtype=np.complex128)[None, :], rows.shape[0], axis=0)
-        values[:, self.writes[self.last]] = outputs[:, self.last]
+        # Compose the output selection with the last-write mask using the
+        # existing static indices; avoid materializing outputs for overwritten writes.
+        values[:, self.last_positions] = outputs[:, self.last_selection]
         return values
 
     def backward(self, rows, values_bar):

@@ -3338,3 +3338,118 @@
   remain open. Prior aLIGO29/29 checks are bounded; host VJP remains first-order
   reverse only. No change to tolerances, fixtures, workload, outputs, compiler
   settings or three JIT stages. Deadline2026-11-22 09:27:44 UTC unchanged.
+
+
+### Candidate37 feedback — retire one-allocation padding
+
+- SHA18f3dc6a164d5c402d53afcb5453a4903ddd4580; evaluation
+  f69e2e1fae5e4a37a02a2774daa25797, grid-1/2/3 and aligo-1/2/3.
+  Receipt: experiments/runs/overnight-20261122/overnight-overhead-v1/f69e2e1fae5e4a37a02a2774daa25797.json.
+  Both official benchmarks passed3/3; confirmed_improvement=false and no
+  independent source review. Publication declined for insufficient large gain,
+  overlapping ranges and missing source review.
+- Large fresh-process seconds:0.8274971060454845,0.7945214826613665,
+  0.7996367327868938; median0.7996367327868938, range
+  0.7945214826613665–0.8274971060454845 (relative4.124%).
+  Official aLIGO:0.5615444909781218,0.550166567787528,0.5507460087537766;
+  median0.5507460087537766, range0.550166567787528–0.5615444909781218
+  (relative2.066%). Historical ee4fea2 median deltas -1.941 ms large and
+  +2.191 ms aLIGO are unpaired and do not establish improvement.
+- Phase medians ms (large/aLIGO): imports266.635/266.966;
+  initialize3.490/3.606; load1.567/0.213; build73.835/39.136;
+  forward lower19.661/19.392, compile32.982/33.650, execute179.561/33.120;
+  sensitivity lower25.785/26.673, compile40.292/41.296, execute0.887/0.508;
+  gradient lower17.012/17.044, compile52.181/53.308, execute84.108/14.364;
+  host transfer0.198/0.153. Build samples73.838,73.835,72.404 ms large,
+  and39.136,39.522,38.781 ms aLIGO. Compared with36's different bookkeeping
+  variant, build medians rise3.885/0.774 ms; this is not a paired attribution.
+  There is no demonstrated target-phase saving to justify expanding this idea.
+- Sampled peak RSS bytes: large640585728,527347712,522162176;
+  aLIGO318533632,295055360,295239680; generalization775553024.
+  No sampled budget exceedance. EPYC9334 CPU2, single logical CPU and
+  library threads one, x64, no persistent cache, reviewed compiler flags.
+  Other-host contention not excluded; no matched quiet parent cohort supplied.
+- All saved carrier/signal/noise/powers/sensitivity/loss/gradient comparisons
+  pass initial-seed tolerances for six official runs and fourteen generalization
+  cases. Official archives equal36's archives. Generalization archive
+  cc8efad11c50c2330c4c3475830d8781f96e3ac4ee11200f89866094aa251d59
+  is not the initial-seed archive; self-comparison is not independent seed proof.
+  Pristine strict mismatches remain inherited: grid signal/loss/gradient,
+  aLIGO loss, and uifo_rand1/3 sensitivity log errors2.036099068405406e-4 /
+  5.8100919558157216e-5, among recorded generalization disagreements.
+  No new seed-relative failures reported. Focused NumPy padding diagnostic
+  remains unexecuted locally and no supervisor result was supplied.
+- Decision: retire37 and restore build.py to reviewed ee4fea2; all ten simulator
+  modules verified byte-identical to parent, syntax and whitespace checks pass.
+  Preserve37's exact evaluated revision and diagnostic; no reset or rewritten
+  history. This is bookkeeping, not a new evaluated candidate.
+  Do not continue row-allocation or membership microvariants without profiling.
+  Next concrete experiment is supervisor profiling of set_instructions and
+  builder array/device conversion costs using the existing own-note
+  overhead-profile.py (full filename overnight-overhead-profile.py), with actual
+  large, official aLIGO and third-setup inputs. The narrower candidate30 remains
+  preserved separately for focused diagnostics, review and matched-parent runs;
+  do not combine pending candidates or replay one noisy cohort as a gain.
+- Grid FD54/59/63/136/161/163 remain unresolved; prior extra aLIGO29/29
+  does not certify general accuracy. Pristine gradients33/161/180 stay visible.
+  Host custom VJP remains first-order reverse only. No benchmarks, installs,
+  commits or agents launched. Stop ends37's hypothesis, not the authorized
+  campaign. Absolute deadline2026-11-22 09:27:44 UTC remains unchanged.
+
+### Candidate38 — compose the forward output selection with final writes
+
+- New focused experiment following the explicit supervisor continuation request.
+  Reviewed simulator parent: ee4fea28c04d482566be16e916b609d7c6a99e5e.
+  Branch HEAD before submission: c624d18321bf7386f5ec747edfaa408f32a0c58b.
+  Candidate SHA and evaluation/job identifiers: pending supervisor assignment.
+  The preserved build.py edit retires37; it restores that module exactly to
+  ee4fea2. Candidate38 changes only SystemPlan.values in host_pass.py relative
+  to that reviewed simulator. No transfer of additional solver-lane changes.
+- Actual redundancy: the forward assembly first gathers every requested output
+  with flat_selection, then gathers the last writes with last. SystemPlan already
+  stores last_selection=flat_selection[last] and last_positions=writes[last]
+  for its reverse pass. Use those existing indices directly in forward assembly.
+  Concatenation and evaluation of ALL component groups remain in their original
+  order; no current-value test or component/derivative suppression is introduced.
+  No arithmetic, solver, refinement, adjoint or callback interface changes.
+- Hypothesis: eliminating the intermediate (batch, number-of-writes) gather and
+  repeated write-position selection may reduce host forward assembly overhead.
+  This is a distinct selection-composition experiment, not another builder
+  padding/membership variant or gather-to-JAX-slice trial. It adds no allocation
+  strategy, metadata, cache or build-time work. Setup/compile improvements are
+  not predicted. It may be too small to distinguish from first-run timing noise.
+- Evidence for target phase is limited to candidate37's evaluator observations:
+  forward execution medians179.561 ms large /33.120 ms official aLIGO; build
+  73.835/39.136 ms; imports266.635/266.966 ms. These are NOT measurements of38
+  or an attribution to SystemPlan.values. Candidate38 phase deltas, memory and
+  complete first-run timings are unmeasured. The pending profiling artifact
+  remains useful; no claim of a measured gain or quiet cohort is made.
+- Local validation: 7,381 exhaustive stdlib selection-composition cases passed
+  (zero through four writes, repeated destinations and repeated output indices).
+  Syntax and whitespace checks passed. AST isolation confirms only values changed
+  in host_pass.py; the other nine simulator modules exactly match ee4fea2.
+  This is indexing evidence, not NumPy execution or a physical correctness test.
+- Focused diagnostic: experiments/notes/overnight-overhead-final-selection-check.py.
+  --structural-only was executed. Default NumPy execution remains UNEXECUTED
+  locally: this Python lacks NumPy and no dependencies were installed. The default
+  extracts the actual candidate values method and compares it with the original
+  method over72 cases varying batch size, group widths including an empty group,
+  zero/repeated writes, repeated selections, finite values, NaNs, infinities and
+  signed zeros. It checks byte-identical results, unchanged component-call order
+  and no input mutation. This is a small synthetic check, not an optical benchmark.
+- Supervisor request: run the focused NumPy diagnostic, then both unchanged full
+  official benchmarks on one exact candidate SHA, save all arrays/gradients,
+  run the fourteen-case generalization checks and obtain independent source review.
+  If target-phase and complete first-run evidence warrants it, compare repeated
+  fresh candidate and ee4fea2 processes interleaved under matching resource policy.
+  Report large and aLIGO separately, with every sample, median/range, phase costs,
+  sampled memory and overlap information. Do not promote merely on official PASS.
+  If no stable improvement, retire38; next step is actual supervisor profiling
+  rather than extending this into component pruning or changing derivative math.
+- Inherited pristine signal/loss/gradient disagreements, including gradients
+  33/161/180, and uifo_rand1/3 sensitivity disagreements remain open. Grid finite
+  differences54/59/63/136/161/163 remain unresolved; prior aLIGO29/29 is bounded
+  evidence. Whole-pass custom VJP remains first-order reverse mode only.
+  All frequencies, design variables, physical outputs, gradients, three JIT
+  stages and package compiler settings are preserved. No independent benchmarks,
+  installs, commits, agents or infrastructure edits. Deadline unchanged.

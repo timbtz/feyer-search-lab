@@ -230,21 +230,11 @@ def set_instructions(
 
     # Standardize function input length to 7 by padding with placeholder zeros.
     if function_input_indices.shape[1] < function_input_indices_shape:
-        if type(function_input_indices) is np.ndarray and function_input_indices.dtype.kind in "buifc":
-            # Match concatenation with float64 zeros, using one output allocation.
-            # Keep every input slot, including zeros that may later be differentiated.
-            padded = np.zeros(
-                (function_input_indices.shape[0], function_input_indices_shape),
-                dtype=np.result_type(function_input_indices.dtype, np.float64),
-            )
-            padded[:, :function_input_indices.shape[1]] = function_input_indices
-            function_input_indices = padded
-        else:
-            pad_width = function_input_indices_shape - function_input_indices.shape[1]
-            function_input_indices = np.concatenate(
-                [function_input_indices, np.zeros((function_input_indices.shape[0], pad_width))],
-                axis=1,
-            )
+        pad_width = function_input_indices_shape - function_input_indices.shape[1]
+        function_input_indices = np.concatenate(
+            [function_input_indices, np.zeros((function_input_indices.shape[0], pad_width))],
+            axis=1,
+        )
 
     assert (
         function_input_indices.shape[1] == function_input_indices_shape
