@@ -3477,3 +3477,95 @@ overlap separately; no combined score. No candidate37 job identifiers or phase
 deltas exist yet. Continue to retain pristine signal/gradient33,161,180/loss,
 rand1/rand3 sensitivity and grid FD54,59,63,136,161,163 disagreements; extraaligo
 29/29 checks remain bounded evidence. Whole-pass JVP/Hessian support unchanged.
+
+## Candidate37 feedback and retirement
+
+Evaluated SHA7d99b714732316716cbb51f1416d67f4fd5f79ce, request
+f6c1b91f01c4463b94d107b856d8c45c (grid-1/2/3 and aligo-1/2/3).
+All6 official runs passed; confirmed_improvement=false, independent review=null.
+Large samples seconds [0.8628024198114872,0.8193307556211948,0.8165579065680504],
+median0.8193307556211948, range0.8165579065680504–0.8628024198114872.
+Aligo [0.5566264055669308,0.5586399864405394,0.54485247656703],
+median0.5566264055669308, range0.54485247656703–0.5586399864405394.
+Versus35 median large+0.046792ms and aligo+6.897837ms; versus admitted7
++17.753072ms/+8.071249ms. These are unpaired observations, not causal estimates.
+No combined score or ranking claim. Keep grid-1 imports292.191710ms; discard no
+sample. CPU2, one logical CPU, threads1, no persistent cache; overlap unknown.
+
+Median phases(ms), delta versus35: large imports264.945861(-2.607986),
+build74.700419(+4.765855), forward177.468713(-4.179200),
+reverse110.397460(+3.973560). Aligo imports267.932920(+3.101477),
+build38.178757(+0.583773), forward33.680843(+0.911925),
+reverse18.842999(-0.132572). Sampled RSS maxima large576606208,
+aligo315228160, generalization820076544 bytes; not guaranteed peaks.
+
+Inspected all6 output/gradient comparison records and hashes: both official
+output archives have exactly the same hashes as35 (largee0f2069ccab917ac4575f484a6c9b5f0ae2457bb59f736185a52cd309a6c03e2,
+aligo1c27f50feafb3149eb9c2f4b48f767cc4c3ddbc1d64810c332dd5a7a260781f8).
+All strict comparison dictionaries equal35, including gradient maximum/relative
+errors. The14 generalization case records equal35 for both references:14/14
+seed passes,4/14 pristine passes. Raw remote NPZ files were not reopened here.
+No new discrepancy identified; existing pristine failures remain unresolved.
+
+Decision: retire37's np.take layout change. Large total is effectively unchanged
+against35 and the forward/reverse phase differences offset. Restore35's original
+advanced indexing and use it for the following distinct reuse experiment.
+This does not reinstate candidate36's scalar estimate or admitted7's approximate
+guards. Preserve37 in history; no claim of a shared improvement.
+
+## Candidate38: retain gathered component inputs within assembly (unevaluated)
+
+Numerical parent35 SHA7a9480332bad29b5aaeacc5a4628481581507e7a; candidate SHA/job
+identifiers pending supervisor. Source inspection establishes real duplication:
+_assemble calls SystemPlan.values for carrier/signal/noise, each gathering
+rows[:,indices]; host_backward later passes the same retained parameter rows to
+SystemPlan.backward, which repeats every differentiable group's gather. The
+existing assembly state retains row arrays, but did not retain these copies.
+
+Add SystemPlan.gather_inputs, optional gathered arguments to values/backward,
+and three input tuples in _assemble's returned state. These are fresh advanced-
+index copies used first by primal assembly, then by its reverse. The existing
+input digest, one-use pop and clear rules govern this state. Nothing numeric is
+stored on the static plan; every forward still gathers, assembles and factors
+fresh. Missing/mismatched state causes _assemble to run again; its newly gathered
+inputs then serve that backward. Standalone values/backward calls without a
+supplied tuple retain their original behavior. Supplied tuples are internal
+assembly residuals and must belong to the same rows, documented on the methods.
+
+Hypothesis: eliminate reverse input-gather allocations and indexing without
+changing array layout or floating-point operation order. The cost is longer
+input-array lifetimes (including non-differentiable groups), greater retained
+memory, and possibly higher forward peak memory than the original sequential
+list comprehension. This could outweigh the small gather saving. No expensive
+Jacobian blocks or outputs are precomputed, no derivative slots are pruned, and
+no solve/refinement/guard arithmetic is changed. No wall-clock gain is measured.
+
+Validation: overnight-numerics-retained-inputs-check.py passed2831 synthetic
+component/Jacobian/contraction checks and96 full SystemPlan checks against35,
+with all19 functions, complex/zero/signed-zero/nonfinite/boundary values,
+C/F/sliced/reversed storage, repeated/negative indices, overwritten destinations
+and repeated selections. Saved input copies remain unmodified. Finite entries
+compare bitwise; nonfinite entries array-equal. A further12 actual host kernel
+scenarios on tiny synthetic matrices exercise _assemble, host_forward and
+host_backward with real refined SciPy solves: counts1/4, two detectors,
+noise-row reuse on/off, matching/cleared/interleaved assembly states. All5
+forward outputs and7 backward outputs match35 bitwise. Factorization counts
+match, and a repeated fresh forward always adds1+count new factorizations.
+Each reverse removes3 gathers in this three-group construction. In the final
+interleaved scenario, gathers15→12 and total gathered bytes3360→2688, with
+672 bytes retained in the matching state; factors20→20. Counts are synthetic,
+not claims about the official topology. Initial diagnostic used an unhashable
+mock pattern; repaired to identity-hashable like production. A subsequent test
+edit had an unmatched parenthesis; fixed and the complete check reran passing.
+Neither was a simulator numerical failure. No official workload was run locally.
+
+Supervisor request: both unchanged official benchmarks, saved arrays/gradients
+and14 generalization cases on the exact new SHA. Count retained bytes and gather
+calls in a separate diagnostic, including cache misses; official timings must
+include all extra retention/build work. If promising, request paired fresh-
+process repeats against35 and independent source review before any promotion,
+and compare the whole result to admitted7 separately. Preserve the existing
+pristine signal/gradient33,161,180/loss, rand1/rand3 log-sensitivity and grid
+FD54,59,63,136,161,163 questions. Earlier extraaligo29/29 and whole-pass lack of
+JVP/Hessians remain unchanged. If this reuse has no benefit, retire it rather
+than combine it with the unsuccessful layout37.
