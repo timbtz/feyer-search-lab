@@ -119,3 +119,58 @@
 - Next decision: reject on new output/gradient discrepancies, failed empty-pattern/AD checks, or no
   stable total gain. A genuinely different next mechanism is builder conversion work; inspect its
   redundant host/device copies before changing it. Do not repeatedly tweak this gather without evidence.
+
+### Candidate 2 feedback (inspected by Claude)
+
+- Candidate SHA `453b494b8d2b6e3f04f106749b6ebe052807793b`; request `246046dc70c94ea098f67ce8151bf783`;
+  publication commit `d2b6095`. Both official benchmarks passed all three fresh processes.
+- Large totals: 0.985600688, 0.958901810, 0.958477251 s; median **0.958901810**, range 0.958477–0.985601.
+- aLIGO totals: 0.611746792, 0.614207480, 0.621004220 s; median **0.614207480**, range 0.611747–0.621004.
+- Current-cohort seed calibration (evaluation `411b23262c7b481391a712264743b0e5`, same SHA 53f38d3):
+  large 1.005881, 0.976064, 0.980870 (median 0.980870); aLIGO 0.627573, 0.623209, 0.627954 (median 0.627573).
+  Unpaired median differences: large −21.97 ms (−2.24%), aLIGO −13.37 ms (−2.13%). Ranges overlap on large
+  (candidate max 0.985601 > seed min 0.976064), so the selection policy refuses promotion without paired
+  evidence; aLIGO ranges do not overlap (candidate max 0.621004 < seed min 0.623209). Not a confirmed gain.
+- Phase medians, ms (candidate 2 vs candidate 1; large / aLIGO): imports 264.9/265.0 vs 266.0/264.0;
+  build 69.9/37.8 vs 73.4/38.5; forward lower 32.0/32.2 vs 36.9/37.3; forward compile 74.8/75.4 vs 77.4/88.8;
+  sensitivity lower 25.4/25.3 vs 25.8/31.3; sensitivity compile 39.7/40.0 vs 39.7/48.9; gradient lower
+  17.0/16.8 vs 16.9/17.7; gradient compile 53.2/55.1 vs 53.5/55.4; forward exec 185.2/33.3; gradient exec
+  191.9/28.9. Forward lower −4.9 ms is consistent across all six runs (31.98–32.30 ms vs 36.9 ms median),
+  matching the gather mechanism. aLIGO candidate-1 medians were inflated (noisier cohort).
+- Numerics: saved official arrays and all 14 generalization cases bitwise equal to seed. Pristine-reference
+  disagreements unchanged (large signal 131, gradient 3, loss; aLIGO loss; uifo_rand1/rand3 log errors
+  2.036e-4/5.81e-5, others). `strict_passed=false` is the inherited pristine comparison, not new.
+- Peak RSS: large 516/571/536 MB; aLIGO 308/307/311 MB. Job walls 3.82/3.55/3.55 s and 1.64 s.
+- Source review: none yet (`requires_source_review`). The gather-check script result was not in feedback.
+- Decision: candidate 2 is the strongest lane candidate so far, provisional. Request paired interleaved
+  fresh-process runs (candidate 453b494 vs seed 53f38d3, ≥5 each, large and aLIGO) and independent review.
+  Candidate 3 below builds on it (stacked; attribute only via its own paired comparison against 453b494).
+
+## Candidate 3: static parameter-row layout on the host path
+
+- Parent `453b494` (candidate 2) plus notes. Candidate SHA pending supervisor commit.
+- Mechanism: `simulate` begins with three traced-index steps — insert optimized values
+  (`parameters.at[[0], idx].set(opt[vidx])`), linking (`parameters[0, linked]` → switch → `.at[...].set`)
+  and detector phases (`parameters[0, qhd_idx]`, then `scatter_mul` with traced placing indices). These
+  index arrays are jit arguments, so generic indexing emits dynamic index normalization/clamping, and
+  `.at[].set` cannot assume unique destinations: JAX's non-unique scatter JVP builds an id-tagging
+  scatter/gather/compare/select construction that then also has to be transposed in the gradient program.
+- Change: `host_pass.ParameterLayout` copies the builder's concrete indices into the static `HostPlan`
+  (included in its hash key) after verifying nonnegative, in-bounds indices and unique write destinations
+  (insertion and link destinations); otherwise `None` and the generic path is used. On the host path
+  `simulate` uses explicit `lax.gather` / `lax.scatter(unique_indices=True, promise_in_bounds)` with these
+  static indices, and passes static qhd placing indices to the unchanged `scatter_mul`. A trace-time
+  shape check (`applies`) falls back if parameters/optimized shapes don't match the layout. Linking
+  function dispatch (vmap of `lax.switch` with traced function indices) is unchanged. Dense/sparse paths and
+  all host numerics are unchanged. Flag `simulate.STATIC_PARAMETER_LAYOUT` toggles it.
+- Precedent/invalidation: the host plan already uses static copies of the sweep indices
+  (`carrier_changing`, `signal_changing`) instead of the traced arrays; same rule now documented in the
+  `simulate` docstring: re-run `run_build_step` if any index array changes. No answers or values cached:
+  parameter values remain traced and differentiated.
+- Expected values: bitwise identical outputs and gradients (copies/casts only; unique scatter derivative is
+  gather/scatter of the same values). Hypothesis: lower forward lower/compile and gradient lower/compile
+  by a few ms on both setups. Size unmeasured; it could be within noise.
+- Local validation: none executable (no JAX locally). `experiments/notes/overnight-overhead-layout-check.py`
+  compares flag on/off bitwise (value, outputs, full gradient) on aLIGO space/amplitude/frequency modulation
+  at default and perturbed parameters, and prints forward-vjp jaxpr equation counts.
+- Decision rule: reject on any output/gradient difference vs seed, or if lower+compile phases do not drop.

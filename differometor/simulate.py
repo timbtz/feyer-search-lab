@@ -390,6 +390,11 @@ def simulate(
         the carrier, signal and noise systems are assembled as structural-nonzero
         value vectors and solved with sparse LU. Rebuild it whenever base matrices'
         structure, selectors or matrix destinations change; omit it for the dense path.
+    host_plan : HostPlan | None
+        Optional static host-evaluation plan produced by `run_build_step`. It carries
+        the builder's concrete sweep, insertion, linking and detector-phase indices;
+        when present those static copies are used instead of the traced index arrays.
+        Re-run `run_build_step` whenever any index array or selector changes.
 
     Returns
     -------
@@ -408,6 +413,33 @@ def simulate(
     - Conjugation and block manipulation follow the conventions used for upper and lower
       sidebands in frequency-domain interferometer models.
     """
+    host_path = sparse_structure is not None and SPARSE_SOLVES and HOST_PASS and host_plan is not None
+    layout = getattr(host_plan, "parameter_layout", None) if host_path and STATIC_PARAMETER_LAYOUT else None
+    if layout is not None and layout.applies(parameters, optimized_parameters):
+        # Same insertion, linking and detector-phase steps as below, indexed with the
+        # builder's concrete (nonnegative, in-bounds, unique-destination) indices.
+        row = parameters.reshape(parameters.shape[1:])
+        row = _static_set(row, layout.optimized_parameter_indices,
+                          _static_take(optimized_parameters, layout.optimized_value_indices))
+        inputs_to_link = _static_take(row, layout.linked_indices)
+        outputs_to_link = vmap(lambda i, x: lax.switch(i, LINKING_FUNCTIONS, x))(
+            linking_function_indices, inputs_to_link
+        )
+        row = _static_set(row, layout.indices_to_link, outputs_to_link)
+        qhd_phase_values = jnp.exp(1j * jnp.radians(_static_take(row, layout.qhd_parameter_indices)))
+        return _simulate_host_pass(
+            host_plan,
+            row.reshape(1, -1),
+            qhd_phase_values,
+            carrier_changing_values,
+            signal_changing_values,
+            carrier_matrix,
+            signal_matrix,
+            noise_matrix,
+            noise_selection_vectors,
+            layout.qhd_placing_indices,
+        )
+
     # Insert optimized parameter values into the base parameter row.
     parameters = parameters.at[[0], optimized_parameter_indices].set(
         optimized_parameters[optimized_value_indices]
@@ -921,6 +953,40 @@ def _simulate_sparse(
 # custom_vjp: jvp, jacfwd and second order raise JAX's explicit errors. False
 # keeps the forward-mode capable path (HOST_COMPONENTS + custom_linear_solve).
 HOST_PASS: bool = True
+
+
+# On the host path, index the parameter row with the host plan's static layout
+# (explicit gathers and unique-index scatters) instead of generic traced indexing.
+# `.at[].set` with traced indices cannot assume unique destinations, so its JVP and
+# transpose build an id-tagging scatter/compare/select construction; with
+# builder-verified unique destinations a scatter's derivative is a plain
+# gather/scatter. Values are identical. False keeps the generic indexing.
+STATIC_PARAMETER_LAYOUT: bool = True
+
+
+def _static_take(values, indices):
+    """values[indices] for a 1-D array and concrete nonnegative in-bounds indices."""
+    return lax.gather(
+        values,
+        np.asarray(indices, dtype=np.int64)[:, None],
+        lax.GatherDimensionNumbers(offset_dims=(), collapsed_slice_dims=(0,), start_index_map=(0,)),
+        slice_sizes=(1,),
+        mode=lax.GatherScatterMode.PROMISE_IN_BOUNDS,
+    )
+
+
+def _static_set(values, indices, updates):
+    """values.at[indices].set(updates) for concrete unique in-bounds indices (1-D)."""
+    return lax.scatter(
+        values,
+        np.asarray(indices, dtype=np.int64)[:, None],
+        jnp.asarray(updates).astype(values.dtype),
+        lax.ScatterDimensionNumbers(
+            update_window_dims=(), inserted_window_dims=(0,), scatter_dims_to_operand_dims=(0,)
+        ),
+        unique_indices=True,
+        mode=lax.GatherScatterMode.PROMISE_IN_BOUNDS,
+    )
 
 
 def _simulate_host_pass(
