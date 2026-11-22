@@ -260,3 +260,39 @@
   and detector-phase conditions apply and the forward-vjp jaxpr equation counts.
 - Decision rule: reject on any array difference, or if forward+gradient lower+compile does not drop vs 2b4654f
   (forward 19.5/33.4 ms, gradient 17.3/52.0 ms large medians).
+
+### Candidate 5 feedback (inspected by Claude): mechanism confirmed vs its parent; not promoted (incumbent moved)
+
+- Candidate SHA `c3c4ab0a9118529b0e3afa33284ab3e5cc6f2523`; request `366ba7a5aaf54ae381861d49dcf004cc`; publication
+  `c5fe984`. Official passed 3/3 on both setups; official arrays and all 14 generalization cases bitwise equal to seed.
+  Inherited pristine disagreements unchanged.
+- Large: 0.908242, 0.882519, 0.875051 s (median 0.882519) vs parent 2b4654f 0.911267: −28.7 ms (−3.2%).
+  aLIGO: 0.532373, 0.532223, 0.532545 s (median 0.532373, range 0.06%) vs 0.560094: −27.7 ms (−4.9%).
+- Phase medians large/aLIGO vs 2b4654f: forward lower 11.25/11.28 vs 19.5/19.2 ms; forward compile 27.15/27.33 vs
+  33.4/33.4; gradient lower 11.56/11.52 vs 17.3/16.7; gradient compile 45.67/47.07 vs 52.0/53.2. Sensitivity
+  (benchmark readout) and execution unchanged. ≈26 ms of lower+compile removed, consistent in all six runs, i.e.
+  the improvement is attributable to the mechanism, not noise. Peak RSS large 578/591/582 MB, aLIGO 301/310/311 MB.
+- Not promoted: the admitted campaign best had moved to `5bbb91e` (evaluation `2c7810bf…`: candidate 3 plus the
+  solver lane's backward changes; large median 0.852667 s, range 0.850608–0.882359; aLIGO 0.555710 s). Policy
+  compared c3c4ab0 against that incumbent (requires_source_review, large gain below threshold, ranges overlap).
+  Not a failed mechanism: the incumbent includes a different, complementary change.
+- Consecutive submissions without a promoted gain: 2 (c4 no effect; c5 effective but superseded parent).
+
+## Candidate 6: candidate 5's boundary-op removal transferred onto the campaign best 5bbb91e
+
+- Parents: `5bbb91e38ff993a10486f296a738860339cd05e0` (admitted campaign best, approved review, evaluation
+  `2c7810bfe84648299731e98a6bb133ae`) and `c3c4ab0` (candidate 5). Candidate SHA pending supervisor commit.
+- Construction: this branch already held candidate 3 (common to both). The remaining 5bbb91e delta was applied
+  hunk by hunk from its published diff: `host.function_jacobian(with_outputs=...)`; `SystemPlan` last-write
+  cotangent fields and assignment-vs-add.at backward; `_ASSEMBLY` forward→backward state replacing `_FACTORS`
+  (with carrier factors); exact covariance-cotangent shortcut in `host_backward`; carrier factor reuse.
+  Candidate 5's changes (transposed callback outputs with separate residual copies, `identity_link`/no-op link
+  skip, empty-detector-phase skip, `SKIP_STATIC_NOOPS`) were kept unchanged. The two touch disjoint code: c5 changes
+  the callback wrappers/shapes and `simulate`; 5bbb91e changes the host backward internals. The c5 backward
+  wrapper hands `host_backward` untransposed residuals and C-contiguous re-transposed cotangents, i.e. exactly the
+  arguments 5bbb91e's `host_backward` received before.
+- Hypothesis: the ~26 ms lower+compile saving of c5 is additive to 5bbb91e's execution saving (different phases).
+  Expected large ≈ 0.85 − 0.026 ≈ 0.825–0.83 s and aLIGO ≈ 0.53 s; unmeasured.
+- Expected numerics: bitwise identical to 5bbb91e (whose arrays equal the seed in every audited case).
+- Needs: both official benchmarks, strict/generalization comparisons, fresh independent source review of the
+  combined diff, and preferably paired runs against 5bbb91e.
