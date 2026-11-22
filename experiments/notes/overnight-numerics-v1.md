@@ -4429,3 +4429,33 @@ without measurement. No new candidate is submitted; working tree = candidate 35.
   numerical difference rather than calling it rounding.
 - Decision rule: if large forward does not fall by ≥5 ms in all three samples versus
   04e92247, retire the product mechanism for good and restore candidate 35's `_Products`.
+
+### Trial45 feedback: retired; candidate 35 `_Products` restored
+
+- SHA `66310bac45afc00b8f1b07420a710256df8ee909`, evaluation `93dd5dbeb4c441279280e3f49ebf4dea`.
+  All six official runs PASS. Seed strict comparison passes, and all 14 generalization cases pass versus the seed.
+- Grid samples: 0.84988, 0.80752, 0.81097 s, median 0.81097 s (c35 in 04e92247: median 0.81781 s).
+  aLIGO samples: 0.54988, 0.55251, 0.55761 s, median 0.55251 s (c35: 0.55946 s).
+  Grid forward: 179.37/166.60/172.81 ms vs c35 181.85/178.47/179.55 ms. The first sample is only
+  2.5 ms lower, so the pre-registered ≥5 ms-in-all-three rule fails.
+  Gradient: 107.4/106.0/104.6 ms, unchanged.
+- My bit-identity claim was wrong. The grid output archive is `e0f2069c…`, not c35's `638b7668…`.
+  The aLIGO archive is `1c27f50f…`, not `2c3e83c1…`. Both are constant across repetitions,
+  so the physical outputs changed at roundoff level. Versus the seed, the grid gradient max abs
+  difference rose from 3.04e-5 to 5.22e-5 (relL2 5.18e-10 → 8.87e-10). Every tolerance still passes.
+  The pristine mismatch profile is unchanged (131 signal / 3 gradient / 1 loss).
+  The elementwise products and the reduceat segments are mathematically the same, so the
+  difference has to come from NumPy's kernel choice: the multiply and reduceat loops depend on
+  operand layout and alignment (SIMD/FMA paths). I could not verify this without a shell. I am
+  recording it as an unexplained roundoff change, not as "harmless".
+- Decision: retire the residual-product mechanism permanently (c9, c10, t45). I restored
+  `_Products` to candidate 35 text, so the working tree simulator source again equals candidate 35.
+  No resubmission is needed.
+- Final submission (turn 69): this restore of candidate 35 is a bookkeeping and recalibration submission, not
+  a new optimization. Its simulator source should hash-match 8c0d9da: host_pass.py `7bf210b2…` and
+  sparse.py `6eaa9949…`. Evaluating it gives a second candidate 35 cohort right after trial 45.
+  That shows how much of trial 45's 7 ms median difference was cohort drift. Expect output archives
+  `638b7668…` (grid) and `2c3e83c1…` (aLIGO). Any other hash means the restore is not exact.
+- Handoff: about 2.4 h remain. Without a profile there is no remaining measured lever in this lane.
+  Coordinator options: (a) decide between c7 (faster tolerance guards) and c35 (exact guards);
+  (b) run the profile listed in the c10 handoff on c35 before any further mechanism.

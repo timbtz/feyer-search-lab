@@ -332,34 +332,19 @@ class _Products:
         self.row_order = np.argsort(pattern.rows, kind="stable")
         self.row_ids, self.row_starts = np.unique(pattern.rows[self.row_order], return_index=True)
         self.col_ids, self.col_starts = np.unique(pattern.cols, return_index=True)  # CSC order
-        # Static row-ordered column indices: the "N" product gathers x once in row
-        # order instead of gathering in pattern order and then reordering the
-        # (nnz, K) products. The elementwise products and the reduceat summation
-        # order are unchanged, so results are bit-identical.
-        self.row_sorted_cols = np.ascontiguousarray(pattern.cols[self.row_order])
-        # When every row (column) holds a structural entry, reduceat already yields
-        # the full result; skip the zero fill and scatter.
-        self.all_rows = bool(self.row_ids.size == self.size and np.array_equal(self.row_ids, np.arange(self.size)))
-        self.all_cols = bool(self.col_ids.size == self.size and np.array_equal(self.col_ids, np.arange(self.size)))
 
     def apply(self, values, x, trans="N"):
         """op(A) x for x (N,) or (N, K); op in {A, A^T, A^H}."""
         x = np.asarray(x)
         vector = x.ndim == 1
         x = x[:, None] if vector else x
+        result = np.zeros((self.size, x.shape[1]), dtype=np.complex128)
         if trans == "N":
-            contributions = values[self.row_order][:, None] * x[self.row_sorted_cols]
-            reduced = np.add.reduceat(contributions, self.row_starts, axis=0)
-            ids, full = self.row_ids, self.all_rows
+            contributions = (values[:, None] * x[self.cols])[self.row_order]
+            result[self.row_ids] = np.add.reduceat(contributions, self.row_starts, axis=0)
         else:
             weights = values if trans == "T" else np.conj(values)
-            reduced = np.add.reduceat(weights[:, None] * x[self.rows], self.col_starts, axis=0)
-            ids, full = self.col_ids, self.all_cols
-        if full:
-            result = reduced.astype(np.complex128, copy=False)
-        else:
-            result = np.zeros((self.size, x.shape[1]), dtype=np.complex128)
-            result[ids] = reduced
+            result[self.col_ids] = np.add.reduceat(weights[:, None] * x[self.rows], self.col_starts, axis=0)
         return result[:, 0] if vector else result
 
 
