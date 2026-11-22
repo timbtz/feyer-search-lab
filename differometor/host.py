@@ -468,7 +468,7 @@ class HostEngine:
         selection[:, :, c:2 * c] = np.conj(tiled[:, :, c:2 * c] * carrier)
         selection_full = np.broadcast_to(selection, (selection.shape[0], rows, selection.shape[2]))
 
-        # Sparse LU per frequency: signal and noise weights (one refinement step each).
+        # Sparse LU per frequency: signal and noise weights (up to three refinement steps).
         signal_system = SparseSystem(plan, matrix_values)
         x = signal_system.solve(rhs, "N")
         w = signal_system.solve(selection_full, "H")
@@ -668,11 +668,13 @@ _SUPERLU_OPTIONS = dict(DiagPivotThresh=None, ColPerm="COLAMD", PanelSize=1, Rel
 
 class SparseSystem:
     """
-    The signal system of every frequency: SuperLU factors plus one step of iterative refinement.
+    The signal system of every frequency: SuperLU factors plus up to three steps of iterative refinement.
 
     The signal systems are extremely badly scaled (condition number ~1e30), and a sparse
-    LU's fill-reducing column order can cost accuracy compared with dense LU. One step of
-    iterative refinement (x += A^-1 (b - A x), reusing the factors) recovers it. Against
+    LU's fill-reducing column order can cost accuracy compared with dense LU.
+    Iterative refinement adds x += A^-1 (b - A x), reusing the factors. The
+    following historical comparisons describe the previous one-step solver,
+    not measured results for this three-step variant. Against
     an extended-precision reference (scripts/roundoff_study.py), the refined solve is
     within 6.4e-10 in log sensitivity on the supplied example, uifo_20_5000 and Voyager
     space modulation (3.9e-10 vs the original's 3.2e-8 on the example). On the
@@ -714,7 +716,14 @@ class SparseSystem:
         """Solve A x = rhs (trans "N"), A^T x = rhs ("T") or A^H x = rhs ("H"); rhs is (..., F, N)."""
         rhs = np.asarray(rhs, dtype=np.complex128)
         x = self._solve_once(rhs, trans)
-        return x + self._solve_once(rhs - self.matvec(x, trans), trans)
+        # Keep every computed residual/correction. Small correction convergence
+        # limits work; it does not justify dropping a source-vector component.
+        for _ in range(3):
+            correction = self._solve_once(rhs - self.matvec(x, trans), trans)
+            x = x + correction
+            if np.max(np.abs(correction)) <= 1e-14 * np.max(np.abs(x)):
+                break
+        return x
 
 
 def _factorize(plan, values: np.ndarray) -> list:
