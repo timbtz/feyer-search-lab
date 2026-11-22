@@ -3250,3 +3250,98 @@ If promising, obtain paired fresh-process candidate/parent repetitions under
 matching resource policy. Keep all existing pristine disagreements and unresolved
 grid FD54,59,63,136,161,163 visible; earlier extra aligo coordinates29/29 passed.
 Whole-pass custom VJP still lacks forward-mode JVP and Hessian support.
+
+## Candidate35 feedback; candidate36 second exact scalar estimate
+
+Candidate35 SHA7a9480332bad29b5aaeacc5a4628481581507e7a, job
+5f61bfb3e2d441598e8e0733a9dd8cc9, grid-1/2/3 and aligo-1/2/3.
+Six official passes and14/14 initial-seed generalization passes; no confirmed
+improvement or independent review. Large complete fresh-process samples (s):
+[0.8614112008363008,0.8178828489035368,0.819283964112401], median
+0.819283964112401, range0.8178828489035368–0.8614112008363008.
+Official aLIGO separately:
+[0.5483462791889906,0.5497285686433315,0.5533304512500763], median
+0.5497285686433315, range0.5483462791889906–0.5533304512500763.
+Both ranges overlap admitted7; medians versus7 +17.706281ms/+1.173412ms.
+These are unpaired cohorts, not causal performance estimates or a combined
+competition score. Keep every sample, including grid-1 imports295.275893ms.
+CPU2, one logical CPU, library threads1, no persistent cache; other-host job
+overlap not excluded. No requested fallback counts or paired parent runs supplied.
+
+Median phases (ms) and deltas versus34's preceding unpaired cohort:
+large imports267.553847 (+1.002690), build69.934564 (-2.431568),
+forward181.647914 (-4.579181), reverse106.423900 (+21.751514).
+aLIGO imports264.831442 (-1.184091), build37.594983 (-0.707218),
+forward32.768918 (-0.316834), reverse18.975571 (+4.367225).
+Reverse samples large106.423900/106.111303/107.051764ms and
+aligo18.726280/19.007230/18.975571ms consistently exceed34's preceding
+samples, consistent with more refined fallback solves. No trigger/profile
+measurement was returned, so this mechanism attribution remains an inference.
+Sampled RSS maxima: large619696128, aligo324067328, generalization980926464
+bytes. Sampling may miss peaks.
+
+Inspected all six saved per-array comparison reports. Carrier, signal, noise,
+powers, sensitivity, loss and gradient pass seed bounds; failure-count records
+against seed and pristine equal34. Outputs are not asserted bitwise unchanged:
+large archive e0f2069ccab917ac4575f484a6c9b5f0ae2457bb59f736185a52cd309a6c03e2;
+aligo archive1c27f50feafb3149eb9c2f4b48f767cc4c3ddbc1d64810c332dd5a7a260781f8.
+Large seed gradient max difference increases from5.686350050382316e-6 to
+5.219937156653032e-5, relativeL2 from8.181451454702114e-11 to
+8.868257184879077e-10. Pristine gradient max difference0.0052471461312961765,
+relativeL2 8.84343782956232e-8. Aligo seed gradient max8.803908713161945e-10,
+relativeL2 2.7241985200175362e-14, versus34's3.637978807091713e-11 and
+1.294943745154708e-15. Pristine max8.865048584993929e-6, relativeL2
+2.7302503671234565e-10. These numerical changes need investigation; stricter
+guards and the diagonal synthetic repair do not establish which optical gradient
+is more accurate. Source delta changes only guard decisions, so any changed
+arithmetic is confined to newly used transpose solves, but actual affected
+frequency/gradient coordinates were not supplied. Raw remote NPZ not reopened.
+
+All14 generalization seed and pristine per-case records equal34; seed14/14 pass,
+pristine4/14 pass. This does not establish identical gradient values because
+case records contain pass/count summaries. Inherited pristine grid131signal,
+3gradient33/161/180,1loss and officialaligo1loss failures remain. rand1/rand3
+log sensitivity errors2.036099068405406e-4/5.8100919558157216e-5 persist;
+grid FD54/59/63/136/161/163 unresolved; prior extraaligo29/29 confirmed.
+No universal correctness or JVP/Hessian support claim.
+
+Focused refinement36 (SHA pending): keep35's strict exact-product condition,
+and try a component-ratio scalar only when its least-squares estimate fails
+the equality check. Use vector[pivot]/direction[pivot], pivot chosen by largest
+absolute direction component; verify the entire reconstructed vector exactly.
+All35 accepted decisions retain the identical alpha. Norm/finite/zero handling,
+noise exact-Hermitian guard and refined fallback remain. One extra argmax,
+scalar division and equality check on rejected cases trade against potentially
+avoiding a complete refined transpose solve. No tolerance relaxation, approximate
+residual discard, fixture dispatch, structural-zero pruning or workload change.
+The ratio is one additional estimate, not a search over input-dependent tolerances.
+Mathematically collinear vectors may still fail reconstruction and use refinement.
+This is the last planned scalar-estimator refinement without new measured
+trigger/accuracy evidence; do not continue guessing guards if36 is unhelpful.
+
+Measured local synthetic evidence, no optical workload or benchmark timing:
+experiments/notes/overnight-numerics-pivot-check.py compares actual35/current
+kernels on2000 complex vectors of lengths2/5/13/37 with random sparsity/scalars.
+1295 accepted35 cases preserve alpha bits;249 additional exact products accept;
+456 still use fallback. All2000 vectors perturbed outside direction support
+reject. Every recovered case exercises actual refined sparse solves on diagonal
+systems of condition numbers1/1e4/1e12, plus independent70-digit Decimal
+componentwise solution reference. Worst max-absolute error divided by maximum
+reference magnitude: reused2.893920051786453e-16, refined2.1480350605114298e-16.
+Neither result is claimed universally more accurate; these are small diagonal
+examples. The earlier collinearity-check.py also passes480 random checks
+(now197 accepted/283 rejected, all240 perturbations rejected),23 edge checks
+and18 amplified-residual repairs. Refinement and physical derivatives unchanged.
+
+Request exact-SHA unchanged dual official benchmarks with all saved outputs and
+gradients,14 generalization cases including amod/fmod, and independent review.
+Request a separate diagnostic on35 and36: per callback, count LS-accepted,
+pivot-accepted and explicit-fallback signal vectors; record affected frequency
+indices, supplied vectors/directions, corresponding signal coefficients and
+forward weights for independent residual/error inspection. Compare literal
+changed gradient coordinates against34/35/seed and retain inherited failures.
+Include guard overhead and explicit solves in complete timing; diagnostic runs
+are not promotion timings. If36 has a repeat-supported gain, obtain fresh paired
+parent/candidate cohorts; otherwise preserve35's demonstrated correctness repair
+provisionally, end this guard-tuning hypothesis, and pursue source profiling.
+Admitted7 remains the reviewed timing reference;35/36 are not shared winners.

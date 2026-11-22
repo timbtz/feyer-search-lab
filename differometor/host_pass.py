@@ -393,6 +393,14 @@ def _collinear_coefficient(vector, direction):
     alpha = np.vdot(direction, vector) / norm
     if np.array_equal(vector, alpha * direction):
         return alpha
+    # The reduction in the least-squares estimate can round away from a scalar
+    # that reconstructs the vector exactly. Try one component ratio before the
+    # refined solve, retaining the same full-vector equality requirement. The
+    # largest component avoids division by a zero or unnecessarily small entry.
+    pivot = np.argmax(np.abs(direction))
+    alpha = vector[pivot] / direction[pivot]
+    if np.array_equal(vector, alpha * direction):
+        return alpha
     return None
 
 
