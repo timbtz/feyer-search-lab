@@ -117,20 +117,90 @@ class SystemPlan:
         return rows_bar, base_bar.sum(axis=0)
 
 
+class ParameterLayout:
+    """Static parameter-row index layout of one built setup (host NumPy copies).
+
+    Holds the concrete optimized-parameter insertion, linking and detector-phase
+    indices that `run_build_step` produced, so `simulate` can index the parameter
+    row with explicit, unique, in-bounds gathers/scatters instead of generic traced
+    indexing. Like the rest of the host plan it describes the built arrays; rebuild
+    it (re-run `run_build_step`) whenever those index arrays change.
+    """
+
+    def __init__(self, parameter_count, optimized_parameter_indices, optimized_value_indices,
+                 linked_indices, indices_to_link, qhd_parameter_indices, qhd_placing_indices):
+        self.parameter_count = int(parameter_count)
+        self.optimized_parameter_indices = np.asarray(optimized_parameter_indices, dtype=np.int64).ravel()
+        self.optimized_value_indices = np.asarray(optimized_value_indices, dtype=np.int64).ravel()
+        self.linked_indices = np.asarray(linked_indices, dtype=np.int64).ravel()
+        self.indices_to_link = np.asarray(indices_to_link, dtype=np.int64).ravel()
+        self.qhd_parameter_indices = np.asarray(qhd_parameter_indices, dtype=np.int64).ravel()
+        self.qhd_placing_indices = np.asarray(qhd_placing_indices, dtype=np.int64).reshape(-1, 3)
+        self._key = _digest(np.int64(self.parameter_count), self.optimized_parameter_indices,
+                            self.optimized_value_indices, self.linked_indices, self.indices_to_link,
+                            self.qhd_parameter_indices, self.qhd_placing_indices)
+
+    @classmethod
+    def from_arrays(cls, simulation_arrays):
+        """Layout from concrete built arrays, or None if not representable exactly.
+
+        Requires nonnegative in-bounds parameter-row indices and unique write
+        destinations (so the scatters may declare unique indices); otherwise the
+        caller keeps the generic indexing path.
+        """
+        try:
+            parameters = np.asarray(simulation_arrays["parameters"])
+            layout = cls(
+                parameters.shape[1] if parameters.ndim == 2 else -1,
+                np.asarray(simulation_arrays["optimized_parameter_indices"]),
+                np.asarray(simulation_arrays["optimized_value_indices"]),
+                np.asarray(simulation_arrays["linked_indices"]),
+                np.asarray(simulation_arrays["indices_to_link"]),
+                np.asarray(simulation_arrays["qhd_parameter_indices"]),
+                np.asarray(simulation_arrays["qhd_placing_indices"]),
+            )
+        except (KeyError, TypeError, ValueError, IndexError):
+            return None
+        if parameters.ndim != 2 or parameters.shape[0] != 1:
+            return None
+        count = layout.parameter_count
+        for indices in (layout.optimized_parameter_indices, layout.linked_indices, layout.indices_to_link,
+                        layout.qhd_parameter_indices):
+            if indices.size and (indices.min() < 0 or indices.max() >= count):
+                return None
+        if layout.optimized_value_indices.size and layout.optimized_value_indices.min() < 0:
+            return None
+        for indices in (layout.optimized_parameter_indices, layout.indices_to_link):
+            if np.unique(indices).size != indices.size:
+                return None
+        return layout
+
+    def applies(self, parameters, optimized_parameters):
+        """Trace-time shape check that the static indices are in bounds for these inputs."""
+        if parameters.ndim != 2 or parameters.shape[0] != 1 or parameters.shape[1] != self.parameter_count:
+            return False
+        if optimized_parameters.ndim != 1:
+            return False
+        values = self.optimized_value_indices
+        return not values.size or int(values.max()) < optimized_parameters.shape[0]
+
+
 class HostPlan:
     """Static host plan for one built setup (no array leaves)."""
 
     def __init__(self, structure, carrier, signal, noise, carrier_changing, signal_changing,
-                 signal_carrier_indices, noise_row_reuse):
+                 signal_carrier_indices, noise_row_reuse, parameter_layout=None):
         self.structure = structure
         self.carrier, self.signal, self.noise = carrier, signal, noise
         self.carrier_changing = np.asarray(carrier_changing, dtype=np.int64).ravel()
         self.signal_changing = np.asarray(signal_changing, dtype=np.int64).ravel()
         self.signal_carrier_indices = np.asarray(signal_carrier_indices, dtype=np.int64).ravel()
         self.noise_row_reuse = bool(noise_row_reuse)
+        self.parameter_layout = parameter_layout
         self._key = (_digest(self.carrier_changing, self.signal_changing, self.signal_carrier_indices,
                              np.int64(self.noise_row_reuse))
-                     + carrier._key + signal._key + noise._key + structure._key)
+                     + carrier._key + signal._key + noise._key + structure._key
+                     + ("" if parameter_layout is None else parameter_layout._key))
 
     def __hash__(self):
         return hash(self._key)
@@ -169,7 +239,8 @@ def build_host_plan(simulation_arrays, structure, component_groups):
                     np.asarray(simulation_arrays["carrier_changing_parameter_indices"]),
                     np.asarray(simulation_arrays["signal_changing_parameter_indices"]),
                     np.asarray(simulation_arrays["signal_carrier_indices"]),
-                    "noise_row_reuse" in component_groups)
+                    "noise_row_reuse" in component_groups,
+                    ParameterLayout.from_arrays(simulation_arrays))
 
 
 def _expand(array, indices, values):

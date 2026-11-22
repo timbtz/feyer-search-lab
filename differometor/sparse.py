@@ -211,6 +211,10 @@ class SparseSystem:
         all_cols = np.concatenate([cols, np.full(rhs_rows.shape, size, dtype=np.int64)])
         self.all_rows = all_rows
         self.all_cols = all_cols
+        # Concrete, nonnegative coordinates in the same order as the values.
+        # Prepare the gather operand once while building, rather than tracing
+        # general advanced-index normalization/packing at every JAX boundary.
+        self.base_coordinates = np.stack((all_rows, all_cols), axis=1)
         position = np.full(base_matrix.shape, -1, dtype=np.int64)
         position[all_rows, all_cols] = np.arange(all_rows.size)
         self._position = position
@@ -237,7 +241,16 @@ class SparseSystem:
 
     def base_values(self, matrix):
         """Gather the base matrix values at all pattern entries (traced)."""
-        return matrix[self.all_rows, self.all_cols]
+        return jax.lax.gather(
+            matrix,
+            self.base_coordinates,
+            jax.lax.GatherDimensionNumbers(
+                offset_dims=(), collapsed_slice_dims=(0, 1), start_index_map=(0, 1)
+            ),
+            slice_sizes=(1, 1),
+            unique_indices=True,
+            mode="promise_in_bounds",
+        )
 
     def split(self, values):
         """Split augmented values (..., nnz_total) into A values and dense RHS."""

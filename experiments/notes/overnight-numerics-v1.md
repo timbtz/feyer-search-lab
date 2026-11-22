@@ -124,6 +124,28 @@ D = 1 noise detector.
      max|dx|/max|x|), plus SuperLU `nnz` for COLAMD vs MMD_AT_PLUS_A on one signal row. Without it
      the next solver mechanism (refinement work, ordering, pivot threshold) would be another blind
      guess. Managed agents in this session have no shell, so they cannot run it themselves.
+- Restored candidate 1 source: SHA `b2943970c6108d9ceeedc7394413b0854d6f5168`, request
+  `544787cb74bf424e88f0f97c1a0f68f1`. Official PASS 3/3 + 3/3, bitwise identical to the seed,
+  generalization 14/14 identical. Grid 0.98597, 0.94583, 0.94994 s (median 0.94994); gradient
+  172.1, 172.0, 170.1 ms; forward 180.7, 175.2, 176.0 ms. aLIGO 0.62057, 0.62483, 0.62017 s
+  (median 0.62057; flagged "aligo regression > 2 %" only against the new incumbent 2b4654f, whose
+  aLIGO median is 0.5601 because of its import/wrapper changes, not because of this mechanism).
+  The gradient-phase reduction has now reproduced in 9/9 samples (170.1-175.2 ms vs seed 187.44).
+
+## Candidate 4: candidate 1 mechanism on top of the admitted incumbent 2b4654f
+- Provenance: the incumbent `2b4654f294414590f760fe972edd69f6774fe9e1` (evaluation b986ad11,
+  approved independent source review, grid median 0.91127 s, aLIGO 0.56009 s, bitwise identical to
+  the seed) changes imports and the JAX-side wrapper only: lazy `visualize_setup`, deferred
+  `jax.scipy.linalg` import (dense path only), static parameter-row layout gathers/scatters
+  (`ParameterLayout` in host_pass.py, `_static_take`/`_static_set` in simulate.py), and an explicit
+  gather in `SparseSystem.base_values`. I applied its supplied diff verbatim to this branch
+  (`__init__.py`, `simulate.py`, `sparse.py`, and the `ParameterLayout`/`HostPlan` parts of
+  `host_pass.py`). It does not touch `host_forward`/`host_backward`/`SystemPlan.backward`.
+- My lane's change on top (unchanged from candidate 1): backward consumes the forward's assembly
+  state and carrier/signal factorizations (digest of the small assembly inputs), no 4 MB
+  coefficient hashes, no discarded primal evaluation in Jacobians, last-write-only cotangent scatter.
+- Expected: grid gradient exec about -15 ms against the incumbent; everything else as the incumbent;
+  arrays bitwise identical to the seed. Needs paired incumbent-vs-candidate runs before a claim.
 - Evidence so far on where the time goes: the backward phase (no factorization; two refined solves
   plus small products per row) costs ~1.7 ms/row, about the same as the forward (factor + two
   refined solves). So factorization is a small share; triangular solves + refinement dominate.
