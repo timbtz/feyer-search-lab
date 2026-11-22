@@ -1764,3 +1764,95 @@ function_jacobian call counts and actual block triggering in arbitrary setups;
 no triggering rate for either official workload has been claimed here. If the
 added dispatch loses time, retire this blocking choice instead of bundling it
 with unrelated pending candidates.
+
+## Candidate 23 feedback: retire batch blocking
+
+SHA b4165e54df9bac152c10af67b5583c60a1f520ba, dual job
+ a29a27a2a070405dafad4de8a21b723c (grid-1/2/3, aligo-1/2/3).
+Both unchanged official benchmarks pass all three fresh processes. Seconds:
+
+- Grid: 0.8398048356175423, 0.8014963883906603, 0.8129627462476492;
+  median 0.8129627462476492; range 0.8014963883906603–0.8398048356175423.
+- Official aLIGO: 0.5417727902531624, 0.5452161803841591, 0.571299472823739;
+  median 0.5452161803841591; range 0.5417727902531624–0.571299472823739.
+
+Grid forward ms184.827859/177.489083/185.769409; reverse
+97.015653/93.049452/94.574656. aLIGO forward
+32.458628/32.921391/33.793151; reverse14.453920/14.556237/14.511038.
+Median deltas versus historical admitted7, ms: grid complete +11.385063,
+forward +3.664772, reverse +9.217232, build -0.639553, imports +0.504041;
+aLIGO complete -3.338976, forward +0.031241, reverse +0.126886.
+These are unpaired observations, not causal phase attribution.
+The third aLIGO sample includes289.607815ms imports versus262.666350/263.567248ms
+in the other two; retain all samples. Allocation reduction did not demonstrate
+runtime improvement. Stop this blocking mechanism without tuning its byte target.
+
+Maximum sampled process-group RSS bytes grid596303872, aLIGO294883328,
+generalization897134592. No infrastructure failure or memory exceedance. CPU2,
+one logical CPU, threads1, no persistent cache. External contention not excluded.
+confirmed_improvement=false, source_review=null, ranking_eligible=false;
+selection reasons missing review, below-threshold gain, overlapping grid ranges.
+
+All six official per-array strict records and all14 initial-seed/pristine
+comparison records were compared programmatically with22: unchanged. Initial
+seed comparisons pass for every output/gradient; this is tolerance agreement,
+not bitwise identity to seed. Official saved archive hashes are unchanged from22.
+Raw remote NPZ arrays were not reopened. The candidate self-comparison is not
+independent evidence. Pristine disagreements remain grid131 signal/3 gradient/
+1 loss, official aLIGO1 loss; rand1/rand3 sensitivity log discrepancies about
+2.04e-4/5.81e-5. Grid finite-difference coordinates54/59/63/136/161/163 remain
+unresolved, earlier aLIGO29/29 checks remain separate, and custom VJP lacks
+JVP/Hessians. No new numerical discrepancy is reported by these comparisons.
+
+## Candidate 24: reuse private Jacobian arrays for cotangent products
+
+Candidate SHA and dual job IDs pending supervisor. Restore host_pass.py to the
+admitted ee4fea28 source before this single change; no reset or history rewrite.
+All failed proposals remain in history. Production differs from admitted7 only
+by six added lines and one replaced line in SystemPlan.backward. No transfer
+from another lane, no combination with22/23 or other unconfirmed candidates.
+
+The original contraction builds linear*output_bar and antilinear*output_bar
+arrays before reducing each along the four component outputs. function_jacobian
+unconditionally creates independent writable complex128 linear and antilinear
+arrays with np.zeros; these arrays have no other consumer in backward. Use
+np.multiply(...,out=...) to place products in those private buffers. Keep the
+same axis2 sums, conjugation, addition, full-group Jacobian call, and per-slot
+np.add.at order. No structural/numerical zero is skipped, no dtype/layout change,
+no reused numerical state, no parameter tuning, no solve/refinement modification.
+The eliminated product allocations scale as B*R*4*S*16 bytes each; this does not
+mean two extra tensors are simultaneously live in the parent. The actual peak
+benefit can be much smaller because Jacobian construction also allocates storage.
+
+This narrower refinement addresses23's memory hypothesis without additional
+component calls or blocking. It is distinct from changing storage order, grouping
+scatters, streaming slots or reusing evaluations at equal inputs. There is no
+configurable threshold or topology-dependent dispatch. Hypothesis: less transient
+memory traffic might lower the reverse phase, but this is not yet a measured
+runtime bottleneck or a speed improvement. The previously requested separate
+callback profile has not been supplied; no profile result is invented here.
+
+Validation: overnight-numerics-inplace-jacobian-check.py passes2736 complete
+synthetic backward comparisons plus37 inherited assembly/backward cases (2773).
+All19 component functions; B0/1/7/37; component counts1/5/43; empty, single,
+repeated and negative slots; negative/repeated parameter destinations; complex,
+zero and nonfinite inputs/cotangents; duplicate and overwritten output writes.
+Finite entries match admitted parent bitwise including signed zero; nonfinite
+entries array-equal. Caller inputs/cotangents remain unchanged. Allocation probe
+also verifies Jacobian buffer ownership/non-aliasing. These AST-extracted local
+host checks are not official workloads, optical generalization or JAX tests.
+
+Illustrative surface group B37,R43,S7: both versions make one Jacobian call,
+allocating the same1,425,536-byte Jacobian pair. Traced complete backward peak
+falls2,822,384 to2,649,008 bytes (173,376 bytes), excluding pre-existing inputs.
+This modest synthetic peak saving is not process RSS or timing evidence.
+No benchmark was run locally. Syntax and git diff checks pass.
+
+Request supervisor evaluation of both unchanged official workloads on the same
+new exact SHA, saved all-output/gradient comparisons to seed and admitted parent,
+all14 generalization cases including modulated/random setups, and independent
+source review before promotion. If promising, obtain matched fresh-process parent
+and candidate repetitions with separate grid/aLIGO samples, medians/ranges,
+phases, RSS and overlap information. Keep inherited strict/pristine findings
+visible. Retire this refinement if complete-run gain is not repeat-supported;
+do not infer speed from fewer allocations or combine pending candidates.

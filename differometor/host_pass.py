@@ -56,10 +56,6 @@ def _digest(*arrays):
 class SystemPlan:
     """Static component groups, output selection and ordered writes for one system."""
 
-    # Target size of the two live complex128 Jacobian blocks. A single batch
-    # row may exceed this target; it is never split or omitted.
-    JACOBIAN_BLOCK_BYTES = 256 * 1024
-
     def __init__(self, sparse_system, groups, selected_rows, selected_columns):
         self.system = sparse_system
         # (function_index, (R, S) parameter indices, slots that carry derivatives)
@@ -113,30 +109,17 @@ class SystemPlan:
         for (function_index, indices, slots), start, stop in zip(self.groups, self.offsets[:-1], self.offsets[1:]):
             if not slots:
                 continue
+            _, linear, antilinear = function_jacobian(function_index, slots, rows[:, indices], with_outputs=False)
             output_bar = flat[:, start:stop, :, None]                       # (B, R, 4, 1)
-            inputs_bar = self._group_pullback(function_index, slots, rows[:, indices], output_bar)
+            # Both Jacobian blocks are fresh private arrays from function_jacobian.
+            # Reuse them for the products; the reductions and scatter order stay
+            # unchanged, without allocating two more Jacobian-sized temporaries.
+            np.multiply(linear, output_bar, out=linear)
+            np.multiply(antilinear, output_bar, out=antilinear)
+            inputs_bar = np.sum(linear, axis=2) + np.conj(np.sum(antilinear, axis=2))
             for position, slot in enumerate(slots):
                 np.add.at(rows_bar, (batch, indices[None, :, slot]), inputs_bar[:, :, position])
         return rows_bar, base_bar.sum(axis=0)
-
-    @staticmethod
-    def _group_pullback(function_index, slots, inputs, output_bar):
-        """Contract independent batch rows with bounded live Jacobian storage."""
-        count, components = inputs.shape[:2]
-        bytes_per_row = 2 * components * 4 * len(slots) * np.dtype(np.complex128).itemsize
-        block_rows = max(1, SystemPlan.JACOBIAN_BLOCK_BYTES // max(1, bytes_per_row))
-
-        def contract(block, cotangent):
-            _, linear, antilinear = function_jacobian(function_index, slots, block, with_outputs=False)
-            return np.sum(linear * cotangent, axis=2) + np.conj(np.sum(antilinear * cotangent, axis=2))
-
-        if count <= block_rows:
-            return contract(inputs, output_bar)
-        inputs_bar = np.empty((count, components, len(slots)), dtype=np.complex128)
-        for start in range(0, count, block_rows):
-            stop = min(start + block_rows, count)
-            inputs_bar[start:stop] = contract(inputs[start:stop], output_bar[start:stop])
-        return inputs_bar
 
 
 class ParameterLayout:
