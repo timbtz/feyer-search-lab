@@ -1856,3 +1856,147 @@ and candidate repetitions with separate grid/aLIGO samples, medians/ranges,
 phases, RSS and overlap information. Keep inherited strict/pristine findings
 visible. Retire this refinement if complete-run gain is not repeat-supported;
 do not infer speed from fewer allocations or combine pending candidates.
+
+## Candidate 24 feedback and contraction/allocation handoff
+
+SHA e091febbb132c65ffd412c89778d7520785c2a1a; dual job
+1ebdbb09b0a24511ae182429e9b0c979, grid-1/2/3 and aligo-1/2/3.
+Both unchanged official workloads pass all three fresh runs. Seconds:
+
+- Grid samples0.8760746754705906,0.8320770859718323,0.8043785057961941;
+  median0.8320770859718323; range0.8043785057961941–0.8760746754705906.
+- Official aLIGO samples0.5471797585487366,0.5447073206305504,0.5493837613612413;
+  median0.5471797585487366; range0.5447073206305504–0.5493837613612413.
+
+Grid forward ms181.289311/193.822512/181.690447; reverse
+84.723640/82.618972/84.840089. aLIGO forward
+32.779921/32.225138/32.966817; reverse14.464036/14.156878/14.783233.
+Against historical admitted7, median deltas in ms: grid complete+30.499402,
+forward+0.527360, reverse-0.633784, build+0.556977, imports+2.103361;
+aLIGO complete-1.375398, forward-0.110229, reverse+0.079884,
+build+0.962654, imports+2.547294. These unpaired observations do not isolate
+causality. Grid first imports341.626432ms versus265.827404/267.703975ms;
+second forward/build also higher. No samples removed. A sub-ms historical
+reverse delta does not establish a stable complete-run gain.
+
+Maximum sampled process-group RSS bytes grid616017920, aLIGO302800896,
+generalization868126720. No infrastructure failures or memory exceedance.
+CPU2/one logical CPU/threads1/no persistent compilation cache; other-host
+contention not excluded. confirmed_improvement=false, source_review=null,
+ranking_eligible=false. Selection rejected missing review, below-threshold large
+gain and overlapping large ranges. This is not an organizer ranking rule.
+
+Programmatically compared all six official strict-comparison records and all14
+seed/pristine generalization records against23: unchanged. All initial-seed
+array/gradient comparisons pass; official archive hashes unchanged. Raw remote
+NPZ files were not reopened. Seed tolerance agreement is not bitwise agreement.
+Pristine grid131 signal/3 gradient/1 loss, official aLIGO1 loss, rand1/rand3
+sensitivity log disagreements about2.04e-4/5.81e-5 persist. Grid FD coordinates
+54/59/63/136/161/163 remain unresolved; prior aLIGO29/29 checks and first-order
+custom VJP scope remain separate. No new numerical mismatch is reported by these
+records. Generalization self-comparison is not independent validation.
+
+Decision: close trials22–24 as unconfirmed. Their grid complete medians are
+0.802137895,0.812962746,0.832077086 seconds; reverse medians84.817791,
+94.574656,84.723640ms. Admitted7 historical grid complete0.801577684s,
+reverse85.357424ms. Neither ordered scatter coalescing, batch blocking, nor
+private Jacobian product-buffer reuse earned promotion. Do not tune more
+contraction buffers or combine these variants. All commits/diagnostics retained.
+
+Restored host_pass.py to admitted ee4fea28 by a working-tree edit; read-only
+comparison confirms the entire differometor tree equals that revision. No history
+reset, commit, push or independent benchmark. This restoration is not a newly
+measured candidate; ready_for_evaluation=false. Stop this hypothesis, not the
+user-authorized campaign. Existing unresolved numerical findings remain intact.
+
+Next supervisor action: use the existing opt-in
+experiments/notes/overnight-numerics-profile.py in a separate, explicitly profiled
+admitted-parent evaluation. Request call counts and cumulative/self times for
+_assemble, SystemPlan.values/backward, function_jacobian, _factor, _solve and
+_Products.apply; record refinement iteration counts separately if instrumented.
+Keep profiling separate from official timing confirmation and preserve the public
+harness. The source inspection confirms signal solves already batch direct RHS
+and covariance columns, and factors are reused in backward. Do not propose those
+as new duplication. Forward residual products and numerical factorization remain
+possible targets, but their relative costs have not been measured here. Select
+a distinct execution mechanism only from that profile or a proven redundant
+operation, with both official exact-SHA checks and independent review afterward.
+Earlier candidate13 paired confirmations and candidate18 review requests remain
+unfulfilled; their lower observed reverse times are not admitted improvements.
+
+## Candidate 25: reuse column ordering within a fresh forward call
+
+Supervisor resumed after the24 handoff and explicitly requested a concrete next
+experiment. No new evaluator result arrived:24 feedback above is unchanged.
+Candidate SHA/jobs pending. Production parent is admitted ee4fea28; only
+host_pass.py changes. The preserved restoration of24 is included, not evaluated
+as a separate candidate. No other-lane combination or unconfirmed contraction,
+scatter, buffer, component or residual-product variant is included.
+
+Hypothesis: each signal row currently calls gstrf with ColPerm=COLAMD despite
+sharing exactly the same supplied sparse pattern. Numerical matrices differ and
+must be factored afresh, but recomputing a fill-reducing column permutation is
+redundant structural work. Forward execution remains about181ms on historical
+admitted grid versus33ms on aLIGO. This trial changes symbolic column ordering
+work rather than numerical factor reuse. No callback profile has been supplied;
+its actual fraction of forward time is unknown. No speed claim is made.
+
+Implementation: first signal row follows the existing factorization path. For a
+multirow forward using the native extension, _ColumnOrdering extracts its perm_c,
+derives the CSC permutation of columns and all structural entries, then factors
+every later row's newly assembled values with ColPerm=NATURAL. All other SuperLU
+options remain unchanged. No competing ordering or physical-input tuning is used.
+Pattern entries with numerical zero remain included. The ordering object is local
+to that forward call; every subsequent forward starts with a new COLAMD factor.
+No symbolic or numerical data are cached across evaluations by this change.
+
+For B=A[:,columns], normal solve maps y=B^-1 b back as x=y[inverse]; transpose
+and adjoint solves use rhs[columns] with the B factors. _PermutedFactor exposes
+only the private solve interface used by host execution. These wrappers enter the
+existing within-evaluation forward/backward state, so reverse solves also operate
+in original coordinates. _solve still computes residuals against the ORIGINAL
+matrix and retains its three-step maximum,1e-14 correction criterion and every
+existing correction operation. No coefficient or gradient convention changes.
+The no-matching-forward backward fallback continues to use ordinary COLAMD factors.
+Public SciPy fallback is unchanged and does not enable this optimization; single
+row forwards also retain the ordinary path. The condition is generic batch count
+and native-extension availability, never topology identity or known workload shape.
+
+Costs/risks: plan construction allocates structural permutation arrays; each later
+factor gathers its coefficients, normal solves gather returned solutions, and
+transpose/adjoint solves gather RHS arrays. These overheads could erase any
+ordering saving, especially on aLIGO. Native SuperLU may make different internal
+choices on untested patterns even though the column-permutation algebra is exact.
+Bitwise agreement on local cases is bounded evidence, not a general stability
+certificate. Inspect every official/generalization output and gradient before
+accepting this numerical execution change. No exception is suppressed.
+
+Local evidence: preliminary540 random small factor comparisons (including scaled
+matrices and both inspected symmetric-mode choices) showed identical solutions;
+production changes ONLY ColPerm, not SymmetricMode. The retained reproducible
+check is experiments/notes/overnight-numerics-column-order-check.py. It passes
+196 factor pairs,1752 refined N/T/H solves (vector/1-column/3-column RHS), and48
+actual host_forward loop comparisons. Refined solve results match parent bitwise;
+refinement counts agree:1579 one-step,149 two-step,24 three-step. Covers sparse
+random complex patterns, offdiagonal structural zeros that later become nonzero,
+strong pivoting, similarity scaling from1e-9 to1e9 and nearly singular Hilbert
+systems. Forward checks cover1/5/11 rows,1/3 detectors, changing or reused noise,
+all five host_forward outputs, and saved-factor solves in original coordinates.
+Each forward is called again with changed matrices; both assemble afresh and the
+native path requests exactly1 COLAMD plus(count-1) NATURAL factorizations each
+call. Eleven numerical factorizations remain eleven; only ten ordering requests
+are eliminated in that illustrative case. Both extension and public fallback
+paths are exercised; RHS/data/index inputs stay unchanged. No actual optical
+fixture, official timing, full gradient or JAX transformation was run locally.
+Syntax and whitespace checks pass. No dependencies installed or settings changed.
+
+Request both unchanged full official benchmarks on one exact new SHA, complete
+saved-output/gradient comparisons to initial seed and admitted parent, all14
+random/modulated generalization cases and independent review. Preserve inherited
+pristine signal/gradient/loss discrepancies, rand1/rand3 sensitivity disagreements,
+six unresolved grid FD coordinates, earlier aLIGO29/29 checks, and JVP/Hessian
+limitations. If promising, obtain repeated matched candidate/parent complete
+fresh-process runs, separately reporting grid/aLIGO samples/median/range, forward
+and reverse tradeoffs, RSS and job overlap. If a discrepancy is new, investigate
+ordering/pivot/refinement behavior rather than loosening tolerance. If no stable
+gain, retire this choice without combining it with pending historical candidates.

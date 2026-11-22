@@ -111,12 +111,7 @@ class SystemPlan:
                 continue
             _, linear, antilinear = function_jacobian(function_index, slots, rows[:, indices], with_outputs=False)
             output_bar = flat[:, start:stop, :, None]                       # (B, R, 4, 1)
-            # Both Jacobian blocks are fresh private arrays from function_jacobian.
-            # Reuse them for the products; the reductions and scatter order stay
-            # unchanged, without allocating two more Jacobian-sized temporaries.
-            np.multiply(linear, output_bar, out=linear)
-            np.multiply(antilinear, output_bar, out=antilinear)
-            inputs_bar = np.sum(linear, axis=2) + np.conj(np.sum(antilinear, axis=2))
+            inputs_bar = np.sum(linear * output_bar, axis=2) + np.conj(np.sum(antilinear * output_bar, axis=2))
             for position, slot in enumerate(slots):
                 np.add.at(rows_bar, (batch, indices[None, :, slot]), inputs_bar[:, :, position])
         return rows_bar, base_bar.sum(axis=0)
@@ -328,6 +323,47 @@ def _factor(pattern, values):
                 permc_spec="COLAMD")
 
 
+class _ColumnOrdering:
+    """Reuse one forward call's COLAMD column ordering, never numerical factors."""
+
+    def __init__(self, pattern, first_factor):
+        self.pattern = pattern
+        self.columns = np.argsort(first_factor.perm_c)
+        self.inverse = np.argsort(self.columns)
+        # CSC columns remain internally sorted. Include every structural entry,
+        # including values that happen to be zero at the first parameter point.
+        counts = np.diff(pattern.indptr)[self.columns]
+        self.indptr = np.concatenate(([0], np.cumsum(counts))).astype(np.intc)
+        self.entries = np.concatenate([
+            np.arange(pattern.indptr[column], pattern.indptr[column + 1])
+            for column in self.columns
+        ])
+        self.indices = pattern.indices[self.entries].astype(np.intc)
+
+    def factor(self, values):
+        gstrf = _superlu_gstrf()
+        if not gstrf:
+            return _factor(self.pattern, values)
+        data = np.ascontiguousarray(values, dtype=np.complex128)[self.entries]
+        options = dict(_SUPERLU_OPTIONS, ColPerm="NATURAL")
+        factor = gstrf(self.pattern.size, data.size, data, self.indices, self.indptr,
+                       csc_construct_func=_construct_csc, ilu=False, options=options)
+        return _PermutedFactor(factor, self.columns, self.inverse)
+
+
+class _PermutedFactor:
+    """Solve with factors of B=A[:, columns] using A's original coordinates."""
+
+    def __init__(self, factor, columns, inverse):
+        self.factor, self.columns, self.inverse = factor, columns, inverse
+
+    def solve(self, rhs, trans="N"):
+        if trans == "N":
+            return self.factor.solve(rhs, trans=trans)[self.inverse]
+        # B^T/H x = rhs[columns] is equivalent to A^T/H x = rhs.
+        return self.factor.solve(rhs[self.columns], trans=trans)
+
+
 class _Products:
     """NumPy sparse products for one static pattern (no scipy.sparse)."""
 
@@ -509,8 +545,12 @@ def host_forward(plan, parameters, carrier_values, signal_values, carrier_base, 
     covariances = np.empty((count, detectors, system.size), dtype=np.complex128)
     weights = np.empty((count, detectors, system.size), dtype=np.complex128)
     factors = []
+    ordering = None
     for row in range(count):
-        factor = _factor(system.pattern, coefficients[row])
+        factor = (_factor(system.pattern, coefficients[row]) if ordering is None
+                  else ordering.factor(coefficients[row]))
+        if ordering is None and count > 1 and _superlu_gstrf():
+            ordering = _ColumnOrdering(system.pattern, factor)
         factors.append(factor)
         weight = _solve(products, coefficients[row], factor, selections[row].T, "H")      # A^H w = s
         sources = noise_products.apply(state["noise_values"][0 if plan.noise_row_reuse else row], weight)
