@@ -46,9 +46,17 @@
     "scope": "Team search-selection heuristic, not organizer judging policy.",
     "version": "overnight-selection-v2"
   },
+  "previous_status": "admitted_campaign_best",
   "record_path": "experiments/campaigns/overnight-20261122/candidates/e4f7b59d3b094a8e9c6dd41263cab78e/record.json",
   "repository_url": "https://github.com/timbtz/feyer-search-lab",
+  "review_hold": {
+    "action": "Conservative explicit-adjoint repair and complete dual-benchmark validation before further admission.",
+    "observed_official_failure": false,
+    "reason": "Approximate collinear and Hermitian adjoint substitutions can amplify discarded residuals in ill-conditioned systems.",
+    "review_path": "experiments/campaigns/overnight-20261122/final-confirmation/source-review.json",
+    "scope": "Algebraic generalization counterexample; both shortcuts also occur in incumbent ee4fea28. Historical benchmark passes remain unchanged."
+  },
   "schema_version": "feyer-current-best-v1",
   "seed_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
-  "status": "admitted_campaign_best"
+  "status": "source_review_hold"
 }

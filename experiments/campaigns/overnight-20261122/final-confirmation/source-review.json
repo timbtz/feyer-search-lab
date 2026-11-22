@@ -1,0 +1,26 @@
+{
+  "source_review": {
+    "approved": false,
+    "artifact_path": "reviews/075955848ff84927b548f902cbdea660/review.json",
+    "artifact_sha256": "2bce47ed7d3a2c3db94ee3182eab836f18890b2e9862b34e04d8bc7de845680c",
+    "candidate_sha": "f856aafd5552f433aa08bd3dc923acb31d5adf4e",
+    "diff_path": "reviews/075955848ff84927b548f902cbdea660/source.diff",
+    "diff_sha256": "e2e8194a85299d4cead512d51d6e5e856b6e1b674e673d3b523c88c1463023f3",
+    "generalization_risks": [
+      "host_backward now discards nonzero cotangent residuals when _collinear_coefficient accepts approximate collinearity. A residual below 8*eps times the largest cotangent entry can still dominate after multiplication by an ill-conditioned inverse transpose. For example, direction=(1,0), cotangent=(1,1e-16), and A=diag(1,1e-20) pass the predicate but replace the correct adjoint (1,1e4) with (1,0). The approximate Hermitian shortcut likewise omits A^-1(N^H-N)w without bounding its amplification. Neither shortcut checks the resulting solve residual or conditioning. These new gradient risks apply to both large and aLIGO configurations outside the tested inputs; retain the explicit solves unless equivalence or an adequate error bound is established."
+    ],
+    "model": "gpt-6-astra",
+    "parent_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+    "policy_rejection": [],
+    "provider": "codex",
+    "reasons": [
+      "Fresh-process benchmarks pass for the large grid and aLIGO; all 14 supplied cases match the trusted seed, including gradients.",
+      "The documented pristine-reference discrepancies and existing autodiff limitations are inherited, not new blockers.",
+      "Static indexing, identity-link elimination and forward-to-backward assembly reuse are structurally motivated; no fixture detection, hardcoded answers or persistent compilation caching is evident.",
+      "Approval remains blocked by the new approximate adjoint substitutions, which the supplied numerical cases do not establish as generally safe."
+    ],
+    "reviewer": "independent-headless-source-review-v1",
+    "scope": "no-fixture-specialization-and-integrity",
+    "session_id": "01a2026c-c2d4-7dd3-b29b-353e9b2f71a4"
+  }
+}
