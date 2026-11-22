@@ -1,0 +1,35 @@
+{
+  "candidate_sha": "c7c3e7a5aa257400d3036ccebb29b76293b60887",
+  "parent_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+  "diff_sha256": "d88d924f5ba7639324d36cd6ffb907f73ec314bd2337e2bb1008bca17784c3d0",
+  "source_context_sha256": "8aef099cccdc70829742398866328900bfb7fe29b111ab372feaf85b081f529d",
+  "evaluation_receipt_sha256": "ce24dccd8b1507b64676590e564038236c78cbaa0b714e135dfc54b11beb39af",
+  "deadline_unix": 1795339664.0,
+  "reviewer": "independent-headless-source-review-v1",
+  "provider": "claude",
+  "model": null,
+  "session_id": null,
+  "result": {
+    "response": {
+      "approved": false,
+      "reasons": [
+        "No reviewer result available"
+      ],
+      "generalization_risks": [
+        "Review incomplete"
+      ]
+    },
+    "session_id": null,
+    "model": null
+  },
+  "failures": [
+    {
+      "provider": "claude",
+      "error": "Approval requires reasons and no unresolved generalization risk"
+    }
+  ],
+  "approved": false,
+  "finished_at": 1795312409.098302,
+  "prompt_sha256": "39956ffa9eab0e02c2f54b1d56ab9010299d366c943a2b2b2a39d2859cd2d596",
+  "scope": "no-fixture-specialization-and-integrity"
+}
