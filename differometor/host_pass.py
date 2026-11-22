@@ -241,56 +241,15 @@ def _superlu_gstrf():
     return _GSTRF
 
 
-def _factor(pattern, values, column_ordering="COLAMD"):
+def _factor(pattern, values):
     data = np.ascontiguousarray(values, dtype=np.complex128)
     gstrf = _superlu_gstrf()
     if gstrf:
         return gstrf(pattern.size, data.size, data, pattern.indices.astype(np.intc), pattern.indptr.astype(np.intc),
-                     csc_construct_func=_construct_csc, ilu=False,
-                     options=dict(_SUPERLU_OPTIONS, ColPerm=column_ordering))
+                     csc_construct_func=_construct_csc, ilu=False, options=dict(_SUPERLU_OPTIONS))
     splu, csc_matrix = _scipy()
     return splu(csc_matrix((data, pattern.indices, pattern.indptr), shape=(pattern.size, pattern.size)),
-                permc_spec=column_ordering)
-
-
-# Fill-reducing column orderings considered for the signal system. COLAMD is the
-# seed's (and `splu`'s default) choice; MMD on the structure of A^T + A suits
-# nearly structurally symmetric matrices. Both are SuperLU built-ins and depend
-# only on the sparsity pattern; partial pivoting (DiagPivotThresh 1.0) is kept.
-COLUMN_ORDERINGS = ("COLAMD", "MMD_AT_PLUS_A")
-
-
-def _fill(factor):
-    """nnz(L) + nnz(U) of a SuperLU factorization, or None if not exposed."""
-    try:
-        return int(factor.nnz)
-    except Exception:
-        return None
-
-
-def _choose_ordering(pattern, values):
-    """Factor the first row with every candidate ordering; keep the sparsest factors.
-
-    All rows of one evaluation share the sparsity pattern, so the ordering that
-    gives the least fill on the first row is used for the remaining rows (each
-    row is still factored afresh from its own values). Ties, or a SuperLU build
-    without the `nnz` attribute, keep COLAMD. Every solve is still followed by
-    the same iterative refinement against the original matrix.
-    """
-    best_ordering = COLUMN_ORDERINGS[0]
-    best_factor = _factor(pattern, values, best_ordering)
-    best_fill = _fill(best_factor)
-    if best_fill is None:
-        return best_ordering, best_factor
-    for ordering in COLUMN_ORDERINGS[1:]:
-        try:
-            factor = _factor(pattern, values, ordering)
-        except Exception:
-            continue
-        fill = _fill(factor)
-        if fill is not None and fill < best_fill:
-            best_ordering, best_factor, best_fill = ordering, factor, fill
-    return best_ordering, best_factor
+                permc_spec="COLAMD")
 
 
 class _Products:
@@ -411,11 +370,9 @@ def host_forward(plan, parameters, carrier_values, signal_values, carrier_base, 
     signal = np.empty((count, system.size), dtype=np.complex128)
     covariances = np.empty((count, detectors, system.size), dtype=np.complex128)
     weights = np.empty((count, detectors, system.size), dtype=np.complex128)
-    column_ordering, first_factor = _choose_ordering(system.pattern, coefficients[0])
-    state["signal_ordering"] = column_ordering
     factors = []
     for row in range(count):
-        factor = first_factor if row == 0 else _factor(system.pattern, coefficients[row], column_ordering)
+        factor = _factor(system.pattern, coefficients[row])
         factors.append(factor)
         weight = _solve(products, coefficients[row], factor, selections[row].T, "H")      # A^H w = s
         sources = noise_products.apply(state["noise_values"][0 if plan.noise_row_reuse else row], weight)
@@ -471,12 +428,9 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
     pattern, noise_pattern = system.pattern, noise_system.pattern
     products, noise_products = _products(pattern), _products(noise_pattern)
     factors = state.get("signal_factors")
-    if factors is None:
-        column_ordering, first_factor = _choose_ordering(pattern, coefficients[0])
-        factors = [first_factor] + [_factor(pattern, coefficients[row], column_ordering) for row in range(1, count)]
     signal_bar = np.asarray(signal_bar)
     for row in range(count):
-        factor = factors[row]
+        factor = factors[row] if factors is not None else _factor(pattern, coefficients[row])
         solution = np.concatenate([signal[row][:, None], covariances[row].T], axis=1)           # (N, 1 + D)
         solution_bar = np.concatenate([signal_bar[row][:, None], covariance_bar[row].T], axis=1)
         rhs_bar = _solve(products, coefficients[row], factor, solution_bar, "T")               # A^T r = x_bar

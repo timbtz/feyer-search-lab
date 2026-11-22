@@ -96,6 +96,37 @@ D = 1 noise detector.
   bitwise identical to the seed, either COLAMD won or `nnz` is unavailable (inconclusive).
 - Parameter menu (implementation choice, not physics): `COLUMN_ORDERINGS` in host_pass.py; legal
   SuperLU values NATURAL, MMD_ATA, MMD_AT_PLUS_A, COLAMD. Default ("COLAMD", "MMD_AT_PLUS_A").
+- SHA `bca5a246d9ab233a79daa691be9815cd6e048888`, request `3c2472328d6a4565af9d9a287fcb4805`.
+  Official PASS 3/3 grid + 3/3 aLIGO. Arrays **bitwise identical to the seed** (grid 5124476e...,
+  aLIGO 75df8515...; generalization 14/14 identical) => COLAMD was kept on every setup, either
+  because it had the smaller fill or because `SuperLU.nnz` is not exposed. Inconclusive about MMD.
+  - Grid first run 0.98164, 0.95484, 0.95280 s (median 0.95484, range 3.0 %); forward exec 178.4,
+    178.0, 180.0 ms; gradient 169.7, 170.3, 175.2 ms (same as candidate 1).
+  - aLIGO first run 0.62619, 0.62670, 0.62282 s (median 0.62619); forward 33.0/32.6/32.6 ms,
+    gradient 24.9/25.4/25.1 ms.
+  - Decision: no effect; reverted (extra factorization and code without benefit).
+
+## Policy change after three unconfirmed submissions (c1, c2, c3)
+- Back on the strongest numerically clean parent: the source is again candidate 1's
+  mechanism (e4b3509); the only difference is cosmetic whitespace in one line.
+- Pooled evidence for the candidate 1 mechanism (c1 and c3 runs, identical execution code paths
+  apart from c3's one extra factorization): grid first run 0.98762, 0.95325, 0.98992, 0.98164,
+  0.95484, 0.95280 s (median 0.9682); gradient exec 170.5-175.2 ms in all six vs seed 187.44 ms
+  (one audit sample). Admitted seed cohort 411b2326: grid 1.00588, 0.97606, 0.98087 s (median
+  0.98087); aLIGO 0.62757, 0.62321, 0.62795 s. Candidate aLIGO medians 0.6669 (c1, compile/import
+  noise in sample 1), 0.6261 (c3). The ranges overlap; a paired, interleaved seed-vs-candidate
+  run is required before any claim.
+- Requests to the supervisor / coordinator:
+  1. Paired interleaved fresh-process runs (>= 5 each) of seed 53f38d3 and this restored candidate 1
+     source, both benchmarks, plus independent source review of the candidate 1 diff.
+  2. A diagnostic run (not a candidate) of host_forward / host_backward on the grid setup with
+     cProfile and a histogram of refinement corrections per `_solve` call (steps taken, final
+     max|dx|/max|x|), plus SuperLU `nnz` for COLAMD vs MMD_AT_PLUS_A on one signal row. Without it
+     the next solver mechanism (refinement work, ordering, pivot threshold) would be another blind
+     guess. Managed agents in this session have no shell, so they cannot run it themselves.
+- Evidence so far on where the time goes: the backward phase (no factorization; two refined solves
+  plus small products per row) costs ~1.7 ms/row, about the same as the forward (factor + two
+  refined solves). So factorization is a small share; triangular solves + refinement dominate.
 
 ## Open numerical findings carried forward unchanged
 Strict dense-reference flags (signal entries, gradients 33/161/180), uifo_rand1 2.04e-4 / uifo_rand3
