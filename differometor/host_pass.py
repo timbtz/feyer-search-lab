@@ -33,7 +33,7 @@ import numpy as np
 
 from differometor.components import UNIT_VACUUM, H_PLANCK, F0
 from differometor.host import evaluate_function, function_jacobian
-from differometor.sparse import _scipy, SparsePattern, REFINEMENT_STEPS, REFINEMENT_TOLERANCE
+from differometor.sparse import _scipy, REFINEMENT_STEPS, REFINEMENT_TOLERANCE
 
 _NOISE_SCALE = 2 * UNIT_VACUUM * H_PLANCK * F0 * 0.25
 
@@ -285,14 +285,15 @@ def _expand(array, indices, values):
     last = _sweep_last_writes(indices, array.shape[1])
     if last is not None:
         indices, values = indices[last], values[last]
-    tiled[np.repeat(np.arange(count), indices.size), np.tile(indices, count)] = values.T.reshape(-1)
+    # Each sweep row writes the same columns. A slice and column index express
+    # that Cartesian product without materializing two count*indices.size arrays.
+    tiled[:count, indices] = values.T
     return tiled
 
 
 def _expand_backward(array_rows, indices, values, tiled_bar):
     count = values.shape[1]
-    rows, columns = np.repeat(np.arange(count), indices.size), np.tile(indices, count)
-    values_bar = tiled_bar[rows, columns].reshape(count, indices.size).T
+    values_bar = tiled_bar[:count, indices].T
     last = _sweep_last_writes(indices, tiled_bar.shape[1])
     if last is not None:
         # Earlier writes do not affect the output; their cotangents are zero.
@@ -300,7 +301,7 @@ def _expand_backward(array_rows, indices, values, tiled_bar):
         overwritten[last] = False
         values_bar[overwritten] = 0
     tiled_bar = tiled_bar.copy()
-    tiled_bar[rows, columns] = 0
+    tiled_bar[:count, indices] = 0
     return tiled_bar.reshape(count, array_rows, tiled_bar.shape[1]).sum(axis=0), values_bar
 
 
@@ -356,7 +357,7 @@ def _superlu_gstrf():
     return _GSTRF
 
 
-def _factor_full(pattern, values):
+def _factor(pattern, values):
     data = np.ascontiguousarray(values, dtype=np.complex128)
     gstrf = _superlu_gstrf()
     if gstrf:
@@ -365,74 +366,6 @@ def _factor_full(pattern, values):
     splu, csc_matrix = _scipy()
     return splu(csc_matrix((data, pattern.indices, pattern.indptr), shape=(pattern.size, pattern.size)),
                 permc_spec="COLAMD")
-
-
-class _IsolatedDiagonalPlan:
-    """Static decomposition A = [[D, 0], [0, C]] after an index permutation.
-
-    D consists only of coordinates whose row AND column contain just their
-    diagonal. An off-diagonal entry that is currently zero prevents elimination.
-    No coefficient, factor or solution is stored in this topology plan.
-    """
-
-    def __init__(self, pattern):
-        counts = np.bincount(pattern.rows, minlength=pattern.size)
-        column_counts = np.bincount(pattern.cols, minlength=pattern.size)
-        diagonal = pattern.rows == pattern.cols
-        self.diagonal_positions = np.flatnonzero(diagonal & (counts[pattern.rows] == 1)
-                                                 & (column_counts[pattern.cols] == 1))
-        self.roots = pattern.rows[self.diagonal_positions]
-        self.size = pattern.size
-        if not self.roots.size:
-            return
-        is_root = np.zeros(pattern.size, dtype=bool)
-        is_root[self.roots] = True
-        self.core = np.flatnonzero(~is_root)
-        core_index = np.empty(pattern.size, dtype=np.int64)
-        core_index[self.core] = np.arange(self.core.size)
-        self.core_positions = np.flatnonzero(~is_root[pattern.rows])
-        self.core_pattern = SparsePattern(core_index[pattern.rows[self.core_positions]],
-                                          core_index[pattern.cols[self.core_positions]], self.core.size)
-
-
-class _IsolatedDiagonalFactor:
-    """Fresh numerical factors for structurally isolated diagonal coordinates."""
-
-    def __init__(self, plan, values):
-        self.plan = plan
-        # Advanced indexing owns these numerical snapshots for this factor.
-        self.diagonal = values[plan.diagonal_positions]
-        self.core_factor = _factor_full(plan.core_pattern, values[plan.core_positions]) if plan.core.size else None
-
-    def solve(self, rhs, trans="N"):
-        plan = self.plan
-        vector = rhs.ndim == 1
-        right = rhs[:, None] if vector else rhs
-        solution = np.empty(right.shape, dtype=np.complex128)
-        if trans not in ("N", "T", "H"):
-            raise ValueError("trans must be N, T or H")
-        diagonal = np.conj(self.diagonal) if trans == "H" else self.diagonal
-        solution[plan.roots] = right[plan.roots] / diagonal[:, None]
-        if plan.core.size:
-            solution[plan.core] = self.core_factor.solve(right[plan.core], trans=trans)
-        return solution[:, 0] if vector else solution
-
-
-_ISOLATED_DIAGONALS = {}
-
-
-def _factor(pattern, values):
-    """Factor afresh, splitting off only structurally isolated diagonal entries."""
-    if pattern not in _ISOLATED_DIAGONALS:
-        _ISOLATED_DIAGONALS[pattern] = _IsolatedDiagonalPlan(pattern)
-    plan = _ISOLATED_DIAGONALS[pattern]
-    values = np.asarray(values, dtype=np.complex128)
-    if plan.roots.size:
-        diagonal = values[plan.diagonal_positions]
-        # Keep SuperLU's existing singular/nonfinite handling for invalid pivots.
-        if np.all(np.isfinite(diagonal)) and np.all(diagonal != 0):
-            return _IsolatedDiagonalFactor(plan, values)
-    return _factor_full(pattern, values)
 
 
 class _Products:

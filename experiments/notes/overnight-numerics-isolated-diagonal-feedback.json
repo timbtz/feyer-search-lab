@@ -1,0 +1,365 @@
+{
+  "sha": "4f4bfab0570f28ee54ead39a0715fcc41c860828",
+  "request_id": "a1dc1c3ef5a54140831844f43b3db41e",
+  "parent_sha": "534570265891b5782b8b55ef10b5b06eb778d1c3",
+  "parent_request_id": "db3df72dd1024cbea413b748540e7f4d",
+  "official_passed": true,
+  "confirmed_improvement": false,
+  "source_review": null,
+  "timings": {
+    "grid": {
+      "fresh_process_seconds": [
+        0.8643205240368843,
+        0.8266397640109062,
+        0.8206502050161362
+      ],
+      "median_seconds": 0.8266397640109062,
+      "minimum_seconds": 0.8206502050161362,
+      "maximum_seconds": 0.8643205240368843,
+      "count": 3
+    },
+    "aligo": {
+      "fresh_process_seconds": [
+        0.5601833686232567,
+        0.5500757731497288,
+        0.5532502047717571
+      ],
+      "median_seconds": 0.5532502047717571,
+      "minimum_seconds": 0.5500757731497288,
+      "maximum_seconds": 0.5601833686232567,
+      "count": 3
+    }
+  },
+  "parent_timings": {
+    "grid": {
+      "fresh_process_seconds": [
+        0.8498562760651112,
+        0.8252214398235083,
+        0.8150014914572239
+      ],
+      "median_seconds": 0.8252214398235083,
+      "minimum_seconds": 0.8150014914572239,
+      "maximum_seconds": 0.8498562760651112,
+      "count": 3
+    },
+    "aligo": {
+      "fresh_process_seconds": [
+        0.5479947309941053,
+        0.5457404647022486,
+        0.5486580114811659
+      ],
+      "median_seconds": 0.5479947309941053,
+      "minimum_seconds": 0.5457404647022486,
+      "maximum_seconds": 0.5486580114811659,
+      "count": 3
+    }
+  },
+  "phase_medians_seconds": {
+    "grid": {
+      "imports": 0.2662562448531389,
+      "initialize": 0.0036091599613428116,
+      "load": 0.0014273542910814285,
+      "build": 0.071440564468503,
+      "forward_lower": 0.019677210599184036,
+      "forward_compile": 0.03389930725097656,
+      "forward": 0.1824965961277485,
+      "sensitivity_lower": 0.025793014094233513,
+      "sensitivity_compile": 0.04112615995109081,
+      "sensitivity": 0.0008702315390110016,
+      "gradient_lower": 0.01708415523171425,
+      "gradient_compile": 0.053637465462088585,
+      "gradient": 0.10890686511993408,
+      "host_transfer": 0.00018674694001674652
+    },
+    "aligo": {
+      "imports": 0.26650599390268326,
+      "initialize": 0.003637600690126419,
+      "load": 0.0002095196396112442,
+      "build": 0.037825845181941986,
+      "forward_lower": 0.01915472373366356,
+      "forward_compile": 0.03343595191836357,
+      "forward": 0.033054014667868614,
+      "sensitivity_lower": 0.02655760571360588,
+      "sensitivity_compile": 0.04133419692516327,
+      "sensitivity": 0.0004683639854192734,
+      "gradient_lower": 0.016687868162989616,
+      "gradient_compile": 0.05323994904756546,
+      "gradient": 0.019060557708144188,
+      "host_transfer": 0.00016363710165023804
+    }
+  },
+  "parent_phase_medians_seconds": {
+    "grid": {
+      "imports": 0.26357324980199337,
+      "initialize": 0.0035571325570344925,
+      "load": 0.0015529412776231766,
+      "build": 0.07457390055060387,
+      "forward_lower": 0.019548960030078888,
+      "forward_compile": 0.03288084827363491,
+      "forward": 0.1812894344329834,
+      "sensitivity_lower": 0.025485241785645485,
+      "sensitivity_compile": 0.040324483066797256,
+      "sensitivity": 0.0008948501199483871,
+      "gradient_lower": 0.016754843294620514,
+      "gradient_compile": 0.052894532680511475,
+      "gradient": 0.10851830802857876,
+      "host_transfer": 0.00018831714987754822
+    },
+    "aligo": {
+      "imports": 0.2636090200394392,
+      "initialize": 0.003542369231581688,
+      "load": 0.00021101906895637512,
+      "build": 0.037748783826828,
+      "forward_lower": 0.01914563588798046,
+      "forward_compile": 0.03361050225794315,
+      "forward": 0.03238668479025364,
+      "sensitivity_lower": 0.02609904482960701,
+      "sensitivity_compile": 0.04130254499614239,
+      "sensitivity": 0.00047631561756134033,
+      "gradient_lower": 0.016476385295391083,
+      "gradient_compile": 0.053080711513757706,
+      "gradient": 0.018774110823869705,
+      "host_transfer": 0.0001478288322687149
+    }
+  },
+  "phase_median_delta_ms": {
+    "grid": {
+      "imports": 2.6829950511455536,
+      "initialize": 0.05202740430831909,
+      "load": -0.12558698654174805,
+      "build": -3.1333360821008682,
+      "forward_lower": 0.12825056910514832,
+      "forward_compile": 1.018458977341652,
+      "forward": 1.207161694765091,
+      "sensitivity_lower": 0.30777230858802795,
+      "sensitivity_compile": 0.8016768842935562,
+      "sensitivity": -0.02461858093738556,
+      "gradient_lower": 0.32931193709373474,
+      "gradient_compile": 0.7429327815771103,
+      "gradient": 0.3885570913553238,
+      "host_transfer": -0.0015702098608016968
+    },
+    "aligo": {
+      "imports": 2.8969738632440567,
+      "initialize": 0.09523145854473114,
+      "load": -0.0014994293451309204,
+      "build": 0.07706135511398315,
+      "forward_lower": 0.00908784568309784,
+      "forward_compile": -0.17455033957958221,
+      "forward": 0.667329877614975,
+      "sensitivity_lower": 0.45856088399887085,
+      "sensitivity_compile": 0.03165192902088165,
+      "sensitivity": -0.007951632142066956,
+      "gradient_lower": 0.21148286759853363,
+      "gradient_compile": 0.15923753380775452,
+      "gradient": 0.2864468842744827,
+      "host_transfer": 0.015808269381523132
+    }
+  },
+  "total_median_delta_ms": {
+    "grid": 1.4183241873979568,
+    "aligo": 5.255473777651787
+  },
+  "saved_output_record_comparisons": {
+    "trial51": {
+      "official": [
+        {
+          "setup": "grid",
+          "repetition": 1,
+          "array_archive_hash_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "aligo",
+          "repetition": 1,
+          "array_archive_hash_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "grid",
+          "repetition": 2,
+          "array_archive_hash_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "aligo",
+          "repetition": 2,
+          "array_archive_hash_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "grid",
+          "repetition": 3,
+          "array_archive_hash_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "aligo",
+          "repetition": 3,
+          "array_archive_hash_equal": true,
+          "strict_records_equal": true
+        }
+      ],
+      "generalization": {
+        "initial_seed": {
+          "case_records_equal": true,
+          "passed_count": 14,
+          "total": 14
+        },
+        "pristine": {
+          "case_records_equal": true,
+          "passed_count": 4,
+          "total": 14
+        }
+      }
+    },
+    "trial35": {
+      "official": [
+        {
+          "setup": "grid",
+          "repetition": 1,
+          "array_archive_hash_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "aligo",
+          "repetition": 1,
+          "array_archive_hash_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "grid",
+          "repetition": 2,
+          "array_archive_hash_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "aligo",
+          "repetition": 2,
+          "array_archive_hash_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "grid",
+          "repetition": 3,
+          "array_archive_hash_equal": true,
+          "strict_records_equal": true
+        },
+        {
+          "setup": "aligo",
+          "repetition": 3,
+          "array_archive_hash_equal": true,
+          "strict_records_equal": true
+        }
+      ],
+      "generalization": {
+        "initial_seed": {
+          "case_records_equal": true,
+          "passed_count": 14,
+          "total": 14
+        },
+        "pristine": {
+          "case_records_equal": true,
+          "passed_count": 4,
+          "total": 14
+        }
+      }
+    }
+  },
+  "memory": {
+    "grid": [
+      648953856,
+      635211776,
+      541429760
+    ],
+    "aligo": [
+      281870336,
+      295419904,
+      295301120
+    ]
+  },
+  "generalization_peak_rss_bytes": 847249408,
+  "generalization_archive_sha256": "a1311328d38bde257b041a10589486e5ec5bc9c150a85a287e529a9caff0eb56",
+  "source_files": {
+    "differometor/__init__.py": "c6360288610bd57f2313ce3c2d6c04935ae8be0c511822349ccc8e281e213a06",
+    "differometor/build.py": "2decccba1eb5c953f51ace8514c08fe47b334b613154afd3cd4b8ff021df2d86",
+    "differometor/components.py": "2e857e19d468d94b46594f71a76221d9d8b677bad05f6cf03b9e57b0e1613593",
+    "differometor/host.py": "595ff7858807656e7ee882c485aa5f7d4b0e7b15e12233a813dbe289a08b55d3",
+    "differometor/host_pass.py": "89e980bb1139715be00c583d80edc58246563ff8e29b147419fe7bcf8ead1e9c",
+    "differometor/plot.py": "16735e0fb14902f2c024e3da9f2655cbea634c4dd9e06c48af1247e12d0cf606",
+    "differometor/setups.py": "478b1a7391b28604c36d8245e13ffa4f6d0f6dc32eeac6c6feaf5c08aa06a76b",
+    "differometor/simulate.py": "4fd4939ed41f84772b6aeb97b23c0639cd0fe4051aafc5f2a1a0abdbf9f91f88",
+    "differometor/sparse.py": "5bae0f5cb5afd7bda5028d0a4897691e2b930d3c93cbb62fc9180c4f3c51cb83",
+    "differometor/utils.py": "73ee8a862cbc435363904addc363071ed7dc8b1546956f82e1746998fe3b09ff"
+  },
+  "policy_digest": "7c2322f706aa0f83ca8e5b64210fac21eaf6f48eb732e7aa78bf30ff0f05af5b",
+  "selection_decision": {
+    "metrics": {
+      "aligo": {
+        "max_seconds": 0.5601833686232567,
+        "median_seconds": 0.5532502047717571,
+        "min_seconds": 0.5500757731497288,
+        "relative_range": 0.01826948347483719,
+        "samples_seconds": [
+          0.5601833686232567,
+          0.5500757731497288,
+          0.5532502047717571
+        ]
+      },
+      "grid": {
+        "max_seconds": 0.8643205240368843,
+        "median_seconds": 0.8266397640109062,
+        "min_seconds": 0.8206502050161362,
+        "relative_range": 0.052828718048666214,
+        "samples_seconds": [
+          0.8643205240368843,
+          0.8266397640109062,
+          0.8206502050161362
+        ]
+      }
+    },
+    "policy": {
+      "aligo_maximum_ratio": 1.02,
+      "large_candidate_maximum_must_be_below_incumbent_minimum": true,
+      "large_minimum_absolute_gain_seconds": 0.003,
+      "large_minimum_relative_gain": 0.005,
+      "maximum_relative_range": 0.1,
+      "minimum_repetitions": 3,
+      "scope": "Team search-selection heuristic, not organizer judging policy.",
+      "version": "overnight-selection-v2"
+    },
+    "promote": false,
+    "reasons": [
+      "requires_source_review",
+      "large_gain_below_selection_threshold",
+      "large_first_run_ranges_overlap_requires_paired_evidence"
+    ],
+    "timing_comparison": {
+      "candidate_grid_max_seconds": 0.8643205240368843,
+      "incumbent_grid_min_seconds": 0.7944249957799911,
+      "observed_ranges_nonoverlapping": false
+    }
+  },
+  "interpretation": "No confirmed improvement. Unpaired cohorts and unknown external contention do not establish a causal slowdown. No callback profiles or isolated-coordinate counts were supplied. Equal output hashes do not establish whether the optimized path ran.",
+  "decision": "Retire isolated-coordinate factor splitting; restore the exact trial51 simulator source, retaining trial53 and the rejected broader row-elimination patch in history.",
+  "next_experiment": "Before another factorization variant, coordinator should capture per-callback profiles and structural isolated-coordinate/core-size counts for trial53 on both unchanged workloads in a separate diagnostic run. No additional unprofiled factor variant is proposed.",
+  "limitations": "Official NPZ hashes and all strict/generalization case records inspected; raw remote NPZ members unavailable locally. Pristine disagreements and unresolved finite differences remain. No independent source review for trial53 or later repairs; no promotion claim.",
+  "restoration": {
+    "source_parent": "534570265891b5782b8b55ef10b5b06eb778d1c3",
+    "all_tracked_simulator_files_byte_equal": true,
+    "checked_files": [
+      "differometor/__init__.py",
+      "differometor/build.py",
+      "differometor/components.py",
+      "differometor/host.py",
+      "differometor/host_pass.py",
+      "differometor/plot.py",
+      "differometor/setups.py",
+      "differometor/simulate.py",
+      "differometor/sparse.py",
+      "differometor/utils.py"
+    ],
+    "host_pass_sha256": "fab5290125270c2a37f612fb5ba5778f59f2c726f4316043e3704430945a1f77",
+    "candidate_sha": "pending supervisor commit; restoration is not a new measured revision"
+  }
+}

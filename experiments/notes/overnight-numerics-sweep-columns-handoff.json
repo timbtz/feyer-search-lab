@@ -1,0 +1,30 @@
+{
+  "trial": 54,
+  "candidate_sha": null,
+  "source_parent": "534570265891b5782b8b55ef10b5b06eb778d1c3",
+  "branch_head_before_supervisor_commit": "10c42746adb0e5faba49d271b5208fab23e41196",
+  "host_pass_sha256": "3e8f81ae09c28c4d7388fe8cf1054502743600ac01dc0fefc6b2fd782d952876",
+  "source_delta_from_trial51": "Replace repeated Cartesian row/column index arrays in _expand/_expand_backward with a row slice and column indices. Preserve last-write masking, copies, summation and all solves. Trial53 factor-splitting code removed.",
+  "evidence_sha256": {
+    "overnight-numerics-sweep-columns-check.py": "b28b4ad7f5d7b5958b2160b9d7db8817b28cee1cd221979d564e5c8752c7df48",
+    "overnight-numerics-sweep-columns-result.json": "75ff259edc3647653b300753938b1843f5383084ce2f150f75d05293a6e19f98",
+    "overnight-numerics-sweep-columns-callback-check.py": "9fcb82786d7dceb7f6be867779aace02db034e5f125ee543156ce16c838699e0",
+    "overnight-numerics-sweep-columns-callback-result.json": "e360ac814c46cebd02369016e9706b1652c732f2a9d0ae994c0219c767c9aff8"
+  },
+  "allocation_evidence": "For17 rows and3 sweep columns, one expansion plus one pullback constructed1904 bytes of integer arange/repeat/tile outputs in parent and0 in candidate. Cumulative array bytes, not peak RSS or timings. Numerical result arrays remain allocated.",
+  "checks": {
+    "kernel_cases": 112,
+    "kernel_fd_coordinates": 3192,
+    "layout_and_special_value_cases": 448,
+    "callback_cases": 384,
+    "callback_arrays_per_case": 12,
+    "callback_fd_coordinates": 6912,
+    "all_compared_arrays_bitwise_equal": true
+  },
+  "official_benchmarks": null,
+  "generalization": null,
+  "independent_review": null,
+  "performance_claim": null,
+  "request": "Evaluate both unchanged full benchmarks and all saved outputs/gradients on one exact supervisor SHA;14-case generalization against parent51, seed and pristine. Independent review required. Any apparent millisecond gain needs paired fresh-process complete runs against51, separate samples/medians/ranges/phase deltas/RSS and overlap status.",
+  "caveats": "Synthetic checks exclude JAX and full optical builder. Inherited pristine disagreements and six unresolved grid FD coordinates remain. First-order custom VJP only. No physical parameter changes; no caches or settings changes."
+}

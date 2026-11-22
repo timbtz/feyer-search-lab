@@ -1,0 +1,73 @@
+{
+  "parent": "534570265891b5782b8b55ef10b5b06eb778d1c3",
+  "host_pass_sha256": "3e8f81ae09c28c4d7388fe8cf1054502743600ac01dc0fefc6b2fd782d952876",
+  "reproduction": {
+    "parent": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        2.0,
+        3.0
+      ]
+    ],
+    "candidate": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        2.0,
+        3.0
+      ]
+    ]
+  },
+  "expansion_cases": 112,
+  "all_destination_bitwise_cases": 112,
+  "finite_difference_coordinates": 3192,
+  "maximum_finite_difference_absolute_error": 5.807629932519376e-10,
+  "layout_and_special_value_cases": 448,
+  "index_allocation_inspection": {
+    "parent": {
+      "integer_index_outputs": [
+        {
+          "operation": "arange",
+          "elements": 17,
+          "bytes": 136
+        },
+        {
+          "operation": "repeat",
+          "elements": 51,
+          "bytes": 408
+        },
+        {
+          "operation": "tile",
+          "elements": 51,
+          "bytes": 408
+        },
+        {
+          "operation": "arange",
+          "elements": 17,
+          "bytes": 136
+        },
+        {
+          "operation": "repeat",
+          "elements": 51,
+          "bytes": 408
+        },
+        {
+          "operation": "tile",
+          "elements": 51,
+          "bytes": 408
+        }
+      ],
+      "cumulative_allocated_bytes": 1904
+    },
+    "candidate": {
+      "integer_index_outputs": [],
+      "cumulative_allocated_bytes": 0
+    }
+  },
+  "scope": "Source-derived NumPy checks; no JAX tracing or benchmark"
+}

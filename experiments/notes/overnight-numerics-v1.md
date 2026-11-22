@@ -5398,3 +5398,117 @@ with individual samples, medians/ranges separately for large and aLIGO, phase
 deltas, sampled memory and overlap status. Do not infer an improvement from a
 single observation. All pristine-reference disagreements, unresolved grid finite
 differences and first-order-only custom VJP limitations remain explicit.
+
+## Trial53 feedback and restoration to51 — 2026-11-22 08:33 UTC
+
+Candidate4f4bfab0570f28ee54ead39a0715fcc41c860828, dual-official request
+ a1dc1c3ef5a54140831844f43b3db41e (grid-1/2/3 and aligo-1/2/3).
+Both unchanged official benchmarks passed all three fresh processes. No confirmed
+improvement and no independent source review. Recorded full first-run seconds:
+
+- Large: 0.864320524,0.826639764,0.820650205; median0.826639764,
+  range0.820650205–0.864320524.
+- Official aLIGO: 0.560183369,0.550075773,0.553250205; median0.553250205,
+  range0.550075773–0.560183369.
+
+Relative to parent51/request db3df72dd1024cbea413b748540e7f4d, total median
+changes are +1.418 ms large and +5.255 ms aLIGO. Median build/forward/reverse
+changes respectively: large -3.133/+1.207/+0.389 ms, aLIGO
++0.077/+0.667/+0.286 ms. These are unpaired cohorts, not causal slowdown
+estimates. Ranges overlap the admitted incumbent; no stable improvement is
+established. CPU2, one logical CPU and library threads1, unchanged XLA settings,
+no persistent cache. External contention/overlap remains unknown.
+
+Sampled peak RSS bytes: large648953856/635211776/541429760;
+aLIGO281870336/295419904/295301120; generalization847249408. No reported
+infrastructure failure or memory-budget breach; sampling can miss brief peaks.
+
+Numerical audit: all six official NPZ archive hashes AND full strict comparison
+records equal51 and35. All14 generalization case comparison records against the
+initial seed and pristine reference equal51 and35:14/14 pass seed,4/14 pass
+pristine. Generalization archive hash differs; do not infer member-byte equality
+from matching comparison records. Raw remote NPZ members were unavailable here.
+The supplied strict records retain grid131 signal,3 gradient and1 loss failures
+against pristine, and the official aLIGO loss failure. uifo_rand1/rand3 retain
+sensitivity log errors0.0002036099068405406/0.000058100919558157216; unresolved
+grid finite differences54,59,63,136,161,163 remain. Earlier aLIGO29/29 checks
+and first-order-only host VJP scope are unchanged. Public passes do not certify
+universal physics or resolve those discrepancies.
+
+Decision: retire isolated-diagonal factor splitting, including its plan/cache,
+wrapper and direct diagonal solve. Restore ONLY host_pass.py to exact51 bytes;
+all10 tracked simulator files verified byte-equal to51, all Python syntax
+checked. Source parent534570265891b5782b8b55ef10b5b06eb778d1c3;
+restored host_pass SHA256
+fab5290125270c2a37f612fb5ba5778f59f2c726f4316043e3704430945a1f77.
+No history reset, commit, benchmark launch or other lane transfer. Trial53's
+commit, synthetic checks and rejected broader row-elimination patch remain
+preserved. The supervisor's restoration SHA is pending; this is source equality
+to an evaluated parent, not a new exact-SHA evaluation or promotion.
+
+Next concrete experiment, before another factorization variant: coordinator
+should collect per-callback profiles and each pattern's size, isolated-coordinate
+count and core size on53 for BOTH unchanged workloads in a separate diagnostic
+run. The requested counts/profile were absent from feedback. Identical outputs
+do not prove that either optimized or fallback path ran. Without evidence of
+remaining factorization overhead, do not keep tuning this mechanism. Retain51's
+conservative guards and correctness repairs; the admitted7 still has later-
+demonstrated tolerance-guard counterexamples and is not silently substituted.
+Evidence and all phase deltas: overnight-numerics-isolated-diagonal-feedback.json.
+This closes the isolated-coordinate hypothesis, not the authorized campaign.
+
+## Trial54 — direct sweep column indexing, 2026-11-22
+
+Concrete next experiment after retiring53: remove redundant integer Cartesian
+index arrays in parameter-sweep assembly and its pullback. Source parent is51,
+534570265891b5782b8b55ef10b5b06eb778d1c3, whose dual request is
+ db3df72dd1024cbea413b748540e7f4d. Branch HEAD remains53 until supervisor commit;
+the submission includes its explicit removal plus this narrow change. No other
+lane code is imported. Candidate SHA and both benchmark job IDs pending.
+
+_expand and _expand_backward previously allocated arange(count), repeated row
+indices and tiled column indices on every call. Each row uses the same supplied
+columns. Direct indexing [:count, indices] expresses the same destinations,
+including the existing first-count-rows convention for multiple base rows.
+The forward retains last-write selection; the reverse retains zero cotangents
+for overwritten duplicate/negative-alias destinations. Base-row tiling, the
+pullback's C-order copy, reduction order and every numerical solve remain.
+Every surviving sweep variable receives its derivative even when its value is0.
+The cotangent gather remains an independent array; its layout can differ, so
+actual downstream callbacks were compared as well as helper outputs.
+
+Mechanism inspection on17 sweep rows with3 columns: one expansion plus one
+pullback constructs1904 bytes of integer arange/repeat/tile outputs in51 and0
+in54. These are counted cumulative temporary array bytes, not peak memory,
+measured runtime or an estimated official gain. The count is input/topology
+agnostic. The official fraction of execution spent here is unprofiled and may
+be too small for a stable total gain. This is distinct from29's rejected
+in-place cotangent ownership change:54 preserves that full copy and only
+simplifies indexing. It adds no solver or numerical fallback.
+
+Small local checks, no benchmarks:
+
+- 112 helper cases, all forward/base/sweep cotangents bitwise equal51;3192
+  finite-difference coordinates pass, worst absolute error5.807629932519376e-10.
+  Empty/one/multiple sweeps, one/three base rows, zero/single/4/17 frequency
+  counts, real/complex values, duplicate and negative indices, zero-valued
+  writes and invalid nonempty destinations are covered.
+- 448 additional cases cover C/F/strided/read-only storage and signed zeros,
+  NaN/infinity values. Results match51 byte-for-byte; inputs stay unchanged.
+- 384 tiny actual host-callback cases compare all12 arrays bitwise (5 forward
+  outputs/residuals plus7 cotangents), including four modulation functions,
+  1/3 frequencies, two detectors, Hermitian/non-Hermitian noise, conjugation,
+  connected/isolated matrices, matched/cleared/interleaved forward state and
+  derivatives at zero-valued coefficients. All6912 finite differences pass;
+  maximum absolute error1.5417320198274354e-10. Each fresh forward factor count
+  remains1+frequency_count. These tests use actual source kernels with the local
+  existing NumPy/SciPy environment; they do not exercise JAX or the full builder.
+
+Source SHA256 and reproducible check/result hashes are in
+ overnight-numerics-sweep-columns-handoff.json. No tuning parameter is introduced.
+Request both unchanged full official benchmarks, saved outputs/gradients,
+14-case generalization and independent source review on the exact same SHA.
+For any apparent gain, require paired complete fresh-process candidate/51 runs
+with separate large/aLIGO samples, medians/ranges, phases, memory and overlap
+status. No gain is claimed now. Preserve all inherited pristine-reference
+mismatches, unresolved grid FD coordinates and first-order-only custom VJP scope.
