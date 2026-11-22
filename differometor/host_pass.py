@@ -77,15 +77,6 @@ class SystemPlan:
         self.last_positions = writes[last]
         self.last_selection = self.flat_selection[last]
         self.last_selection_unique = bool(np.unique(self.last_selection).size == self.last_selection.size)
-        # Route each surviving matrix write to its component group once. The
-        # destinations are unique after last-write selection, even when several
-        # destinations read the same component output. Normalize NumPy negative
-        # flat indices before partitioning them among groups.
-        selected = np.arange(self.total_rows * 4)[self.last_selection]
-        self.group_writes = []
-        for start, stop in zip(self.offsets[:-1], self.offsets[1:]):
-            mask = (selected >= 4 * start) & (selected < 4 * stop)
-            self.group_writes.append((self.last_positions[mask], selected[mask] - 4 * start))
         self._key = _digest(
             np.asarray([f for f, _, _ in self.groups], dtype=np.int64),
             *[indices for _, indices, _ in self.groups],
@@ -95,12 +86,10 @@ class SystemPlan:
 
     def values(self, rows, base):
         """Structural values (B, nnz_total) after the ordered update writes."""
+        blocks = [evaluate_function(f, rows[:, indices]) for f, indices, _ in self.groups]
+        outputs = np.concatenate(blocks, axis=1).reshape(rows.shape[0], -1)[:, self.flat_selection]
         values = np.repeat(np.asarray(base, dtype=np.complex128)[None, :], rows.shape[0], axis=0)
-        for (function_index, indices, _), (destinations, selection) in zip(self.groups, self.group_writes):
-            # Evaluate every group, including groups whose writes were all
-            # overwritten. Only storage and routing change; formulas do not.
-            block = evaluate_function(function_index, rows[:, indices])
-            values[:, destinations] = block.reshape(rows.shape[0], indices.shape[0] * 4)[:, selection]
+        values[:, self.writes[self.last]] = outputs[:, self.last]
         return values
 
     def backward(self, rows, values_bar):
@@ -327,7 +316,11 @@ def _factor(pattern, values):
     data = np.ascontiguousarray(values, dtype=np.complex128)
     gstrf = _superlu_gstrf()
     if gstrf:
-        return gstrf(pattern.size, data.size, data, pattern.indices.astype(np.intc), pattern.indptr.astype(np.intc),
+        # SparsePattern already stores CSC indices as int32. Reuse those static
+        # arrays when they match the extension's C-int dtype; convert otherwise.
+        # SuperLU reads the CSC structure while building fresh numerical factors.
+        return gstrf(pattern.size, data.size, data,
+                     pattern.indices.astype(np.intc, copy=False), pattern.indptr.astype(np.intc, copy=False),
                      csc_construct_func=_construct_csc, ilu=False, options=dict(_SUPERLU_OPTIONS))
     splu, csc_matrix = _scipy()
     return splu(csc_matrix((data, pattern.indices, pattern.indptr), shape=(pattern.size, pattern.size)),

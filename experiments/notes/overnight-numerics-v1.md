@@ -794,3 +794,89 @@ Candidate 1 is not intended to touch any of them.
 - All existing pristine signal/gradient/loss discrepancies, random1/3 sensitivity errors,
   six unresolved grid finite-difference coordinates, and whole-pass JVP/Hessian limitations
   remain open. No tolerance, fixture, workload, compiler policy or JIT-stage changes.
+
+
+## Candidate 14 feedback and decision (2026-11-22 03:09 UTC)
+
+- Exact simulator SHA a6979b7e880c1c893251370a80b24335c191a96f; dual job
+  8a8fbba697e34c869554f612ae4a8598, grid-1/2/3 and aligo-1/2/3. All six official
+  runs passed. No confirmed improvement; independent source review is still absent.
+- Large complete first runs: [0.8384488299489021, 0.8022003620862961,
+  0.8193489741533995] s; median 0.8193489741533995 s, range
+  [0.8022003620862961, 0.8384488299489021] s. Forward samples
+  [184.196614, 183.277691, 180.195555] ms; reverse
+  [89.392554, 83.280908, 88.963116] ms. Build [74.130319, 73.818663, 75.672487] ms.
+  Against admitted candidate 7's earlier cohort, median forward is +2.114604 ms,
+  reverse +3.605692 ms, total +17.771291 ms. These are unpaired observations,
+  not causal estimates. One gradient compilation took 64.029695 ms with unchanged
+  gradient code, further illustrating variation in complete totals.
+- Official aLIGO complete first runs: [0.5483746789395809, 0.5518810488283634,
+  0.5476594641804695] s; median 0.5483746789395809 s, range
+  [0.5476594641804695, 0.5518810488283634] s. Forward
+  [32.826960, 33.283606, 32.526543] ms; reverse
+  [14.597578, 14.665509, 14.827415] ms. Versus candidate 7 median forward
+  -0.063190 ms, reverse +0.281357 ms and total -0.180477 ms; no established gain.
+- Sampled peak RSS maxima: large 682930176 B, aLIGO 289861632 B,
+  generalization 907698176 B. No infrastructure failure or exceeded memory budget.
+  CPU2, threads1, no persistent cache; other-host contention not excluded. No
+  quiet ranking claim or combined score. Selection rejected below-threshold large
+  gain, overlapping ranges and missing independent source review.
+- All per-array receipt comparisons (carrier, signal, noise, powers, sensitivity,
+  loss, gradient) pass versus initial seed for both official workloads and all 14
+  extra cases. Official archives remain grid 112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5
+  and aLIGO 9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195.
+  This statement uses supplied receipt evidence, not a new local raw-array audit.
+  Pristine grid has 131 signal, 3 gradient and 1 loss mismatch; aLIGO has 1 loss
+  mismatch. Extra random1/3 log sensitivity errors remain 2.036099068405406e-4 and
+  5.8100919558157216e-5. The six unresolved grid FD coordinates and first-order-only
+  custom VJP limitation remain. Official passes do not resolve these findings.
+- Decision: stop direct group-write assembly. Its synthetic allocation reduction did
+  not translate into a measured forward improvement. Preserve the failed revision
+  in history; restore admitted candidate 7 assembly in working source. Candidate 13
+  remains separately preserved at 2117c2e, with paired confirmation/review still
+  outstanding; do not combine its derivative storage with this next trial.
+
+## Candidate 15: reuse correctly typed CSC index arrays
+
+- Parent provenance: admitted ee4fea28c04d482566be16e916b609d7c6a99e5e (candidate 7).
+  Restore only host_pass.py's candidate 14 assembly changes, then change only the
+  two integer conversions in _factor to astype(np.intc, copy=False). All other
+  simulator files equal admitted source. No branch reset, commit or external call.
+- Genuine redundant operation: SparsePattern constructs its CSC indices and indptr
+  once as int32. _factor's unconditional astype(np.intc) made two fresh copies at
+  every numerical factorization, even when their dtype already matched C int.
+  copy=False returns the original arrays on matching platforms and retains the
+  original conversion on other dtypes. This changes allocation/traffic inside
+  forward execution; it does not reduce numerical assembly, factorization or
+  refinement work. Expected benefit is small and entirely unmeasured in official
+  first-run timing. Do not claim this dominates the forward phase.
+- No mathematical or structural pruning, permutation option change, new cache,
+  refinement reduction, physical parameter change, workload detection or policy
+  setting. Numerical values and factors remain fresh for every forward. Generic
+  backward fallback uses the same factor routine. Public SciPy fallback is unchanged.
+- Small local check overnight-numerics-factor-check.py extracts _factor and
+  SparsePattern via AST, runs actual SciPy 1.18.1 / NumPy 2.5.5 SuperLU and compares
+  admitted and candidate factors. 72 factor pairs, 648 solves passed bit-for-bit,
+  including factor L/U data and structure, row/column permutations, N/T/H, vector
+  and 1/3-column RHS, sizes 7/19/43, structural zeros becoming nonzero on subsequent
+  calls, changed random complex values, and row scaling from 1e-7 to 1e7. Both direct
+  extension and public fallback paths exercised, writable/read-only index arrays
+  and int32/int64 inputs. Data and structural bytes remained unchanged.
+- The copy-count check observed 18 direct calls sharing both C-int arrays and 18
+  direct calls converting int64 arrays. The shared calls eliminated 36 array copies,
+  totaling 12168 B for these small synthetic patterns. This is not a timing, process
+  RSS measurement, optical generalization test or universal non-mutation proof.
+  Local SciPy's public splu itself uses safely_cast_index_arrays, whose CSC branch
+  also uses astype(..., copy=False); that source inspection supports the same
+  read-only input convention. An initial inspection for an older helper name
+  (_safe_downcast_indices) raised AttributeError; inspecting the actual splu source
+  located the current helper. Production/check execution did not fail.
+- New SHA and both official job identifiers pending supervisor. Request unchanged
+  full large and official aLIGO workloads on one exact new SHA, all saved arrays and
+  gradients, the existing generalization comparisons against initial seed/admitted
+  source and pristine, and independent source review before any promotion. If the
+  small allocation change appears promising, obtain paired fresh candidate/parent
+  dual runs with samples, phase tradeoffs, RSS and overlap information. A synthetic
+  copy reduction alone is not sufficient evidence of improvement. If timing stays
+  indistinguishable, reject this variant and keep candidate 7 admitted; pending
+  candidate 13 confirmation remains a separate useful next action.
