@@ -1362,3 +1362,76 @@
   VJP compatibility remain unresolved. Deadline09:27:44 UTC unchanged. If this search
   removal has no meaningful effect, use the requested import/build profile to choose the
   next mechanism instead of iterating on lookup-table variants.
+
+### Candidate17 feedback — lookup change retired
+
+- Exact SHA **e9781b8c50c796ea9d5737152f55ff00110f4482**, request
+  **f177375645ff451c918657dc8cadb3b8**, grid-1/2/3 and aligo-1/2/3.
+  Official3/3 passes per setup; initial-seed tolerance comparisons pass every output and
+  gradient, including all14 generalization cases. Pristine comparisons still fail the
+  inherited signal/gradient/loss and uifo_rand1/rand3 sensitivity checks. No new numerical
+  discrepancy is reported by these checks; this is not a universal correctness certificate.
+- Large samples seconds:0.8377355355769396,0.8026807140558958,0.8052605800330639;
+  median0.8052605800330639, range0.8026807140558958–0.8377355355769396.
+  Official aLIGO:0.5527297761291265,0.5479395072907209,0.5479968544095755;
+  median0.5479968544095755, range0.5479395072907209–0.5527297761291265.
+  Historical parent large median0.801577684 is lower by3.683 ms; aLIGO difference is only
+  0.558 ms in the candidate's favor. These unmatched cohorts establish no improvement.
+- Phase medians ms large/aLIGO: imports264.697/266.652; build72.520/38.506;
+  forward lowering19.585/19.381, compilation32.942/33.396, execution186.436/33.928;
+  sensitivity lowering25.476/26.262, compilation41.479/41.378;
+  gradient lowering16.865/16.653, compilation53.294/53.499, execution87.506/14.321.
+  Build samples large76.739,72.520,69.080 ms; aLIGO40.651,38.506,38.062 ms. The
+  separate candidate16 build medians were74.149/37.870 ms: opposite directions and
+  substantial spread, not convincing attribution to the name lookup mechanism.
+- Sampled peak RSS bytes large593010688/621879296/606384128;
+  aLIGO280526848/304758784/308908032; generalization961556480. No budget exceeded or
+  infrastructure failure. CPU2, one library thread, x64, no persistent compilation cache;
+  external contention not excluded, ranking_eligible=false. Source review absent;
+  confirmed_improvement=false, below large gain threshold and ranges overlap.
+- Decision: remove the local lookup implementation and return build.py to reviewed
+  ee4fea2 before the next isolated trial. Candidate17 and its test remain preserved in
+  history. Do not iterate on lookup variants without profile evidence. Existing unresolved
+  grid finite differences and first-order-only VJP scope remain unchanged.
+
+### Candidate18 — retain component-group metadata in NumPy
+
+- Baseline simulator **ee4fea28c04d482566be16e916b609d7c6a99e5e**; only build.py differs.
+  Exactly three conversions within `_group_component_indices` change from `_host_array`
+  (NumPy then JAX) to `np.asarray(..., dtype=np.int64)`: function rows, output-row
+  permutation and grouped parameter indices. Grouping, ordering, values and dtype are
+  unchanged. These structural arrays are subsequently read by NumPy to compute derivative
+  slots, SparseStructure and HostPlan. The default host simulation consumes those plans.
+- This establishes actual avoidable staging: the original helper creates2G+1 JAX arrays
+  for G function groups with parameter indices; plan construction reads the same metadata
+  back through NumPy. Candidate18 avoids those eager device conversions. If a dense/JAX
+  path consumes the arrays, its ordinary array-leaf handling supplies them at the point of
+  use, counted within evaluation. No physical values, outputs or derivatives are cached.
+- Distinction from unsuccessful candidate8: this does not convert the whole builder to
+  host-first assembly or add a final batched device_put; the main matrices, parameters,
+  update selectors and returned physical metadata keep their reviewed preparation. Only
+  the private component-group metadata avoids premature staging. No candidate15/16/17
+  optimization is combined. Candidate8's failure remains evidence against broader changes.
+- Target is build overhead and temporary object creation; no measured saving yet. The
+  latest measured build medians72.520 ms large and38.506 ms aLIGO are whole-phase costs,
+  not estimates of recoverable conversion time. JAX argument processing may offset savings.
+  Full first-run timing on both unchanged official workloads must decide retention.
+- Compatibility: NumPy arrays are ordinary JAX pytree leaves; dynamic uses must retain
+  identical compiled primal/gradient behavior. Unlike former JAX leaves these metadata
+  arrays are mutable; callers must still rebuild static plans whenever selectors change,
+  as already documented. No cross-setup metadata cache or invalidation rule is added.
+- Local AST validation reversed exactly the three conversions and the helper docstring,
+  matching the entire reviewed parent build.py AST. Other nine simulator modules match
+  parent bytes. All simulator and diagnostic syntax checks pass. No local numerical test
+  or timing was run because local Python lacks NumPy/JAX.
+- Prepared `experiments/notes/overnight-overhead-group-host-check.py`: ten metadata-tree
+  comparisons against the same helper with eager device conversion restored, plus ten
+  JIT primal/gradient comparisons using both real and complex synthetic parameters.
+  Includes empty, singleton, repeated and interleaved groups and omitted input metadata.
+  Runtime UNEXECUTED. Request its execution in the fixed environment, both full official
+  benchmarks, all physical output/gradient and14-case generalization comparisons, and
+  independent source review. Candidate SHA/job IDs pending supervisor commit.
+- Preserve inherited pristine-reference and finite-difference caveats. No physics, workload,
+  compiler policy, fixture, benchmark, three-stage structure or shared environment changes.
+  If this narrower staging trial is also unsuccessful, request the pending import/build
+  profile before another staging variant. Deadline09:27:44 UTC unchanged.
