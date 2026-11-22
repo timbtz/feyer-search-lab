@@ -1611,3 +1611,102 @@
   If bounds simplification does not improve its target phases, do not pursue another scatter
   mode variant without lowered-graph attribution. Pending import/build profile remains a
   separate next direction. Deadline09:27:44 UTC unchanged; no measured gain claimed.
+
+
+### Candidate20 feedback — bounds hypothesis closed, reviewed parent retained
+
+- Evaluated SHA **558d1d18ca4d68a1296ede6536980b2d07213ab8**, request
+  **d76a2f2deee34b9e996f5f5c873097bf**, grid-1/2/3 and aligo-1/2/3.
+  Both unchanged official benchmarks pass3/3. Every reported physical array and gradient
+  passes initial-seed tolerances, as do all14 generalization cases. Pristine comparisons
+  remain failing; independent source review is absent. confirmed_improvement=false.
+- Large fresh-process seconds:0.8317801412194967,0.7977231331169605,0.7970464248210192;
+  median0.7977231331169605, range0.7970464248210192–0.8317801412194967.
+  Official aLIGO:0.5465619154274464,0.5429943576455116,0.5425329990684986;
+  median0.5429943576455116, range0.5425329990684986–0.5465619154274464.
+  Historical ee4fea2 median differences are3.855 ms lower large (about0.481%) and
+  5.561 ms lower aLIGO. These are separate unpaired cohorts; large ranges overlap and
+  the relative improvement misses the selection threshold. No combined score or gain claim.
+- Phase medians ms large/aLIGO: imports265.393/265.242; build72.520/38.050;
+  forward lower19.791/19.246, compile33.319/33.728, execute184.598/32.627;
+  sensitivity lower25.442/26.358, compile41.174/41.529, execute0.906/0.469;
+  gradient lower15.066/14.547, compile52.881/53.023, execute84.318/14.545.
+  Gradient lowering is about1.799/2.106 ms below candidate17's separate cohort, but forward
+  lowering and compilation show no comparable reduction. Without paired parent timing or
+  lowered-graph attribution this is a possible mechanism, not a confirmed total-time gain.
+- Sampled peak RSS bytes large633970688/682823680/620421120;
+  aLIGO280842240/295092224/288018432; generalization931201024. No infrastructure failure
+  or memory-budget exceedance. EPYC9334 CPU2, one logical CPU, threads1, x64, unchanged
+  package flags and no persistent cache. Host contention is not excluded; ranking_eligible=false.
+- Generalization archive9383841a32aa7d2f559cb89aeb1c7159b374414995cf77e802563809c7c0915a.
+  Initial-seed gradient maximum absolute differences remain5.686350050382316e-6 large
+  and3.637978807091713e-11 aLIGO. No newly reported tolerance failure. Do not equate these
+  passing comparisons or self-comparison archive hashes with bitwise seed equivalence.
+  Inherited pristine grid signal/gradients33/161/180/loss, uifo_rand1/rand3 sensitivity
+  disagreements, grid FD54/59/63/136/161/163 and first-order-only host VJP remain unresolved.
+- Decision: close the bounds mechanism. Repeated readout, builder and boundary microtrials
+  have not established a repeat-supported shared improvement. Restore simulate.py exactly
+  to reviewed ee4fea2; all10 simulator Python modules now match that parent byte-for-byte.
+  Failed candidate20 and previous trials remain in history; no reset or commit performed.
+- Next experiment for coordinator: the existing candidate15 confirmation request above
+  remains unanswered. Independently review exact **2e50e7cffc8c7feb5ae53dc770e26cbb45250ab8**
+  versus **ee4fea28c04d482566be16e916b609d7c6a99e5e**, run its empty-phase synthetic check,
+  and obtain five interleaved fresh complete runs per revision for each official setup,
+  direct full-array/gradient comparisons and varied nonempty/zero-phase generalization.
+  Its previous medians0.7853874359279871 large and0.5305512081831694 aLIGO are promising
+  but unpaired, overlapping on large, and unreviewed. Do not promote or combine it yet.
+  Alternatively obtain the pending import/build profile before further implementation
+  microtrials. No new candidate is claimed by this restoration.
+- Synthetic JAX diagnostics remain UNEXECUTED locally (NumPy/JAX unavailable). No benchmarks,
+  installs, network calls, commits or agents launched. This stop handoff closes this hypothesis,
+  not the authorized campaign. Absolute deadline09:27:44 UTC remains unchanged.
+
+
+### Confirmation submission21 — replay candidate15 exactly, no new mechanism
+
+- The supervisor resumed after the candidate20 stop handoff and requested a concrete
+  evaluable simulator change. The repeated d76a2f2deee34b9e996f5f5c873097bf receipt is
+  still candidate20 feedback, not a test of the restored parent or this submission.
+- Concrete experiment: restored simulate.py from **2e50e7cffc8c7feb5ae53dc770e26cbb45250ab8**.
+  ALL10 simulator modules now match that previously evaluated candidate byte-for-byte;
+  the other9 modules also match reviewed **ee4fea28c04d482566be16e916b609d7c6a99e5e**.
+  This is a confirmation replay, not a novel optimization or a combination. The supervisor
+  will supply the new revision SHA and jobs. Historical passes do not certify that revision.
+  Candidate20 bounds logic and candidate19 arithmetic remain removed. History is preserved.
+- Mechanism remains only structural empty-phase elimination: both static phase parameter
+  and destination arrays must be empty before the gather/exp/scatter are omitted. Nonempty
+  zero phase values and zero selectors keep their operations and derivative contributions.
+  Every public physical output, optimized input, frequency and the three JIT stages remain.
+  There is no fixture/shape identity dispatch, new cache, preload or solver/adjoint change.
+- Rationale for replay: candidate15 evaluation **b699b389623a46c98a1e34c803ca18d8** had
+  forward-lowering medians14.091/13.617 ms and gradient-lowering12.989/13.046 ms
+  (large/aLIGO), compared with candidate20's19.791/19.246 and15.066/14.547 ms.
+  These unmatched phase observations motivate confirmation only. Candidate15 complete
+  large samples0.8227882608771324,0.7784748841077089,0.7853874359279871,
+  median0.7853874359279871, range0.7784748841077089–0.8227882608771324;
+  aLIGO0.5328888855874538,0.5305512081831694,0.5279352385550737,
+  median0.5305512081831694, range0.5279352385550737–0.5328888855874538.
+  Large ranges overlap the reviewed parent. No independent review or paired confirmation
+  has arrived. Previous official passes and initial-seed tolerance passes are recorded in
+  candidate15's feedback above; pristine disagreements remain. No validated gain claimed.
+- Source inspection considered build list lookup, group staging, dense position metadata
+  and sweep-copy costs. Prior trials already covered the first three without established
+  gains; the remaining single sweep-copy redundancy lacks evidence of material cost.
+  None is added. Confirm the stronger isolated tracing signal before further microtrials.
+- Validation performed locally: exact10-file source equality to candidate15; all simulator
+  syntax; AST restoration of just the empty-phase branch, scatter guard and docstring
+  reproduces the entire parent simulate.py AST. Thus the nonempty phase code is unchanged.
+  The existing eight-case JIT primal/VJP diagnostic remains UNEXECUTED locally because
+  NumPy/JAX are unavailable. No installations, benchmarks, commits or agents launched.
+- Evaluation request: both unchanged official benchmarks on the new exact SHA, independent
+  review against ee4fea2, `overnight-overhead-empty-phase-check.py`, all saved physical
+  arrays/gradients against the parent and seed, and the14 varied-setup generalization cases.
+  Include additional nonempty homodyne phase and zero-phase derivative coverage. Obtain
+  five interleaved fresh runs per revision per official setup against ee4fea2 on identical
+  CPU/thread/environment policy; report samples, separate medians/ranges, phases, memory
+  and overlap status. This repeated confirmation is not a request to relax admission rules.
+- Inherited strict grid signal/gradient33/161/180/loss issues, uifo_rand1/rand3 sensitivity
+  errors, unresolved grid FD54/59/63/136/161/163 and no JVP/Hessian host-pass support remain
+  visible. Prior aLIGO FD29/29 does not certify all setups. New discrepancies need investigation.
+  ready_for_evaluation=true refers to the actual replay implementation now in this worktree.
+  Deadline09:27:44 UTC unchanged; this submission does not extend it.
