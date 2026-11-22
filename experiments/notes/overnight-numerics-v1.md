@@ -5107,3 +5107,95 @@ synthetic repair does not resolve or explain them. Do not promote a timing gain
 from this change. If the coordinator can run the prepared callback profiler,
 use that new evidence to select a performance mechanism instead of extending
 correctness repairs into an unmeasured tuning family.
+
+## Trial50 feedback: retain as a bounded correctness repair
+
+Evaluated SHA a5d5a10c9e63ef00a532407a2ed3220905d6e34b, request
+5a6a48b03f4145b183175a07c32c7fda (grid-1/2/3 and aligo-1/2/3).
+All six unchanged official runs passed. Independent source review is absent;
+confirmed_improvement=false. No infrastructure failure or memory-budget breach.
+
+Large fresh-process samples: 0.8507646545767784, 0.8280404042452574,
+0.8346531018614769 seconds; median 0.8346531018614769, range
+0.8280404042452574–0.8507646545767784. Official aLIGO samples:
+0.550700044259429, 0.5481906719505787, 0.5501315388828516 seconds;
+median 0.5501315388828516, range 0.5481906719505787–0.550700044259429.
+These are separate support-audit results, not an organizer ranking metric.
+External host contention is not excluded.
+
+Large/aligo phase medians (ms): build 73.883/38.287, forward 184.060/33.778,
+reverse 107.477/18.798. Relative to trial49, total median differences are
++5.480/-0.273 ms; build +1.159/-0.510, forward +4.734/+1.311, reverse
++0.243/-0.048 ms. Relative to original35 total differences are +15.369/+0.403
+ms. These unpaired cohorts do not isolate causal phase changes. No stable gain
+is established. Sampled peak RSS maxima: large 587567104 bytes, aLIGO
+305405952 bytes, generalization 804974592 bytes; sampling can miss peaks.
+
+All six official output archive hashes and complete strict-comparison records
+match trial49 and original35. Generalization case comparison records also match
+both: 14/14 pass against the initial seed, 4/14 against pristine. The new
+container archive hash is cb4700ed036c7ba9a6cdb575648a800d302cdec4d599feebdb944792787867e6;
+raw member arrays are unavailable locally, so no generalization byte-identity
+claim is made from those comparison records. The evaluator's self-comparison
+is not used as independent evidence. Detailed audit and phase deltas are in
+`overnight-numerics-sweep-overwrite-feedback.json`.
+
+Pristine grid signal/gradient/loss and official aLIGO loss disagreements remain,
+as do uifo_rand1/uifo_rand3 sensitivity discrepancies and unresolved grid finite
+ differences at54,59,63,136,161,163. This repair does not explain those findings.
+The first-order host custom VJP still lacks JVP/Hessian support.
+
+Decision: close the sweep-overwrite hypothesis as a tested local correctness
+repair, pending independent review and the full-builder duplicate-pair check.
+Keep its source and failed timing evidence; do not promote it as an optimization.
+No additional simulator edits are needed in response to this feedback. Before
+another performance proposal, coordinator callback profiling on this exact SHA
+should identify component evaluation, Jacobian, scatter and solve self times.
+The prepared profiler and optional JAX identity check remain unevaluated. Do not
+repeat the retired allocation/solver mechanisms without that new evidence.
+
+## Trial51: overwritten signal-connector multiplier pullbacks
+
+Parent a5d5a10c9e63ef00a532407a2ed3220905d6e34b (trial50). Candidate SHA,
+both official benchmark jobs and independent review pending. This is a focused
+correctness repair following the duplicate-sweep audit, not another timing claim.
+
+The sparse builder derives unique_placing from supplied connector destinations
+(simulate.py) and explicitly allows duplicate destinations. Host _assemble uses
+an ordered overwrite for connector scaling. Its reverse pass previously credited
+every carrier multiplier, even those whose updates were overwritten. A tiny
+actual callback with placements[16,16] and carrier indices[0,1] gives a parent
+carrier-matrix derivative about0.008525 while finite differences give about
+-0.002917 (absolute discrepancy0.01144186). Only the second multiplier affects
+the final connector. Source inspection establishes the generic sparse-layout
+path; a complete optical-builder duplicate-connector example has not been run.
+
+HostPlan now derives a read-only boolean mask of overwritten multiplier positions
+from the supplied structural destinations. The reverse pass zeros these positions
+in scale_bar before scattering into carrier_total_bar. Raw component cotangents
+and final-write contributions remain intact, including a surviving multiplier
+whose current value is zero. The mask is derived once when building; topology
+changes require rebuilding, as with the existing static host metadata. Unique
+placements have mask=None and retain all prior numerical operations. The added
+build-time uniqueness discovery and backward branch count in official timing.
+There is no factorization, refinement, arithmetic-tolerance or forward change.
+
+Local evidence: overnight-numerics-connector-overwrite-check.py loads the actual
+NumPy/SuperLU callback kernels from parent/current source. It exercises384 tiny
+cases: unique, duplicate and negative-alias placements; matched/cleared assembly
+state; four signal/modulation functions; one/three sweep points; sideband
+conjugation on/off; Hermitian and non-Hermitian noise; zero/nonzero surviving
+carrier amplitudes. All4608 real/imaginary directional finite differences pass
+at step1e-4, rtol2e-6, atol1e-9. Maximum absolute error is
+3.0774360837426684e-09 (relative tolerance also applies). Parent fails in all256
+duplicate/alias cases. All forward arrays are byte-identical to parent, and all
+128 unique-placement pullbacks are byte-identical. All candidate arrays are
+finite. These tests do not exercise JAX tracing or the full optical builder.
+
+Evidence and exact source hash: overnight-numerics-connector-overwrite-result.json.
+Request both unchanged official benchmarks, full saved-output/gradient comparison,
+generalization and independent source review on the supervisor's exact commit.
+No speedup is claimed; the callback profiler requested earlier is still missing.
+Existing pristine-reference discrepancies, the six unresolved grid finite-
+difference coordinates, and the first-order-only host VJP limitation remain.
+Do not promote this repair as a validated performance improvement.

@@ -1,0 +1,28 @@
+{
+  "parent_sha": "a5d5a10c9e63ef00a532407a2ed3220905d6e34b",
+  "candidate_sha": null,
+  "host_pass_sha256": "fab5290125270c2a37f612fb5ba5778f59f2c726f4316043e3704430945a1f77",
+  "synthetic_callback_cases": 384,
+  "finite_difference_coordinates": 4608,
+  "parent_failing_cases": 256,
+  "candidate_failing_cases": 0,
+  "maximum_absolute_finite_difference_error": 3.0774360837426684e-09,
+  "finite_difference_step": 0.0001,
+  "rtol": 2e-06,
+  "atol": 1e-09,
+  "forward_arrays_bitwise_equal_to_parent": true,
+  "unique_placement_pullbacks_bitwise_equal_to_parent": true,
+  "scope": "Small actual NumPy/SuperLU kernels loaded from source; no JAX, full optical builder, official workload or timing",
+  "coverage": [
+    "unique/duplicate/negative-alias placements",
+    "matched/cleared assembly state",
+    "four signal/modulation functions",
+    "one/three sweep points",
+    "sideband conjugation on/off",
+    "Hermitian/non-Hermitian noise",
+    "zero/nonzero surviving carrier amplitude",
+    "real/imaginary derivative directions"
+  ],
+  "official_evaluation": "pending",
+  "independent_source_review": "pending"
+}

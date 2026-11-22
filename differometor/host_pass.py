@@ -204,6 +204,16 @@ class HostPlan:
         self.carrier_changing = np.asarray(carrier_changing, dtype=np.int64).ravel()
         self.signal_changing = np.asarray(signal_changing, dtype=np.int64).ravel()
         self.signal_carrier_indices = np.asarray(signal_carrier_indices, dtype=np.int64).ravel()
+        # Connector scaling is an ordered overwrite, just like component writes.
+        # Only the final multiplier at a destination affects the assembled matrix.
+        placing = structure.signal_placing_positions
+        last = _sweep_last_writes(placing, structure.signal.nnz + structure.signal.rhs_rows.size)
+        self.signal_carrier_overwritten = None
+        if last is not None:
+            overwritten = np.ones(placing.size, dtype=bool)
+            overwritten[last] = False
+            overwritten.flags.writeable = False
+            self.signal_carrier_overwritten = overwritten
         self.noise_row_reuse = bool(noise_row_reuse)
         self.parameter_layout = parameter_layout
         self._key = (_digest(self.carrier_changing, self.signal_changing, self.signal_carrier_indices,
@@ -640,6 +650,8 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
     raw_bar[:, placing] = -placed_bar[:, placing] * scale
     carrier_total_bar = np.array(np.asarray(carrier_bar), dtype=np.complex128, copy=True)       # (Bc, CN)
     scale_bar = _sum_to(-placed_bar[:, placing] * state["raw_signal"][:, placing], scale.shape)
+    if plan.signal_carrier_overwritten is not None:
+        scale_bar[:, plan.signal_carrier_overwritten] = 0
     np.add.at(carrier_total_bar, (np.arange(carrier.shape[0])[:, None], plan.signal_carrier_indices[None, :]),
               scale_bar)
 
