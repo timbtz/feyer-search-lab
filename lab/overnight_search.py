@@ -37,6 +37,11 @@ def write_json(path, value):
         stream.flush()
         os.fsync(stream.fileno())
     temporary.replace(path)
+    directory_fd = os.open(str(path.parent), os.O_RDONLY)
+    try:
+        os.fsync(directory_fd)
+    finally:
+        os.close(directory_fd)
 
 
 def digest(value):
@@ -89,9 +94,13 @@ class Providers:
                 return provider
         return None
 
-    def success(self, provider):
+    def success(self, provider, started_at=None):
         with registry_lock(self.directory / 'providers.lock'):
             data = read_json(self.path, {})
+            prior = data.get(provider, {})
+            if (started_at is not None and prior.get('observed_at', 0) >= started_at
+                    and prior.get('kind') in ('auth', 'quota')):
+                return  # Another lane observed a newer account block during this call.
             data[provider] = {'failures': 0, 'observed_at': self.clock()}
             write_json(self.path, data)
 
@@ -443,7 +452,7 @@ class Supervisor:
             self.state.pop('pending_turn')
             self.save()
             return False
-        self.providers.success(provider)
+        self.providers.success(provider, pending['started_at'])
         return self.finish_turn(pending, thread, response)
 
     def finish_turn(self, pending, thread, response):
