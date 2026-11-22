@@ -35,7 +35,13 @@
     "independent/uifo_rand1/arrays.npz": "581562b15136689fa5a69cd5843de4f1efab4f788c9f7d38d719525fa9b12021",
     "independent/uifo_rand3/arrays.npz": "ca606955c4d02421b30dc1c00cff673a838c12f695ee8960c158c528215c49df",
     "extra/precision-arrays/residuals.json": "82c1e2aedd70f53cb4ebc7ceacdcde781905750cb782fc068b967feac9ffe096",
-    "extra/precision-arrays/extended.npz": "36a1b8082e257ae44260ba1013883c028a6dde87193263cea00c65011f32404c"
+    "extra/precision-arrays/extended.npz": "36a1b8082e257ae44260ba1013883c028a6dde87193263cea00c65011f32404c",
+    "precision-gradients/execution.json": "b4c77fd19d106a88bb65f132ca05760e94455326cf95e0db737194d6823294e1",
+    "precision-gradients/gradient-grid.json": "21f2e856b369553ead2e8a97e8ac3d38bec1aa40a1647382b3c3ba1fa378d44f",
+    "precision-gradients/gradient-grid/stdout.log": "c92e0c716d81b90068e7ea4998fbf14583b96a000aa2be2fb31932e3220827d6",
+    "extended-assembly-gradients/execution.json": "a2caa70f1b682b1a0a4bff91466137cc8955e40c91ad93d174c9ccd5d38caec0",
+    "extended-assembly-gradients/gradient-grid.json": "9af1667ef265a320a537062310e07b5de92eecb6ec1e72136f64c00ef16f94bc",
+    "extended-assembly-gradients/gradient-grid/stdout.log": "9ed4032b40770e127a7d3eb6fe3d908e400f493453e5bcc3cbf97626d311fdb4"
   },
   "note": "Large raw arrays retained locally and on AMD; reports/logs/hashes committed. Archive hashes bind preserved evidence, not retroactive authentication of old runs."
 }

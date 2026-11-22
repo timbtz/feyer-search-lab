@@ -155,5 +155,32 @@
     "extended_numerical_review": "Six grid finite-difference coordinates unresolved; two ill-conditioned random cases differ from dense reference. Both precision diagnostics favor the refined sparse solver.",
     "all_diagnostics_passed": false,
     "automatic_fallback": false
+  },
+  "precision_gradient_followups": {
+    "summary_path": "gradient-followup-summary.json",
+    "residual_readout_supported_indices": [
+      59,
+      136
+    ],
+    "residual_readout_unresolved_indices": [
+      54,
+      63,
+      161,
+      163
+    ],
+    "extended_assembly_unresolved_indices": [
+      54,
+      59,
+      63,
+      136,
+      161,
+      163
+    ],
+    "changes_original_black_box_count": false,
+    "all_diagnostics_passed": false
+  },
+  "subsequent_campaign": {
+    "scope": "A separately authorized eight-hour optimization campaign supersedes the earlier model-stop instruction; audit diagnostics themselves launched no models.",
+    "current_submission_url": "https://github.com/timbtz/feyer-search-lab/blob/control/overnight-20261122/CURRENT_BEST.md"
   }
 }

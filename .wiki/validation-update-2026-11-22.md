@@ -14,7 +14,10 @@ The user supplied the organizers' Discord answers and asked to stop managed Clau
 headless sessions to free compute. At inspection all six managed Claude sessions
 were complete and no Claude headless process was running locally, on AMD, or on
 the Hetzner broker. Interactive terminals, saved edits and unrelated running
-benchmarks were preserved. No Claude session may resume without a new instruction.
+benchmarks were preserved. That stop instruction was respected during this audit. The user later gave a new
+eight-hour optimization authorization; its current submission and evidence are
+tracked [separately](https://github.com/timbtz/feyer-search-lab/blob/control/overnight-20261122/CURRENT_BEST.md).
+This does not upgrade any earlier numerical verdict.
 
 ## Challenge contract
 
@@ -183,3 +186,22 @@ the judges' final reference procedure. Organizer questions must distinguish
 experimental evidence from actual organizer confirmation. The new modulation
 cases are additional positive evidence, not a waiver of the flagged random cases
 or the elementwise strict checks reported above.
+
+## Six-coordinate precision follow-up
+
+The completed follow-ups for unchanged `53f38d3` are now retained in the
+[fastest-candidate packet](../experiments/audits/2026-11-22-fastest/gradient-followup-summary.json).
+Extended residual solves plus long-double readout support indices 59 and 136
+under the declared diagnostic bounds, while 54, 63, 161, 163 remain unresolved.
+Promoting component/assembly calculations as well leaves all six unresolved;
+it includes a stable but mismatching finite-difference attempt at 59. The
+residual/readout version also retains a stable mismatching attempt at 161.
+Every unsuccessful attempt remains in the raw JSON and stdout logs.
+
+These use modified diagnostic primals against the original candidate's AD,
+not the unmodified submitted black-box function or an independent physics
+oracle. They therefore do **not** change the original 187/193 count, turn the
+six-coordinate review into a pass, or change either official benchmark result.
+Both follow-up reports retain `passed: false`, and their wall times are
+nonranking diagnostic execution costs. No simulator change, new benchmark run,
+worker deployment or model launch was performed while archiving them.

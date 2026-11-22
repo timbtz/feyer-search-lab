@@ -1,7 +1,10 @@
 # Final verification of the fast host solver
 
 Target: **53f38d342c3228c052785e8c9d63b6ce9c832dd1**, unchanged throughout this audit.
-No fallback was activated. All managed Claude headless sessions remain stopped.
+No fallback was activated. The original audit respected the then-active Claude
+stop instruction; these diagnostics launched no models. The user subsequently
+authorized a separate [overnight campaign](https://github.com/timbtz/feyer-search-lab/blob/control/overnight-20261122/CURRENT_BEST.md).
+That campaign does not retroactively change the verdicts below.
 
 **Both official public benchmarks pass in three fresh processes each.** The
 extended numerical review is not entirely green: six additional finite-difference
@@ -88,6 +91,40 @@ not the organizers' exact correctness rule. Its raw results remain visible in
 `official/execution.json` and `strict-fourteen-cases.json`; they were not waived
 or converted to passes. The extended review must not be summarized as "all checks
 green" or as a proof that all 193 derivatives match a high-precision oracle.
+
+## Follow-up on the six unresolved coordinates
+
+Two completed precision-assisted experiments are now archived, including all
+unsuccessful step attempts. Both compare alternative diagnostic primals with the
+**unmodified exact candidate's autodiff gradient**; neither reruns the official
+benchmark or changes simulator source.
+
+| Diagnostic primal | Additional supported coordinates | Still unresolved | Wall time / sampled peak RSS |
+| --- | --- | --- | --- |
+| Extended residual solves and long-double readout | 59 (`mr22.reflectivity`), 136 (`m20.reflectivity`) | 54, 63, 161, 163 | 178.28 s / 902,103,040 bytes |
+| Long-double component/assembly calculations, residual refinement and readout | None | 54, 59, 63, 136, 161, 163 | 169.88 s / 947,789,824 bytes |
+
+The first diagnostic supports **2 of the 6** previously unresolved coordinates
+under its declared 1% relative / 1e-6 absolute criterion; four remain unresolved.
+The second leaves **all six unresolved**, including a stable but mismatching
+step ladder for index 59. The first likewise retains a stable but mismatching
+attempt at index 161. These attempts are not discarded or renamed successes.
+Because the diagnostic primal differs from the original double-precision
+black-box function, those observations do not by themselves prove a settled
+failure of the submitted gradient either.
+
+**The original count stays 187/193**, not 189/193 or 193/193. These are numerical
+investigations, not a new validation pass, an independent physics oracle, or
+scored timing evidence. Long double alone did not resolve the outstanding
+questions; near-zero readouts, step-size sensitivity and finite precision still
+need care. No tolerance, official result, fallback decision or candidate source
+was changed. Both reports explicitly retain `passed: false`.
+
+See [follow-up summary](gradient-followup-summary.json),
+[residual/readout report](precision-gradients/gradient-grid.json) and
+[extended-assembly report](extended-assembly-gradients/gradient-grid.json).
+Each directory also includes its execution receipt and complete stdout log;
+`artifact-manifest.json` records hashes matching the retained local originals.
 
 ## Classification and fallback
 
