@@ -1,0 +1,37 @@
+{
+  "candidate_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+  "caveats": [
+    "Strict signal and gradient mismatches at indices33,161,180 remain visible.",
+    "Custom uifo_rand1/uifo_rand3 exceed dense sensitivity agreement bound; precision diagnostics support candidate accuracy but do not certify every case.",
+    "Grid finite-difference coordinates54,59,63,136,161,163 unresolved; extra aLIGO29/29 confirmed.",
+    "Whole-pass custom VJP lacks JVP/Hessian support.",
+    "Support audit, ranking_eligible=false; CPU2 and threads1, other-host contention not excluded. Recalibrate current cohort.",
+    "Historical seed evidence is retained; current-cohort fresh dual calibration is pending."
+  ],
+  "metrics": {
+    "aligo": {
+      "max_seconds": 0.6327169891446829,
+      "median_seconds": 0.6260263714939356,
+      "min_seconds": 0.6233954820781946
+    },
+    "grid": {
+      "max_seconds": 0.9973438009619713,
+      "median_seconds": 0.9869915377348661,
+      "min_seconds": 0.9864342752844095
+    }
+  },
+  "policy": {
+    "aligo_maximum_ratio": 1.02,
+    "large_minimum_absolute_gain_seconds": 0.003,
+    "large_minimum_relative_gain": 0.005,
+    "maximum_relative_range": 0.1,
+    "minimum_repetitions": 3,
+    "scope": "Team search-selection heuristic, not organizer judging policy.",
+    "version": "overnight-selection-v1"
+  },
+  "repository_url": "https://github.com/timbtz/feyer-search-lab",
+  "schema_version": "feyer-current-best-v1",
+  "seed_manifest_sha256": "d6026eb2ef1255d4545472a13ef67c8ad5e5f9c0384f9e789c4077c2cc6d0535",
+  "seed_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+  "status": "seed_pending_fresh_calibration"
+}
