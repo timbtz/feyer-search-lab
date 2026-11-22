@@ -255,6 +255,11 @@ class ProviderTests(unittest.TestCase):
         self.assertEqual(json.loads(self.p.path.read_text())['claude']['blocked_until'], 115)
         self.assertIsNone(self.p.choose())
 
+    def test_older_success_does_not_erase_newer_shared_quota(self):
+        self.p.failure('claude', 'usage limit exceeded')
+        self.p.success('claude', started_at=99)
+        self.assertEqual(self.p.choose(), 'codex')
+
     def test_evaluation_identity_and_missing_verdict(self):
         request = {'request_id': 'a'*32, 'sha': 'b'*40}
         for result in ({**request, 'request_id': 'c'*32, 'status': 'failed'},
