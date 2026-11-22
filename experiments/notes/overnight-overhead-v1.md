@@ -2846,3 +2846,131 @@
   Supervisor import/build/trace attribution and candidate30 confirmation remain
   pending and preferable to further speculative allocation variants. Deadline remains
   2026-11-22 09:27:44 UTC. No benchmarks, commits, installs or agents launched here.
+
+
+### Candidate33 feedback — retire constant-row allocation variant
+
+- Exact SHA6f058f36f9db49c1c7fc0301077036566e952212; evaluation
+  28631be62fe54a5ea0b5914446a25713, jobs grid-1/2/3 and aligo-1/2/3.
+  Receipt experiments/runs/overnight-20261122/overnight-overhead-v1/
+  28631be62fe54a5ea0b5914446a25713.json; publisher
+  c705e6532ee8675a1943871ee8905f1664a8e52c. Both official benchmarks pass3/3.
+  confirmed_improvement=false; source review absent. Promotion withheld for missing
+  review, insufficient large gain and overlapping large first-run ranges.
+- Large fresh complete samples [0.840653020888567,0.809885386377573,
+  0.7940295897424221] seconds; median0.809885386377573, range
+  0.7940295897424221–0.840653020888567 (relative range5.7568%).
+  Official aLIGO samples [0.5526398476213217,0.5477518364787102,
+  0.5449389312416315]; median0.5477518364787102, range
+  0.5449389312416315–0.5526398476213217 (relative range1.4059%).
+  Against historical reviewed ee4fea2 medians: large+8.308 ms and aLIGO-0.803 ms.
+  This is an unpaired comparison, not a causal delta or organizer ranking score.
+- Phase medians in ms, large / aLIGO: imports264.427/262.971,
+  initialization3.548/3.548, load1.473/0.215, build72.607/38.348;
+  forward lower19.696/19.400, compile33.168/33.865, execute184.998/32.704;
+  sensitivity lower25.653/26.248, compile40.895/41.735, execute0.878/0.474;
+  gradient lower17.240/16.635, compile53.646/54.596, execute87.352/15.024;
+  host transfer0.193/0.160. Build is+2.585/+0.568 ms versus32 and
+  -0.775/+0.081 ms versus31; these unpaired observations show no stable setup gain.
+  Import/solver timing changes cannot be attributed to these two metadata expressions.
+- Sampled process-group peak RSS bytes: large605339648/573042688/514437120;
+  aLIGO280338432/295047168/294912000; generalization878579712. No budget exceeded.
+  EPYC9334, CPU2, one logical CPU and library threads1, x64, no persistent cache,
+  unchanged package compiler defaults. Other-host contention is not excluded;
+  no specific slow sample is attributed to contention. ranking_eligible=false.
+- All saved official output/gradient comparisons and all14 generalization cases
+  pass initial-seed tolerances. Official archives are the same as32:
+  large112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5;
+  aLIGO9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195.
+  This does not imply bitwise seed equality: maximum absolute gradient differences
+  remain5.686350050382316e-6 large and3.637978807091713e-11 aLIGO.
+  Generalization archive3f0e7ea166e0a7ab2165f46d503f4bcc18be888f324f1e693f999d8e8fa96342.
+  Pristine comparisons still fail; no new seed-relative discrepancy is reported.
+  Focused48 metadata/21 conversion checks remain unexecuted locally; no supervisor
+  result for that diagnostic was supplied.
+- Decision: retire33. Restored build.py from reviewed
+  ee4fea28c04d482566be16e916b609d7c6a99e5e, preserving failed committed source,
+  diagnostics and evidence. This restoration is not a new optimization candidate.
+  Stop further speculative constant-allocation variants without cost attribution.
+- Concrete next investigation: supervisor executes the existing
+  experiments/notes/overnight-overhead-profile.py --trace-forward diagnostic on
+  reviewed ee4fea2 with actual large, official aLIGO and third-setup caller inputs.
+  Use import/build/trace call attribution to choose a distinct, measured bottleneck.
+  Candidate30 at7baa78dd15196b74b6f6e6fdb2bfbac07cfb8f72 still awaits focused
+  diagnostic, independent review and interleaved matched-parent confirmation;
+  do not combine it or treat candidate-only runs as that confirmation.
+- Inherited pristine signal/loss/gradient findings (including gradients33/161/180),
+  uifo_rand1/3 sensitivity disagreements, unresolved grid FD54/59/63/136/161/163,
+  and first-order reverse-only whole-pass custom VJP remain visible. Prior additional
+  aLIGO coordinate checks confirmed29/29; this is not a universal certificate.
+  This stop ends33's hypothesis, not the campaign; deadline2026-11-22 09:27:44 UTC.
+
+### Candidate34 — parameter insertion as a single source-map gather
+
+- Supervisor resumed after33 retirement and requested a concrete next experiment.
+  Candidate SHA and both official job IDs pending. Isolated against reviewed
+  ee4fea28c04d482566be16e916b609d7c6a99e5e. Only host_pass.py and simulate.py
+  differ from that parent; build.py's working diff is the retirement of33.
+  No unconfirmed candidate30/27/15 mechanism is combined.
+- Distinct mechanism: replace the optimized-value gather followed by a unique
+  parameter-row scatter with one gather from concatenated base/optimized inputs.
+  ParameterLayout.from_arrays derives a source map after its existing bounds and
+  unique-destination validation. Initially source[i]=i; every optimized destination
+  receives parameter_count+optimized_value_index. This is metadata from arbitrary
+  supplied layouts, not physical values or recognized workload shapes.
+- simulate casts optimized inputs to the existing row dtype, concatenates them with
+  the original row, and selects the full row with that map. Linking and phase steps
+  remain in their original order. Repeated optimized-value indices are allowed:
+  gather transposition accumulates all of their cotangents. Untouched base entries
+  retain their gradients; overwritten base entries receive zero cotangents. Zero
+  valued design variables are not removed. The map is derived from already-hashed
+  layout inputs; the existing rebuild requirement still applies when indices change.
+  Directly constructed layouts and unequal insertion/source lengths retain the
+  original gather/scatter expression. Existing applies() bounds-checks optimized
+  input length before the static path is used. Invalid builder layouts retain the
+  generic simulation path under the existing validation.
+- Cost hypothesis: two indexing operations become one gather plus concatenation;
+  their reverse program becomes a gather transpose and concatenation transpose.
+  This can reduce forward/gradient compilation work at optimization level0, though
+  materializing concatenated inputs and reading the full row can offset the saving.
+  Source-map allocation is counted in setup. No solver/refinement/adjoint formula,
+  callback signature, compiler flags, public output or three-stage execution changed.
+  This differs from14's contiguous-write dynamic_update_slice,30's contiguous-read
+  slicing and32's empty-gather special case; it works for noncontiguous destinations.
+- Measured context only (33, not34): build medians72.607/38.348 ms large/aLIGO;
+  forward lower19.696/19.400 and compile33.168/33.865 ms; gradient lower17.240/16.635
+  and compile53.646/54.596 ms. Those phases motivate testing the indexing program.
+  No34 complete, phase, memory or generalization measurement exists. This is a
+  structural hypothesis, not a profiling result or established improvement.
+- Local checks:2371 exhaustive small Python cases enumerate unique destination
+  permutations for row sizes1–6, including empty/full/reordered/noncontiguous writes
+  and repeated optimized sources. Source-map primals and both input cotangent models
+  equal the original overwrite semantics. Syntax and whitespace checks pass. Eight
+  other simulator modules are byte-identical to reviewed parent. These checks do
+  not execute NumPy/JAX and cannot establish their compiled derivative behavior.
+- Prepared experiments/notes/overnight-overhead-row-source-check.py, UNEXECUTED
+  locally (NumPy/JAX unavailable). Extracts actual ParameterLayout, helpers and
+  insertion statements from this source.96 small JIT primal/VJP cases vary row
+  size, empty/singleton/full/reversed/strided destinations, shared optimized inputs,
+  real/complex base and optimized inputs, zero values and signed zeros. Compares
+  exact primal values/sign bits and both input cotangents to the reviewed expression.
+  Six layout guard/fallback checks cover negative/out-of-range/duplicate destinations,
+  invalid source index, insufficient optimized length and direct construction.
+  No optical fixture, benchmark execution or timing code. Cast warnings in mixed
+  complex-to-real synthetic cases have the same meaning as in the original cast.
+- Request focused diagnostic plus both unchanged full official benchmarks and14
+  generalization cases on one exact supervisor-committed SHA. Inspect all saved
+  outputs and gradients, including possible accumulation-order differences for
+  shared optimized inputs. Independent source review and interleaved matched-parent
+  fresh-process confirmation remain required before promotion; report every sample,
+  separate medians/ranges, phase tradeoffs, RSS and known overlap. No claim is made
+  from candidate-only medians against historical parent timings.
+- Inherited pristine signal/loss/gradient disagreements (including33/161/180),
+  uifo_rand1/3 sensitivity differences and unresolved grid FD54/59/63/136/161/163
+  persist. Prior additional aLIGO29/29 checks and seed-relative successes do not
+  certify universal accuracy. Whole-pass custom VJP remains first-order reverse-only.
+- Next: inspect34's phase and numerical feedback; retire if the full-row gather
+  fails to show a repeat-supported benefit. Supervisor profiling and candidate30's
+  separate matched-parent confirmation remain pending. Do not repeat this mapping
+  mechanism after three unsuccessful evaluated variants. Deadline unchanged:
+  2026-11-22 09:27:44 UTC. No benchmarks, commits, installs or agents launched here.

@@ -1663,9 +1663,7 @@ def pairs_to_arrays(
             individual_rows = len(np.unique(instruction["output_row_indices"]))
             signal_component_number += individual_rows
         else:
-            signal_arrays["output_row_indices"].append(
-                np.full(len(instruction["output_column_indices"]), signal_component_number, dtype=float)
-            )
+            signal_arrays["output_row_indices"].append(np.ones(len(instruction["output_column_indices"])) * signal_component_number)
             signal_component_number += 1
 
         signal_arrays["system_matrix_row_indices"].append(instruction["system_matrix_row_indices"])
@@ -1705,10 +1703,8 @@ def pairs_to_arrays(
         arrays["function_input_indices"].append(component_function_input_indices)
         arrays["function_indices"].extend(instructions[component]["function_indices"])
         arrays["output_column_indices"].append(instructions[component]["output_column_indices"])
-        # Construct constant row labels directly, with the same float64 dtype
-        # as the former ones-array multiplication, before the final integer cast.
         arrays["output_row_indices"].append(
-            np.full(len(instructions[component]["output_column_indices"]), len(components) - 1, dtype=float)
+            np.ones(len(instructions[component]["output_column_indices"])) * (len(components) - 1)
         )
         arrays["system_matrix_row_indices"].append(instructions[component]["system_matrix_row_indices"])
         arrays["system_matrix_column_indices"].append(instructions[component]["system_matrix_column_indices"])

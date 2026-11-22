@@ -419,8 +419,14 @@ def simulate(
         # Same insertion, linking and detector-phase steps as below, indexed with the
         # builder's concrete (nonnegative, in-bounds, unique-destination) indices.
         row = parameters.reshape(parameters.shape[1:])
-        row = _static_set(row, layout.optimized_parameter_indices,
-                          _static_take(optimized_parameters, layout.optimized_value_indices))
+        if layout.optimized_row_sources is not None:
+            row = _static_take(
+                jnp.concatenate((row, optimized_parameters.astype(row.dtype))),
+                layout.optimized_row_sources,
+            )
+        else:
+            row = _static_set(row, layout.optimized_parameter_indices,
+                              _static_take(optimized_parameters, layout.optimized_value_indices))
         inputs_to_link = _static_take(row, layout.linked_indices)
         outputs_to_link = vmap(lambda i, x: lax.switch(i, LINKING_FUNCTIONS, x))(
             linking_function_indices, inputs_to_link
