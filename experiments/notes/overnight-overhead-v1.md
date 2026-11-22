@@ -174,3 +174,43 @@
   compares flag on/off bitwise (value, outputs, full gradient) on aLIGO space/amplitude/frequency modulation
   at default and perturbed parameters, and prints forward-vjp jaxpr equation counts.
 - Decision rule: reject on any output/gradient difference vs seed, or if lower+compile phases do not drop.
+
+### Candidate 3 feedback (inspected by Claude): promoted
+
+- Candidate SHA `2b4654f294414590f760fe972edd69f6774fe9e1`; request/evaluation `b986ad1181484aec96966fdbd4d39e55`;
+  publication commit `a5cd6c0`. `confirmed_improvement=true`, policy `promote=true`; independent source review
+  approved (claude-opus-5-5, session `647f858f-bcb8-4a19-bb68-fe4ea6934aff`, bounded scope). Now the admitted
+  campaign best.
+- Large: 0.954289085, 0.911267346, 0.907194179 s; median **0.911267**, range 0.907194–0.954289. Candidate max is
+  below the seed cohort minimum (0.976064). aLIGO: 0.560094250, 0.578337485, 0.559704069 s; median **0.560094**,
+  range 0.559704–0.578337 (seed cohort median 0.627573). Unpaired median deltas vs seed cohort: large −69.6 ms
+  (−7.1%), aLIGO −67.5 ms (−10.8%). Vs candidate 2: large −47.6 ms, aLIGO −54.1 ms.
+- Phase medians, ms (large / aLIGO), candidate 3 vs candidate 2: forward lower 19.5/19.2 vs 32.0/32.2;
+  **forward compile 33.4/33.4 vs 74.8/75.4**; gradient lower 17.3/16.7 vs 17.0/16.8; gradient compile 52.0/53.2 vs
+  53.2/55.1; sensitivity lower 25.6/26.4 and compile 39.8/41.1 (unchanged, benchmark readout); imports
+  265.2/269.4; build 75.2/38.0; forward exec 188/33.8; gradient exec 191.7/28.0. The gain is almost entirely
+  forward lower+compile (~54 ms), as hypothesised (non-unique scatter JVP removed); the gradient program barely moved.
+- Numerics: official arrays and all 14 generalization cases bitwise equal to seed; inherited pristine
+  disagreements unchanged (large signal 131 / gradient 3 / loss; aLIGO loss; uifo_rand1/rand3 log errors
+  2.036e-4/5.81e-5; etc.). Six unresolved grid FD coordinates remain unresolved. Peak RSS large 545/671/578 MB,
+  aLIGO 296/299/318 MB. External contention not excluded. The layout/gather check scripts' outputs were not
+  reported in feedback.
+- Remaining fixed costs (large): imports ~265, build ~75, lower+compile ~190 (forward 53, sensitivity 65,
+  gradient 69), execution ~380 (other lane).
+
+## Candidate 4: vectorized host bookkeeping in the build phase
+
+- Parent `2b4654f` (campaign best). Candidate SHA pending supervisor commit. Distinct mechanism (Python host
+  work in `build`, not JAX indexing).
+- Change: replace per-element Python loops over NumPy arrays with exact vectorized equivalents:
+  `build._matrix_indices_are_unique` (int truncation, one negative wrap, bounds, `np.unique` of flattened
+  destinations), `build._group_component_indices` (stable argsort grouping; same keys/order/dtypes/values),
+  `run_build_step` noise-reuse predicate and diff-slot masks (`np.isin`), and `parameter_names.index`
+  linear scans in `pairs_to_arrays`/`build` replaced by a first-occurrence dictionary that raises the same
+  `ValueError` when a name is absent. No change to built values; same pytree structure.
+- Hypothesis: lower `build` phase time on both setups by several ms (larger for the 193-variable grid, whose
+  optimization pairs each scanned the parameter-name list and whose signal system has thousands of
+  destinations checked one by one). Size unmeasured; could be within noise (build spread ~2–5 ms).
+- Local validation: none executable. `experiments/notes/overnight-overhead-build-check.py` compares the new
+  helpers with verbatim seed copies on 3000 randomized cases (negative/out-of-bounds/duplicate/empty/float indices).
+- Decision rule: reject on any built/output/gradient difference, or if `build` does not drop.

@@ -1376,23 +1376,24 @@ def run_build_step(
     # Predicate S: real (pre-dummy) carrier/signal changing indices are disjoint from
     # every noise-function input index, including padding and grouped indices. Then all
     # expanded rows share bitwise-identical noise inputs. Key presence is static.
-    real_changing = {int(i) for i in np.asarray(arrays_to_prepare[2]).ravel()}
-    real_changing |= {int(i) for i in np.asarray(arrays_to_prepare[3]).ravel()}
-    noise_inputs = {int(i) for i in np.asarray(noise_arrays[0]).ravel()}
-    for indices in component_groups.get("noise", {}).get("parameter_indices", {}).values():
-        noise_inputs |= {int(i) for i in np.asarray(indices).ravel()}
-    if real_changing.isdisjoint(noise_inputs):
+    # Vectorized integer set tests (same int() truncation as the former set comprehensions).
+    def host_ints(*arrays):
+        parts = [np.asarray(array).astype(np.int64).ravel() for array in arrays]
+        return np.concatenate(parts) if parts else np.zeros((0,), dtype=np.int64)
+
+    real_changing = host_ints(arrays_to_prepare[2], arrays_to_prepare[3])
+    noise_inputs = host_ints(
+        noise_arrays[0], *component_groups.get("noise", {}).get("parameter_indices", {}).values()
+    )
+    if not np.isin(noise_inputs, real_changing).any():
         component_groups["noise_row_reuse"] = ()
 
     # Static differentiable-slot masks (dict keys only; empty-tuple values add no
     # pytree leaves). A slot is differentiable when any row of the group reads an
     # optimized index or a linking output; other slots read constants only.
-    differentiable_indices = {
-        int(i) for i in np.asarray(simulation_arrays["optimized_parameter_indices"]).ravel()
-    }
-    differentiable_indices |= {
-        int(i) for i in np.asarray(simulation_arrays["indices_to_link"]).ravel()
-    }
+    differentiable_indices = host_ints(
+        simulation_arrays["optimized_parameter_indices"], simulation_arrays["indices_to_link"]
+    )
     for name in ("carrier", "signal", "noise"):
         group = component_groups.get(name)
         if not isinstance(group, dict) or "parameter_indices" not in group:
@@ -1402,11 +1403,8 @@ def run_build_step(
             indices = np.asarray(indices)
             if indices.ndim != 2:
                 continue
-            diff_slots[function_index] = {
-                slot: ()
-                for slot in range(indices.shape[1])
-                if any(int(i) in differentiable_indices for i in indices[:, slot])
-            }
+            reads_differentiable = np.isin(indices.astype(np.int64), differentiable_indices).any(axis=0)
+            diff_slots[function_index] = {int(slot): () for slot in np.flatnonzero(reads_differentiable)}
         group["diff_slots"] = diff_slots
 
     simulation_arrays["component_groups"] = component_groups

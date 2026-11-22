@@ -1486,7 +1486,15 @@ def build(setup: Setup):
             port_to_index[f"{node}.{port_name}.out"] = node_index + port_offset + 1
 
     # Convert linked parameter names to parameter index positions.
-    linked_indices = [parameter_names.index(name) for name in linked_names]
+    # First-match positions (list.index semantics, KeyError -> ValueError) in one pass.
+    name_positions = {}
+    for position, name in enumerate(parameter_names):
+        name_positions.setdefault(name, position)
+    linked_indices = []
+    for name in linked_names:
+        if name not in name_positions:
+            raise ValueError(f"{name!r} is not in list")
+        linked_indices.append(name_positions[name])
     if len(linked_indices) == 0:
         linked_indices = [0]
         indices_to_link = [0]
@@ -1523,37 +1531,38 @@ def _matrix_indices_are_unique(matrix_indices, matrix_shape):
     height, width = matrix_shape
     if len(rows) != len(columns):
         return False
-    seen = set()
-    for row, column in zip(rows, columns):
-        row, column = int(row), int(column)
-        row = row + height if row < 0 else row
-        column = column + width if column < 0 else column
-        if not (0 <= row < height and 0 <= column < width):
-            return False
-        destination = (row, column)
-        if destination in seen:
-            return False
-        seen.add(destination)
-    return True
+    # Vectorized form of the per-entry check: int() truncation, one negative-index
+    # wrap, bounds, then distinct (row, column) destinations.
+    rows = np.asarray(rows).astype(np.int64).ravel()
+    columns = np.asarray(columns).astype(np.int64).ravel()
+    rows = np.where(rows < 0, rows + height, rows)
+    columns = np.where(columns < 0, columns + width, columns)
+    if np.any((rows < 0) | (rows >= height) | (columns < 0) | (columns >= width)):
+        return False
+    destinations = rows * width + columns
+    return bool(np.unique(destinations).size == destinations.size)
 
 
 def _group_component_indices(function_indices, function_input_indices=None):
     """Classify instructions and map original rows to grouped output rows."""
-    groups = defaultdict(list)
-    for row, function_index in enumerate(function_indices):
-        groups[int(function_index)].append(row)
-    grouped_rows = [row for index in sorted(groups) for row in groups[index]]
-    output_rows = [0] * len(function_indices)
-    for grouped_row, original_row in enumerate(grouped_rows):
-        output_rows[original_row] = grouped_row
+    # Rows grouped by ascending function index, original row order within a group
+    # (a stable sort), exactly as the former per-row dictionary construction.
+    selectors = np.asarray([int(function_index) for function_index in function_indices], dtype=np.int64)
+    grouped_rows = np.argsort(selectors, kind="stable")
+    output_rows = np.zeros(selectors.size, dtype=np.int64)
+    output_rows[grouped_rows] = np.arange(selectors.size, dtype=np.int64)
+    sorted_selectors = selectors[grouped_rows]
+    indices, starts = np.unique(sorted_selectors, return_index=True)
+    stops = np.append(starts[1:], selectors.size)
+    rows_by_index = {int(index): grouped_rows[start:stop] for index, start, stop in zip(indices, starts, stops)}
     result = {
-        "function_rows": {index: _host_array(groups[index], int) for index in sorted(groups)},
+        "function_rows": {index: _host_array(rows, int) for index, rows in rows_by_index.items()},
         "output_rows": _host_array(output_rows, int),
     }
     if function_input_indices is not None:
+        inputs = np.asarray(function_input_indices)
         result["parameter_indices"] = {
-            index: _host_array([function_input_indices[row] for row in groups[index]], int)
-            for index in sorted(groups)
+            index: _host_array(inputs[rows], int) for index, rows in rows_by_index.items()
         }
     return result
 
@@ -1647,6 +1656,18 @@ def pairs_to_arrays(
 
     signal_component_number = 0
 
+    # First position of each parameter name: list.index semantics (first match,
+    # ValueError if absent) with one dictionary lookup instead of a linear scan.
+    name_positions = {}
+    for position, name in enumerate(parameter_names):
+        name_positions.setdefault(name, position)
+
+    def name_index(name):
+        try:
+            return name_positions[name]
+        except KeyError:
+            raise ValueError(f"{name!r} is not in list") from None
+
     # Compile signal update arrays by iterating through all signal instructions.
     for instruction in signal_instructions.values():
         try:
@@ -1718,14 +1739,14 @@ def pairs_to_arrays(
         if not isinstance(optimization_pair[0], list):
             optimized_component, optimized_parameter = optimization_pair
             try:
-                optimized_parameter_indices.append(parameter_names.index(f"{optimized_component}_{optimized_parameter}"))
+                optimized_parameter_indices.append(name_index(f"{optimized_component}_{optimized_parameter}"))
                 optimization_value_indices.append(ix)
             except ValueError:
                 pass
         else:
             for optimized_component, optimized_parameter in optimization_pair:
                 try:
-                    optimized_parameter_indices.append(parameter_names.index(f"{optimized_component}_{optimized_parameter}"))
+                    optimized_parameter_indices.append(name_index(f"{optimized_component}_{optimized_parameter}"))
                     optimization_value_indices.append(ix)
                 except ValueError:
                     pass
@@ -1736,9 +1757,9 @@ def pairs_to_arrays(
     # Compile changing parameter indices for sweeps.
     for changing_component, changing_parameter in changing_pairs:
         if changing_component in signal_components:
-            signal_changing_parameter_indices.append(parameter_names.index(f"{changing_component}_{changing_parameter}"))
+            signal_changing_parameter_indices.append(name_index(f"{changing_component}_{changing_parameter}"))
         else:
-            carrier_changing_parameter_indices.append(parameter_names.index(f"{changing_component}_{changing_parameter}"))
+            carrier_changing_parameter_indices.append(name_index(f"{changing_component}_{changing_parameter}"))
             append_information(parameter_instructions, carrier_arrays, changing_component, carrier_components)
 
     def combine_arrays(arrays: dict, system: str, signal: bool = False):
