@@ -4631,3 +4631,134 @@ Existing pristine-reference signal/loss/gradient disagreements33/161/180,
 rand1/rand3 log-sensitivity deviations, unresolved grid finite-difference
 coordinates54/59/63/136/161/163 and first-order-only whole-pass VJP support remain
 unchanged open questions. No tolerances or physical inputs were changed.
+
+### Trial46 feedback and retirement (2026-11-22 07:17 UTC)
+
+Evaluated SHA d5579c8829983d382f24f6a0bcef175f1836dcba, dual request
+4408129d906b48d3b804b2d6666375b7, jobs grid-1/2/3 and aligo-1/2/3 beneath that
+request. All six official benchmarks pass; confirmed_improvement=false,
+source_review=null, ranking_eligible=false. Publication
+3af1de75a8f1f768728666280e6665c5dc544cea retains admitted7. No infrastructure
+failure was reported.
+
+Large fresh-process complete seconds:
+[0.8611530959606171,0.8156335912644863,0.8412591814994812], median
+0.8412591814994812, range[0.8156335912644863,0.8611530959606171], relative
+range5.411%. Official aLIGO seconds:
+[0.5497349798679352,0.5493905544281006,0.5461004562675953], median
+0.5493905544281006, range[0.5461004562675953,0.5497349798679352], relative
+range0.662%. These remain separate support-evaluation measurements.
+
+Large phase medians ms: imports267.715588, build72.621832,
+forward179.068340, reverse106.785035. Against latest restored35 requestde3724:
+-20.724561,-3.104750,+2.511075,-1.923261ms respectively. Total median difference
+is only -0.352953ms. Against original35 request5f61bfb, forward is -2.579574ms
+and reverse +0.361135ms, while total is +21.975217ms. Direction depends on which
+unpaired parent cohort is used; there is no stable execution or complete-run win.
+The third large run also has gradient compile67.828100ms, retained in full.
+
+aLIGO phase medians ms: imports264.532510, build38.714726,
+forward32.541098, reverse18.506952. Against latest restored35:
+-1.937477,+0.142826,-0.693824,-0.276772ms. Total median -8.207824ms is an
+unpaired comparison against the previously unstable aLIGO cohort. Against
+original35 total differs by only -0.338014ms. Do not promote on these observations.
+
+Sampled process-group RSS bytes: large[684212224,603435008,515158016],
+aLIGO[282382336,294961152,309465088], generalization755331072. No budget breach;
+sampling is not a peak-memory guarantee and external job overlap is unknown.
+Policy is still CPU2, one logical CPU, library threads1, fixed environment and
+no persistent compilation cache.
+
+Read-only comparison of the saved receipts against BOTH restored35 and original35
+confirmed all six official archive hashes and complete strict comparison records
+match. Grid hash e0f2069ccab917ac4575f484a6c9b5f0ae2457bb59f736185a52cd309a6c03e2;
+aLIGO1c27f50feafb3149eb9c2f4b48f767cc4c3ddbc1d64810c332dd5a7a260781f8.
+All14 seed/pristine generalization case-record dictionaries also match both
+parents exactly:14/14 seed pass,4/14 pristine pass. The generalization archive
+hash74ac5557... differs from the parent's fb228411...; raw NPZ members were not
+available in this inspection, so do not claim byte-identical generalization
+arrays or attribute the hash difference to a particular cause. The saved checks
+report no additional regression. Evidence and phase deltas are retained in
+`overnight-numerics-destination-broadcast-feedback.json`.
+
+Decision: retire the broadcast-view mechanism for lack of stable improvement.
+Restored only host.py's trial46 delta. Read-only
+`git diff e5cbeba07943b6c797932263ff9deb721bf3ca89 -- differometor` is empty;
+the entire simulator again equals the already-evaluated35 source. Host hash is
+595ff7858807656e7ee882c485aa5f7d4b0e7b15e12233a813dbe289a08b55d3. No shared history
+was reset, and trial46 and its local inspections remain preserved. A fresh
+evaluation solely to confirm this byte-exact source restoration is not requested.
+
+This ends trial46, not the authorized campaign. The next useful measurement is
+the previously prepared first-callback profile under the evaluator on exact35,
+including component/Jacobian/scatter self times and solve/refinement call counts.
+Those artifacts have not been supplied; aggregate phase timings cannot identify
+the next productive sub-operation. Do not retry the retired mechanisms or combine
+unconfirmed variants just to generate another submission. Existing pristine
+signal/loss/gradient disagreements, rand1/rand3 sensitivity discrepancies, six
+unresolved grid finite-difference coordinates and first-order-only VJP limitations
+remain open. The exact-guard parent is not a universal correctness certificate.
+
+## Trial47: preserve derivative-group boundaries in static plan identity
+
+The resumed instruction requests a concrete experiment or repair. After retiring
+trial46, this submission repairs a reproduced static-plan identity collision;
+it does not retry an unproductive timing mechanism. Numerical parent is
+e5cbeba07943b6c797932263ff9deb721bf3ca89 (original35 source), whose latest dual
+request is de3724fedfe5438b810a3629c48c7fed. The pending submission also includes
+the already-documented reversal of trial46's host.py delta. Candidate SHA and
+new official job identifiers remain pending supervisor submission.
+
+`SystemPlan._key` previously hashed derivative slots only after flattening all
+groups. For two otherwise identical groups, masks `((), (0,))` and `((0,), ())`
+therefore produced identical keys. Since `HostPlan.__eq__` uses the combined
+system keys and HostPlan is registered static with JAX, this identity is too
+coarse for distinct pullbacks. A small source-derived reproduction uses a laser
+and signal source with rows `[2,0,.2,.3,1,1.4,2]` and a cotangent selecting the
+laser output. The first mask returns zero amplitude gradient; the second returns
+0.5. The parent nevertheless compares the host plans equal and a Python dict
+retains only one entry when keyed by those two plans. This reproduces the faulty
+identity; an actual JAX cache collision was NOT executed locally.
+
+Bounded scope: the reproduction supplies derivative masks explicitly. The normal
+builder derives them from optimized/linked parameter indices, and ParameterLayout
+also hashes those indices when representable. No claim is made that unchanged
+official fixtures or ordinary run_build_step necessarily trigger this collision.
+The internal static-plan contract should still encode its actual per-group
+derivative behavior; build_host_plan accepts supplied diff_slots dictionaries.
+
+Repair: add the per-group derivative-slot counts to the SystemPlan digest.
+Together with the existing flattened slots this preserves all boundaries,
+including empty lists. Equal independently constructed plans retain equal keys;
+distinct tested masks no longer alias. No numerical code, derivative flags,
+refinement settings, factor lifetime, physical inputs or JIT stages change.
+All keys change consistently; fresh-process evaluation must include the small
+additional build-time hashing cost. No speedup is claimed or expected from this
+correctness repair. Candidate host_pass.py SHA256:
+a135b95a3cdcb4e16823215b24bd52cadedfb30632cc77386ee5de0f3db92762.
+
+`overnight-numerics-slot-key-check.py` uses actual source-derived host kernels in
+the existing local NumPy environment. It reproduces the parent collision and
+the 0/0.5 gradient difference, verifies the repair, and checks36 partitions of
+the same flat seven-slot sequence across three distinct function groups. Parent
+keys:1; candidate keys:36. All72 real/complex batched primal/pullback comparisons
+match bitwise and are finite, and equal-plan equality/hash behavior is preserved.
+An initial test point put the surface at zero transmission and produced inherited
+singular derivatives in both versions; the partition test was moved to a regular
+point to require finite pullbacks, while the original finite collision
+reproduction remains unchanged. Results are in `overnight-numerics-slot-key-result.json`.
+
+The same script's optional `--jax` mode uses the real registered HostPlan and
+three tiny JIT callback evaluations in A/B/A order, checking each plan's intended
+pullback. It is prepared but unexecuted because local JAX is unavailable. Please
+run that check through the coordinator's diagnostic environment, separately from
+timings. Both unchanged official benchmarks and saved output/gradient comparisons
+on the exact candidate SHA, generalization and independent source review remain
+required. Expected official outputs equal original35; this is a prediction, not
+an evaluation result. Do not promote as a speed gain. If results regress, inspect
+the exact source/plan identities before another change.
+
+All previously recorded pristine-reference disagreements, rand1/rand3 errors,
+six unresolved grid finite-difference coordinates and first-order-only host VJP
+limitations remain unresolved. The evaluator callback profile request remains
+open for future performance work; this repair does not substitute for that data.

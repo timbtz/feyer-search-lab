@@ -80,6 +80,9 @@ class SystemPlan:
         self._key = _digest(
             np.asarray([f for f, _, _ in self.groups], dtype=np.int64),
             *[indices for _, indices, _ in self.groups],
+            # The flattened slots alone lose group boundaries: ((), (0,))
+            # and ((0,), ()) have different pullbacks but the same flat list.
+            np.asarray([len(d) for _, _, d in self.groups], dtype=np.int64),
             np.asarray([s for _, _, d in self.groups for s in d] + [-1], dtype=np.int64),
             self.flat_selection, writes,
         ) + sparse_system._key

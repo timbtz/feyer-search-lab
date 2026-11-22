@@ -1,0 +1,58 @@
+{
+  "candidate_sha": "d5579c8829983d382f24f6a0bcef175f1836dcba",
+  "request_id": "4408129d906b48d3b804b2d6666375b7",
+  "scope": "Saved receipt comparison, no new evaluation or raw NPZ inspection",
+  "official_passed": true,
+  "confirmed_improvement": false,
+  "restored_host_sha256": "595ff7858807656e7ee882c485aa5f7d4b0e7b15e12233a813dbe289a08b55d3",
+  "comparisons": [
+    {
+      "parent_sha": "e5cbeba07943b6c797932263ff9deb721bf3ca89",
+      "parent_request_id": "de3724fedfe5438b810a3629c48c7fed",
+      "official_archive_hashes_equal": true,
+      "official_strict_records_equal": true,
+      "generalization_records_equal": {
+        "initial_seed": true,
+        "pristine": true
+      },
+      "phase_median_delta_ms": {
+        "grid": {
+          "imports": -20.72456106543541,
+          "build": -3.1047500669956207,
+          "forward": 2.5110747665166855,
+          "gradient": -1.92326121032238
+        },
+        "aligo": {
+          "imports": -1.9374769181013107,
+          "build": 0.14282576739788055,
+          "forward": -0.6938241422176361,
+          "gradient": -0.27677230536937714
+        }
+      }
+    },
+    {
+      "parent_sha": "7a9480332bad29b5aaeacc5a4628481581507e7a",
+      "parent_request_id": "5f61bfb3e2d441598e8e0733a9dd8cc9",
+      "official_archive_hashes_equal": true,
+      "official_strict_records_equal": true,
+      "generalization_records_equal": {
+        "initial_seed": true,
+        "pristine": true
+      },
+      "phase_median_delta_ms": {
+        "grid": {
+          "imports": 0.16174092888832092,
+          "build": 2.6872679591178894,
+          "forward": -2.579573541879654,
+          "gradient": 0.36113522946834564
+        },
+        "aligo": {
+          "imports": -0.29893219470977783,
+          "build": 1.1197421699762344,
+          "forward": -0.22782012820243835,
+          "gradient": -0.468619167804718
+        }
+      }
+    }
+  ]
+}
