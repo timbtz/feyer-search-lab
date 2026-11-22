@@ -1,0 +1,77 @@
+{
+  "candidate_sha": "2b4654f294414590f760fe972edd69f6774fe9e1",
+  "parent_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+  "diff_sha256": "dd7e70f455b42cb718cb69bd1e37b3d47402355b6406489dde36c632d662a93c",
+  "source_context_sha256": "970d0dbd97e19c3a51952ce9a0d86ae5250f406317133d2447bc4065d0273c24",
+  "evaluation_receipt_sha256": "940895994befc993f65a10f052ebd81e3b58403ceef79d17430df04f2a044a85",
+  "deadline_unix": 1795339664.0,
+  "reviewer": "independent-headless-source-review-v1",
+  "provider": "claude",
+  "model": "claude-opus-5-5",
+  "session_id": "647f858f-bcb8-4a19-bb68-fe4ea6934aff",
+  "result": {
+    "response": {
+      "approved": true,
+      "reasons": [
+        "Reviewed the four parts of the delta: the lazy `visualize_setup` export, the static parameter-row layout on the host path, the explicit gather in `SparseSystem.base_values`, and the deferred `jax.scipy.linalg` import on the dense path. None of them detects fixtures, hardcodes or caches answers, adds persistent compilation caching, or changes precision.",
+        "`ParameterLayout.from_arrays` only builds a layout when the concrete builder indices are nonnegative and in bounds, and when the scatter destinations (`optimized_parameter_indices`, `indices_to_link`) are unique. Otherwise it returns None and `simulate` uses the original generic `.at[].set` path. So duplicate destinations still keep the original last-write-wins behaviour.",
+        "At trace time, `applies()` checks the parameter-row shape and confirms that `max(optimized_value_indices)` fits within `optimized_parameters`, so `PROMISE_IN_BOUNDS` holds. Under an outer vmap the per-example ndim is 1, so batched optimized parameters still use the static path correctly.",
+        "Values and derivatives are preserved. `_static_take` is a plain gather. `_static_set` is a scatter whose destinations the builder has verified as unique, so declaring `unique_indices=True` is correct: the JVP is the linear scatter of tangents, and the transpose is a gather of updates plus a zeroed operand cotangent. Linking functions are still dispatched from the traced `linking_function_indices` via `lax.switch`.",
+        "In `base_values`, the coordinates (`all_rows`, `all_cols`) are distinct by construction: coefficient entries come from a nonzero mask, and right-hand-side entries sit in column N at distinct rows. They are also in bounds, so `unique_indices=True` and `promise_in_bounds` are valid and the gather's transpose is correct.",
+        "The static layout's key is folded into the `HostPlan` hash and equality, so plans with different index layouts cannot share a trace by mistake. The layout lives only in process memory and is not persistent caching.",
+        "The layout is built in `run_build_step` as part of the existing host-plan construction. That is trivial structural precomputation on the host, not simulation work moved out of the timed region.",
+        "Behaviour change, documented in the docstring and not blocking: like the existing host plan's static sweep indices, the host path now uses the builder's static copies of the insertion, linking-destination and detector-phase placing indices instead of the traced index arguments. Callers who change index arrays must re-run `run_build_step`. This follows the convention the host plan already uses.",
+        "Numerical evidence: all 14 cases, including dev, the uifo variants, voyager, aligo and the randparams/amod/fmod cases, match the seed exactly across carrier, signal, noise, powers, sensitivity, loss and gradient (zero failing elements, log sensitivity error 0.0). The large-setup (grid) and aLIGO benchmarks both passed in fresh processes.",
+        "Inherited caveat, not introduced by this delta: comparing against the pristine reference already shows mismatches (for example uifo_rand1 sensitivity log error 2.0e-4, and elementwise signal/gradient differences on several cases). Those discrepancies predate this change. The delta itself is bitwise-identical to the seed on every audited output.",
+        "Inherited limitation: the host pass is a `custom_vjp`, so forward-mode and second-order autodiff are unsupported. This delta does not change that.",
+        "This approval is a bounded review of the supplied diff and evidence. It does not prove universal correctness."
+      ],
+      "generalization_risks": []
+    },
+    "session_id": "647f858f-bcb8-4a19-bb68-fe4ea6934aff",
+    "model": "claude-opus-5-5",
+    "model_verification": "provider-init",
+    "usage": [
+      {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 78136,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 2849,
+        "output_tokens_details": {
+          "thinking_tokens": 1538
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 78136,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 2849,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 78136,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 78136
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      }
+    ]
+  },
+  "failures": [],
+  "approved": true,
+  "finished_at": 1795313313.345342,
+  "prompt_sha256": "85246109bb612e3e8a4a3fa0b877304a48990fe0e2593fe3471a8dce9d2277f8",
+  "scope": "no-fixture-specialization-and-integrity",
+  "policy_rejection": []
+}

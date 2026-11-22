@@ -2,13 +2,13 @@
 
 **Status:** admitted_campaign_best
 
-**Exact simulator revision:** [53f38d342c3228c052785e8c9d63b6ce9c832dd1](https://github.com/timbtz/feyer-search-lab/tree/53f38d342c3228c052785e8c9d63b6ce9c832dd1)
+**Exact simulator revision:** [2b4654f294414590f760fe972edd69f6774fe9e1](https://github.com/timbtz/feyer-search-lab/tree/2b4654f294414590f760fe972edd69f6774fe9e1)
 
 The larger official benchmark is the primary objective. aLIGO is reported separately.
 This is the best admitted candidate in this campaign; it is not an official judging verdict.
 
-- grid: median 0.980870143 s; range 0.976063563–1.005881380 s.
-- aligo: median 0.627572572 s; range 0.623208527–0.627954461 s.
+- grid: median 0.911267346 s; range 0.907194179–0.954289084 s.
+- aligo: median 0.560094250 s; range 0.559704069–0.578337485 s.
 
 ## Evidence and limitations
 
@@ -23,6 +23,6 @@ This is the best admitted candidate in this campaign; it is not an official judg
 - grid pristine-reference disagreements remain; see complete candidate receipt.
 - aligo pristine-reference disagreements remain; see complete candidate receipt.
 - Generalization pristine-reference disagreements remain; see complete candidate receipt.
-- [Selected candidate evidence](experiments/campaigns/overnight-20261122/candidates/411b23262c7b481391a712264743b0e5/record.json)
+- [Selected candidate evidence](experiments/campaigns/overnight-20261122/candidates/b986ad1181484aec96966fdbd4d39e55/record.json)
 
-Search selection requires at least three fresh runs of each official benchmark, a large-case gain of at least max(3 ms, 0.5%), no more than 2% aLIGO regression, and relative timing range at most 10%. These are team heuristics, not organizer scoring rules. Failed and provisional trials remain in the candidate receipts.
+Search selection requires at least three fresh runs of each official benchmark, a large-case gain of at least max(3 ms, 0.5%), no more than 2% aLIGO regression, and relative timing range at most 10%. Under selection-v2, the candidate large-case maximum must also be strictly below the incumbent minimum. Overlapping candidates remain provisional for further paired investigation. Observed nonoverlap is not statistical proof. These are team heuristics, not organizer scoring rules. Failed and provisional trials remain in the candidate receipts.
