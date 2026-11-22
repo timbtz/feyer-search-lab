@@ -357,11 +357,9 @@ def _products(pattern):
     return _PRODUCTS[pattern]
 
 
-# Relative tolerance for treating a noise-source matrix as Hermitian. Replacing N^H
-# by N within this bound perturbs the noise adjoint source by at most a few units
-# of double-precision roundoff relative to max|N|, i.e. the same order as the
-# rounding already present when N is assembled. Any larger asymmetry (or a
-# structurally unpaired nonzero) keeps the explicit adjoint solve.
+# Legacy relative tolerance for the signal-cotangent collinearity shortcut.
+# Noise-source Hermiticity below requires exact equality: a small asymmetry
+# can be amplified by the inverse signal system in the adjoint solve.
 HERMITIAN_TOLERANCE = 8 * np.finfo(np.float64).eps
 
 _TRANSPOSES = {}
@@ -403,20 +401,22 @@ def _collinear_coefficient(vector, direction):
 
 
 def _is_hermitian(pattern, values):
-    """Whether the sparse matrix with these values equals its conjugate transpose (to roundoff)."""
+    """Whether finite supplied coefficients equal their conjugate transpose exactly.
+
+    A roundoff-sized mismatch in N is not an error bound for A^-1 N^H w.
+    Keep the explicit refined adjoint solve for every nonzero mismatch, including
+    an unpaired structural entry. No coefficient or derivative is discarded.
+    """
     values = np.asarray(values)
     if values.shape[-1] != pattern.rows.size:
         return False                       # not a plain coefficient vector: keep the solve
     if values.size == 0:
         return True
-    scale = np.max(np.abs(values))
-    if scale == 0:
-        return True
-    if not np.isfinite(scale):
+    if not np.all(np.isfinite(values)):
         return False
     index, found = _transpose_index(pattern)
-    difference = np.where(found, values - np.conj(values[index]), values)
-    return bool(np.max(np.abs(difference)) <= HERMITIAN_TOLERANCE * scale)
+    transposed = np.where(found, np.conj(values[index]), 0)
+    return bool(np.array_equal(values, transposed))
 
 
 def _solve(products, values, factor, rhs, trans):
@@ -495,7 +495,7 @@ def host_forward(plan, parameters, carrier_values, signal_values, carrier_base, 
     _ASSEMBLY[_assembly_key(plan, *assembly_inputs)] = state
     structure = plan.structure
     system = structure.signal
-    coefficients = state["signal_values"][:, : system.nnz]
+    coefficients, rhs = _split(system, state["signal_values"])
     _, selected = _selections(plan, state["carrier"], np.asarray(selection_vectors))
     count, detectors = coefficients.shape[0], selected.shape[0]
     selections = np.moveaxis(np.broadcast_to(selected, (detectors, count, system.size)), 0, 1)
@@ -503,21 +503,13 @@ def host_forward(plan, parameters, carrier_values, signal_values, carrier_base, 
     signal = np.empty((count, system.size), dtype=np.complex128)
     covariances = np.empty((count, detectors, system.size), dtype=np.complex128)
     weights = np.empty((count, detectors, system.size), dtype=np.complex128)
-    # Materialize the augmented RHS only where it is consumed. The first
-    # column holds the signal source, the others hold the noise sources.
-    # _solve does not mutate its RHS; every column is filled for each row.
-    combined_rhs = np.empty((system.size, 1 + detectors), dtype=np.complex128)
     factors = []
     for row in range(count):
         factor = _factor(system.pattern, coefficients[row])
         factors.append(factor)
         weight = _solve(products, coefficients[row], factor, selections[row].T, "H")      # A^H w = s
         sources = noise_products.apply(state["noise_values"][0 if plan.noise_row_reuse else row], weight)
-        combined_rhs[:, 0] = 0
-        if system.augmented:
-            combined_rhs[system.rhs_rows, 0] = state["signal_values"][row, system.nnz :]
-        combined_rhs[:, 1:] = sources
-        solution = _solve(products, coefficients[row], factor, combined_rhs, "N")
+        solution = _solve(products, coefficients[row], factor, np.concatenate([rhs[row][:, None], sources], axis=1), "N")
         signal[row], covariances[row], weights[row] = solution[:, 0], solution[:, 1:].T, weight.T
     # Consumed by the matching backward together with the rest of the state:
     # these coefficients are a deterministic function of the digested inputs.
@@ -555,7 +547,7 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
         state = _assemble(plan, *assembly_inputs)
     structure = plan.structure
     system, noise_system, carrier_system = structure.signal, structure.noise, structure.carrier
-    coefficients = state["signal_values"][:, : system.nnz]
+    coefficients, _ = _split(system, state["signal_values"])
     tiled, selected = _selections(plan, carrier, selection_vectors)
     count, detectors, size = coefficients.shape[0], selected.shape[0], system.size
     selections = np.moveaxis(np.broadcast_to(selected, (detectors, count, size)), 0, 1)

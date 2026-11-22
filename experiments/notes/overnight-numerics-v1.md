@@ -3010,3 +3010,144 @@ Inherited pristine signal/gradient33,161,180 and random-case disagreements remai
 unresolved, as do grid finite-difference54,59,63,136,161,163; prior aLIGO checks
 confirmed29/29. Whole-pass custom VJP remains first-order reverse-only. No official
 outcome, phase delta, memory improvement or correctness certificate exists for33.
+
+## Candidate33 feedback: retire RHS packing; no gain established
+
+Evaluated SHA ce9d76a7c4ac62acaccb142ceec163e7afa2f4bb, request
+f1b9c8cac83c43df9d83a2931288a52a, jobs grid-1/2/3 and aligo-1/2/3.
+All six unchanged official benchmarks pass. Complete fresh-process seconds:
+
+- Grid [0.8363840915262699,0.8179306425154209,0.8043074533343315];
+  median0.8179306425154209, range[0.8043074533343315,0.8363840915262699].
+- aLIGO [0.5528130028396845,0.5587303917855024,0.5564036127179861];
+  median0.5564036127179861, range[0.5528130028396845,0.5587303917855024].
+
+Compared with the historical admitted7 cohort, complete medians increased
+16.352959ms grid and7.848457ms aLIGO. This is unpaired evidence, not a causal
+regression estimate, but it provides no justification to keep this optimization.
+Median phase ms / difference from historical admitted7:
+grid forward185.768826/+4.605738, reverse84.887264/-0.470160,
+build73.965676/-0.028403, imports267.713113/+2.112499;
+aLIGO forward32.803399/-0.086751, reverse14.470506/+0.086354,
+build42.328773/+4.366228, imports267.888037/+4.379230.
+Retain every sample, including grid1 imports296.341499ms. Other-host contention
+is not excluded; no cause is assigned to timing variation. Sampled peak RSS:
+grid635387904 B, aLIGO295038976 B, generalization942047232 B. No infrastructure
+failure or memory exceedance. No independent review or paired parent runs were
+supplied. confirmed_improvement=false; selection cites missing source review,
+insufficient large gain and overlapping ranges.
+
+Programmatically inspected all six official archive hashes and full strict
+comparison records: each equals32's corresponding record. Also compared all14
+generalization records against BOTH initial_seed and pristine: unchanged.
+All14 pass seed bounds, including zero sensitivity log difference, while only4
+pass pristine strict checks. This is inspection of evaluator per-array records;
+raw remote NPZ arrays were not independently reopened locally. Archive hash
+changes in generalization do not establish numerical differences because those
+archives include timing metadata. The candidate-self artifact comparison is not
+used as independent correctness evidence.
+
+Decision: reject the RHS packing optimization for promotion and stop this
+hypothesis after its first evaluated trial. No speed benefit was established;
+do not generate further packing/buffer variants from allocation counts alone.
+Restore only host_pass.py to admitted ee4fea2. All differometor/** source again
+matches that reviewed parent exactly. This preserves33's committed trial,
+synthetic checker and feedback, without resetting history. No reevaluation is
+requested merely for this identical parent restoration.
+
+Concrete next experiment is a diagnostic, not another timed candidate: supervisor
+should run admitted ee4fea2 under collect_host_profiles from
+experiments/notes/overnight-numerics-profile.py in a separate synchronized driver
+using the fixed evaluator CPU/thread environment. Supply first host_forward and
+host_backward function call counts, self/cumulative times and total profiled
+callback time, separately for both unchanged optical setups. Attribute assembly,
+factorization, refined solves/products and component Jacobians/scatters. Do not
+compare instrumented elapsed times with official first-run totals. This helper
+is already implemented and does not execute a workload by itself. The missing
+profile is the specific evidence needed to select a materially different
+bottleneck; previous repeated requests have not yielded that artifact. Paired
+confirmation/review of preserved promising9/13/18/31 can proceed separately;
+none is silently promoted or combined here.
+
+Inherited signal and gradients33/161/180 disagreements, rand1/rand3 sensitivity
+disagreements and grid finite-difference54/59/63/136/161/163 remain unresolved.
+Prior additional aLIGO coordinates confirmed29/29. First-order reverse-only
+custom VJP limitations remain. Handoff session overnight-numerics-v1. This stop
+ends RHS packing only, not the authorized campaign or its09:27:44 UTC deadline.
+
+## Candidate34: exact Hermitian guard, a numerical repair experiment
+
+Supervisor requested a concrete next experiment after33's retirement. Rather
+than another buffer/interpreter variant, inspect the admitted adjoint shortcut's
+numerical premise. Scientific parent remains reviewed
+ee4fea28c04d482566be16e916b609d7c6a99e5e; candidate SHA and dual job IDs pending.
+The only simulator delta from that parent is _is_hermitian and its comments.
+Candidate33's RHS changes remain absent. This is a correctness repair experiment,
+not an established performance improvement or a claim that prior review was a
+universal certificate.
+
+Concrete failure of the old guard on arbitrary supplied coefficients:
+A=diag(1,1e-12), N=[[1,e],[0,1]], s=[1,0], e=4*binary64_eps.
+A has condition number1e12. The guard accepts N as Hermitian because its
+asymmetry8.881784197001252e-16 is below8*eps*max|N|. Forward w=A^-H s and
+cov=A^-1 N w are both[1,0]. The shortcut reuses conj(cov), but the explicit
+adjoint is conj(A^-1 N^H w)=[1,0.0008881784197001252]. For the real selection
+derivative of Re(s^H A^-1 N A^-H s), the old result is[2,0], whereas the
+explicit result is[2,0.0008881784197001252]. An independent70-digit Decimal
+central difference of the scalar quadratic, using exact binary64 input values,
+confirms that nonzero coordinate. This is amplification of a supplied coefficient
+asymmetry, not an assertion about the published optical fixtures or a dismissal
+of their existing disagreements. Merely bounding the source perturbation by
+roundoff does not bound the adjoint error without conditioning information.
+
+Change: accept the noise shortcut only when every supplied coefficient is finite
+and equals its conjugate-transposed partner exactly. Unpaired structural entries
+must be zero. Any nonzero mismatch keeps the existing explicit refined solve.
+Retain structural zeros and their derivative contributions. No coefficients,
+conjugation rules, refinement counts/tolerance, forward solve or Jacobian change.
+The guard replaces magnitude/subtraction/max reductions with finite/equality
+checks. This could alter guard overhead slightly, but speed is not the rationale
+and is unmeasured. Rejecting additional rows may increase reverse execution time;
+count triggers and include their cost in both complete official benchmarks.
+
+Local evidence: experiments/notes/overnight-numerics-hermitian-check.py,
+existing NumPy/SciPy environment, AST-extracted actual guard/product/refinement
+functions; no optical workload or benchmark timing.
+
+-360 checks agree with an independent dense exact-Hermitian predicate, covering
+ sizes1/2/5/11, random sparsity, paired/unpaired entries, zero and changed values,
+ small asymmetries, imaginary diagonals and nonfinite values.
+-28 source-derived physical noise component cases (vacuum, real loss, real
+ squeeze strength and angle variations) retain the shortcut in both versions.
+ Initial test used flattened output order for squeezer and failed; repaired the
+ synthetic mapping to its documented [upper diagonal, upper off-diagonal,
+ lower diagonal, lower off-diagonal] order. Production source was not changed
+ to accommodate this diagnostic error.
+-The analytic example above rejects the old shortcut and uses the unchanged
+ refined solve; resulting selection derivative matches the independent70-digit
+ finite difference. Both accepted and rejected guard paths are exercised.
+-No full optical gradient, modulation or JAX callback validation is claimed
+ from these small checks. git diff --check passes.
+
+Separate newly identified open issue: _collinear_coefficient accepts direction
+[1,0] and vector[1,e] with alpha1 under the same tolerance. With the diagonal A
+above, reusing its solution omits the same8.881784197001252e-4 component. That
+guard is intentionally unchanged in34 to keep the repair attributable. Its
+legacy constant HERMITIAN_TOLERANCE remains for that caller; comments now make
+the distinction explicit. Exact Hermiticity does not fix this separate gap or
+prove safety of every adjoint shortcut.
+
+Supervisor request: both unchanged official benchmarks on the new exact SHA,
+all saved carrier/signal/noise/power/sensitivity/loss/gradient comparisons,
+14-case generalization including amod/fmod and independent source review. In a
+separate diagnostic, count old-accepted/new-rejected noise rows for each supplied
+setup, with maximum coefficient asymmetry and the resulting gradient changes.
+Investigate every new discrepancy rather than declaring it harmless or correct
+from this one example. Report forward/reverse phase and complete first-run/RSS
+tradeoffs. If numerical results and timing warrant promotion, obtain paired
+fresh-process repetitions against7 under matching hardware/resources. No shared
+best or performance claim is made for34 before that evidence.
+
+All previous pristine signal/gradient33,161,180 and rand1/rand3 disagreements,
+unresolved grid FD54,59,63,136,161,163 and first-order reverse-only compatibility
+limits remain visible. Earlier aLIGO extra coordinate confirmation was29/29.
