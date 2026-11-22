@@ -66,12 +66,11 @@ class SystemPlan:
                                + np.asarray(selected_columns, dtype=np.int64))
         writes = np.asarray(sparse_system.write_positions, dtype=np.int64)
         # The reference scatter applies writes in order: the last write to a position wins.
-        written, first_in_reverse = np.unique(writes[::-1], return_index=True)
+        _, first_in_reverse = np.unique(writes[::-1], return_index=True)
         last = np.zeros(writes.shape, dtype=bool)
         last[writes.size - 1 - first_in_reverse] = True
         self.writes, self.last = writes, last
-        # The reverse-order unique call already returned the sorted written positions.
-        self.written = written
+        self.written = np.unique(writes)
         # Only the last write to a position receives a cotangent (the others are
         # exactly zero). When those last writes read distinct component outputs,
         # the cotangent scatter is a plain assignment instead of `np.add.at`.

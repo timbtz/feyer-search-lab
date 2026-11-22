@@ -989,6 +989,10 @@ def _static_set(values, indices, updates):
     )
 
 
+# Stage the callback adapter as one differentiable call inside the caller's JIT.
+# Its gathers, phase scatter and custom VJP stay in the timed computation; this
+# boundary only changes how JAX stages their forward and transpose programs.
+@jit
 def _simulate_host_pass(
     plan,
     parameters,

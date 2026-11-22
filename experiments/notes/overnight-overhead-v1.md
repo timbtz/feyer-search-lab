@@ -2316,3 +2316,107 @@
   discrepancies, gradients33/161/180, uifo_rand1/3 sensitivity errors, unresolved grid
   FD54/59/63/136/161/163 and first-order-only host VJP remain open. No workload, tolerance,
   fixture, flags, solver/refinement or adjoint mathematics changed.
+
+### Candidate28 feedback and retirement
+
+- Exact SHA **e29fe2a18582f332aa755ec7141adb066e5e901c**, evaluation
+  **41d353f067ba4ee7a6b45621704d61f7**, grid-1/2/3 and aligo-1/2/3. Receipt:
+  experiments/runs/overnight-20261122/overnight-overhead-v1/41d353f067ba4ee7a6b45621704d61f7.json.
+  Both official benchmarks passed3/3; all saved physical outputs/gradients passed the
+  initial-seed comparison policy, as did fourteen generalization cases. Pristine failures
+  remain inherited. No new numerical failure identified; no source review supplied.
+- Large seconds [0.8387086167931557, 0.7954129409044981, 0.8073403798043728];
+  median0.8073403798043728, range0.7954129409044981–0.8387086167931557.
+  aLIGO separately [0.5467080846428871, 0.5456180926412344, 0.5434959325939417];
+  median0.5456180926412344, range0.5434959325939417–0.5467080846428871.
+  confirmed_improvement=false. Historical ee4fea2 median differences +5.763 ms large,
+  -2.937 ms aLIGO; ranges overlap. These unpaired observations do not establish causality.
+- Phase medians ms, large/aLIGO: imports267.076/265.117; initialize3.516/3.548;
+  load1.558/0.211; build73.789/38.207; forward lower19.560/19.185,
+  compile32.929/33.548, execute185.004/32.570; sensitivity lower25.563/26.447,
+  compile41.044/41.328, execute0.876/0.468; gradient lower16.658/16.537,
+  compile53.124/53.150, execute85.614/14.270; host transfer0.187/0.153.
+  Build medians differ from26 by only -0.209/-0.123 ms, and from27 by -0.605/+0.376 ms.
+  Those revisions differ in other ways; none supplies matched-parent attribution.
+  No stable targeted build gain or complete-first-run improvement is established.
+- Sampled peak process-group RSS bytes: large [608301056,506638336,622731264];
+  aLIGO [281747456,295309312,295772160]; generalization874868736. No infrastructure
+  or memory-budget failure. EPYC9334 CPU2, one logical CPU, library threads1, x64,
+  unchanged permitted flags, no persistent compilation cache. Overlap unknown;
+  ranking_eligible=false. Sampling can miss brief memory peaks.
+- Generalization archive17a321c86c92eddee5e7a15955dca818ae4a53956243b1edefced4f90cd33c5b.
+  Official archive hashes remain112c0407...large and9c1ce936...aLIGO; seed maximum
+  absolute gradient differences remain5.686350050382316e-6 and3.637978807091713e-11.
+  Seed tolerance passes do not establish bitwise equality or pristine agreement.
+- Decision: retire28, preserve its evaluated commit/results, and restore host_pass.py
+  to reviewed ee4fea28c04d482566be16e916b609d7c6a99e5e. All ten simulator modules now
+  match that parent byte-for-byte. The restoration is not a new optimization candidate.
+  No further unique/sort metadata variants without attribution evidence.
+- Next experiment is measurement, not another implementation guess: supervisor to run
+  the existing overnight-overhead-profile.py with --trace-forward on exact ee4fea2,
+  supplying actual setup, optimization pairs/values and sweep pairs/values for large,
+  official aLIGO and a third setup. Return import/build/trace call costs and pytree inventory.
+  No such profile has been supplied. Separately,27's independent review, focused derivative
+  diagnostic and matched-parent cohort remain pending; do not combine or promote27.
+- Pristine signal/gradient/loss mismatches, gradients33/161/180, uifo_rand1/3 sensitivity
+  disagreements, unresolved grid FD54/59/63/136/161/163 and first-order-only custom VJP
+  remain open. Stop this metadata-reuse hypothesis, not the authorized campaign.
+  Absolute deadline remains2026-11-22 09:27:44 UTC. No independent benchmark or install.
+
+### Candidate29 — stage the callback adapter behind a nested JIT boundary
+
+- Supervisor explicitly resumed after28's retirement and requested a concrete new
+  experiment. Retain28's restoration of host_pass.py to reviewed
+  ee4fea28c04d482566be16e916b609d7c6a99e5e; do not retain28's unique-write reuse.
+  All simulator modules match that reviewed parent except simulate.py, whose only
+  executable delta is @jit on _simulate_host_pass. New SHA and both official job
+  identifiers are pending supervisor submission. History and prior feedback remain.
+- This is a different mechanism from metadata reuse, empty-operation removal or
+  callback orientation. The adapter performs phase scatter, sparse base gathers,
+  casts, the existing custom-VJP callback and output transposes. A nested JIT gives
+  JAX a staged call boundary for forward linearization and transpose generation.
+  Hypothesis: reducing Python-level transformation work across this boundary may
+  reduce forward/gradient lowering overhead. No redundant physical calculation is
+  alleged or removed. First staging has overhead and may make this candidate slower.
+- There is no precompile, warm-up, evaluation-result cache, persistent compilation
+  cache or launch change. The decorator creates a callable at import; its staging
+  happens when called. The official outer forward, sensitivity and gradient JIT
+  stages remain. Every callback and all solver/refinement/adjoint math are unchanged.
+  The existing HostPlan static pytree registration supplies structure; numeric inputs
+  remain dynamic. Passing phase placement indices through a nested call may add
+  operands to the staged program; count that overhead rather than assume elimination.
+  Eager calls to this internal adapter now compile it, a compatibility/performance
+  tradeoff requiring review. No new JVP/Hessian support is claimed.
+- Cost context from evaluated28, not a matched-parent baseline: median forward lower
+  19.560/19.185 ms and gradient lower16.658/16.537 ms (large/aLIGO); forward compile
+  32.929/33.548 ms, gradient compile53.124/53.150 ms. Sensitivity lower/compile remain
+  25.563/41.044 ms large and26.447/41.328 ms aLIGO. Imports267.076/265.117 ms and
+  build73.789/38.207 ms are not the target. Complete first-run medians of28 were
+  0.8073403798043728 s large and0.5456180926412344 s aLIGO; no29 timings exist.
+- Local checks: all ten simulator modules compile as Python source; nine are exactly
+  reviewed-parent bytes. Removing the one new decorator yields an AST identical to
+  the reviewed simulate.py. git diff --check passes. No NumPy/JAX execution locally,
+  no installs, independent benchmarks, commits or spawned agents.
+- Prepared experiments/notes/overnight-overhead-nested-jit-check.py, UNEXECUTED.
+  It extracts the actual adapter and custom-VJP boundary into an isolated namespace,
+  uses actual SparseSystem gathers, and substitutes only toy host math reused from
+  the older callback diagnostic. It compares the nested wrapper with its unwrapped
+  reference for twelve tiny cases: two structural patterns, empty/one/two phase
+  placements and repeated calls with changed numeric inputs. It checks primals and
+  all eight differentiable input cotangents, including zero current base entries,
+  zero selectors and zero phase angles. This diagnoses staging compatibility only;
+  it is not an optical solver or universal transform correctness certificate.
+- Supervisor request: run that focused diagnostic, then both unchanged full official
+  benchmarks on the exact candidate SHA, all saved arrays/gradients, fourteen-case
+  seed and pristine comparisons, and independent source review. Compare with exact
+  ee4fea2 in matched interleaved fresh processes if promising; report each sample,
+  separate medians/ranges, all phase costs, RSS and known overlap. Three official
+  stages must remain visible and all compilation included. Do not promote from a
+  warm-only result or unpaired millisecond shift. Earlier27 confirmation is separate.
+- If no stable lowering and complete-first-run gain appears, retire this boundary
+  experiment and return to reviewed parent; do not cycle decorator options blindly.
+  Next evidence request remains the prepared supervisor import/build/trace profile.
+- Inherited pristine signal/gradient/loss discrepancies, gradients33/161/180,
+  uifo_rand1/3 sensitivity disagreements, unresolved grid FD54/59/63/136/161/163 and
+  first-order-only host VJP remain open. Candidate29 changes no tolerance or physical
+  workload. Absolute deadline remains2026-11-22 09:27:44 UTC.
