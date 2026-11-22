@@ -26,7 +26,6 @@ from jax import lax, vmap, jit
 
 from differometor.setups import Setup
 from differometor.build import build, pairs_to_arrays, prepare_arrays, LINKING_FUNCTIONS
-from differometor.build import _identity_link
 from differometor.components import FUNCTIONS, UNIT_VACUUM, H_PLANCK, F0
 from differometor import components as _components
 from differometor.sparse import SparseStructure, SparseSystem, sparse_solve
@@ -422,7 +421,11 @@ def simulate(
         row = parameters.reshape(parameters.shape[1:])
         row = _static_set(row, layout.optimized_parameter_indices,
                           _static_take(optimized_parameters, layout.optimized_value_indices))
-        row = _static_link(row, layout, linking_function_indices)
+        inputs_to_link = _static_take(row, layout.linked_indices)
+        outputs_to_link = vmap(lambda i, x: lax.switch(i, LINKING_FUNCTIONS, x))(
+            linking_function_indices, inputs_to_link
+        )
+        row = _static_set(row, layout.indices_to_link, outputs_to_link)
         qhd_phase_values = jnp.exp(1j * jnp.radians(_static_take(row, layout.qhd_parameter_indices)))
         return _simulate_host_pass(
             host_plan,
@@ -959,24 +962,6 @@ HOST_PASS: bool = True
 # builder-verified unique destinations a scatter's derivative is a plain
 # gather/scatter. Values are identical. False keeps the generic indexing.
 STATIC_PARAMETER_LAYOUT: bool = True
-
-
-def _static_link(row, layout, function_indices):
-    """Apply links, omitting proven identity writes back to the same positions.
-
-    Every registered branch must be the builder's exact identity function, so
-    even dynamic (or clamped) branch indices select identity. Any custom branch
-    keeps the original linking path; no inference is made from current values.
-    """
-    if (LINKING_FUNCTIONS
-            and all(function is _identity_link for function in LINKING_FUNCTIONS)
-            and function_indices.shape == layout.linked_indices.shape
-            and np.issubdtype(function_indices.dtype, np.integer)
-            and np.array_equal(layout.linked_indices, layout.indices_to_link)):
-        return row
-    inputs = _static_take(row, layout.linked_indices)
-    outputs = vmap(lambda i, x: lax.switch(i, LINKING_FUNCTIONS, x))(function_indices, inputs)
-    return _static_set(row, layout.indices_to_link, outputs)
 
 
 def _static_take(values, indices):

@@ -152,11 +152,6 @@ def _np_space_entry(frequency, length, refractive_index):
 # ---------------------------------------------------------------------
 
 LINKING_FUNCTIONS = []
-
-
-def _identity_link(value):
-    """Builder placeholder for a setup with no parameter links."""
-    return value
 """
 Global registry of parameter-linking functions.
 
@@ -1495,7 +1490,7 @@ def build(setup: Setup):
     if len(linked_indices) == 0:
         linked_indices = [0]
         indices_to_link = [0]
-        LINKING_FUNCTIONS.append(_identity_link)
+        LINKING_FUNCTIONS.append(lambda x: x)
         linking_function_indices = [0]
 
     return (
@@ -1561,6 +1556,28 @@ def _group_component_indices(function_indices, function_input_indices=None):
             for index in sorted(groups)
         }
     return result
+
+
+def _parameter_name_lookup(parameter_names):
+    """Build a per-call first-position lookup for ordinary string names.
+
+    Preserve list.index semantics for duplicate and missing names. Unusual name
+    objects keep the original equality-based search, including unhashable items.
+    This table is local to one builder invocation, never shared across setups.
+    """
+    if type(parameter_names) is not list or any(type(name) is not str for name in parameter_names):
+        return parameter_names.index
+    positions = {}
+    for index, name in enumerate(parameter_names):
+        positions.setdefault(name, index)
+
+    def lookup(name):
+        try:
+            return positions[name]
+        except KeyError:
+            raise ValueError(f"{name!r} is not in list") from None
+
+    return lookup
 
 
 def pairs_to_arrays(
@@ -1650,6 +1667,11 @@ def pairs_to_arrays(
     if changing_pairs is None:
         changing_pairs = []
 
+    parameter_index = (
+        _parameter_name_lookup(parameter_names)
+        if optimization_pairs or changing_pairs else parameter_names.index
+    )
+
     signal_component_number = 0
 
     # Compile signal update arrays by iterating through all signal instructions.
@@ -1723,14 +1745,14 @@ def pairs_to_arrays(
         if not isinstance(optimization_pair[0], list):
             optimized_component, optimized_parameter = optimization_pair
             try:
-                optimized_parameter_indices.append(parameter_names.index(f"{optimized_component}_{optimized_parameter}"))
+                optimized_parameter_indices.append(parameter_index(f"{optimized_component}_{optimized_parameter}"))
                 optimization_value_indices.append(ix)
             except ValueError:
                 pass
         else:
             for optimized_component, optimized_parameter in optimization_pair:
                 try:
-                    optimized_parameter_indices.append(parameter_names.index(f"{optimized_component}_{optimized_parameter}"))
+                    optimized_parameter_indices.append(parameter_index(f"{optimized_component}_{optimized_parameter}"))
                     optimization_value_indices.append(ix)
                 except ValueError:
                     pass
@@ -1741,9 +1763,9 @@ def pairs_to_arrays(
     # Compile changing parameter indices for sweeps.
     for changing_component, changing_parameter in changing_pairs:
         if changing_component in signal_components:
-            signal_changing_parameter_indices.append(parameter_names.index(f"{changing_component}_{changing_parameter}"))
+            signal_changing_parameter_indices.append(parameter_index(f"{changing_component}_{changing_parameter}"))
         else:
-            carrier_changing_parameter_indices.append(parameter_names.index(f"{changing_component}_{changing_parameter}"))
+            carrier_changing_parameter_indices.append(parameter_index(f"{changing_component}_{changing_parameter}"))
             append_information(parameter_instructions, carrier_arrays, changing_component, carrier_components)
 
     def combine_arrays(arrays: dict, system: str, signal: bool = False):

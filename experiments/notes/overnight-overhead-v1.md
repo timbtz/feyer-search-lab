@@ -1262,3 +1262,103 @@
 - All inherited pristine-reference discrepancies and unresolved finite differences above
   remain visible. No change to tolerances, three JIT stages, physical workload, compiler
   settings or first-order-only custom-VJP scope. Deadline09:27:44 UTC unchanged.
+
+### Candidate16 feedback and end of boundary-variant sequence
+
+- Evaluated SHA **479a5c1283c700d423bf369e5eabbaee113d5d53**, dual-official request
+  **7edb79c9069548d188dd96841cda457e** (grid-1/2/3 and aligo-1/2/3).
+  Both official benchmarks passed all three fresh processes. All14 generalization cases
+  pass the initial-seed comparison tolerance. Independent source review remains absent;
+  confirmed_improvement=false. No infrastructure failure or memory-budget exceedance.
+- Large samples seconds: **0.8216858301311731, 0.7836411092430353,
+  0.7903760205954313**; median **0.7903760205954313**, range
+  **0.7836411092430353–0.8216858301311731**.
+- Official aLIGO samples seconds: **0.5373751949518919, 0.5320959351956844,
+  0.5331667233258486**; median **0.5331667233258486**, range
+  **0.5320959351956844–0.5373751949518919**.
+  Separate historical parent medians differ by11.202 ms large and15.388 ms aLIGO;
+  these are unmatched observations, not confirmed improvements. Large ranges overlap.
+- Phase medians ms (large / aLIGO): imports265.631 /264.571; build74.149 /37.870;
+  forward lowering18.199 /17.737, compilation30.387 /29.976, execution181.632 /32.703;
+  sensitivity lowering25.580 /26.077, compilation40.400 /41.289;
+  gradient lowering15.739 /15.704, compilation46.969 /48.430, execution85.272 /14.315.
+  Versus separate candidate14 observations, gradient compilation is lower by about
+  4.774 /3.886 ms. This supports a phase-level hypothesis only: it is neither a paired
+  comparison to ee4fea2 nor proof of a total-time gain. Candidate15 lowers tracing more;
+  candidate16 lowers gradient compilation more. Do not automatically combine them.
+- Sampled process-group peak RSS bytes: large511279104 /478326784 /611266560;
+  aLIGO323584000 /294666240 /314937344; generalization927752192. Sampling can miss
+  brief peaks. AMD EPYC9334, CPU2, one logical CPU and library threads1, x64, no
+  persistent compilation cache; inherited package flags unchanged. External contention
+  was not excluded; ranking_eligible=false. No claim about organizer ranking medians.
+- Full official output archive hashes match the preceding candidate's saved archives:
+  large112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5,
+  aLIGO9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195.
+  Generalization archive aa376d173e2d8d21151b22c0159806058aca2a59010900f6224322258605cf7f.
+  The receipt's self-comparison is not evidence of byte identity to the seed. Initial-seed
+  tolerance checks pass; pristine checks remain false. Official grid maximum gradient
+  difference from seed is5.686350050382316e-6; aLIGO3.637978807091713e-11.
+  Pristine grid signal/gradient33,161,180/loss disagreements, uifo_rand1/rand3 sensitivity
+  disagreements and six unresolved grid finite differences remain open. Prior additional
+  aLIGO29/29 coordinate checks remain distinct. Whole-pass VJP is first-order reverse only.
+- Decision: end this speculative boundary-variant sequence. Candidate16 has not established
+  a repeat-supported full-run gain, and the requested synthetic JAX run/source review is
+  still unreported. Restore **build.py and simulate.py to ee4fea28c04d482566be16e916b609d7c6a99e5e**
+  in this worktree; all simulator Python modules are verified byte-identical to that reviewed
+  parent. No history reset or commit was made. Candidate15 and16 implementations, notes and
+  diagnostic scripts remain preserved in history; their evidence is not discarded.
+- Next task is evidence collection through the supervisor, not another boundary variant:
+  independent review and prepared synthetic checks on exact candidate15 and16 revisions;
+  direct parent/candidate physical-array comparisons; then five interleaved fresh runs per
+  revision per official setup against ee4fea2 if review permits. Separately obtain the
+  already-prepared import/build profile on supplied setups before proposing another builder
+  change. Neither paired confirmation nor profiling has been supplied yet.
+- ready_for_evaluation=false: restored parent does not warrant a duplicate candidate job.
+  stop=true ends this hypothesis sequence, not the authorized overnight campaign. Supervisor
+  may continue the campaign with the evidence tasks above. Deadline09:27:44 UTC unchanged.
+
+### Candidate17 — index parameter names once per builder call
+
+- Supervisor resumed after the sequence-ending handoff and requested a concrete next
+  experiment. Keep the prior restoration to reviewed simulator parent
+  **ee4fea28c04d482566be16e916b609d7c6a99e5e**. Candidate17 changes only build.py relative
+  to that parent; it includes neither candidate15 nor16 nor their combinations.
+- Distinct mechanism: `pairs_to_arrays` called `parameter_names.index` for every optimized
+  and swept parameter (four call sites, including grouped optimization pairs). Each call
+  restarted a linear search of the same unchanged name list. Build a local first-position
+  dictionary once, then resolve these queries from it. For N names and Q queries this
+  changes worst-case search work from O(NQ) to expected O(N+Q), with O(N) temporary memory.
+  The table is rebuilt for each call and is never persisted or shared across setups.
+- Only exact Python lists of exact strings use the dictionary. `setdefault` preserves the
+  first occurrence for duplicate names (including the builder's empty-name placeholders).
+  Missing names raise the same ValueError/message: optimization queries remain ignored by
+  their existing catch, while invalid sweep queries still fail. Tuples, custom containers,
+  string subclasses and non-string/unhashable items keep the original `.index` behavior.
+  Calls with no optimized or changing pairs skip table construction. Instruction order,
+  optimized-value indices and all array construction are unchanged.
+- Target is setup/build, not JAX compilation or solver execution. Latest candidate16 phase
+  medians were74.149 ms large and37.870 ms official aLIGO, but these include all build work
+  and do NOT measure name-search cost. No detailed builder profile has arrived. The actual
+  redundant operation is established from source; no millisecond saving is claimed.
+  Table construction may outweigh savings for short lists or very few queries. Measure
+  complete first-run cost and build phase on both official workloads before retaining it.
+- Local validation: `experiments/notes/overnight-overhead-name-lookup-check.py` passed
+  2,106 comparisons against original `.index`, plus three fresh-call checks. It covers
+  empty/duplicate names, Unicode, missing names, tuples, unhashable items, a custom list
+  override and rebuilding after name mutation. Initial test exposed tuple missing-name
+  message mismatch; repaired by retaining tuple `.index`, then all checks passed.
+  An AST comparison undid exactly the four lookup substitutions and local initialization,
+  removed the helper, and matched the entire parent build.py AST. All nine other simulator
+  Python modules remain byte-identical to ee4fea2. Syntax checks passed. These are small
+  stdlib correctness inspections, not optical/JAX validation or performance benchmarks.
+- Candidate SHA and job IDs pending supervisor commit. Request both unchanged full official
+  benchmarks, complete output/gradient and14-case generalization comparisons, independent
+  review, and paired fresh-process parent/candidate measurements if the build phase improves.
+  Record phase medians, all total samples/ranges, memory and overlap information separately
+  for large and aLIGO. Existing candidate15/16 review/confirmation requests remain open.
+- No changes to physical inputs, gradients, three JIT stages, package compiler settings,
+  public harness/data or caches. Inherited pristine disagreements (including uifo_rand1/3
+  and grid gradients33/161/180), unresolved grid finite differences and first-order-only
+  VJP compatibility remain unresolved. Deadline09:27:44 UTC unchanged. If this search
+  removal has no meaningful effect, use the requested import/build profile to choose the
+  next mechanism instead of iterating on lookup-table variants.
