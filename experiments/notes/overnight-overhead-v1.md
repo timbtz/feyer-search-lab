@@ -2011,3 +2011,81 @@
   flatten/slice/scatter variants absent compiler attribution. Pending import/build profiling
   remains useful; it was not supplied or launched here. No commits, remote calls, benchmarks,
   installs or agents. Absolute campaign deadline09:27:44 UTC unchanged.
+
+### Candidate24 feedback, retirement and targeted tracing attribution
+
+- Evaluated SHA **297e24239a332411f17963007fa9c6ceb1d1f50d**, request/job **f9eeff16240e4e14b37607ff1cd01cb1** (grid-1/2/3 and aligo-1/2/3). Receipt: experiments/runs/overnight-20261122/overnight-overhead-v1/f9eeff16240e4e14b37607ff1cd01cb1.json.
+- Both unchanged official workloads passed3/3. All saved carrier/signal/noise/powers/sensitivity/loss/gradient arrays passed seed-relative policy;14 generalization cases passed seed-relative policy. This is not bitwise seed equality. Pristine comparisons still fail: grid131 signal entries,3 gradients and loss; aLIGO loss; varied setups include the inherited uifo_rand1/3 sensitivity discrepancies. No new discrepancy is identified by this receipt. Strict_passed=false, confirmed_improvement=false, source_review=null. The30 prepared synthetic JAX comparisons still have no execution result.
+- grid: samples seconds=[0.8352016191929579, 0.8171110264956951, 0.8280034642666578]; median=0.828003464267; range=0.817111026496–0.835201619193. Phase medians ms={'imports': 280.052, 'initialize': 3.593, 'load': 1.516, 'build': 76.107, 'forward_lower': 20.25, 'forward_compile': 33.928, 'forward': 187.023, 'sensitivity_lower': 25.519, 'sensitivity_compile': 41.328, 'sensitivity': 0.852, 'gradient_lower': 16.638, 'gradient_compile': 53.695, 'gradient': 86.152, 'host_transfer': 0.186}.
+- grid sampled process-group peak RSS bytes=[646955008, 633712640, 618778624].
+- aligo: samples seconds=[0.5515841860324144, 0.5514951888471842, 0.5516271963715553]; median=0.551584186032; range=0.551495188847–0.551627196372. Phase medians ms={'imports': 265.192, 'initialize': 3.578, 'load': 0.215, 'build': 38.549, 'forward_lower': 19.711, 'forward_compile': 34.636, 'forward': 32.62, 'sensitivity_lower': 26.367, 'sensitivity_compile': 41.269, 'sensitivity': 0.496, 'gradient_lower': 16.632, 'gradient_compile': 54.966, 'gradient': 15.177, 'host_transfer': 0.159}.
+- aligo sampled process-group peak RSS bytes=[280166400, 283123712, 287735808].
+- Generalization peak RSS800702464 bytes. No infrastructure or memory-budget failure. Fixed EPYC9334, CPU2 affinity(one logical CPU), threads1, x64, permitted package flags, persistent cache disabled. Other-host overlap unknown; ranking_eligible=false. No combined benchmark score.
+- Relative to the historical reviewed ee4fea2 cohort, medians are26.426 ms slower large and3.029 ms slower aLIGO. Unpaired cohorts do not establish causation. Forward trace/compile and gradient trace/compile provide no evidence of a useful flattened-gather effect. Do not promote or repeat flatten/slice/scatter variants without attributed compiler evidence.
+- Retired24 by restoring sparse.py bytes from reviewed **ee4fea28c04d482566be16e916b609d7c6a99e5e**. All10 simulator modules now match that parent. The failed trial remains in branch history; no reset, commit or remote operation was made. This restoration is not a new performance candidate and does not warrant another candidate-only official timing run.
+- Distinct next experiment prepared: extended own-branch overnight-overhead-profile.py with optional --trace-forward and --optimized-values-json. It inventories the actual built input pytree leaf counts and array bytes per argument, then cProfiles the public simulator VJP trace/lower without compiling or executing callbacks. All leaves and operations are retained; no metadata pruning or simulated optical execution. Supply actual caller optimized values, optimization pairs, sweep pairs and values with arbitrary setup JSON. Defaults are not equivalent to either official workload.
+- Motivation from source: the public forward stage passes the entire built dictionary as a dynamic pytree. component_groups contains function_rows, parameter_indices and output_rows array leaves even though the valid host path returns through HostPlan without reading these dynamic groups. JAX must flatten/abstract those inputs before unused arguments are eliminated. The cost is not measured; static wrapping could alter mutation/rebuild and transform behavior and should not be implemented speculatively. This experiment will distinguish pytree/abstractification overhead from actual scatter/gather/callback lowering and import/build time. Ask the supervisor to run this diagnostic on the reviewed parent for large, official aLIGO and a third supplied setup, in separate fresh fixed-policy processes. No diagnostic launched here.
+- Diagnostic results are instrumented attribution, not official timing, speedup or numerical validation. Local syntax/CLI checks only: NumPy/JAX unavailable. Pending general import/build profiling and matched-parent confirmation of candidate15/21 remain separate; do not replay candidate-only samples as confirmation.
+- Existing grid FD54/59/63/136/161/163, pristine gradients33/161/180, random-case sensitivity disagreements and first-order-only host VJP remain unresolved. No tolerances, fixtures, workloads, flags or solver mathematics changed. This closes the unproductive coordinate-representation hypothesis; the newly authorized campaign deadline remains09:27:44 UTC.
+
+### Candidate25 — static immutable component dispatch metadata
+
+- Supervisor explicitly resumed after24 retirement and requested one concrete evaluable
+  implementation. No import/build/trace profile accompanied the request. This is a new
+  hypothesis based on source-proven unused dynamic inputs, not a measured attribution.
+  Simulator parent is reviewed ee4fea28c04d482566be16e916b609d7c6a99e5e. Candidate SHA and
+  both official job identifiers are pending supervisor commit/evaluation. No changes from
+  unpromoted15/21/23/24 are combined. The sparse.py diff against branch HEAD retires24.
+- The public forward JIT receives the complete simulation_arrays pytree. The host path
+  reads its static HostPlan and does not use component_groups' integer leaves, but those
+  leaves still participate in input flattening, abstractification and initial tracing.
+  New StaticComponentGroups is registered as a no-leaf static mapping. It snapshots the
+  nested dictionary structure while retaining immutable integer JAX arrays; rejects
+  floating/complex arrays and mutable host arrays/lists. It stores no physical values,
+  computed simulation output, gradient or factorization. Ordinary physical arguments and
+  the other integer selector arguments retain their existing dynamic representation.
+- Wrap only after successful host-plan construction and when HOST_PASS is enabled.
+  Sparse/dense fallback inside simulate converts the full mapping back to dictionaries;
+  _build_sparse_structure and build_host_plan also accept the wrapper for explicit rebuilds.
+  Keys, indexing, iteration, get/items and the actual metadata arrays remain accessible.
+  to_dict()/copy() produce fresh mutable nested dictionaries. Hand-supplied ordinary dicts
+  remain supported and dynamic. No changes to gathers, scatters, callback signatures,
+  physical functions, solver, refinement or adjoint arithmetic.
+- Compatibility tradeoff is explicit: builder-returned component_groups is a read-only
+  Mapping rather than a dict on successful host builds. Direct in-place structural edits
+  raise; callers should rebuild plans after index changes as already required. Tree-map
+  operations no longer transform these structural leaves. Equality/hash use object identity;
+  every new build has a new identity and retraces even for equal-shaped or identical layouts.
+  This avoids content-dependent stale JIT reuse but can increase recompilation for repeated
+  builds. This is not a claim of unrestricted JAX transform/API compatibility. Frozen nested
+  dictionaries prevent mutation of the source dictionary or a returned copy from changing
+  an existing static object. Private object.__setattr__ bypasses are not a supported API.
+- Cost hypothesis: fewer dynamic inputs may reduce forward trace/lower overhead, measured
+  around20.250 ms large and19.711 ms aLIGO in24, and possibly downstream AD bookkeeping.
+  Full forward compile was33.928/34.636 ms, gradient trace16.638/16.632 ms and compile
+  53.695/54.966 ms. These whole-phase medians are not recoverable-cost estimates. Building
+  nested mapping snapshots adds Python allocation; import registration and retained static
+  objects also have cost. No timing gain claimed. All work stays inside ordinary build/import.
+- Local checks:100 executions of the actual class with stdlib array stubs validate snapshot
+  isolation, nested copy independence, immutability guards and distinct build identities;
+  six unsupported leaf types rejected. These do not test JAX. All simulator and new diagnostic
+  AST checks pass; eight otherwise untouched simulator modules match reviewed parent bytes.
+- Prepared overnight-overhead-static-groups-check.py for the supervisor: eight actual optical
+  component JIT primal/VJP comparisons across empty/single/multiple groups and real/complex
+  parameter values including zeros; four metadata round trips; no-leaf tree registration;
+  two equal-shaped builds with changed indices and JIT retrace checks; rejected mutations;
+  a small laser/space/mirror graph with a three-frequency sweep and two optimized parameters
+  verifies actual builder integration and sparse/host plan reconstruction from both metadata
+  representations. This script is UNEXECUTED locally: NumPy/JAX are unavailable. It reads
+  no fixtures and runs no official benchmark or timing loop. Run it against this candidate,
+  not retired candidates' incompatible diagnostic scripts.
+- Request both unchanged full official benchmarks on the exact new SHA; inspect all saved
+  physical outputs/gradients and14 varied generalization cases against parent/seed/pristine;
+  run independent source review with particular attention to metadata mutation and fallback
+  behavior. If tracing improves meaningfully, obtain matched interleaved fresh-process parent
+  and candidate cohorts, separate large/aLIGO samples/medians/ranges, phase tradeoffs, RSS and
+  overlap state. Do not infer success from fewer leaves alone or from a single timing sample.
+- Existing pristine signal/gradient/loss differences, uifo_rand1/3 sensitivity disagreements,
+  unresolved grid FD54/59/63/136/161/163 and first-order-only host VJP remain open. Candidate24
+  failure remains recorded above. No tolerance, arithmetic flag, benchmark or fixture changes.
+  No commits, pushes, remote jobs, installs or agents. Deadline remains09:27:44 UTC.

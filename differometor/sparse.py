@@ -215,8 +215,6 @@ class SparseSystem:
         # Prepare the gather operand once while building, rather than tracing
         # general advanced-index normalization/packing at every JAX boundary.
         self.base_coordinates = np.stack((all_rows, all_cols), axis=1)
-        self.base_width = int(base_matrix.shape[1])
-        self.base_linear_indices = (all_rows * self.base_width + all_cols)[:, None]
         position = np.full(base_matrix.shape, -1, dtype=np.int64)
         position[all_rows, all_cols] = np.arange(all_rows.size)
         self._position = position
@@ -243,20 +241,13 @@ class SparseSystem:
 
     def base_values(self, matrix):
         """Gather the base matrix values at all pattern entries (traced)."""
-        # A scalar gather from a row-major reshape selects the same entries in
-        # the same order. Its transpose scatters to those same matrix entries.
-        # Derive offsets again if a caller supplies a different matrix width;
-        # no optical values or differentiation status determine this layout.
-        indices = self.base_linear_indices if matrix.shape[1] == self.base_width else (
-            self.all_rows * matrix.shape[1] + self.all_cols
-        )[:, None]
         return jax.lax.gather(
-            matrix.reshape(-1),
-            indices,
+            matrix,
+            self.base_coordinates,
             jax.lax.GatherDimensionNumbers(
-                offset_dims=(), collapsed_slice_dims=(0,), start_index_map=(0,)
+                offset_dims=(), collapsed_slice_dims=(0, 1), start_index_map=(0, 1)
             ),
-            slice_sizes=(1,),
+            slice_sizes=(1, 1),
             unique_indices=True,
             mode="promise_in_bounds",
         )

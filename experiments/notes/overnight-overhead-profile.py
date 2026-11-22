@@ -2,9 +2,12 @@
 
 Put this checkout on PYTHONPATH. This is an instrumented diagnostic, not an official benchmark or a timing sample
 for promotion. Run once in a fresh process under the existing resource policy.
-No simulation, output validation, compilation-cache enablement or file writes.
+No simulation execution, output validation, compilation-cache enablement or file writes.
 Optional JSON inputs contain the same pairs and sweep values as the intended
 caller; omitting them profiles the builder's public defaults.
+--trace-forward also profiles tracing/lowering of the public simulator VJP,
+without compiling or executing it. Supply the caller's optimized values when
+the builder returns no default values. This retains all built metadata leaves.
 """
 
 import argparse
@@ -23,6 +26,8 @@ def main():
     parser.add_argument("--optimization-pairs-json", type=Path)
     parser.add_argument("--changing-pairs-json", type=Path)
     parser.add_argument("--changing-values-json", type=Path)
+    parser.add_argument("--optimized-values-json", type=Path)
+    parser.add_argument("--trace-forward", action="store_true")
     parser.add_argument("--top", type=int, default=60)
     args = parser.parse_args()
     if args.top < 1:
@@ -90,6 +95,36 @@ def main():
 
     built = profiled("run_build_step", build)
     arrays = built[0]
+    leaf_inventory = {}
+    for name, value in arrays.items():
+        leaves = jax.tree_util.tree_leaves(value)
+        leaf_inventory[name] = {
+            "leaf_count": len(leaves),
+            "array_bytes": sum(int(leaf.size * leaf.dtype.itemsize) for leaf in leaves
+                               if hasattr(leaf, "size") and hasattr(leaf, "dtype")),
+        }
+    if args.trace_forward:
+        def prepare_parameters():
+            if args.optimized_values_json is not None:
+                values = np.asarray(json.loads(args.optimized_values_json.read_text()))
+                if values.ndim != 1:
+                    raise ValueError("Optimized values must be a one-dimensional array")
+                return jax.block_until_ready(jax.device_put(values))
+            values = arrays["optimized_parameters"]
+            if values is None:
+                raise ValueError("Supply the caller's --optimized-values-json for tracing")
+            return values
+
+        parameters = profiled("prepare_optimized_values", prepare_parameters)
+        arrays = dict(arrays, optimized_parameters=parameters)
+
+        def forward_with_pullback(parameters, arrays):
+            return jax.vjp(lambda p: df.simulate(**dict(arrays, optimized_parameters=p)), parameters)
+
+        # lower() traces the original operations and callback signatures but does
+        # not execute the callbacks or factor any matrices. No leaves are removed.
+        lowered = profiled("forward_trace_lower", lambda: jax.jit(forward_with_pullback).lower(parameters, arrays))
+        del lowered
     storage = {}
     structure = arrays.get("sparse_structure")
     if structure is not None:
@@ -103,7 +138,8 @@ def main():
     print(json.dumps({"scope": "instrumented diagnostic; not official timing or validation",
                       "simulator_path": df.__file__, "jax_version": jax.__version__,
                       "numpy_version": np.__version__, "phases": phases,
-                      "sparse_metadata": storage}, indent=2))
+                      "sparse_metadata": storage,
+                      "input_leaf_inventory": leaf_inventory}, indent=2))
 
 
 if __name__ == "__main__":

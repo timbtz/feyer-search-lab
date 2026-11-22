@@ -25,7 +25,9 @@ factorization per signal row serves the N, T and H solves.
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 from functools import partial
+from types import MappingProxyType
 
 import jax
 import jax.numpy as jnp
@@ -51,6 +53,61 @@ def _digest(*arrays):
         digest.update(np.asarray(array.shape, dtype=np.int64).tobytes())
         digest.update(array.tobytes())
     return digest.hexdigest()
+
+
+class StaticComponentGroups(Mapping):
+    """Immutable snapshot of builder-only integer dispatch metadata.
+
+    Physical values are never stored here. Each new build has a distinct static
+    identity, so JAX retraces after a rebuild even if array shapes are unchanged.
+    Nested dictionaries are copied and read-only; JAX integer arrays are already
+    immutable. ``to_dict()`` returns fresh mutable dictionaries for callers that
+    need the ordinary dynamic metadata representation.
+    """
+
+    __slots__ = ("_groups",)
+
+    def __init__(self, groups):
+        def freeze(value):
+            if isinstance(value, dict):
+                return MappingProxyType({key: freeze(item) for key, item in value.items()})
+            if isinstance(value, tuple) and not value:
+                return value
+            if isinstance(value, jax.Array) and value.dtype.kind in "iu":
+                return value
+            raise TypeError("Static component groups require dictionaries, integer JAX arrays and empty markers")
+
+        object.__setattr__(self, "_groups", freeze(groups))
+
+    def __setattr__(self, name, value):
+        raise TypeError("Component groups are immutable; rebuild the setup")
+
+    def __delattr__(self, name):
+        raise TypeError("Component groups are immutable; rebuild the setup")
+
+    def __getitem__(self, key):
+        return self._groups[key]
+
+    def __iter__(self):
+        return iter(self._groups)
+
+    def __len__(self):
+        return len(self._groups)
+
+    __hash__ = object.__hash__
+    __eq__ = object.__eq__
+
+    def to_dict(self):
+        def thaw(value):
+            if isinstance(value, Mapping):
+                return {key: thaw(item) for key, item in value.items()}
+            return value
+        return thaw(self._groups)
+
+    copy = to_dict
+
+
+jax.tree_util.register_static(StaticComponentGroups)
 
 
 class SystemPlan:
@@ -217,6 +274,8 @@ jax.tree_util.register_static(HostPlan)
 
 def build_host_plan(simulation_arrays, structure, component_groups):
     """Static plan from concrete built arrays, or None when the layout is unsupported."""
+    if isinstance(component_groups, StaticComponentGroups):
+        component_groups = component_groups.to_dict()
     if structure is None or not isinstance(component_groups, dict) or not structure.unique_placing:
         return None
     plans = {}

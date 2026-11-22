@@ -381,10 +381,13 @@ def simulate(
     noise_system_matrix_indices :
         Indexing and function-selection arrays used by `update` to fill the noise matrix.
 
-    component_groups : dict | None
+    component_groups : Mapping | None
         Optional structural dispatch metadata produced by `run_build_step`.
         Contains carrier, signal and noise partitions. Omit it to use dynamic
         function selectors, or rebuild it if selectors or matrix destinations change.
+        Successful host-plan builds return a read-only static mapping to avoid
+        tracing unused integer leaves. Use its `to_dict()` method when an ordinary
+        mutable/dynamic dictionary is needed; rebuild all plans after index changes.
     sparse_structure : SparseStructure | None
         Optional static sparsity metadata produced by `run_build_step`. When given,
         the carrier, signal and noise systems are assembled as structural-nonzero
@@ -468,6 +471,11 @@ def simulate(
             noise_selection_vectors,
             qhd_placing_indices,
         )
+
+    if isinstance(component_groups, _host_pass.StaticComponentGroups):
+        # The host path above already contains these indices in its static plan.
+        # Other execution paths retain the complete original grouped metadata.
+        component_groups = component_groups.to_dict()
 
     if sparse_structure is not None and SPARSE_SOLVES:
         return _simulate_sparse(
@@ -1054,6 +1062,8 @@ def _build_sparse_structure(simulation_arrays):
     unique_placing = np.unique(placing).size == placing.size
     group_indices = {}
     component_groups = simulation_arrays.get("component_groups")
+    if isinstance(component_groups, _host_pass.StaticComponentGroups):
+        component_groups = component_groups.to_dict()
     if isinstance(component_groups, dict):
         for system in ("carrier", "signal", "noise"):
             group = component_groups.get(system)
@@ -1417,6 +1427,8 @@ def run_build_step(
             host_plan = _host_pass.build_host_plan(simulation_arrays, sparse_structure, component_groups)
             if host_plan is not None:
                 simulation_arrays["host_plan"] = host_plan
+                if HOST_PASS:
+                    simulation_arrays["component_groups"] = _host_pass.StaticComponentGroups(component_groups)
 
     if timeit:
         for array in simulation_arrays.values():
