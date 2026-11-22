@@ -71,10 +71,6 @@ class SystemPlan:
         last[writes.size - 1 - first_in_reverse] = True
         self.writes, self.last = writes, last
         self.written = np.unique(writes)
-        # Base entries overwritten by components have no base cotangent. The
-        # mask depends only on destinations, including writes currently equal to zero.
-        self.base_unwritten = np.ones(sparse_system.all_rows.size, dtype=bool)
-        self.base_unwritten[self.written] = False
         # Only the last write to a position receives a cotangent (the others are
         # exactly zero). When those last writes read distinct component outputs,
         # the cotangent scatter is a plain assignment instead of `np.add.at`.
@@ -101,16 +97,8 @@ class SystemPlan:
         count = rows.shape[0]
         batch = np.arange(count)[:, None]
         last_bar = values_bar[:, self.last_positions]
-        if values_bar.flags.c_contiguous:
-            # Reduce the surviving base columns without a full (B, nnz) copy.
-            # Masked entries are not read, including any nonfinite cotangents.
-            base_bar = np.sum(values_bar, axis=0, where=self.base_unwritten[None, :])
-        else:
-            # The original copy normalizes strides before summing. Preserve that
-            # path so a different input layout cannot change the reduction order.
-            base_bar = values_bar.copy()
-            base_bar[:, self.written] = 0
-            base_bar = base_bar.sum(axis=0)
+        base_bar = values_bar.copy()
+        base_bar[:, self.written] = 0
         flat = np.zeros((count, self.total_rows * 4), dtype=np.complex128)
         if self.last_selection_unique:
             flat[:, self.last_selection] = last_bar
@@ -126,7 +114,7 @@ class SystemPlan:
             inputs_bar = np.sum(linear * output_bar, axis=2) + np.conj(np.sum(antilinear * output_bar, axis=2))
             for position, slot in enumerate(slots):
                 np.add.at(rows_bar, (batch, indices[None, :, slot]), inputs_bar[:, :, position])
-        return rows_bar, base_bar
+        return rows_bar, base_bar.sum(axis=0)
 
 
 class ParameterLayout:
@@ -326,12 +314,26 @@ def _superlu_gstrf():
 
 def _factor(pattern, values):
     data = np.ascontiguousarray(values, dtype=np.complex128)
+    indices, indptr = pattern.indices, pattern.indptr
+    # SuperLU needs the current numerical matrix, not explicit zero entries.
+    # Compact only this factorization input; the original pattern and values
+    # remain intact for residual refinement and every coefficient cotangent.
+    # Recompute the mask on every call so a parameter crossing zero is retained
+    # on its next evaluation. Nonfinite entries are never removed.
+    keep = data != 0
+    if not np.all(keep):
+        prefix = np.empty(data.size + 1, dtype=np.int64)
+        prefix[0] = 0
+        np.cumsum(keep, out=prefix[1:])
+        data = data[keep]
+        indices = indices[keep]
+        indptr = prefix[indptr]
     gstrf = _superlu_gstrf()
     if gstrf:
-        return gstrf(pattern.size, data.size, data, pattern.indices.astype(np.intc), pattern.indptr.astype(np.intc),
+        return gstrf(pattern.size, data.size, data, indices.astype(np.intc), indptr.astype(np.intc),
                      csc_construct_func=_construct_csc, ilu=False, options=dict(_SUPERLU_OPTIONS))
     splu, csc_matrix = _scipy()
-    return splu(csc_matrix((data, pattern.indices, pattern.indptr), shape=(pattern.size, pattern.size)),
+    return splu(csc_matrix((data, indices, indptr), shape=(pattern.size, pattern.size)),
                 permc_spec="COLAMD")
 
 

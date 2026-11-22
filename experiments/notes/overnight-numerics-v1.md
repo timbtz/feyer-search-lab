@@ -3898,3 +3898,177 @@ overlap status. No40 official timing or numerical evidence exists yet.39 stays
 retired with its failures preserved. Admitted7 remains the reviewed timing
 reference;35 remains a provisional exact-guard parent. No universal transform
 or numerical-correctness claim is made.
+
+
+## Trial40 feedback and retirement — 2026-11-22 06:23 UTC
+
+Candidate eb9f03dcfdf3d780a01a53d2ba192617437be4b2; evaluator request
+3386df7edefb4acf986f0a18ba6289a5, jobs grid-1/2/3 and aligo-1/2/3.
+Both unchanged official benchmarks passed all three fresh processes. No confirmed
+improvement; source review remains absent. Publication c512c075e9e9f4311869148b6b58b7ae816d795c
+retained admitted7. Runner promotion_ready is not an admission or a timing win.
+
+Large complete seconds: [0.8578849621117115, 0.824901694431901,
+0.8176638577133417]; median0.824901694431901, range0.8176638577133417–
+0.8578849621117115. aLIGO complete seconds: [0.5490885321050882,
+0.554315684363246, 0.5526161752641201]; median0.5526161752641201,
+range0.5490885321050882–0.554315684363246. Relative to recorded parent35
+medians, large is +5.617730ms and aLIGO +2.887607ms. These are separate cohorts,
+not a paired causal estimate, organizer score or quiet ranking cohort.
+CPU2, one logical CPU, library threads1; external overlap/host contention unknown.
+All samples retained, including first large import294.240480ms.
+
+Phase medians(ms), with delta from recorded35: large imports269.247524(+1.693677),
+build73.070575(+3.136011), forward183.902640(+2.254726), reverse106.413428
+(-0.010472). aLIGO imports264.139384(-0.692058), build38.140003(+0.545019),
+forward34.090525(+1.321606), reverse18.419428(-0.556143). Large reverse is
+essentially unchanged; removing the synthetic allocation did not establish
+an optical execution gain. Sampled process-group RSS bytes: large
+[634724352,603754496,604688384], aLIGO[281812992,340000768,313630720],
+generalization866430976. Sampling can miss peaks; no memory-win claim.
+
+Read the complete local receipt and programmatically compared all six official
+array hashes and strict-comparison dictionaries against35 request
+5f61bfb3e2d441598e8e0733a9dd8cc9: all exactly equal. Large arrays SHA256
+ e0f2069ccab917ac4575f484a6c9b5f0ae2457bb59f736185a52cd309a6c03e2;
+aLIGO 1c27f50feafb3149eb9c2f4b48f767cc4c3ddbc1d64810c332dd5a7a260781f8.
+Both generalization case-record lists (initial_seed and pristine) also exactly
+match35. Initial-seed comparisons pass14/14, pristine4/14. The archive hash is
+f3a6853243baf88b055f16837136eeee72d228f32adcc582c438cd9f86379f9e;
+self-comparison artifacts are not used as accuracy evidence. Raw remote NPZ
+files were not reopened locally. No newly introduced discrepancies are indicated
+by these records; inherited pristine failures are unresolved, not certified benign.
+
+Decision: retire masked base-cotangent reduction. Remove its mask and layout branch,
+restoring all simulator source exactly to parent35
+7a9480332bad29b5aaeacc5a4628481581507e7a without resetting history. Keep trial40,
+its synthetic checker and this failed timing evidence. The historical checker
+must use trial40 source to reproduce the candidate-specific mask checks.
+Parent35 is the provisional exact-guard numerical parent, not a new admitted
+speed winner; admitted7 remains the reviewed timing reference. Do not undo35's
+exact guards merely to recover timing without resolving the independent
+ill-conditioned counterexamples.
+
+Next concrete diagnostic: coordinator should collect first host_forward and
+host_backward callback profiles on35 using overnight-numerics-profile.py in a
+separate diagnostic run, plus the already requested changed-adjoint captures
+using overnight-numerics-guard-diagnostics.py (35 versus34). Return per-function
+self/cumulative costs, call counts, cache hit/miss and changed guard rows. This
+will select between component derivative evaluation and actual transpose-solve
+costs, instead of another unprofiled allocation/layout variant. No independent
+benchmark was launched and no new optimization timing is claimed here.
+The pristine signal/gradient mismatches, uifo_rand1/rand3 sensitivity disagreements,
+six unresolved grid finite-difference coordinates and first-order-only custom VJP
+limitation remain open. Previous panel tuning and retained-gather trials stay
+retired. Stop this hypothesis; the campaign deadline is unchanged.
+
+## Trial41 — exact-zero compaction of fresh factor inputs
+
+Prepared 2026-11-22 after retiring40. Candidate SHA/job IDs pending supervisor.
+Numerical parent is35 7a9480332bad29b5aaeacc5a4628481581507e7a, with both exact
+adjoint guards retained.40's masked reduction stays removed. No other lane is
+transferred. This is a distinct factor-input structural experiment, not another
+allocation/layout or SuperLU panel-option trial. No panel/ordering/pivot/refinement
+option changes are made. No official41 performance or correctness evidence yet.
+
+Source-established work: _factor currently passes every structural coefficient
+to SuperLU, including exact numerical zeros. Generic builder patterns retain
+positions that can become nonzero as inputs change. SuperLU's symbolic ordering
+and numeric factorization need only the current numerical matrix.41 recomputes
+keep=(data != 0) on every fresh factorization, filters CSC data/indices and
+rebuilds column pointers with a prefix count when any zero exists. NaN, Inf and
+tiny nonzero coefficients remain; only exact complex zero is omitted. The no-zero
+path retains the original arrays and factor invocation, after an extra scan.
+Both direct gstrf and public splu fallback receive the same compact matrix.
+
+Crucially this mask never changes the supplied topology, component assembly,
+residual products, derivative destinations or cotangent contractions. Original
+pattern.rows/cols and coefficients remain present throughout _solve and
+host_backward, including -r[row]*x[col] for a coefficient whose current value is
+zero. A future nonzero value gets a fresh mask and factor. Nothing is cached
+across evaluations, and no factor or answer is reused beyond the existing
+within-evaluation mechanism. Every forward still factors afresh. All physical
+outputs and variables, precision, tolerances and three JIT stages remain intact.
+
+Hypothesis: reduce sparse symbolic/fill work in forward factorization for setups
+with explicit numerical zeros. The measured35 forward median181.647914ms (large)
+and32.768918ms (aLIGO) is the target phase. The share spent factoring, and the
+number of exact zeros on either official workload, remain unmeasured here.
+Compaction scans/prefix sums/copies are included in execution and may outweigh
+savings on small or nearly zero-free systems. Changed structural ordering can
+change pivots/arithmetic even for mathematically identical matrices; no bitwise
+numerical claim or expected timing gain is represented as measured. This trial
+adds no implementation tuning parameter and uses no fixture/known-shape dispatch.
+
+Local small synthetic audit (existing Python3.12 NumPy2.5.5 SciPy1.18.1, no JAX,
+no optical benchmarks or elapsed-time measurements):
+
+- overnight-numerics-factor-zero-check.py / factor-zero-result.json:
+  60 matrices, sizes2/3/7/13/23, ordinary, diagonal-similarity-scaled, triangular
+  and zero-free variants;540 refined N/T/H solves with vectors and1/3 RHS.
+  Original entries4933, compact entries1473; total stored L+U entries3251->2888.
+  This is an aggregate operation/storage count on synthetic matrices, not official
+  optical factor counts or RSS.31 column permutations changed;196 solution arrays
+  changed bits and5 refinement counts changed. No parent agreement failures at
+  rtol1e-12 plus atol1e-14*max|parent|; max relative difference9.068242478030739e-16.
+  Direct/public fallback results bitwise equal throughout. Zero-free cases bitwise
+  equal to35. Original coefficients/indices/pointers and RHS were not mutated.
+ 18 scaled vector solves compared to independent real-block Decimal elimination
+ at80/120digits, agreeing after rounding at both precisions: worst parent relative
+ error6.16707163154985e-16, candidate3.655525409097666e-16. These small cases do not
+ certify arbitrary optical systems.89 zero-coefficient cotangents compared with
+ independently solved100-digit primal/transpose systems; worst relative error
+ 5.391110646046081e-16. Every tested zero-to-nonzero change used a fresh factor and
+ matched its changed-matrix Decimal solution. Tiny1e-300 and NaN/Inf retention
+ inspected through captured actual factor-entry arguments; signed zeros omitted.
+ Six singular-matrix checks (all-zero and empty-column, parent/direct/fallback)
+ continued to raise RuntimeError.
+ The first finite-difference diagnostic rounded high-precision solutions to
+ binary64 before subtraction, producing up to about0.7% relative disagreement
+ in a small derivative of a strongly scaled solution. Those original diagnostics
+ remain saved as rounded_solution_finite_difference. A repaired diagnostic retains
+ the Decimal solution through scalar loss/differencing at steps2^-50 and2^-70;
+ the smaller-step results agree with analytic zero-coefficient derivatives, worst
+ scaled relative error2.183407674835191e-16. No simulator tolerance was changed.
+
+- overnight-numerics-factor-zero-stress-check.py / factor-zero-stress-result.json:
+  Reuses all96 matrices and864 solves of preserved39's panel-stress check with
+  unchanged random seed/case construction, but41's actual _factor and default
+  panel options.36 factor representation differences,36 permutation-array
+  differences,129 refined bit differences,0 correction-count differences;
+  max relative difference2.9239885720370566e-16, no parent-agreement failures at
+  the same criterion. Direct/fallback bitwise equal. Independent100/160digit
+  checks retain the existing failures:18 scaled cases have identical parent and
+  candidate errors, worst5.637132777975339e-6; extreme65x65 triangular case
+  still has relative error1.0000000000000069 for BOTH, reference amplitude
+  1.28092529931205e40. Both worst measured backward errors0.9999984955051643.
+  This is an unresolved severe-synthetic accuracy limitation, NOT a passing
+  accuracy certificate. These zero-free stress cases follow the unchanged path.
+
+- overnight-numerics-factor-zero-callback-check.py:96 complete tiny source-derived
+  host forward/backward scenarios,2x2 carrier/4x4 signal,2 detectors,1/5 sweep
+  rows with frequencies20..107, generic source/amplitude/frequency/lower-frequency
+  modulation, Hermitian and non-Hermitian noise, noise-row reuse on/off,
+  matching/cleared/interleaved forward-state cache, and zero/nonzero physical
+  coefficient amplitude. All5 forward and7 backward returned arrays agree with35
+  with maximum observed numerical difference0. All192 parameter-cotangent checks
+  remain nonzero, including coefficients currently zero. Every repeat forward
+  independently made1+number_of_signal_rows fresh factors; parent/candidate factor
+  call counts equal. This is additional synthetic evidence, not either official
+  optical benchmark or a universal transform claim.
+
+Submit one exact SHA for both unchanged official workloads, complete saved
+outputs/gradients against35 and initial seed,14 varied-topology/parameter/frequency
+and amod/fmod cases, full numerical-failure review, memory and independent source
+review. The evaluator should report new failures explicitly because compaction
+changes ordering. If promising, request matched fresh-process repetitions of41
+and35 plus admitted7 recalibration on the same CPU/resource policy; preserve all
+samples and workload medians/ranges separately, phase tradeoffs and overlap status.
+A useful diagnostic is per-forward factor input nnz, retained nonzero counts and
+L/U fill, captured by the coordinator without changing benchmark execution.
+Pending callback profiles/changed-guard captures remain useful; this trial does
+not substitute synthetic timings for them. All inherited pristine disagreements,
+uifo_rand1/rand3 sensitivity discrepancies, six unresolved grid FD coordinates,
+and first-order-only whole-pass VJP limitation remain visible. Retired39/40
+failures and source history are preserved. No promotion is requested without
+exact-SHA dual-official, generalization, repeated timing and independent review.
