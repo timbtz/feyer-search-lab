@@ -1,0 +1,1201 @@
+{
+  "runtime_commit": "630ea27c5036206a9da0d42f6120beea75ab3117",
+  "inspected_at": "2026-11-22T08:36:21.732894+00:00",
+  "deadline": "2026-11-22T09:27:44+00:00",
+  "read_only": true,
+  "actions_taken": [
+    "Read local session histories, receipts, committed source and source trees",
+    "Wrote only audit artifacts under campaign/audit",
+    "Read remote completed-checkout .pyc metadata only; no code executed or filesystem changed"
+  ],
+  "no_dispatch_stop_or_runtime_edit": true,
+  "session_counts": {
+    "overnight-numerics-v1": {
+      "status": "coding",
+      "pid": 98340,
+      "iteration": 86,
+      "candidate_count": 55,
+      "nonimproving": 47,
+      "no_candidate": 1,
+      "model_turns": 84,
+      "ready_false": 27,
+      "stop_true": 29,
+      "official_passes": 55,
+      "promotions": 2,
+      "reason_counts": {
+        "requires_source_review": 53,
+        "large_gain_below_selection_threshold": 38,
+        "large_first_run_ranges_overlap_requires_paired_evidence": 52,
+        "aligo_regression_over_two_percent": 3,
+        "grid_unstable_timing": 3,
+        "aligo_unstable_timing": 6,
+        "runner_not_promotion_ready": 3,
+        "incomplete_generalization": 3,
+        "unresolved_new_failures": 3
+      },
+      "distinct_source_trees": 53,
+      "same_source_duplicates": {
+        "7eb7d970e4973626dd36ef636004cebce6fc9b28": [
+          "ee4fea28c04d482566be16e916b609d7c6a99e5e",
+          "cb04c3c2b5aa7e6ff2b44b298a102e7511aee81e"
+        ],
+        "908159020dc2ff3e9b82b0fca8fe907e03df7b87": [
+          "7a9480332bad29b5aaeacc5a4628481581507e7a",
+          "e5cbeba07943b6c797932263ff9deb721bf3ca89"
+        ]
+      },
+      "shared_status": {
+        "status": "available",
+        "selected_sha": "ee4fea28c04d482566be16e916b609d7c6a99e5e",
+        "artifact_sha256": "0ef46aad95b6782351ef7d9ce48c3b989f5900f8b9b8d1afd9323ea38ac16d6f",
+        "publisher_commit": "b9802f63b8cad5d3b4d89176544c438e1c1f0359"
+      }
+    },
+    "overnight-overhead-v1": {
+      "status": "coding",
+      "pid": 98338,
+      "iteration": 96,
+      "candidate_count": 55,
+      "nonimproving": 52,
+      "no_candidate": 0,
+      "model_turns": 94,
+      "ready_false": 38,
+      "stop_true": 38,
+      "official_passes": 55,
+      "promotions": 1,
+      "reason_counts": {
+        "requires_source_review": 54,
+        "large_first_run_ranges_overlap_requires_paired_evidence": 53,
+        "aligo_unstable_timing": 6,
+        "large_gain_below_selection_threshold": 37,
+        "aligo_regression_over_two_percent": 4,
+        "grid_unstable_timing": 4
+      },
+      "distinct_source_trees": 52,
+      "same_source_duplicates": {
+        "79a0b65355b1340de00738952b6593f2787bd400": [
+          "1ea70bfbde9bcf42fce836846a4e1e92aee36a3b",
+          "39b7575748da8baa2b7303df5b6040414163b3ef",
+          "c72345797738ce2742c21beea028800153076376"
+        ],
+        "111f675ef579ff2127cfd96ecbd1086b6f327264": [
+          "2e50e7cffc8c7feb5ae53dc770e26cbb45250ab8",
+          "f90fa964a73aca5515ba93a3517ec1d26ae32a32"
+        ]
+      },
+      "shared_status": {
+        "status": "available",
+        "selected_sha": "ee4fea28c04d482566be16e916b609d7c6a99e5e",
+        "artifact_sha256": "0ef46aad95b6782351ef7d9ce48c3b989f5900f8b9b8d1afd9323ea38ac16d6f",
+        "publisher_commit": "b9802f63b8cad5d3b4d89176544c438e1c1f0359"
+      }
+    }
+  },
+  "search_dynamics": {
+    "overnight-numerics-v1": {
+      "ready_false_runs": [
+        [
+          65,
+          66
+        ],
+        [
+          82,
+          83
+        ],
+        [
+          15
+        ],
+        [
+          22
+        ],
+        [
+          25
+        ],
+        [
+          29
+        ]
+      ],
+      "after_last_promotion": 47,
+      "first10_after_promotion_grid_median": 0.8021254185587168,
+      "last10_grid_median": 0.8279062733054161,
+      "first10_after_promotion_aligo_median": 0.5450416626408696,
+      "last10_aligo_median": 0.5518801482394338
+    },
+    "overnight-overhead-v1": {
+      "ready_false_runs": [
+        [
+          8
+        ],
+        [
+          12
+        ],
+        [
+          15
+        ],
+        [
+          18
+        ],
+        [
+          22
+        ],
+        [
+          25
+        ]
+      ],
+      "after_last_promotion": 52,
+      "first10_after_promotion_grid_median": 0.80905781686306,
+      "last10_grid_median": 0.783656170591712,
+      "first10_after_promotion_aligo_median": 0.5436914283782244,
+      "last10_aligo_median": 0.5261720074340701
+    }
+  },
+  "timing_order_diagnostic": {
+    "n": 110,
+    "first_max_count": {
+      "2": 3,
+      "0": 103,
+      "1": 4
+    },
+    "median_first_minus_later": {
+      "total": 0.03279118612408638,
+      "imports": 0.027983362320810556,
+      "initialize": -0.0002574743703007698,
+      "load": -1.4151912182569504e-05,
+      "build": 0.0005428018048405647,
+      "forward_lower": -2.170819789171219e-05,
+      "forward_compile": 0.00042539648711681366,
+      "forward": 0.002952779643237591,
+      "sensitivity_lower": -1.4115124940872192e-05,
+      "sensitivity_compile": 7.204245775938034e-05,
+      "sensitivity": 6.798654794692993e-06,
+      "gradient_lower": 0.0005071684718132019,
+      "gradient_compile": 0.00027345819398760796,
+      "gradient": 0.0006136954762041569,
+      "host_transfer": -3.2549723982810974e-07
+    }
+  },
+  "stability_candidates": [
+    {
+      "sha": "ee4fea28c04d482566be16e916b609d7c6a99e5e",
+      "request_id": "e4f7b59d3b094a8e9c6dd41263cab78e",
+      "timings": {
+        "grid": {
+          "fresh_process_seconds": [
+            0.8224838301539421,
+            0.8015776835381985,
+            0.7944249957799911
+          ],
+          "median_seconds": 0.8015776835381985,
+          "minimum_seconds": 0.7944249957799911,
+          "maximum_seconds": 0.8224838301539421,
+          "count": 3
+        },
+        "aligo": {
+          "fresh_process_seconds": [
+            0.5516242142766714,
+            0.5485551562160254,
+            0.544719347730279
+          ],
+          "median_seconds": 0.5485551562160254,
+          "minimum_seconds": 0.544719347730279,
+          "maximum_seconds": 0.5516242142766714,
+          "count": 3
+        }
+      },
+      "phases": {
+        "grid": {
+          "imports": 0.26560061424970627,
+          "initialize": 0.0035252925008535385,
+          "load": 0.001467432826757431,
+          "build": 0.07399407960474491,
+          "forward_lower": 0.02001883275806904,
+          "forward_compile": 0.033810993656516075,
+          "forward": 0.18116308748722076,
+          "sensitivity_lower": 0.02548961155116558,
+          "sensitivity_compile": 0.03972873464226723,
+          "sensitivity": 0.0008690208196640015,
+          "gradient_lower": 0.016865553334355354,
+          "gradient_compile": 0.052230700850486755,
+          "gradient": 0.0853574238717556,
+          "host_transfer": 0.00018728896975517273
+        },
+        "aligo": {
+          "imports": 0.2635088078677654,
+          "initialize": 0.0035363193601369858,
+          "load": 0.00021412968635559082,
+          "build": 0.037962544709444046,
+          "forward_lower": 0.019122151657938957,
+          "forward_compile": 0.03362000174820423,
+          "forward": 0.03289015032351017,
+          "sensitivity_lower": 0.02632599137723446,
+          "sensitivity_compile": 0.041780032217502594,
+          "sensitivity": 0.0004996471107006073,
+          "gradient_lower": 0.016961384564638138,
+          "gradient_compile": 0.053769828751683235,
+          "gradient": 0.014384152367711067,
+          "host_transfer": 0.00014524906873703003
+        }
+      },
+      "array_hashes": {
+        "grid": [
+          "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5",
+          "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5",
+          "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5"
+        ],
+        "aligo": [
+          "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195",
+          "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195",
+          "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195"
+        ]
+      },
+      "generalization": {
+        "case_count": 14,
+        "seed_comparison_passed": true,
+        "all_finite": true,
+        "inputs_identical": true,
+        "new_failures": []
+      },
+      "source_review": {
+        "approved": true,
+        "candidate_sha": "ee4fea28c04d482566be16e916b609d7c6a99e5e",
+        "parent_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+        "diff_sha256": "7e18184c5e09aa3b9dc56ccbaab4b18654d701671845e9a332739f6eb2eab958",
+        "reviewer": "independent-headless-source-review-v1",
+        "provider": "claude",
+        "model": "claude-opus-5-5",
+        "session_id": "f1652d7b-763e-476c-900d-b134a1590c7f",
+        "scope": "no-fixture-specialization-and-integrity",
+        "artifact_path": "reviews/e4f7b59d3b094a8e9c6dd41263cab78e/review.json",
+        "artifact_sha256": "e2bf1c9f90cd432b8475d3d39fbda723338d84916a5c620f4a541deda165f4db",
+        "diff_path": "reviews/e4f7b59d3b094a8e9c6dd41263cab78e/source.diff",
+        "reasons": [
+          "The candidate's output archive is byte-identical to the seed reference (candidate and reference SHA-256 are both 7625261b\u2026). All 14 cases, including aligo, voyager, the uifo random-topology cases, the randparams cases, and the amod and fmod cases, pass every array check (carrier, signal, noise, powers, sensitivity, loss, gradient) with log_sensitivity_error 0.0. All outputs are finite and both benchmarks ran in fresh processes. Numbers alone do not prove generality, so the source was reviewed separately below.",
+          "The cache of forward state used by the backward pass (_ASSEMBLY) is general. It only lets a backward pass consume the state from its own forward pass. The key is the plan key plus a blake2b digest of every assembly input, including dtype, shape and bytes. Every forward clears the cache before storing, and every backward pops the entry and then clears. If the digest does not match, or there was no preceding forward (for example vmap 'sequential' or a backward with no forward), the code reassembles. Nothing is reused across evaluations, nothing persists to disk, and no timed work moves outside the timed region. It extends the seed's existing _FACTORS mechanism, which also kept factors only from one forward pass to its backward pass, to the carrier factors and assembled values.",
+          "The covariance-adjoint shortcut is an exact identity. The forward pass solves A^H w = s. Conjugating gives A^T conj(w) = conj(s), so the cotangent t_bar*conj(s) (t_bar real) has the solution t_bar*conj(w). Covariances are never a public output of host_pass, so they have no other cotangent.",
+          "The shortcut for collinear signal cotangents uses the same identity. It applies only when signal_bar matches alpha*conj(s_d) to within 8*eps*max|signal_bar|. Zero vectors, zero directions and non-finite values are handled conservatively, and anything else falls back to the refined A^T solve. It tests a mathematical property of the inputs, not a particular fixture.",
+          "The Hermitian noise-matrix shortcut is derived correctly. conj(w_bar) = t_bar*N^H*w equals t_bar*N*w (the forward sources) when N is Hermitian, so g = t_bar*cov. Hermiticity is checked numerically for every row against the static transpose index. Diagonal entries must be real, any nonzero without a structural partner fails the check, and non-coefficient vectors, non-finite values or asymmetry above 8*eps fall back to the explicit solve. Setups whose noise matrix is not Hermitian keep the original code path.",
+          "SystemPlan.backward now scatters only the last writes. Non-last writes always received zero cotangent in the seed as well, and np.add.at is still used whenever the last-write selections repeat. Calling function_jacobian with with_outputs=False skips only an unused primal evaluation, and the Jacobian blocks are computed exactly as before.",
+          "The static ParameterLayout uses scatters declared unique and in-bounds only after build-time checks pass: indices nonnegative and in bounds, insertion and link destinations unique, a single-row parameter array, and a trace-time shape check in applies(). Otherwise it falls back to the generic .at[] path. The order of insertion, linking and detector-phase steps is unchanged, and the scatter declared unique has the correct transpose for gradients.",
+          "SparseSystem.base_values now uses lax.gather with unique_indices and promise_in_bounds. The coordinates come from build-time pattern positions, which are distinct and in bounds by construction.",
+          "The remaining changes only affect import time: visualize_setup is loaded through module __getattr__, and jax.scipy.linalg is imported locally on the dense path. Both are behaviour-preserving, and the XLA flag defaults are inherited, permitted package compiler options.",
+          "Inherited caveat, not blocking: like the seed's existing host plan, which already ignored traced carrier/signal changing indices, the new static layout uses build-time index copies. A caller who changes those index arrays without re-running run_build_step would get stale indices. This is documented in the docstring and matches the inherited design.",
+          "Inherited caveat, not blocking: the differences against the pristine reference (signal, gradient and loss rtol mismatches; uifo_rand1 and uifo_rand3 sensitivity log errors; the aligo loss mismatch) were already present in the seed. The candidate matches the seed exactly, so these were not introduced by this delta.",
+          "Inherited caveat, not blocking: the host-pass custom_vjp still supports first-order reverse mode only (jvp and second order raise explicit errors), and the division by noise in temporary_bar is unchanged from the seed.",
+          "This approval is one additional, bounded review. It is not proof that the simulator is correct in general."
+        ],
+        "generalization_risks": [],
+        "policy_rejection": []
+      },
+      "review_selection": {
+        "eligible_except_source_review": true,
+        "reasons": [],
+        "ignored_gate": "requires_source_review",
+        "current_best_sha256": "0a1b575b4346f537b60063706b6b9ede83ca4a189088a96446122441d1f9244a",
+        "current_best_candidate_sha": "5bbb91e38ff993a10486f296a738860339cd05e0",
+        "selection_decision": {
+          "promote": false,
+          "reasons": [
+            "requires_source_review"
+          ],
+          "metrics": {
+            "grid": {
+              "samples_seconds": [
+                0.8224838301539421,
+                0.8015776835381985,
+                0.7944249957799911
+              ],
+              "median_seconds": 0.8015776835381985,
+              "min_seconds": 0.7944249957799911,
+              "max_seconds": 0.8224838301539421,
+              "relative_range": 0.03500451041762796
+            },
+            "aligo": {
+              "samples_seconds": [
+                0.5516242142766714,
+                0.5485551562160254,
+                0.544719347730279
+              ],
+              "median_seconds": 0.5485551562160254,
+              "min_seconds": 0.544719347730279,
+              "max_seconds": 0.5516242142766714,
+              "relative_range": 0.012587369689536288
+            }
+          },
+          "policy": {
+            "version": "overnight-selection-v2",
+            "minimum_repetitions": 3,
+            "large_minimum_absolute_gain_seconds": 0.003,
+            "large_minimum_relative_gain": 0.005,
+            "aligo_maximum_ratio": 1.02,
+            "maximum_relative_range": 0.1,
+            "large_candidate_maximum_must_be_below_incumbent_minimum": true,
+            "scope": "Team search-selection heuristic, not organizer judging policy."
+          },
+          "timing_comparison": {
+            "incumbent_grid_min_seconds": 0.850608242675662,
+            "candidate_grid_max_seconds": 0.8224838301539421,
+            "observed_ranges_nonoverlapping": true
+          }
+        },
+        "observed_at": 1795314114.5998368,
+        "note": "Review-cost preflight only; Publisher must assess again before promotion."
+      },
+      "receipt_path": "/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/overnight-20261122/evidence/client/e4f7b59d3b094a8e9c6dd41263cab78e/admission-receipt.json",
+      "relative_median_change_vs_historical_incumbent": {
+        "grid": 0.0,
+        "aligo": 0.0
+      },
+      "four_phase_lower_compile_ms": {
+        "grid": 122.92608059942722,
+        "aligo": 123.47336672246456
+      }
+    },
+    {
+      "sha": "1ea70bfbde9bcf42fce836846a4e1e92aee36a3b",
+      "request_id": "dacbeb43d6a740f49d2dccc765449298",
+      "timings": {
+        "grid": {
+          "fresh_process_seconds": [
+            0.806567158550024,
+            0.7791205421090126,
+            0.7738668844103813
+          ],
+          "median_seconds": 0.7791205421090126,
+          "minimum_seconds": 0.7738668844103813,
+          "maximum_seconds": 0.806567158550024,
+          "count": 3
+        },
+        "aligo": {
+          "fresh_process_seconds": [
+            0.5174284148961306,
+            0.5172290112823248,
+            0.5216178148984909
+          ],
+          "median_seconds": 0.5174284148961306,
+          "minimum_seconds": 0.5172290112823248,
+          "maximum_seconds": 0.5216178148984909,
+          "count": 3
+        }
+      },
+      "phases": {
+        "grid": {
+          "imports": 0.2662770077586174,
+          "initialize": 0.003608470782637596,
+          "load": 0.0014473646879196167,
+          "build": 0.0745233092457056,
+          "forward_lower": 0.012002227827906609,
+          "forward_compile": 0.027872135862708092,
+          "forward": 0.18115950003266335,
+          "sensitivity_lower": 0.02572985179722309,
+          "sensitivity_compile": 0.03978653997182846,
+          "sensitivity": 0.0008582901209592819,
+          "gradient_lower": 0.011574774980545044,
+          "gradient_compile": 0.04592924006283283,
+          "gradient": 0.08654773980379105,
+          "host_transfer": 0.0001871362328529358
+        },
+        "aligo": {
+          "imports": 0.2643978279083967,
+          "initialize": 0.003591880202293396,
+          "load": 0.0002116374671459198,
+          "build": 0.03725496493279934,
+          "forward_lower": 0.011211540549993515,
+          "forward_compile": 0.02722284384071827,
+          "forward": 0.032701525837183,
+          "sensitivity_lower": 0.02641846239566803,
+          "sensitivity_compile": 0.0413875300437212,
+          "sensitivity": 0.00047142431139945984,
+          "gradient_lower": 0.01159791648387909,
+          "gradient_compile": 0.04698084108531475,
+          "gradient": 0.014689911156892776,
+          "host_transfer": 0.0001445077359676361
+        }
+      },
+      "array_hashes": {
+        "grid": [
+          "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5",
+          "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5",
+          "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5"
+        ],
+        "aligo": [
+          "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195",
+          "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195",
+          "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195"
+        ]
+      },
+      "generalization": {
+        "case_count": 14,
+        "seed_comparison_passed": true,
+        "all_finite": true,
+        "inputs_identical": true,
+        "new_failures": []
+      },
+      "source_review": null,
+      "review_selection": {
+        "eligible_except_source_review": false,
+        "reasons": [
+          "large_first_run_ranges_overlap_requires_paired_evidence"
+        ],
+        "ignored_gate": "requires_source_review",
+        "current_best_sha256": "0ef46aad95b6782351ef7d9ce48c3b989f5900f8b9b8d1afd9323ea38ac16d6f",
+        "current_best_candidate_sha": "ee4fea28c04d482566be16e916b609d7c6a99e5e",
+        "selection_decision": {
+          "promote": false,
+          "reasons": [
+            "requires_source_review",
+            "large_first_run_ranges_overlap_requires_paired_evidence"
+          ],
+          "metrics": {
+            "grid": {
+              "samples_seconds": [
+                0.806567158550024,
+                0.7791205421090126,
+                0.7738668844103813
+              ],
+              "median_seconds": 0.7791205421090126,
+              "min_seconds": 0.7738668844103813,
+              "max_seconds": 0.806567158550024,
+              "relative_range": 0.04197075083032193
+            },
+            "aligo": {
+              "samples_seconds": [
+                0.5174284148961306,
+                0.5172290112823248,
+                0.5216178148984909
+              ],
+              "median_seconds": 0.5174284148961306,
+              "min_seconds": 0.5172290112823248,
+              "max_seconds": 0.5216178148984909,
+              "relative_range": 0.008481953232211127
+            }
+          },
+          "policy": {
+            "version": "overnight-selection-v2",
+            "minimum_repetitions": 3,
+            "large_minimum_absolute_gain_seconds": 0.003,
+            "large_minimum_relative_gain": 0.005,
+            "aligo_maximum_ratio": 1.02,
+            "maximum_relative_range": 0.1,
+            "large_candidate_maximum_must_be_below_incumbent_minimum": true,
+            "scope": "Team search-selection heuristic, not organizer judging policy."
+          },
+          "timing_comparison": {
+            "incumbent_grid_min_seconds": 0.7944249957799911,
+            "candidate_grid_max_seconds": 0.806567158550024,
+            "observed_ranges_nonoverlapping": false
+          }
+        },
+        "observed_at": 1795314531.942584,
+        "note": "Review-cost preflight only; Publisher must assess again before promotion."
+      },
+      "receipt_path": "/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/overnight-20261122/evidence/client/dacbeb43d6a740f49d2dccc765449298/admission-receipt.json",
+      "relative_median_change_vs_historical_incumbent": {
+        "grid": -0.028016175961959267,
+        "aligo": -0.056743138711172425
+      },
+      "four_phase_lower_compile_ms": {
+        "grid": 97.37837873399258,
+        "aligo": 97.01314195990562
+      }
+    },
+    {
+      "sha": "39b7575748da8baa2b7303df5b6040414163b3ef",
+      "request_id": "e61a6e6ff60748c1b665fc3ebafdbfbc",
+      "timings": {
+        "grid": {
+          "fresh_process_seconds": [
+            0.8174977209419012,
+            0.8268607035279274,
+            0.7733320482075214
+          ],
+          "median_seconds": 0.8174977209419012,
+          "minimum_seconds": 0.7733320482075214,
+          "maximum_seconds": 0.8268607035279274,
+          "count": 3
+        },
+        "aligo": {
+          "fresh_process_seconds": [
+            0.5228468533605337,
+            0.5219972692430019,
+            0.5179989654570818
+          ],
+          "median_seconds": 0.5219972692430019,
+          "minimum_seconds": 0.5179989654570818,
+          "maximum_seconds": 0.5228468533605337,
+          "count": 3
+        }
+      },
+      "phases": {
+        "grid": {
+          "imports": 0.2660814952105284,
+          "initialize": 0.003595404326915741,
+          "load": 0.001504998654127121,
+          "build": 0.07704509049654007,
+          "forward_lower": 0.011880999431014061,
+          "forward_compile": 0.02745261788368225,
+          "forward": 0.18722309358417988,
+          "sensitivity_lower": 0.025596892461180687,
+          "sensitivity_compile": 0.04065805673599243,
+          "sensitivity": 0.000861823558807373,
+          "gradient_lower": 0.011693350970745087,
+          "gradient_compile": 0.04732742719352245,
+          "gradient": 0.08771295100450516,
+          "host_transfer": 0.00018848665058612823
+        },
+        "aligo": {
+          "imports": 0.2641550339758396,
+          "initialize": 0.003540532663464546,
+          "load": 0.00020797736942768097,
+          "build": 0.038883425295352936,
+          "forward_lower": 0.01130848377943039,
+          "forward_compile": 0.027541300281882286,
+          "forward": 0.0326437596231699,
+          "sensitivity_lower": 0.026269610971212387,
+          "sensitivity_compile": 0.041562341153621674,
+          "sensitivity": 0.0004815179854631424,
+          "gradient_lower": 0.011615710332989693,
+          "gradient_compile": 0.04754573479294777,
+          "gradient": 0.014316778630018234,
+          "host_transfer": 0.00014843791723251343
+        }
+      },
+      "array_hashes": {
+        "grid": [
+          "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5",
+          "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5",
+          "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5"
+        ],
+        "aligo": [
+          "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195",
+          "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195",
+          "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195"
+        ]
+      },
+      "generalization": {
+        "case_count": 14,
+        "seed_comparison_passed": true,
+        "all_finite": true,
+        "inputs_identical": true,
+        "new_failures": []
+      },
+      "source_review": null,
+      "review_selection": {
+        "eligible_except_source_review": false,
+        "reasons": [
+          "large_gain_below_selection_threshold",
+          "large_first_run_ranges_overlap_requires_paired_evidence"
+        ],
+        "ignored_gate": "requires_source_review",
+        "current_best_sha256": "0ef46aad95b6782351ef7d9ce48c3b989f5900f8b9b8d1afd9323ea38ac16d6f",
+        "current_best_candidate_sha": "ee4fea28c04d482566be16e916b609d7c6a99e5e",
+        "selection_decision": {
+          "promote": false,
+          "reasons": [
+            "requires_source_review",
+            "large_gain_below_selection_threshold",
+            "large_first_run_ranges_overlap_requires_paired_evidence"
+          ],
+          "metrics": {
+            "grid": {
+              "samples_seconds": [
+                0.8174977209419012,
+                0.8268607035279274,
+                0.7733320482075214
+              ],
+              "median_seconds": 0.8174977209419012,
+              "min_seconds": 0.7733320482075214,
+              "max_seconds": 0.8268607035279274,
+              "relative_range": 0.06547866000009338
+            },
+            "aligo": {
+              "samples_seconds": [
+                0.5228468533605337,
+                0.5219972692430019,
+                0.5179989654570818
+              ],
+              "median_seconds": 0.5219972692430019,
+              "min_seconds": 0.5179989654570818,
+              "max_seconds": 0.5228468533605337,
+              "relative_range": 0.009287190161899323
+            }
+          },
+          "policy": {
+            "version": "overnight-selection-v2",
+            "minimum_repetitions": 3,
+            "large_minimum_absolute_gain_seconds": 0.003,
+            "large_minimum_relative_gain": 0.005,
+            "aligo_maximum_ratio": 1.02,
+            "maximum_relative_range": 0.1,
+            "large_candidate_maximum_must_be_below_incumbent_minimum": true,
+            "scope": "Team search-selection heuristic, not organizer judging policy."
+          },
+          "timing_comparison": {
+            "incumbent_grid_min_seconds": 0.7944249957799911,
+            "candidate_grid_max_seconds": 0.8268607035279274,
+            "observed_ranges_nonoverlapping": false
+          }
+        },
+        "observed_at": 1795330035.763941,
+        "note": "Review-cost preflight only; Publisher must assess again before promotion."
+      },
+      "receipt_path": "/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/overnight-20261122/evidence/client/e61a6e6ff60748c1b665fc3ebafdbfbc/admission-receipt.json",
+      "relative_median_change_vs_historical_incumbent": {
+        "grid": 0.019860879027259193,
+        "aligo": -0.04841425091365781
+      },
+      "four_phase_lower_compile_ms": {
+        "grid": 98.35439547896385,
+        "aligo": 98.01122918725014
+      }
+    },
+    {
+      "sha": "c72345797738ce2742c21beea028800153076376",
+      "request_id": "1ac82b79af53478d8494ebc849a895b7",
+      "timings": {
+        "grid": {
+          "fresh_process_seconds": [
+            0.842652466148138,
+            0.7955493405461311,
+            0.7799616381525993
+          ],
+          "median_seconds": 0.7955493405461311,
+          "minimum_seconds": 0.7799616381525993,
+          "maximum_seconds": 0.842652466148138,
+          "count": 3
+        },
+        "aligo": {
+          "fresh_process_seconds": [
+            0.5539150405675173,
+            0.5307415723800659,
+            0.5229607541114092
+          ],
+          "median_seconds": 0.5307415723800659,
+          "minimum_seconds": 0.5229607541114092,
+          "maximum_seconds": 0.5539150405675173,
+          "count": 3
+        }
+      },
+      "phases": {
+        "grid": {
+          "imports": 0.28872486390173435,
+          "initialize": 0.003597395494580269,
+          "load": 0.0014208443462848663,
+          "build": 0.07257046364247799,
+          "forward_lower": 0.01175832748413086,
+          "forward_compile": 0.0273634921759367,
+          "forward": 0.17865883000195026,
+          "sensitivity_lower": 0.02558320015668869,
+          "sensitivity_compile": 0.039675263687968254,
+          "sensitivity": 0.0008421130478382111,
+          "gradient_lower": 0.011776408180594444,
+          "gradient_compile": 0.046558670699596405,
+          "gradient": 0.09232544898986816,
+          "host_transfer": 0.0001905299723148346
+        },
+        "aligo": {
+          "imports": 0.26604204811155796,
+          "initialize": 0.003525376319885254,
+          "load": 0.00021053850650787354,
+          "build": 0.0394485667347908,
+          "forward_lower": 0.011407991871237755,
+          "forward_compile": 0.02807830274105072,
+          "forward": 0.03421240672469139,
+          "sensitivity_lower": 0.026609858497977257,
+          "sensitivity_compile": 0.041582005098462105,
+          "sensitivity": 0.0004903543740510941,
+          "gradient_lower": 0.012214463204145432,
+          "gradient_compile": 0.050146955996751785,
+          "gradient": 0.014403324574232101,
+          "host_transfer": 0.000151708722114563
+        }
+      },
+      "array_hashes": {
+        "grid": [
+          "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5",
+          "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5",
+          "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5"
+        ],
+        "aligo": [
+          "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195",
+          "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195",
+          "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195"
+        ]
+      },
+      "generalization": {
+        "case_count": 14,
+        "seed_comparison_passed": true,
+        "all_finite": true,
+        "inputs_identical": true,
+        "new_failures": []
+      },
+      "source_review": null,
+      "review_selection": {
+        "eligible_except_source_review": false,
+        "reasons": [
+          "large_first_run_ranges_overlap_requires_paired_evidence"
+        ],
+        "ignored_gate": "requires_source_review",
+        "current_best_sha256": "0ef46aad95b6782351ef7d9ce48c3b989f5900f8b9b8d1afd9323ea38ac16d6f",
+        "current_best_candidate_sha": "ee4fea28c04d482566be16e916b609d7c6a99e5e",
+        "selection_decision": {
+          "promote": false,
+          "reasons": [
+            "requires_source_review",
+            "large_first_run_ranges_overlap_requires_paired_evidence"
+          ],
+          "metrics": {
+            "grid": {
+              "samples_seconds": [
+                0.842652466148138,
+                0.7955493405461311,
+                0.7799616381525993
+              ],
+              "median_seconds": 0.7955493405461311,
+              "min_seconds": 0.7799616381525993,
+              "max_seconds": 0.842652466148138,
+              "relative_range": 0.07880193571966576
+            },
+            "aligo": {
+              "samples_seconds": [
+                0.5539150405675173,
+                0.5307415723800659,
+                0.5229607541114092
+              ],
+              "median_seconds": 0.5307415723800659,
+              "min_seconds": 0.5229607541114092,
+              "max_seconds": 0.5539150405675173,
+              "relative_range": 0.058322709331579584
+            }
+          },
+          "policy": {
+            "version": "overnight-selection-v2",
+            "minimum_repetitions": 3,
+            "large_minimum_absolute_gain_seconds": 0.003,
+            "large_minimum_relative_gain": 0.005,
+            "aligo_maximum_ratio": 1.02,
+            "maximum_relative_range": 0.1,
+            "large_candidate_maximum_must_be_below_incumbent_minimum": true,
+            "scope": "Team search-selection heuristic, not organizer judging policy."
+          },
+          "timing_comparison": {
+            "incumbent_grid_min_seconds": 0.7944249957799911,
+            "candidate_grid_max_seconds": 0.842652466148138,
+            "observed_ranges_nonoverlapping": false
+          }
+        },
+        "observed_at": 1795330629.16862,
+        "note": "Review-cost preflight only; Publisher must assess again before promotion."
+      },
+      "receipt_path": "/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/overnight-20261122/evidence/client/1ac82b79af53478d8494ebc849a895b7/admission-receipt.json",
+      "relative_median_change_vs_historical_incumbent": {
+        "grid": -0.0075205973368145385,
+        "aligo": -0.032473642138083014
+      },
+      "four_phase_lower_compile_ms": {
+        "grid": 97.45689854025841,
+        "aligo": 101.84771381318569
+      }
+    },
+    {
+      "sha": "f856aafd5552f433aa08bd3dc923acb31d5adf4e",
+      "request_id": "075955848ff84927b548f902cbdea660",
+      "timings": {
+        "grid": {
+          "fresh_process_seconds": [
+            0.807728560641408,
+            0.7707912418991327,
+            0.7738715950399637
+          ],
+          "median_seconds": 0.7738715950399637,
+          "minimum_seconds": 0.7707912418991327,
+          "maximum_seconds": 0.807728560641408,
+          "count": 3
+        },
+        "aligo": {
+          "fresh_process_seconds": [
+            0.5286405067890882,
+            0.5235768966376781,
+            0.5207520164549351
+          ],
+          "median_seconds": 0.5235768966376781,
+          "minimum_seconds": 0.5207520164549351,
+          "maximum_seconds": 0.5286405067890882,
+          "count": 3
+        }
+      },
+      "phases": {
+        "grid": {
+          "imports": 0.26629481464624405,
+          "initialize": 0.003644730895757675,
+          "load": 0.0014980453997850418,
+          "build": 0.07249164395034313,
+          "forward_lower": 0.012604132294654846,
+          "forward_compile": 0.027745390310883522,
+          "forward": 0.1792070772498846,
+          "sensitivity_lower": 0.025734730064868927,
+          "sensitivity_compile": 0.04008813574910164,
+          "sensitivity": 0.0008950494229793549,
+          "gradient_lower": 0.012137217447161674,
+          "gradient_compile": 0.046949150040745735,
+          "gradient": 0.08525948785245419,
+          "host_transfer": 0.00019294768571853638
+        },
+        "aligo": {
+          "imports": 0.2651337552815676,
+          "initialize": 0.003532322123646736,
+          "load": 0.0002104882150888443,
+          "build": 0.03811020776629448,
+          "forward_lower": 0.012127259746193886,
+          "forward_compile": 0.027842897921800613,
+          "forward": 0.032498737797141075,
+          "sensitivity_lower": 0.026559343561530113,
+          "sensitivity_compile": 0.04171171970665455,
+          "sensitivity": 0.0004998929798603058,
+          "gradient_lower": 0.01201510801911354,
+          "gradient_compile": 0.047695983201265335,
+          "gradient": 0.014424514025449753,
+          "host_transfer": 0.0001502297818660736
+        }
+      },
+      "array_hashes": {
+        "grid": [
+          "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5",
+          "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5",
+          "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5"
+        ],
+        "aligo": [
+          "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195",
+          "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195",
+          "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195"
+        ]
+      },
+      "generalization": {
+        "case_count": 14,
+        "seed_comparison_passed": true,
+        "all_finite": true,
+        "inputs_identical": true,
+        "new_failures": []
+      },
+      "source_review": null,
+      "review_selection": {
+        "eligible_except_source_review": false,
+        "reasons": [
+          "large_first_run_ranges_overlap_requires_paired_evidence"
+        ],
+        "ignored_gate": "requires_source_review",
+        "current_best_sha256": "0ef46aad95b6782351ef7d9ce48c3b989f5900f8b9b8d1afd9323ea38ac16d6f",
+        "current_best_candidate_sha": "ee4fea28c04d482566be16e916b609d7c6a99e5e",
+        "selection_decision": {
+          "promote": false,
+          "reasons": [
+            "requires_source_review",
+            "large_first_run_ranges_overlap_requires_paired_evidence"
+          ],
+          "metrics": {
+            "grid": {
+              "samples_seconds": [
+                0.807728560641408,
+                0.7707912418991327,
+                0.7738715950399637
+              ],
+              "median_seconds": 0.7738715950399637,
+              "min_seconds": 0.7707912418991327,
+              "max_seconds": 0.807728560641408,
+              "relative_range": 0.04773055243146345
+            },
+            "aligo": {
+              "samples_seconds": [
+                0.5286405067890882,
+                0.5235768966376781,
+                0.5207520164549351
+              ],
+              "median_seconds": 0.5235768966376781,
+              "min_seconds": 0.5207520164549351,
+              "max_seconds": 0.5286405067890882,
+              "relative_range": 0.015066536328878756
+            }
+          },
+          "policy": {
+            "version": "overnight-selection-v2",
+            "minimum_repetitions": 3,
+            "large_minimum_absolute_gain_seconds": 0.003,
+            "large_minimum_relative_gain": 0.005,
+            "aligo_maximum_ratio": 1.02,
+            "maximum_relative_range": 0.1,
+            "large_candidate_maximum_must_be_below_incumbent_minimum": true,
+            "scope": "Team search-selection heuristic, not organizer judging policy."
+          },
+          "timing_comparison": {
+            "incumbent_grid_min_seconds": 0.7944249957799911,
+            "candidate_grid_max_seconds": 0.807728560641408,
+            "observed_ranges_nonoverlapping": false
+          }
+        },
+        "observed_at": 1795335230.137393,
+        "note": "Review-cost preflight only; Publisher must assess again before promotion."
+      },
+      "receipt_path": "/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/overnight-20261122/evidence/client/075955848ff84927b548f902cbdea660/admission-receipt.json",
+      "relative_median_change_vs_historical_incumbent": {
+        "grid": -0.03456444592611274,
+        "aligo": -0.04553463639034794
+      },
+      "four_phase_lower_compile_ms": {
+        "grid": 99.43589009344578,
+        "aligo": 99.68124888837337
+      }
+    },
+    {
+      "sha": "23a9895cba361144a1d88b91b1454d634659250c",
+      "request_id": "022b5526b818444e9bd7423eb1181b50",
+      "timings": {
+        "grid": {
+          "fresh_process_seconds": [
+            0.8051569852977991,
+            0.7756724860519171,
+            0.7739589065313339
+          ],
+          "median_seconds": 0.7756724860519171,
+          "minimum_seconds": 0.7739589065313339,
+          "maximum_seconds": 0.8051569852977991,
+          "count": 3
+        },
+        "aligo": {
+          "fresh_process_seconds": [
+            0.5226404294371605,
+            0.5221093911677599,
+            0.5210566408932209
+          ],
+          "median_seconds": 0.5221093911677599,
+          "minimum_seconds": 0.5210566408932209,
+          "maximum_seconds": 0.5226404294371605,
+          "count": 3
+        }
+      },
+      "phases": {
+        "grid": {
+          "imports": 0.2665298543870449,
+          "initialize": 0.003612929955124855,
+          "load": 0.001424115151166916,
+          "build": 0.07384858094155788,
+          "forward_lower": 0.012478239834308624,
+          "forward_compile": 0.02763228490948677,
+          "forward": 0.1810165699571371,
+          "sensitivity_lower": 0.025555916130542755,
+          "sensitivity_compile": 0.039733488112688065,
+          "sensitivity": 0.0008851718157529831,
+          "gradient_lower": 0.011988375335931778,
+          "gradient_compile": 0.04664197191596031,
+          "gradient": 0.08488059975206852,
+          "host_transfer": 0.000187041237950325
+        },
+        "aligo": {
+          "imports": 0.2651570085436106,
+          "initialize": 0.003558281809091568,
+          "load": 0.00022257864475250244,
+          "build": 0.03770504891872406,
+          "forward_lower": 0.012153396382927895,
+          "forward_compile": 0.027644865214824677,
+          "forward": 0.03265613690018654,
+          "sensitivity_lower": 0.02636413834989071,
+          "sensitivity_compile": 0.04129353165626526,
+          "sensitivity": 0.0004669930785894394,
+          "gradient_lower": 0.011797567829489708,
+          "gradient_compile": 0.04728622920811176,
+          "gradient": 0.014349231496453285,
+          "host_transfer": 0.0001466795802116394
+        }
+      },
+      "array_hashes": {
+        "grid": [
+          "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5",
+          "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5",
+          "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5"
+        ],
+        "aligo": [
+          "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195",
+          "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195",
+          "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195"
+        ]
+      },
+      "generalization": {
+        "case_count": 14,
+        "seed_comparison_passed": true,
+        "all_finite": true,
+        "inputs_identical": true,
+        "new_failures": []
+      },
+      "source_review": null,
+      "review_selection": {
+        "eligible_except_source_review": false,
+        "reasons": [
+          "large_first_run_ranges_overlap_requires_paired_evidence"
+        ],
+        "ignored_gate": "requires_source_review",
+        "current_best_sha256": "0ef46aad95b6782351ef7d9ce48c3b989f5900f8b9b8d1afd9323ea38ac16d6f",
+        "current_best_candidate_sha": "ee4fea28c04d482566be16e916b609d7c6a99e5e",
+        "selection_decision": {
+          "promote": false,
+          "reasons": [
+            "requires_source_review",
+            "large_first_run_ranges_overlap_requires_paired_evidence"
+          ],
+          "metrics": {
+            "grid": {
+              "samples_seconds": [
+                0.8051569852977991,
+                0.7756724860519171,
+                0.7739589065313339
+              ],
+              "median_seconds": 0.7756724860519171,
+              "min_seconds": 0.7739589065313339,
+              "max_seconds": 0.8051569852977991,
+              "relative_range": 0.040220685053894055
+            },
+            "aligo": {
+              "samples_seconds": [
+                0.5226404294371605,
+                0.5221093911677599,
+                0.5210566408932209
+              ],
+              "median_seconds": 0.5221093911677599,
+              "min_seconds": 0.5210566408932209,
+              "max_seconds": 0.5226404294371605,
+              "relative_range": 0.0030334419773550875
+            }
+          },
+          "policy": {
+            "version": "overnight-selection-v2",
+            "minimum_repetitions": 3,
+            "large_minimum_absolute_gain_seconds": 0.003,
+            "large_minimum_relative_gain": 0.005,
+            "aligo_maximum_ratio": 1.02,
+            "maximum_relative_range": 0.1,
+            "large_candidate_maximum_must_be_below_incumbent_minimum": true,
+            "scope": "Team search-selection heuristic, not organizer judging policy."
+          },
+          "timing_comparison": {
+            "incumbent_grid_min_seconds": 0.7944249957799911,
+            "candidate_grid_max_seconds": 0.8051569852977991,
+            "observed_ranges_nonoverlapping": false
+          }
+        },
+        "observed_at": 1795334731.836809,
+        "note": "Review-cost preflight only; Publisher must assess again before promotion."
+      },
+      "receipt_path": "/Users/t.betz/Documents/Feyer challenge/.lab/campaigns/overnight-20261122/evidence/client/022b5526b818444e9bd7423eb1181b50/admission-receipt.json",
+      "relative_median_change_vs_historical_incumbent": {
+        "grid": -0.03231776285479249,
+        "aligo": -0.04820985592531901
+      },
+      "four_phase_lower_compile_ms": {
+        "grid": 98.74087199568748,
+        "aligo": 98.88205863535404
+      }
+    }
+  ],
+  "implementation_evidence": [
+    {
+      "file": "lab/overnight_search.py",
+      "lines": "381-388",
+      "finding": "A single generic stagnation instruction is repeated after three nonpromotions; no escalation to diagnostics or paired confirmation."
+    },
+    {
+      "file": "lab/overnight_search.py",
+      "lines": "617-633",
+      "finding": "New evaluation requires ready_for_evaluation AND dirty simulator paths; no structured unchanged-SHA confirmation/diagnostic request."
+    },
+    {
+      "file": "lab/overnight_search.py",
+      "lines": "671-673",
+      "finding": "After no-candidate response, model called again; sleep60 only at three consecutive no-candidate responses."
+    },
+    {
+      "file": "lab/overnight_client.py",
+      "lines": "261-268,304-319",
+      "finding": "Any selection objection except missing source review blocks independent review; overlap therefore prevents review even for plausible gains."
+    },
+    {
+      "file": "lab/overnight_publish.py",
+      "lines": "159-170",
+      "finding": "Conservative candidate maximum < historical incumbent minimum test has no paired-evidence acceptance branch."
+    }
+  ],
+  "findings": [
+    "Both lanes consume valid admitted shared-best snapshots; concrete cross-lane transfer exists in overhead1ea70bf and numerics earlier combinations.",
+    "110 evaluated SHAs passed both public benchmarks. Three numerics requests still failed additional generalization admission; inherited pristine disagreements remain across passing candidates.",
+    "105 unique simulator trees among110 evaluations. Five additional evaluations are same-tree reconstructions under different SHAs, not same-SHA confirmation repeats.",
+    "65 completed turns returned readiness false across initial snapshot178modelturns. Most are one-turn evidence/handoff responses, not long identical idle streaks (maximum2 in numerics and1 in overhead).",
+    "After valid incumbent ee4fea2, both lanes keep exploring because stop means hypothesis completion only. They repeatedly request profiles, focused JAX checks and paired timings that orchestration does not dispatch.",
+    "Numerics last10 grid medians are worse than its first10 post-promotion medians; overhead last10 are better. These are unpaired observations, not causal regression proof.",
+    "First grid sample is the largest in103/110 jobs. Median first-vs-later extra total32.79ms, imports27.98ms; phase/order bias competes directly with20-28ms proposed improvements.",
+    "f856aafd and23a9895 have all14 seed comparisons and unchanged official archive hashes, but are unrevewed and overlap historical incumbent range. They are provisional, not accepted replacements.",
+    "f856 immediate change is a three-line digest group-boundary correction; its apparent28ms total gain comes mostly from earlier callback-boundary changes and timing variation, not evidence that this three-line patch accelerates physics.",
+    "Models claim additional synthetic correctness repairs and identify unexecuted focused NumPy/JAX checks; these claims are not independently validated in this audit."
+  ],
+  "bounded_recommendation": {
+    "deadline_unix": 1795339664,
+    "scope": "Operator-owned confirmation/diagnosis within original campaign, not launch authorization from this audit.",
+    "priority1": "At a safe boundary allocate confirmation work instead of more speculative model turns; preserve pending edits/jobs and exact sessions.",
+    "targets": {
+      "A": "ee4fea28c04d482566be16e916b609d7c6a99e5e",
+      "B": "f856aafd5552f433aa08bd3dc923acb31d5adf4e",
+      "C_optional_latest_correctness_fixes": "1acb98c3d02274b9ed241bba558bedfe50f9f6de"
+    },
+    "design": "Pre-register balanced AB/BA serial fresh-process blocks on both official setups. Use same CPU/thread/environment and unchanged timing boundary. Keep every sample, including first-of-job; compare matched block medians and phase/order effects. Use at least5 independent blocks per chosen comparison if time permits; no fixture prewarm or removing import samples.",
+    "cost": "Existing whole dual+14-case requests observed roughly25-45s of remote execution; transport/publication and queue wait add time. Bound confirmation budget explicitly to remaining deadline, preferably20-25minutes, leaving source review and final publication time.",
+    "review": "Run independent fullseed-to-finalist source review and the prepared focused group-key/index-ownership/shared-parameter diagnostics separately from ranking. Inspect newer1ac/dbb repair scope before discarding correctness fixes for a slightly faster older f856.",
+    "decision": "Keep incumbent unless correctness/source review plus predeclared matched timing evidence justify another exact SHA. Preserve old v2 rejection; any new paired criterion needs a versioned explicit verdict, not erased samples or retroactive silent tolerance relaxation.",
+    "not_recommended": "Do not promote faster a1e10d9 CSR candidate: publicPASS alone did not clear its new generalization failures. Do not infer exact-SHA repeats from three different commits sharing one tree.",
+    "future_small_harness_repair": "Add structured experiment_request kind=confirm|diagnose with exactSHA, question and bounded request budget. Service these before another model-edit turn after repeated nonimprovement. Do not implement a large new search controller in the final hour."
+  },
+  "bytecode_cache_observation": {
+    "request_id": "075955848ff84927b548f902cbdea660",
+    "read_only_remote_stat": true,
+    "path": "/workspace/feyer-final-validation/requests/075955848ff84927b548f902cbdea660/code/differometor",
+    "pyc_count": 8,
+    "pyc_files": [
+      {
+        "path": "__pycache__/sparse.cpython-312.pyc",
+        "bytes": 21220,
+        "mtime": 1795335130.0733173
+      },
+      {
+        "path": "__pycache__/host.cpython-312.pyc",
+        "bytes": 19380,
+        "mtime": 1795335130.0753174
+      },
+      {
+        "path": "__pycache__/__init__.cpython-312.pyc",
+        "bytes": 2338,
+        "mtime": 1795335130.0523176
+      },
+      {
+        "path": "__pycache__/build.cpython-312.pyc",
+        "bytes": 67594,
+        "mtime": 1795335130.0723174
+      },
+      {
+        "path": "__pycache__/components.cpython-312.pyc",
+        "bytes": 40381,
+        "mtime": 1795335130.0593174
+      },
+      {
+        "path": "__pycache__/simulate.cpython-312.pyc",
+        "bytes": 70836,
+        "mtime": 1795335130.0653174
+      },
+      {
+        "path": "__pycache__/setups.cpython-312.pyc",
+        "bytes": 48906,
+        "mtime": 1795335130.0583174
+      },
+      {
+        "path": "__pycache__/host_pass.cpython-312.pyc",
+        "bytes": 54258,
+        "mtime": 1795335130.0793173
+      }
+    ],
+    "creation_mtime_span_seconds": 0.026999711990356445,
+    "hypothesis": "Fresh clone has no generated package bytecode; first grid imports create it and later processes reuse same checkout. This plausibly contributes to first-grid import penalty; not an isolated causal timing experiment."
+  }
+}

@@ -1,0 +1,289 @@
+{
+  "schema_version": "feyer-overnight-evaluation-v1",
+  "evaluation_id": "4c1df886fe31517c9ccf962fb8e8c549",
+  "candidate_sha": "f90fa964a73aca5515ba93a3517ec1d26ae32a32",
+  "cohort_digest": "0543092279d0368390fe9a039823f591cb0f163f58ff89849ecb07fd22f4647e",
+  "cohort": {
+    "host": "j-h6w4ycifvvza6wlxma2mxou2mm",
+    "policy": {
+      "cpu": 2,
+      "python": "/workspace/venv-feyer/bin/python",
+      "memory_budget_bytes": 16000000000,
+      "memory_reserve_bytes": 8000000000,
+      "lock_states": [
+        "/workspace/feyer-lab/state",
+        "/workspace/feyer-lab-lane1/state"
+      ],
+      "harness": {
+        "upstream_commit": "83f8d2f40fc75218a1d8ec7908cc0bf1c8f99a75",
+        "source": "https://github.com/feyerlabs/start-hack-munich-2026",
+        "files": {
+          "benchmark.py": "b2e8c5367705e220f83c3d5f2bb95301e3148b102dc0d34f5c2c6f5792b9984e",
+          "benchmark_aligo.py": "8c1018592e33f66b0913490159f7e2c20f5a2acec614b95b9bbbda18d90d99fc",
+          "plot_timings.py": "21e19966f36fbffc6bd0e416b5fb99e8d7d6b4593bf5b14b7a0d4e3b5216ca8a"
+        }
+      },
+      "runtime_files": {
+        "dual_benchmark_worker.py": "cdeff6f1476796278945e9dae59f278095167979c5b1a81821eb8403ef7ef8d4",
+        "transfer_run.py": "749e4c920454217ab03d5af997d35f0366ce26fb4e2bd6ec1b269809da744180",
+        "transfer_validation.py": "ea54de7bb687901435339272178093989e9366aa59b8cfd2df8e5d5b16acd255",
+        "worker.py": "dc22f8865b67606117cd372cdcf712d54879b353edbaf6125e3955bdc7a12f9f",
+        "resources.py": "3de3297e4207603043208e3c4235e6ac82c0e4eed246e8dd264cd689fceb7e75"
+      }
+    },
+    "container_limits": {
+      "memory.max": "59055800320",
+      "memory.swap.max": "0",
+      "cpu.max": "1600000 100000",
+      "cpuset.cpus.effective": "0-127"
+    },
+    "environment": {
+      "cpu_model": "AMD EPYC 9334 32-Core Processor",
+      "cpu_affinity_ids": [
+        2
+      ],
+      "platform": "Linux-6.8.0-79-generic-x86_64-with-glibc2.35",
+      "python": "3.12.15",
+      "packages": {
+        "differometor": "0.0.6",
+        "jax": "0.9.0",
+        "jaxlib": "0.9.0",
+        "numpy": "2.5.5",
+        "optax": "0.2.6"
+      },
+      "backend": "cpu",
+      "jax_enable_x64": true,
+      "persistent_compilation_cache": false,
+      "thread_limits": {
+        "OMP_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "NUMEXPR_NUM_THREADS": "1"
+      }
+    },
+    "timing_regime": "both-existing-queues-reserved; external-contention-not-excluded"
+  },
+  "benchmarks": {
+    "grid": {
+      "passed": true,
+      "fresh_process": true,
+      "samples": [
+        {
+          "seconds": 0.8190452642738819,
+          "candidate_sha": "f90fa964a73aca5515ba93a3517ec1d26ae32a32",
+          "fresh_process": true,
+          "official_passed": true,
+          "report_path": "requests/4c1df886fe31517c9ccf962fb8e8c549/grid-1/report.json",
+          "report_sha256": "9189696cec37fbc881da9efcb8f9f5da5c28c552db0fb4681093097504225bb9",
+          "arrays_sha256": "112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5",
+          "effective_environment": {
+            "cpu_model": "AMD EPYC 9334 32-Core Processor",
+            "cpu_affinity_count": 1,
+            "cpu_affinity_ids": [
+              2
+            ],
+            "requested_logical_cpus": 1,
+            "logical_cpus_on_host": 128,
+            "platform": "Linux-6.8.0-79-generic-x86_64-with-glibc2.35",
+            "python": "3.12.15",
+            "packages": {
+              "differometor": "0.0.6",
+              "jax": "0.9.0",
+              "jaxlib": "0.9.0",
+              "numpy": "2.5.5",
+              "optax": "0.2.6"
+            },
+            "backend": "cpu",
+            "jax_enable_x64": true,
+            "persistent_compilation_cache": false,
+            "omp_num_threads": "1",
+            "xla_flags": "--xla_backend_optimization_level=0 --xla_cpu_use_fusion_emitters=false",
+            "thread_limits": {
+              "OMP_NUM_THREADS": "1",
+              "OPENBLAS_NUM_THREADS": "1",
+              "MKL_NUM_THREADS": "1",
+              "NUMEXPR_NUM_THREADS": "1"
+            }
+          }
+        }
+      ],
+      "median_seconds": 0.8190452642738819,
+      "minimum_seconds": 0.8190452642738819,
+      "maximum_seconds": 0.8190452642738819
+    },
+    "aligo": {
+      "passed": true,
+      "fresh_process": true,
+      "samples": [
+        {
+          "seconds": 0.5350030176341534,
+          "candidate_sha": "f90fa964a73aca5515ba93a3517ec1d26ae32a32",
+          "fresh_process": true,
+          "official_passed": true,
+          "report_path": "requests/4c1df886fe31517c9ccf962fb8e8c549/aligo-1/report.json",
+          "report_sha256": "334c3e3a2da6049077d71c13562c8e967a749528177f94cf9ea288f6e943fe66",
+          "arrays_sha256": "9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195",
+          "effective_environment": {
+            "cpu_model": "AMD EPYC 9334 32-Core Processor",
+            "cpu_affinity_count": 1,
+            "cpu_affinity_ids": [
+              2
+            ],
+            "requested_logical_cpus": 1,
+            "logical_cpus_on_host": 128,
+            "platform": "Linux-6.8.0-79-generic-x86_64-with-glibc2.35",
+            "python": "3.12.15",
+            "packages": {
+              "differometor": "0.0.6",
+              "jax": "0.9.0",
+              "jaxlib": "0.9.0",
+              "numpy": "2.5.5",
+              "optax": "0.2.6"
+            },
+            "backend": "cpu",
+            "jax_enable_x64": true,
+            "persistent_compilation_cache": false,
+            "omp_num_threads": "1",
+            "xla_flags": "--xla_backend_optimization_level=0 --xla_cpu_use_fusion_emitters=false",
+            "thread_limits": {
+              "OMP_NUM_THREADS": "1",
+              "OPENBLAS_NUM_THREADS": "1",
+              "MKL_NUM_THREADS": "1",
+              "NUMEXPR_NUM_THREADS": "1"
+            }
+          }
+        }
+      ],
+      "median_seconds": 0.5350030176341534,
+      "minimum_seconds": 0.5350030176341534,
+      "maximum_seconds": 0.5350030176341534
+    }
+  },
+  "generalization": {
+    "case_count": 0,
+    "all_finite": false,
+    "inputs_identical": false,
+    "seed_comparison_passed": false,
+    "new_failures": [
+      "generalization: full 14-case initial-seed regression check missing or failed"
+    ],
+    "seed_case_checks": [],
+    "artifact_checks": null,
+    "candidate_archive_sha256": null,
+    "pristine_comparison": null,
+    "comparison_path": null,
+    "comparison_sha256": null
+  },
+  "admission": {
+    "promotion_ready": false,
+    "source_sha": "f90fa964a73aca5515ba93a3517ec1d26ae32a32",
+    "candidate_sha": "f90fa964a73aca5515ba93a3517ec1d26ae32a32",
+    "comparison_cohort_passed": true,
+    "scope": "public-benchmarks-and-no-new-regressions",
+    "universal_physics_claim": false
+  },
+  "inherited_caveats": [
+    {
+      "setup": "grid",
+      "repetition": 1,
+      "pristine_comparison": {
+        "passed": false,
+        "issues": [
+          "gradient: elementwise regression mismatch",
+          "loss: elementwise regression mismatch",
+          "signal: elementwise regression mismatch"
+        ],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": false,
+            "failing_count": 3
+          },
+          "loss": {
+            "passed": false,
+            "failing_count": 1
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": false,
+            "failing_count": 131
+          },
+          "log_sensitivity_error": 6.80508378536615e-08
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-05
+        },
+        "gradient_relative_l2": 8.761880163567328e-08,
+        "gradient_max_abs_difference": 0.0052006331097800285
+      }
+    },
+    {
+      "setup": "aligo",
+      "repetition": 1,
+      "pristine_comparison": {
+        "passed": false,
+        "issues": [
+          "loss: elementwise regression mismatch"
+        ],
+        "arrays": {
+          "carrier": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "gradient": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "loss": {
+            "passed": false,
+            "failing_count": 1
+          },
+          "noise": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "powers": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "sensitivity": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "signal": {
+            "passed": true,
+            "failing_count": 0
+          },
+          "log_sensitivity_error": 1.1802825383711024e-10
+        },
+        "regression_policy": {
+          "rtol": 1e-07,
+          "scale_atol": 1e-12,
+          "sensitivity_log_tolerance": 1e-06
+        },
+        "gradient_relative_l2": 2.730249796691298e-10,
+        "gradient_max_abs_difference": 8.864135452313349e-06
+      }
+    },
+    {
+      "generalization_pristine_comparison": null
+    }
+  ],
+  "note": "Pristine mismatches remain review caveats, never erased; initial seed comparison is the no-new-regression gate."
+}

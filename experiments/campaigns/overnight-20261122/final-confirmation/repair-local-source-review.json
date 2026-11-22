@@ -1,0 +1,36 @@
+{
+  "schema_version": "feyer-local-source-review-v1",
+  "scope": "no-fixture-specialization-and-integrity",
+  "review_kind": "local-independent-source-and-integrity",
+  "reviewer": "collaborating-agent:/root/dual_evaluator",
+  "candidate_sha": "3b107d69d9d083f7aaa5f11b952f0098ed0ba528",
+  "parent_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+  "immediate_parent_sha": "f856aafd5552f433aa08bd3dc923acb31d5adf4e",
+  "diff_sha256": "710ed1ba0d34124514d8d579ce1d94d18c2a9ad0097d1cce3fd22a02ebc932aa",
+  "approved": true,
+  "observed_at": 1795337564.8438559,
+  "reasons": [
+    "Complete seed-to-candidate simulator delta reviewed through prior six-file audit plus exact repair delta; protected workload/environment/harness files unchanged.",
+    "Both approximate near-collinearity and near-Hermitian predicates and their conditional solve substitutions are completely removed. Signal inverse-transpose and noise inverse adjoints now use unconditional refined solves preserving their full right-hand sides.",
+    "Retained covariance reuse follows the algebraic identity A^H w=s implies A^T conjugate(w)=conjugate(s), scaled by the real covariance cotangent; it does not discard an epsilon-sized input residual via approximate predicate.",
+    "Forward computations remain fresh; one-use forward residual/factor reuse is input-bound and cleared after backward. No fixture answers, benchmark-name branches, reduced precision or persistent compilation cache identified.",
+    "Four algebraic/source regression checks independently rerun successfully; these are not substitute optical benchmark runs."
+  ],
+  "unresolved_risks": [],
+  "limitations": [
+    "Local source inspection is not an external headless-provider verdict or a proof for every optical setup.",
+    "Numerical preflight on both official benchmarks and all14 cases is still required for this exact repaired SHA; prior finalist timings do not transfer.",
+    "Inherited first-order host-autodiff scope, static-plan rebuild requirements, private SciPy ABI portability and original-reference disagreement caveats remain.",
+    "Finite precision of the retained exact covariance identity still requires numerical validation; no universal condition-number bound is claimed."
+  ],
+  "evidence": [
+    "local-semantic-audit.md",
+    "adjoint-counterexample.json",
+    "repair-versus-seed.diff"
+  ],
+  "tests": {
+    "command": "python3 .lab/worktrees/overnight-exact-adjoint-v1/experiments/notes/overnight-exact-adjoint-regression.py -q",
+    "passed": 4
+  },
+  "promotion_ready": false
+}

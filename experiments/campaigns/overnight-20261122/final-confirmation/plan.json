@@ -1,0 +1,415 @@
+{
+  "schema_version": "feyer-paired-confirmation-plan-v1",
+  "status": "prepared-not-launched",
+  "created_at": 1795336559.375969,
+  "frozen_before_new_measurements": true,
+  "deadline_unix": 1795339664.0,
+  "randomization_seed": 20261122,
+  "bootstrap_seed": 20261123,
+  "bootstrap_resamples": 20000,
+  "blocks": 5,
+  "requests": [
+    {
+      "sequence": 1,
+      "block": 1,
+      "position": 1,
+      "candidate": "layout",
+      "sha": "1ea70bfbde9bcf42fce836846a4e1e92aee36a3b",
+      "request_id": "a8b948c8f59058d6962ed3e3e6d0b388",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/01-1-layout.json",
+      "request_sha256": "e1287e609858adb8861e2fb28a0c8532f486c170314748644bb45a9f5955f759",
+      "run_generalization": true
+    },
+    {
+      "sequence": 2,
+      "block": 1,
+      "position": 2,
+      "candidate": "latest",
+      "sha": "f856aafd5552f433aa08bd3dc923acb31d5adf4e",
+      "request_id": "e496bbd5f0f256299b121dfa5a7ee327",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/01-2-latest.json",
+      "request_sha256": "ab918c936bfb606b4550c6a7062b13f9ffaaf43466e7f88b822ec2ae4a466e37",
+      "run_generalization": true
+    },
+    {
+      "sequence": 3,
+      "block": 1,
+      "position": 3,
+      "candidate": "incumbent",
+      "sha": "ee4fea28c04d482566be16e916b609d7c6a99e5e",
+      "request_id": "d5598e1a1bf95aa885b70b782360d352",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/01-3-incumbent.json",
+      "request_sha256": "ac5f0c0eaff288782a15a26c1af486b6615575a8624e1b4456ad4c099bbb1355",
+      "run_generalization": true
+    },
+    {
+      "sequence": 4,
+      "block": 1,
+      "position": 4,
+      "candidate": "stable",
+      "sha": "f90fa964a73aca5515ba93a3517ec1d26ae32a32",
+      "request_id": "b1b9943d70f959cbb1a66960e49380a5",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/01-4-stable.json",
+      "request_sha256": "ed22f856c68af577032a4ab039aad1c5839041f53e7a8eae744d0383df8caa64",
+      "run_generalization": true
+    },
+    {
+      "sequence": 5,
+      "block": 2,
+      "position": 1,
+      "candidate": "stable",
+      "sha": "f90fa964a73aca5515ba93a3517ec1d26ae32a32",
+      "request_id": "4c1df886fe31517c9ccf962fb8e8c549",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/02-1-stable.json",
+      "request_sha256": "38aff5588b4ea79ccfd6931199bc99ae7b632ae5191cfb037275e74bc4522a9b",
+      "run_generalization": false
+    },
+    {
+      "sequence": 6,
+      "block": 2,
+      "position": 2,
+      "candidate": "layout",
+      "sha": "1ea70bfbde9bcf42fce836846a4e1e92aee36a3b",
+      "request_id": "22d6b1de1d30588b81a2cbe78336699d",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/02-2-layout.json",
+      "request_sha256": "d985bb5d9b6ec157b457538d48d218b6415e5a1907edec34b7d5d4e837e5597d",
+      "run_generalization": false
+    },
+    {
+      "sequence": 7,
+      "block": 2,
+      "position": 3,
+      "candidate": "latest",
+      "sha": "f856aafd5552f433aa08bd3dc923acb31d5adf4e",
+      "request_id": "08ce920ace2b5f5ab717d94a2a4c8086",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/02-3-latest.json",
+      "request_sha256": "8c898d665921873c7d989832e5c666ff4abab8497ba0c675f1d64bde77102308",
+      "run_generalization": false
+    },
+    {
+      "sequence": 8,
+      "block": 2,
+      "position": 4,
+      "candidate": "incumbent",
+      "sha": "ee4fea28c04d482566be16e916b609d7c6a99e5e",
+      "request_id": "24a058c755935320bcc6a537a2634427",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/02-4-incumbent.json",
+      "request_sha256": "99b587fce9958c609c5524f438c7d5262ca7f95006a924afa9815ec0acc442b6",
+      "run_generalization": false
+    },
+    {
+      "sequence": 9,
+      "block": 3,
+      "position": 1,
+      "candidate": "latest",
+      "sha": "f856aafd5552f433aa08bd3dc923acb31d5adf4e",
+      "request_id": "cf50293a33765434b12abbbc474dd0bf",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/03-1-latest.json",
+      "request_sha256": "377b7ffdc05544d789311f88170dcceb5d284d104e6204b785b34d26d90ccdfe",
+      "run_generalization": false
+    },
+    {
+      "sequence": 10,
+      "block": 3,
+      "position": 2,
+      "candidate": "incumbent",
+      "sha": "ee4fea28c04d482566be16e916b609d7c6a99e5e",
+      "request_id": "8ecc9919233a558a9a4b853be7a4cbb8",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/03-2-incumbent.json",
+      "request_sha256": "06aedeb14e5692b71566279171a17bd338cf6e2fc5b6ee15706f64fb7a445683",
+      "run_generalization": false
+    },
+    {
+      "sequence": 11,
+      "block": 3,
+      "position": 3,
+      "candidate": "stable",
+      "sha": "f90fa964a73aca5515ba93a3517ec1d26ae32a32",
+      "request_id": "2e19891a2d105b1d957c324472fcab05",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/03-3-stable.json",
+      "request_sha256": "4e0e9cca3313bb13a19d058bbb879e4674060adf37c627e56927d224a0589560",
+      "run_generalization": false
+    },
+    {
+      "sequence": 12,
+      "block": 3,
+      "position": 4,
+      "candidate": "layout",
+      "sha": "1ea70bfbde9bcf42fce836846a4e1e92aee36a3b",
+      "request_id": "bdc93a308f8d5e3da20a5550d1acee50",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/03-4-layout.json",
+      "request_sha256": "8df9da1f9e4a850fbe2a508d329f852165e7b4711d6aad7b90942ae7f26b4da5",
+      "run_generalization": false
+    },
+    {
+      "sequence": 13,
+      "block": 4,
+      "position": 1,
+      "candidate": "incumbent",
+      "sha": "ee4fea28c04d482566be16e916b609d7c6a99e5e",
+      "request_id": "0aad65dab56654abbbeb388029cf520e",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/04-1-incumbent.json",
+      "request_sha256": "644be820dea50fe6b740970a9edd85ef05434693600d4e9545a9eb8e1ab2e160",
+      "run_generalization": false
+    },
+    {
+      "sequence": 14,
+      "block": 4,
+      "position": 2,
+      "candidate": "stable",
+      "sha": "f90fa964a73aca5515ba93a3517ec1d26ae32a32",
+      "request_id": "92ada8c847f35bfca22ab121e9d71824",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/04-2-stable.json",
+      "request_sha256": "da34c0565c6b6db3fd816dd7ed687b81168dc8670b00ff7882cc2c1ed6ec0d41",
+      "run_generalization": false
+    },
+    {
+      "sequence": 15,
+      "block": 4,
+      "position": 3,
+      "candidate": "layout",
+      "sha": "1ea70bfbde9bcf42fce836846a4e1e92aee36a3b",
+      "request_id": "6bc94924fa6a5daeb57961a720bcdae9",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/04-3-layout.json",
+      "request_sha256": "8edd969d1c19990c2a74db518b236b2f636ba1b4b495ed70ad134ce26099af88",
+      "run_generalization": false
+    },
+    {
+      "sequence": 16,
+      "block": 4,
+      "position": 4,
+      "candidate": "latest",
+      "sha": "f856aafd5552f433aa08bd3dc923acb31d5adf4e",
+      "request_id": "dd7c0a991f545b6caa368352bc9dd328",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/04-4-latest.json",
+      "request_sha256": "a0e50035036fb2a1a52881565f7cba0deecafbb9c73dfaa10005acdef248241a",
+      "run_generalization": false
+    },
+    {
+      "sequence": 17,
+      "block": 5,
+      "position": 1,
+      "candidate": "layout",
+      "sha": "1ea70bfbde9bcf42fce836846a4e1e92aee36a3b",
+      "request_id": "b8a75da0f97c55058a5f0ae226e8a736",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/05-1-layout.json",
+      "request_sha256": "0cc5d924353d4d39b433b1ef1c6e7218b919e5337b803c035198df401f3bfe72",
+      "run_generalization": false
+    },
+    {
+      "sequence": 18,
+      "block": 5,
+      "position": 2,
+      "candidate": "stable",
+      "sha": "f90fa964a73aca5515ba93a3517ec1d26ae32a32",
+      "request_id": "326d984d9c1f5e9bad8655c0ca7a1525",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/05-2-stable.json",
+      "request_sha256": "71373617728b651621b4c3d14828bf5dc0381f9f62089d297adc66cc7bcc7000",
+      "run_generalization": false
+    },
+    {
+      "sequence": 19,
+      "block": 5,
+      "position": 3,
+      "candidate": "latest",
+      "sha": "f856aafd5552f433aa08bd3dc923acb31d5adf4e",
+      "request_id": "372e2455b9df51c7a1570ba88ef3d0ee",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/05-3-latest.json",
+      "request_sha256": "5482844078960ddab1c50ac2e7a92ba18e002f3577e8787243981f6e947dbad9",
+      "run_generalization": false
+    },
+    {
+      "sequence": 20,
+      "block": 5,
+      "position": 4,
+      "candidate": "incumbent",
+      "sha": "ee4fea28c04d482566be16e916b609d7c6a99e5e",
+      "request_id": "61c725d94c8a5b919e4378f592cafb67",
+      "request_path": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/requests/05-4-incumbent.json",
+      "request_sha256": "7ef708c431b5c82f23b88cef2fbdd36b46cee273a732a69b10451dc640ea0846",
+      "run_generalization": false
+    }
+  ],
+  "candidates": [
+    {
+      "name": "incumbent",
+      "sha": "ee4fea28c04d482566be16e916b609d7c6a99e5e",
+      "simulator_tree": "7eb7d970e4973626dd36ef636004cebce6fc9b28",
+      "prior_evaluation_id": "e4f7b59d3b094a8e9c6dd41263cab78e",
+      "prior_record_path": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/overnight-control/experiments/campaigns/overnight-20261122/candidates/e4f7b59d3b094a8e9c6dd41263cab78e/record.json",
+      "prior_record_sha256": "5e6534aa0b279edadea45da3d74a9076ab24b7accb93bc0d03d3c67af2415ac4",
+      "prior_cohort_digest": "0543092279d0368390fe9a039823f591cb0f163f58ff89849ecb07fd22f4647e",
+      "prior_metrics": {
+        "aligo": {
+          "max_seconds": 0.5516242142766714,
+          "median_seconds": 0.5485551562160254,
+          "min_seconds": 0.544719347730279,
+          "relative_range": 0.012587369689536288,
+          "samples_seconds": [
+            0.5516242142766714,
+            0.5485551562160254,
+            0.544719347730279
+          ]
+        },
+        "grid": {
+          "max_seconds": 0.8224838301539421,
+          "median_seconds": 0.8015776835381985,
+          "min_seconds": 0.7944249957799911,
+          "relative_range": 0.03500451041762796,
+          "samples_seconds": [
+            0.8224838301539421,
+            0.8015776835381985,
+            0.7944249957799911
+          ]
+        }
+      },
+      "prior_source_review_approved": true,
+      "source_review_required": false,
+      "existing_14_case_proof_verified": true,
+      "diff_from_incumbent": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/incumbent-versus-incumbent.diff",
+      "diff_from_incumbent_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "diff_from_seed": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/incumbent-versus-seed.diff",
+      "diff_from_seed_sha256": "b741b3a8cb78872b45144def48d00554087ddc240a5337dec211102def699574"
+    },
+    {
+      "name": "latest",
+      "sha": "f856aafd5552f433aa08bd3dc923acb31d5adf4e",
+      "simulator_tree": "648b86ae2c648988a3c49b6ebd5a756999c77f9a",
+      "prior_evaluation_id": "075955848ff84927b548f902cbdea660",
+      "prior_record_path": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/overnight-control/experiments/campaigns/overnight-20261122/candidates/075955848ff84927b548f902cbdea660/record.json",
+      "prior_record_sha256": "d9cc452fe998ed3c59f289c32432a87d5cf4d1c836aad976fa6e6d91d2a4694f",
+      "prior_cohort_digest": "0543092279d0368390fe9a039823f591cb0f163f58ff89849ecb07fd22f4647e",
+      "prior_metrics": {
+        "aligo": {
+          "max_seconds": 0.5286405067890882,
+          "median_seconds": 0.5235768966376781,
+          "min_seconds": 0.5207520164549351,
+          "relative_range": 0.015066536328878756,
+          "samples_seconds": [
+            0.5286405067890882,
+            0.5235768966376781,
+            0.5207520164549351
+          ]
+        },
+        "grid": {
+          "max_seconds": 0.807728560641408,
+          "median_seconds": 0.7738715950399637,
+          "min_seconds": 0.7707912418991327,
+          "relative_range": 0.04773055243146345,
+          "samples_seconds": [
+            0.807728560641408,
+            0.7707912418991327,
+            0.7738715950399637
+          ]
+        }
+      },
+      "prior_source_review_approved": null,
+      "source_review_required": true,
+      "existing_14_case_proof_verified": true,
+      "diff_from_incumbent": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/latest-versus-incumbent.diff",
+      "diff_from_incumbent_sha256": "71358839b3d8a03d3907dade3c423466a2aac14f342a3f6c875f7a529ab07da7",
+      "diff_from_seed": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/latest-versus-seed.diff",
+      "diff_from_seed_sha256": "e2e8194a85299d4cead512d51d6e5e856b6e1b674e673d3b523c88c1463023f3"
+    },
+    {
+      "name": "layout",
+      "sha": "1ea70bfbde9bcf42fce836846a4e1e92aee36a3b",
+      "simulator_tree": "79a0b65355b1340de00738952b6593f2787bd400",
+      "prior_evaluation_id": "dacbeb43d6a740f49d2dccc765449298",
+      "prior_record_path": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/overnight-control/experiments/campaigns/overnight-20261122/candidates/dacbeb43d6a740f49d2dccc765449298/record.json",
+      "prior_record_sha256": "cdfa2a7d9a3757c0a5bdd20c940a39b4e6ec899d5fbed2167c345893975c119d",
+      "prior_cohort_digest": "0543092279d0368390fe9a039823f591cb0f163f58ff89849ecb07fd22f4647e",
+      "prior_metrics": {
+        "aligo": {
+          "max_seconds": 0.5216178148984909,
+          "median_seconds": 0.5174284148961306,
+          "min_seconds": 0.5172290112823248,
+          "relative_range": 0.008481953232211127,
+          "samples_seconds": [
+            0.5174284148961306,
+            0.5172290112823248,
+            0.5216178148984909
+          ]
+        },
+        "grid": {
+          "max_seconds": 0.806567158550024,
+          "median_seconds": 0.7791205421090126,
+          "min_seconds": 0.7738668844103813,
+          "relative_range": 0.04197075083032193,
+          "samples_seconds": [
+            0.806567158550024,
+            0.7791205421090126,
+            0.7738668844103813
+          ]
+        }
+      },
+      "prior_source_review_approved": null,
+      "source_review_required": true,
+      "existing_14_case_proof_verified": true,
+      "diff_from_incumbent": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/layout-versus-incumbent.diff",
+      "diff_from_incumbent_sha256": "c49b3bc9617f96cd0c9197f0e4bb05f8daa1f71d5040384700858d0a98d3bf29",
+      "diff_from_seed": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/layout-versus-seed.diff",
+      "diff_from_seed_sha256": "d149b3f778b0079698ae9a7d75c140a483d66d3f32753b0cc6c3bc2878803118"
+    },
+    {
+      "name": "stable",
+      "sha": "f90fa964a73aca5515ba93a3517ec1d26ae32a32",
+      "simulator_tree": "111f675ef579ff2127cfd96ecbd1086b6f327264",
+      "prior_evaluation_id": "a4d2cd8dcf5f448aafa8d2817fb59644",
+      "prior_record_path": "/Users/t.betz/Documents/Feyer challenge/.lab/worktrees/overnight-control/experiments/campaigns/overnight-20261122/candidates/a4d2cd8dcf5f448aafa8d2817fb59644/record.json",
+      "prior_record_sha256": "ddda5e79ce1d32ac405086a5404625336b263a93cd115f0d556a417b15d04fe5",
+      "prior_cohort_digest": "0543092279d0368390fe9a039823f591cb0f163f58ff89849ecb07fd22f4647e",
+      "prior_metrics": {
+        "aligo": {
+          "max_seconds": 0.5375279970467091,
+          "median_seconds": 0.5347207505255938,
+          "min_seconds": 0.5324668753892183,
+          "relative_range": 0.009464980838158974,
+          "samples_seconds": [
+            0.5375279970467091,
+            0.5347207505255938,
+            0.5324668753892183
+          ]
+        },
+        "grid": {
+          "max_seconds": 0.8098749481141567,
+          "median_seconds": 0.7943564131855965,
+          "min_seconds": 0.7841489966958761,
+          "relative_range": 0.03238590510664121,
+          "samples_seconds": [
+            0.8098749481141567,
+            0.7841489966958761,
+            0.7943564131855965
+          ]
+        }
+      },
+      "prior_source_review_approved": null,
+      "source_review_required": true,
+      "existing_14_case_proof_verified": true,
+      "diff_from_incumbent": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/stable-versus-incumbent.diff",
+      "diff_from_incumbent_sha256": "a3c9e156d903df8b432398e546c8b2104e08630fa6fb679a9dc6f0807057b853",
+      "diff_from_seed": "/Users/t.betz/Documents/Feyer challenge/.lab/audits/overnight-final-confirmation-v1/stable-versus-seed.diff",
+      "diff_from_seed_sha256": "5e0ddcbacffc36998f1e9181b9649e4aebf1104fcef68a3bab004a0cc81dfbdd"
+    }
+  ],
+  "controls": {
+    "cpu": 2,
+    "logical_cpus": 1,
+    "serial": true,
+    "warm_repeats_inside_each_official_benchmark": 3,
+    "fresh_process_repetitions_per_request": 1,
+    "new_checkout_each_request": true,
+    "drop_first_sample": false,
+    "extra_warmups": false,
+    "existing_two_lane_locks_required": true,
+    "worker_or_queue_changes": false,
+    "package_or_dependency_changes": false
+  },
+  "selection_scope": "Frozen shortlist, exact source; all new timings counted. Four rotations balance positions once; fifth seeded random block gives per-position counts differing at most one.",
+  "analysis_scope": "Cold-checkout fresh-process timings, separate from earlier within-checkout three-process medians. Separate grid/aligo paired ratios versus incumbent within block; 95% percentile bootstrap resampling WHOLE blocks, estimator exp(median(log ratios)), fixed seed. Five blocks give limited precision, not universal statistical proof. Report raw samples, MAD, stdev, min/max, and all per-block ratios.",
+  "admission": "No automatic promotion: per-request reps1 receipts intentionally provisional; source review + exact existing/refreshed 14-case evidence + explicit trusted confirmation assessment required. Existing range-overlap decision remains archived; no numerical threshold or physical workload change.",
+  "excluded_peer": {
+    "sha": "e2fd659e6f426289c526f79ae758bed4182879a9",
+    "reason": "No current dual+14seed proof; 8d source identity not independently resolved from available Git objects. Question frozen without peer."
+  }
+}

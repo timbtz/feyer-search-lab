@@ -1,0 +1,8 @@
+{
+  "automatic_promotion": false,
+  "notes": "Official pass and seed-relative checks do not assert universal correctness; inherited pristine discrepancies remain in receipts.",
+  "raw_report_paths": "Copied beneath this directory retaining trusted-runner relative paths.",
+  "repair_candidate": "3b107d69d9d083f7aaa5f11b952f0098ed0ba528",
+  "repair_evaluation_id": "fbe23beea6e049ccbb5e971232a00955",
+  "scope": "Descriptive paired comparison; all four original finalists remain under source review."
+}
