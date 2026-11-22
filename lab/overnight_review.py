@@ -20,6 +20,7 @@ from .dual_benchmark_worker import durable_json, file_digest, lock, request_id
 DEADLINE = 1795339664.0
 TRUSTED_SEED = '53f38d342c3228c052785e8c9d63b6ce9c832dd1'
 MODELS = {'claude':'claude-opus-5-5', 'codex':'gpt-6-astra'}
+REVIEWER = 'independent-headless-source-review-v1'
 SCHEMA = {'type':'object','additionalProperties':False,
     'required':['approved','reasons','generalization_risks'],
     'properties': {'approved':{'type':'boolean'}, 'reasons':{'type':'array','items':{'type':'string'}},
@@ -171,11 +172,12 @@ def review(payload, *, call=model_call, providers_factory=None, clock=time.time)
             provider=providers.choose()
             while provider and clock()<end:
                 try:
+                    attempt_started=clock()
                     result=call(provider,directory,prompt,end-clock(),(fd,))
                     response(result['response'])
                     if result.get('model')!=MODELS[provider] or not result.get('session_id'):
                         raise ValueError('Reviewer model/session identity missing or wrong')
-                    providers.success(provider)
+                    providers.success(provider,started_at=attempt_started)
                     accepted=True
                     break
                 except Exception as error:
@@ -188,12 +190,12 @@ def review(payload, *, call=model_call, providers_factory=None, clock=time.time)
         except Exception as error:
             failures.append({'error':str(error)})
         approved=accepted and result['response']['approved'] is True and result.get('session_id') is not None
-        artifact={**binding,'provider':provider,'model':result.get('model'),'session_id':result.get('session_id'),
+        artifact={**binding,'reviewer':REVIEWER,'provider':provider,'model':result.get('model'),'session_id':result.get('session_id'),
             'result':result,'failures':failures,'approved':approved,'finished_at':clock(),
             'prompt_sha256':sha256(prompt.encode()),'scope':'no-fixture-specialization-and-integrity'}
         durable_json(directory/'review.json',artifact)
         metadata={'source_review':{'approved':approved,'candidate_sha':payload['candidate_sha'],'parent_sha':payload['parent_sha'],
-            'diff_sha256':sha256(raw),'reviewer':'independent-headless-source-review-v1','provider':provider,
+            'diff_sha256':sha256(raw),'reviewer':REVIEWER,'provider':provider,
             'model':result.get('model'),'session_id':result.get('session_id'),'scope':artifact['scope'],
             'artifact_path':str((directory/'review.json').relative_to(root)), 'artifact_sha256':file_digest(directory/'review.json'),
             'diff_path':str((directory/'source.diff').relative_to(root))}}

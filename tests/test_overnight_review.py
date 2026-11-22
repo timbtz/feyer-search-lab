@@ -1,4 +1,5 @@
 import hashlib
+import contextlib
 import json
 from pathlib import Path
 import tempfile
@@ -12,7 +13,7 @@ from lab import overnight_review as review
 class Registry:
     def __init__(self,*args): self.provider='claude'; self.failures=[]
     def choose(self): return self.provider
-    def success(self,p): pass
+    def success(self,p,started_at=None): pass
     def failure(self,p,error):
         self.failures.append(error)
         if 'quota' in error: self.provider='codex'; return 'quota'
@@ -57,6 +58,26 @@ class ReviewTests(unittest.TestCase):
         self.assertEqual((self.root/metadata['diff_path']).read_bytes(),self.diff)
         self.assertEqual(metadata['scope'],'no-fixture-specialization-and-integrity')
         self.assertLessEqual(self.calls[0][2],100)
+        stored=json.loads(artifact.read_text())
+        for key in ('approved','candidate_sha','parent_sha','diff_sha256','reviewer','provider','model','session_id','scope'):
+            self.assertEqual(stored[key],metadata[key])
+
+    def test_publisher_archives_real_review_envelope(self):
+        try: from lab import overnight_publish as publisher
+        except ImportError: self.skipTest('Publisher available in integrated campaign runtime')
+        metadata=self.run_review()
+        receipt={**self.receipt,**metadata,'schema_version':'feyer-overnight-evaluation-v1','cohort_digest':'f'*64}
+        path=self.root/'enriched.json'; path.write_text(json.dumps(receipt))
+        control=self.root/'control'; control.mkdir()
+        best=control/publisher.BEST; best.parent.mkdir(parents=True)
+        best.write_text(json.dumps({'status':'seed_pending_fresh_calibration','candidate_sha':review.TRUSTED_SEED}))
+        owner=publisher.Publisher.__new__(publisher.Publisher)
+        owner.worktree=control; owner.evidence_root=self.root; owner.repository_url='https://example.invalid/repo'
+        owner.locked=contextlib.nullcontext; owner._recover=lambda:None
+        owner._submit=lambda identity,files,decision:files
+        files=owner.publish(path)
+        self.assertTrue(any(path.endswith('/source-review.json') for path in files))
+        self.assertTrue(any(path.endswith('/reviewed-source.diff') for path in files))
 
     def test_no_numerical_admission_no_provider_call(self):
         self.receipt['admission']['promotion_ready']=False
