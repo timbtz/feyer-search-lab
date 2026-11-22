@@ -966,9 +966,17 @@ STATIC_PARAMETER_LAYOUT: bool = True
 
 def _static_take(values, indices):
     """values[indices] for a 1-D array and concrete nonnegative in-bounds indices."""
+    indices = np.asarray(indices, dtype=np.int64)
+    # A contiguous ascending selection needs no gather index operand or scatter
+    # in its transpose. Check only the supplied index structure, never values.
+    if indices.ndim == 1 and indices.size:
+        start = int(indices[0])
+        stop = start + indices.size
+        if 0 <= start and stop <= values.shape[0] and np.all(np.diff(indices) == 1):
+            return lax.slice_in_dim(values, start, stop, axis=0)
     return lax.gather(
         values,
-        np.asarray(indices, dtype=np.int64)[:, None],
+        indices[:, None],
         lax.GatherDimensionNumbers(offset_dims=(), collapsed_slice_dims=(0,), start_index_map=(0,)),
         slice_sizes=(1,),
         mode=lax.GatherScatterMode.PROMISE_IN_BOUNDS,
@@ -989,10 +997,6 @@ def _static_set(values, indices, updates):
     )
 
 
-# Stage the callback adapter as one differentiable call inside the caller's JIT.
-# Its gathers, phase scatter and custom VJP stay in the timed computation; this
-# boundary only changes how JAX stages their forward and transpose programs.
-@jit
 def _simulate_host_pass(
     plan,
     parameters,

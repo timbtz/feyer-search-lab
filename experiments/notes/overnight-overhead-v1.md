@@ -2420,3 +2420,105 @@
   uifo_rand1/3 sensitivity disagreements, unresolved grid FD54/59/63/136/161/163 and
   first-order-only host VJP remain open. Candidate29 changes no tolerance or physical
   workload. Absolute deadline remains2026-11-22 09:27:44 UTC.
+
+### Candidate29 feedback and retirement
+
+- Exact SHA **7b7a6d391f820ae7acf49336ff84896005c688a4**, evaluation
+  **48f282121cdc44c09eaf485c10f5f248**, grid-1/2/3 and aligo-1/2/3. Receipt:
+  experiments/runs/overnight-20261122/overnight-overhead-v1/48f282121cdc44c09eaf485c10f5f248.json.
+  Official passes3/3 for each workload; saved arrays/gradients and all fourteen
+  generalization cases pass initial-seed tolerance checks. Pristine comparisons
+  retain inherited failures. No infrastructure failure or new numerical failure
+  identified. Independent source review and focused synthetic test results were not
+  supplied; the prepared diagnostic remains unexecuted on the evidence available.
+- Large seconds [0.8827177360653877,0.7992416713386774,0.7992088962346315];
+  median0.7992416713386774, range0.7992088962346315–0.8827177360653877.
+  aLIGO separately [0.550218353047967,0.5518978741019964,0.5532072186470032];
+  median0.5518978741019964, range0.550218353047967–0.5532072186470032.
+  confirmed_improvement=false. Large relative range10.4485% exceeds the team's10%
+  heuristic. Historical ee4fea2 median deltas -2.336 ms large and +3.343 ms aLIGO;
+  ranges overlap and no matched-parent causal estimate is available.
+- Phase medians ms, large/aLIGO: imports266.284/265.766; initialize3.584/3.618;
+  load1.505/0.216; build73.871/38.929; forward lower21.525/21.443,
+  compile34.912/35.234, execute181.541/33.117; sensitivity lower25.448/26.271,
+  compile39.708/41.397, execute0.860/0.474; gradient lower17.764/17.134,
+  compile53.433/54.315, execute85.248/14.479; host transfer0.187/0.147.
+  Against28's observed phase medians, forward lowering increased1.965/2.258 ms,
+  forward compilation1.983/1.686 ms, and gradient lowering1.106/0.597 ms.
+  These are unpaired observations, but the targeted phases provide no support for
+  the proposed tracing reduction. Large1 also had slower imports/build/compilation;
+  retain that sample and do not assign its cause without evidence.
+- Sampled peak process-group RSS bytes: large[579211264,481406976,581120000],
+  aLIGO[281972736,294412288,294899712], generalization999202816. No memory-budget
+  failure; sampling can miss brief peaks. EPYC9334 CPU2, one logical CPU and library
+  threads1, x64, unchanged package flags, persistent cache disabled. Other-job
+  overlap unknown; ranking_eligible=false.
+- Generalization archive deaa6e46f581c61ebee98516f581d30ef4de3a25e34d8dd386fee3a0c65b8d5d.
+  Official archive hashes remain112c0407...large and9c1ce936...aLIGO; seed maximum
+  absolute gradient differences remain5.686350050382316e-6 and3.637978807091713e-11.
+  Tolerance agreement does not establish bitwise seed equality or pristine agreement.
+- Decision: retire nested-JIT adapter staging; remove its decorator/comment and
+  restore all ten simulator modules to reviewed ee4fea28c04d482566be16e916b609d7c6a99e5e.
+  Keep29's commit, diagnostic and evidence in history. Do not try inline/different
+  decorator boundaries without new tracing evidence. This restoration is not a new
+  optimization candidate and should not trigger another performance submission.
+- Next: supervisor import/build/trace profiling on reviewed parent using the prepared
+  overnight-overhead-profile.py --trace-forward and actual setup/optimization/sweep
+  inputs. Return call attribution before further setup or staging variants. Candidate27
+  remains a separate pending confirmation/review request, not a validated gain.
+  Pristine signal/gradient/loss mismatches, gradients33/161/180, uifo_rand1/3 sensitivity
+  disagreements, unresolved grid FD54/59/63/136/161/163 and first-order-only custom VJP
+  remain open. Stop this hypothesis, not the campaign; deadline2026-11-22 09:27:44 UTC.
+
+### Candidate30 — static slices for consecutive parameter selections
+
+- Supervisor explicitly resumed after29's retirement requesting a concrete experiment.
+  Keep29 retired and preserve its restoration. Parent for this isolated refinement is
+  reviewed ee4fea28c04d482566be16e916b609d7c6a99e5e. Candidate SHA and both benchmark/job
+  identifiers are pending. Only _static_take in simulate.py differs from that parent.
+- Source mechanism: _static_take always emits a one-dimensional lax.gather for the
+  builder's concrete indices. If a nonempty one-dimensional index vector is ascending
+  by exactly one and its entire interval is in bounds, it is exactly a static slice.
+  Emit lax.slice_in_dim in that case. Otherwise retain the original gather, including
+  empty, repeated, unordered and nonconsecutive selections. No matrix or parameter
+  values are inspected. A zero-valued selected parameter retains its derivative.
+- Hypothesis: a static slice can avoid a gather index operand and the gather's scatter
+  transpose in parameter insertion/linking/phase readout, reducing small JAX lowering
+  or compilation costs. Full-span selections can simplify to identity. This is not an
+  assertion that the compiler currently fails to simplify them: XLA may already do so,
+  and the NumPy index scan introduces trace-time work. No benefit has been measured.
+  Metadata is not cached; each invocation examines the actual supplied index vector.
+- This is a narrow selection refinement, not another nested-JIT boundary. Candidate14
+  tested contiguous parameter writes (dynamic_update_slice replacing scatter), without
+  a demonstrated gain;30 instead tests reads and their transpose, against reviewed
+  parent and without14 or any other unreviewed change. Retire this read-selection
+  refinement if it gives no stable benefit rather than cycling indexing variants.
+- Current cost context from29, not matched parent: forward lower21.525/21.443 ms,
+  compile34.912/35.234 ms; gradient lower17.764/17.134 ms, compile53.433/54.315 ms
+  (large/aLIGO).29's nested-JIT overhead is absent from30. Parent-like28 observed
+  forward lower19.560/19.185 ms, compile32.929/33.548 ms; gradient lower16.658/16.537
+  ms, compile53.124/53.150 ms. Import/build are not expected savings from30. No30
+  phase deltas, first-run samples or memory observations yet exist.
+- Local verification: all ten simulator modules compile as Python; nine match parent
+  bytes exactly. Replacing _static_take's AST with the parent's restores simulate.py's
+  complete parent AST, verifying no29 decorator remains. git diff --check passes.
+  An exhaustive standard-library index enumeration for lengths1–6 and selection lengths
+  0–4 verified52 eligible contiguous intervals against explicit index selection. This
+  is a logical index-equivalence check, not execution of NumPy/JAX implementation.
+- Prepared overnight-overhead-static-slice-check.py, UNEXECUTED because NumPy/JAX are
+  unavailable locally. It extracts the actual helper and compares it with the parent
+  lax.gather under JIT/VJP for54 tiny real/complex cases. Includes singleton/full-span/
+  partial/reversed/repeated/random/empty selections, selected current zeros, sign bits
+  and duplicate-index gradient accumulation. It does not benchmark optical fixtures.
+- Request focused diagnostic plus both unchanged full official benchmarks, full saved
+  outputs/gradients and fourteen-case seed/pristine generalization on the same exact
+  new SHA. Independent source review and interleaved fresh parent/candidate confirmation
+  are required before promotion. Report samples, separate medians/ranges, all phase
+  tradeoffs, RSS and known overlap. No new compiler setting, outside-timer work, cache,
+  fixture modification, solver/refinement/adjoint math or official-stage change.
+- Candidate29's failed timing evidence and all prior trials remain preserved. The
+  supervisor profiling request and27's separate confirmation request remain pending;
+  neither is supplied by this trial. Inherited pristine signal/gradient/loss failures,
+  gradients33/161/180, uifo_rand1/3 sensitivity discrepancies, unresolved grid
+  FD54/59/63/136/161/163 and first-order-only host VJP remain explicit open questions.
+  Absolute deadline2026-11-22 09:27:44 UTC remains unchanged.
