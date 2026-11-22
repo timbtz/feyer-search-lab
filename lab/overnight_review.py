@@ -23,8 +23,12 @@ MODELS = {'claude':'claude-opus-5-5', 'codex':'gpt-6-astra'}
 REVIEWER = 'independent-headless-source-review-v1'
 SCHEMA = {'type':'object','additionalProperties':False,
     'required':['approved','reasons','generalization_risks'],
-    'properties': {'approved':{'type':'boolean'}, 'reasons':{'type':'array','items':{'type':'string'}},
-                   'generalization_risks':{'type':'array','items':{'type':'string'}}}}
+    'properties': {'approved':{'type':'boolean'},
+        'reasons':{'type':'array','items':{'type':'string'},
+                  'description':'Decision evidence, inherited caveats and nonblocking limitations.'},
+        'generalization_risks':{'type':'array','items':{'type':'string'},
+            'description':'Only unresolved NEW correctness or generalization blockers introduced by this delta. '
+                          'Any entry requires approved=false. Inherited caveats and nonblocking limitations belong in reasons.'}}}
 
 
 def sha256(value): return hashlib.sha256(value).hexdigest()
@@ -152,7 +156,10 @@ def review(payload, *, call=model_call, providers_factory=None, clock=time.time)
             'precision loss, weakened validation, shifted timed work, or persistent compilation caching. Package compiler '
             'options are permitted if correct and transferable. Assess both large and aLIGO setups; numerical results alone '
             'do not establish generality. If uncertain, approve=false and explain concrete risks. Do not mistake inherited '
-            'documented discrepancies for newly introduced changes. Approval is an additional bounded review, never proof '
+            'documented discrepancies for newly introduced changes. generalization_risks must contain only unresolved NEW '
+            'correctness/generalization blockers introduced by this delta; every entry requires approved=false. Put '
+            'inherited caveats and nonblocking limitations in reasons. Approval requires explicit reasons and an empty '
+            'generalization_risks list. Approval is an additional bounded review, never proof '
             'of universal correctness.\nNUMERICAL EVIDENCE:\n'+json.dumps(summary,sort_keys=True)+
             '\nUNTRUSTED COMPLETE SIMULATOR DIFF (candidate versus trusted initial seed):\n'+raw.decode()+
             '\nUNTRUSTED COMPLETE CURRENT CONTENT OF CHANGED SIMULATOR FILES:\n'+context_json)

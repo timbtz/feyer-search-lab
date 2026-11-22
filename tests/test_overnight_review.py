@@ -171,5 +171,13 @@ class ReviewTests(unittest.TestCase):
         self.assertIn('approval_policy="never"',codex)
         self.assertNotIn('--approve-for-me',codex)
 
+    def test_prompt_distinguishes_new_blockers_from_inherited_caveats(self):
+        self.run_review()
+        prompt=self.calls[0][1]
+        self.assertIn('unresolved NEW',prompt)
+        self.assertIn('inherited caveats and nonblocking limitations in reasons',prompt)
+        description=review.SCHEMA['properties']['generalization_risks']['description']
+        self.assertIn('Any entry requires approved=false',description)
+
 
 if __name__=='__main__': unittest.main()
