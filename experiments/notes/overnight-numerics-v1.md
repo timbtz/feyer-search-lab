@@ -2220,3 +2220,120 @@ separate grid/aLIGO samples/median/range, phase tradeoffs, RSS and overlap recor
 If copy reduction has no stable end-to-end benefit, retire this narrow variant.
 Inherited pristine disagreement, unresolved grid FD coordinates and first-order
 reverse-only compatibility caveats remain as documented above.
+
+### Candidate27 feedback and retirement
+
+Exact SHA72940d62fc545d0fefa7d9b3401a1c6ebbdd10d1, dual-official job
+ dec34554b31c4da1b655fafdd8a57f8b (grid-1/2/3 and aligo-1/2/3).
+All six official runs pass; confirmed_improvement=false, source_review=null.
+Large fresh seconds [.8291872125118971,.8023864179849625,.7948901876807213],
+median .8023864179849625, range [.7948901876807213,.8291872125118971].
+aLIGO [.5432056952267885,.543520376086235,.5454824231564999],
+median .543520376086235, range [.5432056952267885,.5454824231564999].
+Admitted7 medians .8015776835381985/.5485551562160254: large +.809ms,
+aLIGO -5.035ms, with overlapping large ranges and different cohorts. No stable
+large improvement. These are separate setup results, not an averaged score.
+
+Median phases in ms (27 versus historical admitted7): grid forward182.700 versus
+181.163 (+1.537), reverse84.768 versus85.357 (-.589), build69.423 versus73.994
+(-4.571), imports267.174 versus265.601 (+1.573). aLIGO forward32.434 versus32.890
+(-.456), reverse14.661 versus14.384 (+.277), build38.480 versus37.963 (+.517),
+imports263.859 versus263.509 (+.350). Not paired timing evidence. Peak sampled
+RSS grid560984064, aLIGO295440384, generalization1124888576 bytes. No reported
+infrastructure or memory-budget failure; external contention remains unexcluded.
+
+Inspected supplied per-array/gradient comparison records and archive hashes;
+raw remote arrays were not reopened locally. All official output comparison
+records remain those of26. All14 generalization cases pass initial-seed bounds,
+with sensitivity log difference now0.0 in every case;25/26's four new nonzero
+log differences disappeared after their ordering implementation was removed.
+This does not explain the ordering discrepancy or attribute its removal to27's
+conjugation change. Pristine comparisons still fail: grid131 signal,3 gradient,
+1 loss entries; aLIGO1 loss; rand1/rand3 sensitivity log errors approximately
+.0002036099068405406/.000058100919558157216. All inherited numerical caveats
+remain, including grid finite differences and first-order-only transform support.
+Decision: retire the unconfirmed masked-copy variant. It remains preserved in27's
+commit. The next experiment explicitly restores the two sites to admitted7.
+
+### Candidate28: native sparse products, numerical/performance experiment
+
+Pending supervisor SHA and dual-official job. Production source is admitted7
+plus only the native-product implementation in host_pass.py. No column-ordering,
+component-Jacobian or27 masked-conjugation change is combined. This changes the
+sparse-product execution backend, distinct from the closed9/10 NumPy temporary
+reuse experiments. No callback profile was supplied; the proportion of total
+runtime attributable to products remains unmeasured. No speedup is claimed.
+
+Concrete operation removed: _Products.apply currently gathers x at every
+structural entry, materializes the complex nnz-by-RHS product, and for normal
+products gathers/reorders that array before reduceat. Every refinement correction
+calls it. The new path uses SciPy's native csr_matvecs loop with static CSR layouts
+for A and A^T. Coordinates include all structural entries, including currently
+zero coefficients; numerical values are reordered afresh for every call. H uses
+conjugated current coefficients. It allocates the full result and any necessary
+contiguous operands, but no nnz-by-RHS intermediate. Same function supports
+vectors and arbitrary RHS counts. No sparse factors or numerical matrices persist
+across evaluations. Factorization and _solve's three-step refinement and1e-14
+stopping criterion are unchanged. Native arithmetic remains complex128.
+
+The extension loader follows the existing SuperLU loader's approach: first use
+an already-loaded scipy.sparse._sparsetools, otherwise load that extension file
+from the installed SciPy package. It runs during the first host callback; its
+startup and CSR-index construction must be included in complete official timing.
+If the extension cannot load, retain the original NumPy path. This is a package
+availability fallback, independent of optical inputs. Native kernel errors are
+not swallowed. No new dependencies or launch settings. Public SciPy source in
+the existing local installation was inspected for csr_matvecs' argument order.
+
+Numerical distinction: native accumulation has a different summation order from
+NumPy reduceat. This is NOT a claim of bitwise equivalence or a harmless-rounding
+assertion. Saved local check and full report:
+ experiments/notes/overnight-numerics-native-products-check.py
+ experiments/notes/overnight-numerics-native-products-result.json
+The check AST-extracts actual production kernels and compares against admitted7;
+it does not import JAX or execute an optical benchmark.360 sparse products and
+360 refined solves cover random complex matrices, changing coefficients including
+new zeros, N/T/H, vector and1/2/5 RHS, Fortran inputs, sizes5/13/37, scaling1e-8 to
+1e8 and Hilbert6/9/12.340 products and336 solutions differ bitwise;3 solve pairs
+change correction count. Ordinary/scaled maximum relative solution differences
+are3.8588283487298117e-16/8.193077684207589e-16. All solutions remain finite and
+inputs unchanged.360 forced NumPy fallback products match parent bitwise.
+Additional empty-pattern/empty-row/nonfinite cases agree including NaN locations.
+The cold direct extension loader and already-imported-SciPy path both worked.
+
+A significant ill-conditioned difference is retained: max native/parent solution
+relative difference .07038003065674561 for a12x12 Hilbert N solve with2 RHS.
+Local longdouble has only52 mantissa bits: its residual results do NOT provide
+extended-precision evidence. The reported ~1e-16 backward errors and zero maximum
+native/dense product difference must be interpreted as ordinary double checks.
+To investigate independently, the check performs70-digit Decimal pivoted Gaussian
+elimination on the exact binary64 matrix and real/imaginary RHS components for
+all36 unperturbed Hilbert solves. Every reference rounded to binary64 is unchanged
+at90 digits. Native is more accurate in20 cases and less accurate in16. Maximum
+relative forward errors: parent .0727785086307816; native .05546192276396677.
+For the largest parent/native disagreement specifically: parent .0727785086307816,
+native .009643985644328048 against the Decimal reference. All per-case errors are
+retained in the JSON. Thus changing summation can improve OR degrade accuracy;
+the lower worst error in this small sample does not certify arbitrary setups.
+Do not hide this finding behind small residuals or public benchmark passing.
+
+Allocation-only synthetic inspection: size127, degree9,3 RHS, one normal product;
+peak traced allocations parent172176 bytes, native24768 bytes (-147408). This
+excludes already-built static layouts/imports, so is only a per-product allocation
+measurement. No local timing benchmark was run. First-use layouts occupy extra
+O(nnz+size) index storage for normal and transposed products. Count its build,
+first-forward, memory and fallback costs in official evidence.
+
+Evaluation request: both unchanged full official workloads on the same new SHA,
+all saved physical arrays and gradients versus admitted7 and initial seed, all14
+optical parameter/frequency/modulation cases, and independent source review.
+Any newly introduced optical discrepancies require investigation of the exact
+assembled coefficients/RHS, high-precision residual/solution diagnostics and
+full sensitivity/gradient effects; do not automatically classify them as rounding.
+Given the local mixed accuracy, numerical review is mandatory even if official
+checks pass. No tolerance relaxation or refinement reduction is proposed. Retain
+admitted7 as shared best unless numerical review and matched repeated fresh-process
+complete timings support this candidate. If promising, request parent/candidate
+paired runs with separate grid/aLIGO samples, medians, ranges, phase deltas, RSS
+and overlap records. If native accumulation causes new unresolved optical errors
+or no stable gain, close this backend hypothesis rather than multiply variants.

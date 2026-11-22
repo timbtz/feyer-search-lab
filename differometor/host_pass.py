@@ -323,8 +323,47 @@ def _factor(pattern, values):
                 permc_spec="COLAMD")
 
 
+_CSR_MATVECS = None
+
+
+def _csr_matvecs():
+    """Load SciPy's native CSR product; retain NumPy if unavailable.
+
+    Like the SuperLU entry point above, load the extension without importing the
+    full sparse solver package. Loading occurs inside the first host evaluation.
+    """
+    global _CSR_MATVECS
+    if _CSR_MATVECS is None:
+        import sys
+        name = "scipy.sparse._sparsetools"
+        try:
+            module = sys.modules.get(name)
+            if module is None:
+                import importlib.machinery
+                import importlib.util
+                import os
+                scipy_spec = importlib.util.find_spec("scipy")
+                directory = os.path.join(os.path.dirname(scipy_spec.origin), "sparse")
+                suffixes = tuple(importlib.machinery.EXTENSION_SUFFIXES)
+                filename = next(f for f in sorted(os.listdir(directory))
+                                if f.startswith("_sparsetools.") and f.endswith(suffixes))
+                path = os.path.join(directory, filename)
+                loader = importlib.machinery.ExtensionFileLoader(name, path)
+                module = importlib.util.module_from_spec(
+                    importlib.util.spec_from_file_location(name, path, loader=loader))
+                loader.exec_module(module)
+            _CSR_MATVECS = module.csr_matvecs
+        except Exception:
+            _CSR_MATVECS = False
+    return _CSR_MATVECS
+
+
 class _Products:
-    """NumPy sparse products for one static pattern (no scipy.sparse)."""
+    """Sparse products with static CSR layouts for A and its transpose.
+
+    Only coordinates are retained. Every product uses its supplied coefficients,
+    including structural entries whose current numerical value is zero.
+    """
 
     def __init__(self, pattern):
         self.size = pattern.size
@@ -332,6 +371,13 @@ class _Products:
         self.row_order = np.argsort(pattern.rows, kind="stable")
         self.row_ids, self.row_starts = np.unique(pattern.rows[self.row_order], return_index=True)
         self.col_ids, self.col_starts = np.unique(pattern.cols, return_index=True)  # CSC order
+        self.native = _csr_matvecs()
+        if self.native:
+            self.normal_indptr = np.searchsorted(pattern.rows[self.row_order],
+                                                 np.arange(self.size + 1)).astype(np.int64)
+            self.normal_indices = np.ascontiguousarray(pattern.cols[self.row_order], dtype=np.int64)
+            self.transpose_indptr = np.searchsorted(pattern.cols, np.arange(self.size + 1)).astype(np.int64)
+            self.transpose_indices = np.ascontiguousarray(pattern.rows, dtype=np.int64)
 
     def apply(self, values, x, trans="N"):
         """op(A) x for x (N,) or (N, K); op in {A, A^T, A^H}."""
@@ -339,6 +385,20 @@ class _Products:
         vector = x.ndim == 1
         x = x[:, None] if vector else x
         result = np.zeros((self.size, x.shape[1]), dtype=np.complex128)
+        if self.native:
+            if trans == "N":
+                indptr, indices = self.normal_indptr, self.normal_indices
+                weights = values[self.row_order]
+            else:
+                indptr, indices = self.transpose_indptr, self.transpose_indices
+                weights = values if trans == "T" else np.conj(values)
+            # The native loop accumulates in complex128, with no nnz-by-RHS
+            # gather/product array. Its summation order can differ from reduceat;
+            # the existing iterative refinement and stopping rule remain intact.
+            self.native(self.size, self.size, x.shape[1], indptr, indices,
+                        np.ascontiguousarray(weights, dtype=np.complex128),
+                        np.ascontiguousarray(x, dtype=np.complex128).ravel(), result.ravel())
+            return result[:, 0] if vector else result
         if trans == "N":
             contributions = (values[:, None] * x[self.cols])[self.row_order]
             result[self.row_ids] = np.add.reduceat(contributions, self.row_starts, axis=0)
@@ -479,10 +539,7 @@ def _assemble(plan, parameters, carrier_values, signal_values, carrier_base, sig
     placing = structure.signal_placing_positions
     placed = raw_signal.copy()
     placed[:, placing] = -raw_signal[:, placing] * carrier[:, plan.signal_carrier_indices]
-    # `placed` is private; retain raw_signal for the pullback but avoid two more
-    # full coefficient arrays for conjugation and selection.
-    np.conjugate(placed, out=placed, where=structure.signal_conjugate)
-    final = placed
+    final = np.where(structure.signal_conjugate, np.conj(placed), placed)
     noise_rows = signal_rows[:1] if plan.noise_row_reuse else signal_rows
     return dict(carrier_rows=carrier_rows, carrier_values=carrier_vals, carrier_coefficients=carrier_coefficients,
                 carrier_factors=carrier_factors, carrier=carrier, signal_rows=signal_rows, raw_signal=raw_signal, signal_values=final,
@@ -606,9 +663,7 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
             signal_values_bar[row, system.nnz :] = rhs_bar[system.rhs_rows, 0]
 
     # Sideband conjugation, then carrier scaling of signal connectors.
-    # The coefficient cotangent is private and no longer needed unconjugated.
-    placed_bar = signal_values_bar
-    np.conjugate(placed_bar, out=placed_bar, where=structure.signal_conjugate)
+    placed_bar = np.where(structure.signal_conjugate, np.conj(signal_values_bar), signal_values_bar)
     placing = structure.signal_placing_positions
     scale = carrier[:, plan.signal_carrier_indices]
     raw_bar = placed_bar.copy()
