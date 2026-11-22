@@ -3947,3 +3947,51 @@
   Only the large first-sample overlap and the missing independent review block it.
 - Request: independent source review of the ee4fea2→candidate diff; direct array comparison with ee4fea2;
   and ≥5 interleaved fresh runs per revision per setup. Arrays expected identical to ee4fea2.
+
+### Candidate 43 feedback — byte-exact replay of candidate 7; lane handoff
+
+- SHA `39b7575748da8baa2b7303df5b6040414163b3ef`; request `e61a6e6ff60748c1b665fc3ebafdbfbc`; publication `ec57e5a`.
+  Simulator hashes equal candidate 7's (build 6a7d8b20…, host 595ff785…, host_pass dd2ff39c…, simulate 772b44de…):
+  byte-exact replay. Official 3/3 on both setups; official archives equal c7's (large 112c0407…, aLIGO 9c1ce936…);
+  all 14 generalization cases pass seed tolerances; seed gradient max abs diff 5.686e-6 large / 3.64e-11 aLIGO.
+  Inherited pristine disagreements and the six grid FD coordinates remain open. No source review supplied.
+- Large 0.817498, 0.826861, 0.773332 s (median 0.817498). The large cohort is noisy: grid-1 imports 297.8 ms (cold
+  first job); grid-2 build 95.5 ms (vs ~74), forward lower/compile 16.1/38.6 ms (vs ~11.7/24–27). Clean grid-3 0.7733 s.
+- aLIGO 0.522847, 0.521997, 0.517999 s (median 0.521997, range 0.93%); max 0.5228 is below ee4fea2's minimum 0.5447.
+- Lower+compile phases in the non-disturbed runs reproduce the mechanism: forward ~11.3–11.9 / 24–28 ms, gradient
+  ~11.6 / 46–47.5 ms (ee4fea2 ≈ 19.5/33.4 and 17/52).
+- Two cohorts of the identical source: large medians 0.7791 (c7) and 0.8175 (c43), aLIGO 0.5174 and 0.5220, against
+  ee4fea2's single cohort 0.8016 / 0.5486. Conclusion: the aLIGO gain (~27–31 ms, non-overlapping ranges in both
+  cohorts) and the ~26 ms compile-phase reduction are reproducible; the large first-run total is dominated by
+  cohort noise of ±25 ms and is not resolvable with unpaired 3-sample cohorts. Not a confirmed large improvement.
+
+### Final lane handoff (Claude, ~2.6 h before deadline)
+
+- Recommended candidate from this lane: exact source of 1ea70bf / 39b7575 (ee4fea2 + boundary-op removal). It is
+  left in the worktree. Admitted best remains ee4fea2 until the following are done: independent source review of the
+  small diff (host_pass wrappers/ParameterLayout helpers, simulate no-op skips with `SKIP_STATIC_NOOPS`,
+  `build.identity_link`); direct array comparison against ee4fea2; ≥5 interleaved fresh-process runs per revision per
+  setup. No further unpaired submissions from this branch are useful.
+- Protocol issue to fix before judging small gains: the first large job's imports are 25–30 ms slower in almost every
+  cohort, which makes "candidate max < incumbent min" fail for any gain below ~30 ms. Use paired interleaving or an
+  untimed filesystem warm-up.
+- Remaining lane targets (imports ~265 ms, build ~73/38 ms) need the import-time tree and cProfile of `build_inputs`,
+  never supplied; the successor's 30+ blind variants found nothing there.
+- Continuity: campaign overnight-20261122, lane overnight-overhead-v1, deadline 2026-11-22 09:27:44 UTC (1795339664).
+
+## Candidate 44: drop Python traceback frames from MLIR op locations (distinct hypothesis, on ee4fea2)
+
+- Parent: reviewed incumbent `ee4fea28c04d482566be16e916b609d7c6a99e5e`. Candidate 7's code was reverted again
+  (still preserved at 1ea70bf/39b7575 for the coordinator's paired confirmation). Expected unchanged hashes vs
+  ee4fea2: build.py 2decccba…, host.py 595ff785…, host_pass.py f2fb32cb…; only simulate.py differs.
+- Change (simulate.py, import time): `jax.config.update("jax_traceback_in_locations_limit", 0)` unless the user set
+  JAX_TRACEBACK_IN_LOCATIONS_LIMIT or DIFFEROMETOR_LOWERING_DEFAULTS=0; guarded so an unknown option keeps defaults.
+- Mechanism: during lowering JAX turns each op's Python traceback (default up to 10 user frames) into a nested
+  MLIR call-site location; these are debug metadata carried into HLO OpMetadata and affect only dumps and error
+  messages. No op, dtype, value or derivative changes. Unlike every earlier lane candidate this also touches the
+  benchmark-owned sensitivity readout lowering (~25.6 ms), the one fixed phase our source changes could not reach.
+- Hypothesis: trace/lower of all three stages drops (ee4fea2 large medians: forward 19.5, sensitivity 25.6,
+  gradient 16.9 ms), possibly compile slightly (smaller metadata). Expected a few ms per stage; unmeasured; may be
+  within noise. Arrays must be identical to ee4fea2.
+- Decision rule: reject if any array differs or if the three lowering phases do not drop versus ee4fea2's recorded
+  phase medians. Phase-level medians are the attribution signal here, not the noisy large total.

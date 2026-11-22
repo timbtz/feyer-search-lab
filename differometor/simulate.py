@@ -25,7 +25,7 @@ import numpy as np
 from jax import lax, vmap, jit
 
 from differometor.setups import Setup
-from differometor.build import build, pairs_to_arrays, prepare_arrays, LINKING_FUNCTIONS, identity_link
+from differometor.build import build, pairs_to_arrays, prepare_arrays, LINKING_FUNCTIONS
 from differometor.components import FUNCTIONS, UNIT_VACUUM, H_PLANCK, F0
 from differometor import components as _components
 from differometor.sparse import SparseStructure, SparseSystem, sparse_solve
@@ -34,6 +34,32 @@ from differometor import host_pass as _host_pass
 
 
 jax.config.update("jax_enable_x64", True)
+
+
+def _apply_lowering_defaults():
+    """Omit Python traceback frames from MLIR op locations (debug metadata only).
+
+    While lowering, JAX converts each operation's Python traceback (up to
+    `jax_traceback_in_locations_limit` frames, default 10) into an MLIR location.
+    These locations only affect compiler dumps and error messages; operations,
+    numerical results and derivatives are unchanged. The simulator's programs are
+    tiny, so this per-op metadata is a visible part of their trace/lower time.
+    A user's own JAX_TRACEBACK_IN_LOCATIONS_LIMIT setting is never overridden;
+    DIFFEROMETOR_LOWERING_DEFAULTS=0 disables this.
+    """
+    import os
+
+    if os.environ.get("DIFFEROMETOR_LOWERING_DEFAULTS", "1") == "0":
+        return
+    if "JAX_TRACEBACK_IN_LOCATIONS_LIMIT" in os.environ:
+        return
+    try:
+        jax.config.update("jax_traceback_in_locations_limit", 0)
+    except (AttributeError, KeyError, ValueError, TypeError):
+        pass  # option unavailable in this JAX version: keep its default
+
+
+_apply_lowering_defaults()
 
 
 def solve(matrix: jnp.ndarray, right_hand_side: jnp.ndarray) -> jnp.ndarray:
@@ -421,20 +447,12 @@ def simulate(
         row = parameters.reshape(parameters.shape[1:])
         row = _static_set(row, layout.optimized_parameter_indices,
                           _static_take(optimized_parameters, layout.optimized_value_indices))
-        # Omit structurally exact no-ops (decided from the static layout, never from
-        # parameter values): the builder's placeholder link writes each parameter
-        # back onto itself through `identity_link`, and a setup without detector
-        # phases scatters nothing into the selection vectors.
-        if not (SKIP_STATIC_NOOPS and layout.linking_is_identity(LINKING_FUNCTIONS, identity_link)):
-            inputs_to_link = _static_take(row, layout.linked_indices)
-            outputs_to_link = vmap(lambda i, x: lax.switch(i, LINKING_FUNCTIONS, x))(
-                linking_function_indices, inputs_to_link
-            )
-            row = _static_set(row, layout.indices_to_link, outputs_to_link)
-        if SKIP_STATIC_NOOPS and not layout.has_detector_phases:
-            qhd_phase_values = None
-        else:
-            qhd_phase_values = jnp.exp(1j * jnp.radians(_static_take(row, layout.qhd_parameter_indices)))
+        inputs_to_link = _static_take(row, layout.linked_indices)
+        outputs_to_link = vmap(lambda i, x: lax.switch(i, LINKING_FUNCTIONS, x))(
+            linking_function_indices, inputs_to_link
+        )
+        row = _static_set(row, layout.indices_to_link, outputs_to_link)
+        qhd_phase_values = jnp.exp(1j * jnp.radians(_static_take(row, layout.qhd_parameter_indices)))
         return _simulate_host_pass(
             host_plan,
             row.reshape(1, -1),
@@ -970,9 +988,6 @@ HOST_PASS: bool = True
 # builder-verified unique destinations a scatter's derivative is a plain
 # gather/scatter. Values are identical. False keeps the generic indexing.
 STATIC_PARAMETER_LAYOUT: bool = True
-# With the static layout, omit the placeholder identity link and an empty
-# detector-phase scatter (both exact no-ops for values and derivatives).
-SKIP_STATIC_NOOPS: bool = True
 
 
 def _static_take(values, indices):
@@ -1012,26 +1027,19 @@ def _simulate_host_pass(
     noise_selection_vectors,
     qhd_placing_indices,
 ):
-    """`_simulate_sparse` evaluated on the host behind one custom VJP.
-
-    `qhd_phase_values=None` means the builder placed no detector phases: a
-    scatter_mul with no updates returns the selection vectors unchanged, so it is
-    omitted.
-    """
+    """`_simulate_sparse` evaluated on the host behind one custom VJP."""
     structure = plan.structure
-    if qhd_phase_values is not None:
-        noise_selection_vectors = lax.scatter_mul(
-            noise_selection_vectors,
-            qhd_placing_indices.reshape(-1, 3),
-            qhd_phase_values,
-            lax.ScatterDimensionNumbers(
-                update_window_dims=(),
-                inserted_window_dims=(0, 1, 2),
-                scatter_dims_to_operand_dims=(0, 1, 2),
-            ),
-            unique_indices=True,
-        )
-    # host_pass returns carrier (CN, Bc) and signal (N, Bs) already transposed.
+    noise_selection_vectors = lax.scatter_mul(
+        noise_selection_vectors,
+        qhd_placing_indices.reshape(-1, 3),
+        qhd_phase_values,
+        lax.ScatterDimensionNumbers(
+            update_window_dims=(),
+            inserted_window_dims=(0, 1, 2),
+            scatter_dims_to_operand_dims=(0, 1, 2),
+        ),
+        unique_indices=True,
+    )
     carrier, signal, noise = _host_pass.host_pass(
         plan,
         parameters.astype(jnp.complex128),
@@ -1042,7 +1050,7 @@ def _simulate_host_pass(
         structure.noise.base_values(noise_matrix).astype(jnp.complex128),
         noise_selection_vectors.astype(jnp.complex128),
     )
-    return carrier, signal, noise.squeeze()
+    return carrier.T, signal.T, noise.squeeze()
 
 
 def _build_sparse_structure(simulation_arrays):
