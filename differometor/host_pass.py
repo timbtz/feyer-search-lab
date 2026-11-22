@@ -314,7 +314,7 @@ def _split(system, values):
 
 _GSTRF = None
 # The options `scipy.sparse.linalg.splu(A, permc_spec="COLAMD")` passes to SuperLU.
-_SUPERLU_OPTIONS = dict(DiagPivotThresh=None, ColPerm="COLAMD", PanelSize=None, Relax=None)
+_SUPERLU_OPTIONS = dict(DiagPivotThresh=None, ColPerm="COLAMD", PanelSize=8, Relax=None)
 
 
 def _construct_csc(*args, **kwargs):
@@ -364,7 +364,7 @@ def _factor(pattern, values):
                      csc_construct_func=_construct_csc, ilu=False, options=dict(_SUPERLU_OPTIONS))
     splu, csc_matrix = _scipy()
     return splu(csc_matrix((data, pattern.indices, pattern.indptr), shape=(pattern.size, pattern.size)),
-                permc_spec="COLAMD")
+                permc_spec="COLAMD", panel_size=8, relax=None)
 
 
 class _Products:
