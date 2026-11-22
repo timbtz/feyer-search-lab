@@ -38,7 +38,37 @@ D = 1 noise detector.
 - Expected: gradient exec phase falls (removed re-assembly, carrier re-factor x2, two hashes,
   scatter); forward exec roughly unchanged (one 4 MB hash removed). All outputs and gradients should
   be bitwise identical to the seed apart from signed zeros. Unmeasured until evaluator feedback.
-- Candidate SHA / job ids: (pending supervisor)
+- SHA `e4b3509cf9b5c630b057175b139b44db05b08195`, dual request `9a08fddaa9cd48a8b26a4a09478c7e33`.
+  Official PASS on all 3 grid and 3 aLIGO fresh processes. Arrays bitwise identical to the seed
+  (grid arrays sha 5124476e..., aLIGO 75df8515... = seed references; strict-vs-seed 0 failures,
+  gradient max abs diff 0.0); generalization 14/14 cases identical to the seed. Strict vs pristine
+  fails exactly as the seed does (pre-existing: grid signal 131, gradient 3, loss 1; rand1/rand3 etc.).
+  - Grid first run: 0.98762, 0.95325, 0.98992 s (median 0.98762, range 3.7 %). Seed audit median
+    0.98699 => no total gain visible; total noise (imports 0.274-0.303 s) exceeds the phase gain.
+  - Grid gradient exec: 173.2, 170.5, 172.3 ms (seed grid-1 187.44 ms, single sample) => ~-15 ms.
+    Grid forward exec: 179.4, 178.3, 209.5 ms (seed 181.08; third sample noisy).
+  - aLIGO first run: 0.67145, 0.66687, 0.63206 s (median 0.66687; seed audit median 0.62603).
+    aLIGO gradient exec 25.3, 25.3, 25.1 ms (seed 28.66); forward 43.2 (noisy), 33.5, 32.8 ms (seed 33.93).
+    The aLIGO total difference comes from imports/compile phases (e.g. forward compile 97.6 ms in
+    sample 1), which this change does not touch; not attributable without paired parent runs.
+  - Decision: numerically clean, small but consistent gradient-phase reduction; not a confirmed
+    total improvement (no paired seed samples in the same window). Kept as parent for candidate 2.
+    Source review: pending (`requires_source_review`).
+
+## Candidate 2: row-batched refinement products (parent = candidate 1)
+- Remaining phases are ~170-180 ms each for 101 rows, i.e. ~1.7 ms per row, dominated by the
+  per-row Python loop: per row and per solve, an initial SuperLU solve plus up to 3 refinement steps,
+  each issuing ~6 small NumPy calls for the residual product and 2 reductions for the stop test,
+  for 2533 nnz x 1-2 columns.
+- Change: `_solve_batch` keeps each row's SuperLU solves and each row's own stop test (at most
+  REFINEMENT_STEPS, max|dx| <= 1e-14 max|x| per row; converged rows drop out), but evaluates the
+  residual products (`_Products.apply_batch`, same products and same sequential `add.reduceat`
+  segments as `apply`) and stop-test reductions for all still-refining rows at once. Forward:
+  factor all rows, batched H solves, one batched noise-source product, batched N solves. Backward:
+  batched T solves, coefficient/noise cotangent terms, noise transpose product and conj N solves;
+  the shared noise-row cotangent is still accumulated row by row in order.
+- Expected: forward and gradient exec phases fall (fewer Python-level NumPy calls); outputs expected
+  bitwise identical to candidate 1 / seed (same per-row operations and reduction order). Unmeasured.
 
 ## Open numerical findings carried forward unchanged
 Strict dense-reference flags (signal entries, gradients 33/161/180), uifo_rand1 2.04e-4 / uifo_rand3

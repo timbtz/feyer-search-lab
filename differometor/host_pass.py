@@ -276,6 +276,21 @@ class _Products:
             result[self.col_ids] = np.add.reduceat(weights[:, None] * x[self.rows], self.col_starts, axis=0)
         return result[:, 0] if vector else result
 
+    def apply_batch(self, values, x, trans="N"):
+        """Row-wise op(A_b) x_b for values (B, nnz) and x (B, N, K).
+
+        Same elementwise products and the same sequential per-segment
+        `add.reduceat` order as `apply`, evaluated for all rows at once.
+        """
+        result = np.zeros((x.shape[0], self.size, x.shape[2]), dtype=np.complex128)
+        if trans == "N":
+            contributions = (values[:, :, None] * x[:, self.cols])[:, self.row_order]
+            result[:, self.row_ids] = np.add.reduceat(contributions, self.row_starts, axis=1)
+        else:
+            weights = values if trans == "T" else np.conj(values)
+            result[:, self.col_ids] = np.add.reduceat(weights[:, :, None] * x[:, self.rows], self.col_starts, axis=1)
+        return result
+
 
 _PRODUCTS = {}
 
@@ -298,6 +313,31 @@ def _solve(products, values, factor, rhs, trans):
     return solution
 
 
+def _solve_batch(products, values, factors, rhs, trans):
+    """`_solve` for every row b: op(A_b) x_b = rhs_b, rhs (B, N, K).
+
+    Each row keeps its own SuperLU solves and its own stopping test (at most
+    REFINEMENT_STEPS corrections, stop once max|dx| <= tol max|x| for that row);
+    only the residual products and the convergence reductions of the rows that
+    are still refining are evaluated together.
+    """
+    rhs = np.ascontiguousarray(rhs, dtype=np.complex128)
+    solution = np.stack([factors[b].solve(rhs[b], trans=trans) for b in range(rhs.shape[0])])
+    active = np.arange(rhs.shape[0])
+    for _ in range(REFINEMENT_STEPS):
+        residual = rhs[active] - products.apply_batch(values[active], solution[active], trans)
+        correction = np.stack([factors[b].solve(np.ascontiguousarray(residual[i]), trans=trans)
+                               for i, b in enumerate(active)])
+        updated = solution[active] + correction
+        solution[active] = updated
+        converged = (np.abs(correction).max(axis=(1, 2))
+                     <= REFINEMENT_TOLERANCE * np.abs(updated).max(axis=(1, 2)))
+        active = active[~converged]
+        if active.size == 0:
+            break
+    return solution
+
+
 # Assembly state of the latest forward evaluation (component values, carrier
 # factorizations and solution, signal-system factorizations), consumed once by
 # its backward evaluation when the backward receives byte-identical assembly
@@ -316,6 +356,13 @@ def _assembly_key(plan, *inputs):
         digest.update(np.asarray(array.shape, dtype=np.int64).tobytes())
         digest.update(array.tobytes())
     return plan._key, digest.digest()
+
+
+def _noise_rows(plan, noise_values, count):
+    """Noise-source values for each of the `count` signal rows, (count, nnz)."""
+    if plan.noise_row_reuse:
+        return np.broadcast_to(noise_values[0], (count, noise_values.shape[1]))
+    return noise_values
 
 
 def _selections(plan, carrier, selection_vectors):
@@ -367,21 +414,18 @@ def host_forward(plan, parameters, carrier_values, signal_values, carrier_base, 
     count, detectors = coefficients.shape[0], selected.shape[0]
     selections = np.moveaxis(np.broadcast_to(selected, (detectors, count, system.size)), 0, 1)
     products, noise_products = _products(system.pattern), _products(structure.noise.pattern)
-    signal = np.empty((count, system.size), dtype=np.complex128)
-    covariances = np.empty((count, detectors, system.size), dtype=np.complex128)
-    weights = np.empty((count, detectors, system.size), dtype=np.complex128)
-    factors = []
-    for row in range(count):
-        factor = _factor(system.pattern, coefficients[row])
-        factors.append(factor)
-        weight = _solve(products, coefficients[row], factor, selections[row].T, "H")      # A^H w = s
-        sources = noise_products.apply(state["noise_values"][0 if plan.noise_row_reuse else row], weight)
-        solution = _solve(products, coefficients[row], factor, np.concatenate([rhs[row][:, None], sources], axis=1), "N")
-        signal[row], covariances[row], weights[row] = solution[:, 0], solution[:, 1:].T, weight.T
+    factors = [_factor(system.pattern, coefficients[row]) for row in range(count)]
+    weight = _solve_batch(products, coefficients, factors, np.swapaxes(selections, 1, 2), "H")   # A^H w = s
+    sources = noise_products.apply_batch(_noise_rows(plan, state["noise_values"], count), weight)
+    solution = _solve_batch(products, coefficients, factors,
+                            np.concatenate([rhs[:, :, None], sources], axis=2), "N")
+    signal = np.ascontiguousarray(solution[:, :, 0])
+    covariances = np.ascontiguousarray(np.swapaxes(solution[:, :, 1:], 1, 2))
+    weights = np.ascontiguousarray(np.swapaxes(weight, 1, 2))
     # Consumed by the matching backward together with the rest of the state:
     # these coefficients are a deterministic function of the digested inputs.
     state["signal_factors"] = factors
-    noise =_noise_amplitude(np.sum(np.real(covariances * np.conj(selections)), axis=2)).T     # (D, Bs)
+    noise = _noise_amplitude(np.sum(np.real(covariances * np.conj(selections)), axis=2)).T     # (D, Bs)
     return state["carrier"], signal, noise, covariances, weights
 
 
@@ -428,24 +472,29 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
     pattern, noise_pattern = system.pattern, noise_system.pattern
     products, noise_products = _products(pattern), _products(noise_pattern)
     factors = state.get("signal_factors")
+    if factors is None:
+        factors = [_factor(pattern, coefficients[row]) for row in range(count)]
     signal_bar = np.asarray(signal_bar)
-    for row in range(count):
-        factor = factors[row] if factors is not None else _factor(pattern, coefficients[row])
-        solution = np.concatenate([signal[row][:, None], covariances[row].T], axis=1)           # (N, 1 + D)
-        solution_bar = np.concatenate([signal_bar[row][:, None], covariance_bar[row].T], axis=1)
-        rhs_bar = _solve(products, coefficients[row], factor, solution_bar, "T")               # A^T r = x_bar
-        coefficient_bar = -np.sum(rhs_bar[pattern.rows] * solution[pattern.cols], axis=1)
-        sources_bar, weight = rhs_bar[:, 1:], weights[row].T                                    # (N, D)
-        noise_row = 0 if plan.noise_row_reuse else row
-        noise_values_bar[noise_row] += np.sum(sources_bar[noise_pattern.rows] * weight[noise_pattern.cols], axis=1)
-        weight_bar = noise_products.apply(state["noise_values"][noise_row], sources_bar, "T")
-        # w = conj(A)^-T s: s_bar = conj(A)^-1 w_bar = g; conj(A)_bar[r, c] = -g[c] w[r].
-        adjoint = np.conj(_solve(products, coefficients[row], factor, np.conj(weight_bar), "N"))
-        selection_bar[row] += adjoint.T
-        coefficient_bar += np.conj(-np.sum(adjoint[pattern.cols] * weight[pattern.rows], axis=1))
-        signal_values_bar[row, : system.nnz] = coefficient_bar
-        if system.augmented:
-            signal_values_bar[row, system.nnz :] = rhs_bar[system.rhs_rows, 0]
+    # All rows at once; per row identical operations to the reference loop.
+    solution = np.concatenate([signal[:, :, None], np.swapaxes(covariances, 1, 2)], axis=2)        # (B, N, 1 + D)
+    solution_bar = np.concatenate([signal_bar[:, :, None], np.swapaxes(covariance_bar, 1, 2)], axis=2)
+    rhs_bar = _solve_batch(products, coefficients, factors, solution_bar, "T")                 # A^T r = x_bar
+    coefficient_bar = -np.sum(rhs_bar[:, pattern.rows] * solution[:, pattern.cols], axis=2)
+    sources_bar, weight = rhs_bar[:, :, 1:], np.swapaxes(weights, 1, 2)                         # (B, N, D)
+    noise_terms = np.sum(sources_bar[:, noise_pattern.rows] * weight[:, noise_pattern.cols], axis=2)
+    if plan.noise_row_reuse:
+        for row in range(count):                         # sequential accumulation, as in the row loop
+            noise_values_bar[0] += noise_terms[row]
+    else:
+        noise_values_bar += noise_terms
+    weight_bar = noise_products.apply_batch(_noise_rows(plan, state["noise_values"], count), sources_bar, "T")
+    # w = conj(A)^-T s: s_bar = conj(A)^-1 w_bar = g; conj(A)_bar[r, c] = -g[c] w[r].
+    adjoint = np.conj(_solve_batch(products, coefficients, factors, np.conj(weight_bar), "N"))
+    selection_bar += np.swapaxes(adjoint, 1, 2)
+    coefficient_bar += np.conj(-np.sum(adjoint[:, pattern.cols] * weight[:, pattern.rows], axis=2))
+    signal_values_bar[:, : system.nnz] = coefficient_bar
+    if system.augmented:
+        signal_values_bar[:, system.nnz :] = rhs_bar[:, system.rhs_rows, 0]
 
     # Sideband conjugation, then carrier scaling of signal connectors.
     placed_bar = np.where(structure.signal_conjugate, np.conj(signal_values_bar), signal_values_bar)
