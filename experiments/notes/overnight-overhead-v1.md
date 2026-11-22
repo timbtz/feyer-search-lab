@@ -3687,3 +3687,119 @@
   No workload, dtype, physical inputs, outputs, gradients, tolerance or JIT-stage
   changes. No benchmarks, commits, installs, agents, shared-launch or evaluator
   modifications made by this agent. Deadline09:27:44 UTC unchanged.
+
+### Candidate40 feedback — retire deferred base-matrix transfers
+
+- Evaluated SHA6fdacc07ca925607b98d2192d864a491403fc7aa; request
+  c357c33ee530497e94858f4c309ec548, jobs grid-1/2/3 and aligo-1/2/3.
+  Own receipt experiments/runs/overnight-20261122/overnight-overhead-v1/c357c33ee530497e94858f4c309ec548.json.
+  All six official runs passed; no infrastructure failure. Independent source
+  review absent, confirmed_improvement=false, ranking_eligible=false.
+- Large samples seconds0.9052383340895176,0.8559758011251688,0.8141670748591423;
+  median0.8559758011251688, range0.8141670748591423–0.9052383340895176,
+  relative range10.6395%. Official aLIGO samples0.5975357796996832,
+  0.5842905454337597,0.5508914031088352; median0.5842905454337597,
+  range0.5508914031088352–0.5975357796996832, relative range7.9831%.
+  Compared with recorded ee4fea2 medians, large+54.398 ms and aLIGO+35.735 ms.
+  Unpaired cohorts do not establish causal regression magnitude, but supply no
+  evidence for promotion. Selection rejected instability, missing source review,
+  insufficient large gain, aLIGO regression and overlapping large ranges.
+- Phase medians ms (large / aLIGO): imports295.540/264.428;
+  initialize3.550/3.573; load1.450/0.215; build74.914/40.754;
+  forward lower21.040/20.678, compile33.666/35.135, execute184.679/39.028;
+  sensitivity lower25.588/34.289, compile41.089/41.828, execute0.837/0.478;
+  gradient lower16.778/17.073, compile55.107/53.819, execute88.132/14.694;
+  transfer0.195/0.153. Build samples large90.781,74.914,74.837 ms;
+  aLIGO40.754,43.867,38.448 ms. Against different candidate39's recorded
+  medians build+2.252/+2.746 ms, not a matched-parent attribution. Multiple
+  unrelated phases also varied; do not assign all slowdown to transfer order.
+- Sampled peak RSS bytes large493481984,645681152,589361152;
+  aLIGO279437312,293298176,294998016; generalization940851200.
+  No sampled budget exceedance. Fixed EPYC9334 CPU2, threads one, x64,
+  existing flags and no persistent cache. External contention unknown and
+  no interleaved fresh-parent cohort supplied.
+- All saved carrier, signal, noise, powers, sensitivity, loss and gradient
+  comparisons pass initial-seed tolerances in six official and fourteen
+  generalization runs. Official archives equal39's. Generalization archive
+  aa0a9c9295a3753064a2b5b5fd3fc89490339d437131faa67a05c8ca0d51f22e;
+  self-comparison is not bitwise seed equivalence. Inherited pristine grid
+  signal/loss/gradient and aLIGO loss disagreements remain; generalization
+  includes uifo_rand1/3 sensitivity log errors2.036099068405406e-4 and
+  5.8100919558157216e-5. No new initial-seed-relative failure reported.
+  No supervisor result for the focused NumPy/JAX diagnostic was supplied;
+  it remains unexecuted locally. Its source targets exact candidate40.
+- Decision: restore build.py and simulate.py to reviewed ee4fea2. All ten
+  simulator modules verified byte-identical to that parent; syntax and
+  whitespace checks passed. Preserve40's commit, diagnostic and results;
+  no history reset. This restoration is not an optimization submission.
+  Broad host-first8, group-only18 and matrix-only40 failed to establish a
+  repeat-supported complete gain. Retire this transfer-order mechanism rather
+  than extending it into more array categories or combining failed changes.
+- Next concrete experiment remains the supervisor-owned profile artifact
+  experiments/notes/overnight-overhead-profile.py on actual large, official
+  aLIGO and a third setup, attributing builder/device-conversion and tracing
+  costs. No profile results supplied. Candidate30 remains a separate preserved
+  lead for its focused diagnostic, independent review and matched-parent
+  confirmation, not another candidate-only timing replay.
+- Keep inherited gradients33/161/180, grid FD54/59/63/136/161/163 and bounded
+  prior aLIGO29/29 findings visible. Whole-pass custom VJP still lacks JVP and
+  Hessian support. No workload, tolerance, physical input/output or stage changes.
+  No benchmarks, installs, commits or agents launched. Stop ends40's hypothesis,
+  not the campaign; deadline09:27:44 UTC unchanged.
+
+### Candidate41 — build-local direct membership table for derivative slots
+
+- New experiment after40's retirement; pending supervisor SHA and job IDs.
+  Source baseline is reviewed ee4fea28c04d482566be16e916b609d7c6a99e5e,
+  not failed40. Current Git HEAD is the recorded40 submission6fdacc0;
+  permitted working changes include its explicit restoration. No history reset.
+  Only simulate.py differs from ee4fea2 for this experiment. Solver,
+  refinement, adjoint, callback and readout implementations retain that parent.
+- Source evidence: run_build_step classifies each group column using
+  any(int(i) in differentiable_indices for i in indices[:, slot]). Inactive
+  columns scan every row, boxing NumPy integers in Python. The new path builds
+  one Boolean membership table for the current parameter row, reuses it across
+  carrier/signal/noise groups, gathers membership by integer input indices,
+  and reduces with any along rows. It uses no optical values, including current
+  zeros, to decide activity. Linking outputs remain differentiable exactly as
+  before. The table is local to this build and is not cached or returned.
+- Guards: table only exists when all differentiable indices are nonnegative
+  and in bounds; each group's fast path requires integer dtype and in-bounds
+  indices. Negative, out-of-bounds or other dtype inputs retain the original
+  int-conversion and membership loop. Empty dimensions reduce to the same empty
+  mask; dictionary keys remain Python ints and values empty tuples.
+- This isolates and changes the classification algorithm from candidate4's
+  bundled np.isin experiment. That earlier build result (~2 ms on large, none
+  on aLIGO) did not establish a benefit and is not evidence for this proposal.
+  A direct table removes repeated membership setup and Python per-element work,
+  but allocates a Boolean temporary per group and adds bounds reductions. Early
+  short-circuiting in the old code may win. No estimated gain is asserted.
+- Measured cost context only: failed40 build medians74.914 ms large and40.754 ms
+  official aLIGO; total medians0.855975801 and0.584290545 s. Reviewed ee4fea2
+  recorded total medians0.801577684 and0.548555156 s. These are separate cohorts,
+  not a causal phase delta or a combined score. Candidate41 phase delta, memory,
+  official status and generalization results are all pending.
+- Local diagnostic experiments/notes/overnight-overhead-slot-table-check.py
+  --structural-only passed6265 actual-helper comparisons using a stdlib array
+  shim: exhaustive two-by-two index arrangements and membership subsets,
+  repeated reads, out-of-range/negative indices, empty dimensions, float/bool/
+  object fallback labels and unavailable-table fallback. This verifies control
+  flow with a shim, NOT NumPy semantics, optical outputs or gradients. Its
+  default additional420 NumPy comparisons cover integer/unsigned/float/bool/
+  object arrays, strided/transposed/empty views, unchanged inputs and Python
+  key types. NumPy portion UNEXECUTED locally because dependencies unavailable.
+- Request: run the focused diagnostic in the supervisor environment, then both
+  unchanged full official workloads on the same exact candidate SHA, saving
+  every output and gradient plus14 generalization cases and independent source
+  review. If promising, matched/interleaved fresh-parent timings must establish
+  build and complete-total gains separately for large and aLIGO. Count all table
+  work inside build; existing three stages and launch settings unchanged.
+  Reject on any mask, output or gradient regression, or absent stable gain.
+- Existing numerical uncertainties remain: pristine signal/loss and gradients
+  33/161/180, uifo_rand1/3 logarithmic sensitivity differences, grid finite-
+  difference coordinates54/59/63/136/161/163; prior extra aLIGO29/29 is bounded
+  evidence. Whole-pass VJP still does not support JVP/Hessians. Initial-seed
+  tolerance passes from40 do not validate41. No benchmarks, installs, commits,
+  agents, public-file or fixture edits performed. Next decision follows this
+  focused result; do not combine with preserved30 or extend table optimization
+  to numerical calculations. Supervisor profiling remains pending.

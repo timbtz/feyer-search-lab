@@ -1307,6 +1307,27 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
     return signal, noise
 
 
+def _differentiable_slots(indices, differentiable_indices, membership):
+    """Classify input columns from parameter indices, never parameter values.
+
+    The build-local table avoids Python scalar conversion for ordinary integer
+    indices. Keep the original conversion rules for other dtypes or indices
+    outside the table; no negative-index wrapping is introduced here.
+    """
+    if (
+        membership is not None
+        and indices.dtype.kind in "iu"
+        and (not indices.size or (indices.min() >= 0 and indices.max() < membership.size))
+    ):
+        active = np.any(membership[indices], axis=0)
+        return {slot: () for slot, present in enumerate(active) if present}
+    return {
+        slot: ()
+        for slot in range(indices.shape[1])
+        if any(int(i) in differentiable_indices for i in indices[:, slot])
+    }
+
+
 def run_build_step(
     setup: Setup,
     changing_pairs: list | None = None,
@@ -1354,7 +1375,7 @@ def run_build_step(
     """
     start = time()
 
-    instructions, matrices, metadata = build(setup, _host_matrices=SPARSE_SOLVES)
+    instructions, matrices, metadata = build(setup)
     component_groups = {}
     arrays_to_prepare, carrier_arrays, signal_arrays, noise_arrays = pairs_to_arrays(
         *instructions, optimization_pairs, changing_pairs, component_groups=component_groups,
@@ -1393,6 +1414,12 @@ def run_build_step(
     differentiable_indices |= {
         int(i) for i in np.asarray(simulation_arrays["indices_to_link"]).ravel()
     }
+    parameter_count = simulation_arrays["parameters"].shape[-1]
+    membership = None
+    if all(0 <= index < parameter_count for index in differentiable_indices):
+        membership = np.zeros(parameter_count, dtype=bool)
+        for index in differentiable_indices:
+            membership[index] = True
     for name in ("carrier", "signal", "noise"):
         group = component_groups.get(name)
         if not isinstance(group, dict) or "parameter_indices" not in group:
@@ -1402,11 +1429,9 @@ def run_build_step(
             indices = np.asarray(indices)
             if indices.ndim != 2:
                 continue
-            diff_slots[function_index] = {
-                slot: ()
-                for slot in range(indices.shape[1])
-                if any(int(i) in differentiable_indices for i in indices[:, slot])
-            }
+            diff_slots[function_index] = _differentiable_slots(
+                indices, differentiable_indices, membership
+            )
         group["diff_slots"] = diff_slots
 
     simulation_arrays["component_groups"] = component_groups
@@ -1417,12 +1442,6 @@ def run_build_step(
             host_plan = _host_pass.build_host_plan(simulation_arrays, sparse_structure, component_groups)
             if host_plan is not None:
                 simulation_arrays["host_plan"] = host_plan
-
-        # Structural planning consumes these dense matrices on the host. Transfer
-        # each once, after planning (including unsupported-layout fallbacks), so
-        # callers still receive the same JAX arrays within the build timer.
-        for name in ("carrier_matrix", "signal_matrix", "noise_matrix"):
-            simulation_arrays[name] = jnp.asarray(simulation_arrays[name])
 
     if timeit:
         for array in simulation_arrays.values():
