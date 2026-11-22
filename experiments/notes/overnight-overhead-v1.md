@@ -3097,3 +3097,129 @@
   checks are bounded evidence. No solver/refinement/adjoint formula, compiler
   flag, official stage, workload or tolerance changes. Deadline remains
   2026-11-22 09:27:44 UTC. No commits, agents, installs or benchmark launches here.
+
+
+### Candidate35 feedback — retire identity-only gathers
+
+- Candidate800acf5fbfc8eae3846d262b4d702c20d8939af7, evaluation
+  56cb75e36ea44298b4d2d55fdb59fd66, jobs grid-1/2/3 and aligo-1/2/3.
+  Receipt: experiments/runs/overnight-20261122/overnight-overhead-v1/56cb75e36ea44298b4d2d55fdb59fd66.json.
+  Publisher37c930ba9bf61bbacf453548f33aec7096dac320. Both official benchmarks
+  passed3/3; confirmed_improvement=false, independent source_review=null.
+  Selection rejected missing review, insufficient large gain and overlapping ranges.
+- Large fresh complete samples [0.8333641663193703,0.7963257115334272,
+  0.7994784880429506] s: median0.7994784880429506, range
+  0.7963257115334272–0.8333641663193703 (relative4.6328%).
+  Official aLIGO samples [0.5365756079554558,0.5376485530287027,
+  0.5407672077417374] s: median0.5376485530287027, range
+  0.5365756079554558–0.5407672077417374 (relative0.7796%).
+  Historical reviewed ee4fea2 median deltas -2.099 ms large/-10.907 ms aLIGO;
+  these are unpaired observations, not a demonstrated shared improvement.
+- Phase medians ms, large/aLIGO: imports271.584/265.453, init3.543/3.622,
+  load1.516/0.301, build74.895/37.938, forward lower19.657/18.679,
+  forward compile33.009/32.854, forward execute179.615/32.676,
+  sensitivity lower25.677/26.233, compile39.637/41.280, execute0.877/0.478,
+  gradient lower16.808/16.076, compile52.106/47.084, execute85.436/14.689,
+  host transfer0.192/0.152. Phase medians need not sum to the total median.
+  Compared with30's measured gradient compile48.943/44.267 ms, identity-only
+ 35 is +3.163/+2.817 ms; compared with parent-like28's53.124/53.150 ms,
+  it is -1.018/-6.066 ms. A transfer compilation signal remains plausible,
+  but neither comparison is a matched-parent causal measurement. This narrower
+  mechanism did not reproduce30's full observed compilation reduction and did
+  not establish the required large complete-run gain. No slow sample discarded.
+- Sampled peak process-group RSS bytes: large520572928/541638656/504217600;
+  aLIGO294862848/295333888/293765120; generalization871612416. No exceedance.
+  EPYC9334 CPU2, one logical CPU, library threads1, x64, no persistent cache,
+  unchanged compiler flags. External contention not excluded; ranking_eligible=false.
+- Inspected receipt comparisons for all saved physical outputs and gradients:
+  six official and all14 additional cases pass initial-seed regression tolerances.
+  Official archives remain large112c040763a3659519d4fd21272c47f649d302ee2b5d3fc6ee1422006a8cb4a5
+  and aLIGO9c1ce936bf401a6b48abf017df1e3980d8cfa7b04c800a1f9d7d47195da25195.
+  Seed maximum absolute gradient differences remain5.686350050382316e-6
+  large and3.637978807091713e-11 aLIGO. Generalization archive
+  428a220aed616ade541a6dd80d7cf09d9b28b41da4f95b9f79070bb842535725 differs
+  from the initial-seed archive; tolerance passes do not imply bitwise equality.
+  The receipt's archive self-comparison is not independent seed evidence.
+  Pristine strict comparisons still fail inherited signal/gradient/loss checks;
+  uifo_rand1/3 log-sensitivity errors remain2.036099068405406e-4/5.8100919558157216e-5.
+  No new seed-relative failing entries are reported. The focused54 primal/VJP,
+  six trace and six eager-input checks remain unexecuted locally; no supervisor
+  diagnostic result was supplied. No new universal correctness claim.
+- Decision: retire35 and restore simulate.py to reviewed ee4fea2. All ten simulator
+  modules verified byte-identical to that reviewed parent. Preserve35's evaluated
+  revision, diagnostic and evidence. No further gather/slice/identity variants
+  without profiling or matched-parent confirmation; repeated unconfirmed variants
+  do not justify increasing complexity. This restoration is not a new candidate.
+- Next concrete step is supervisor profiling of reviewed ee4fea2 using
+  experiments/notes/overnight-overhead-profile.py --trace-forward with actual
+  large, official aLIGO and third-setup inputs. Return import/build/trace costs
+  and pytree inventory before choosing a distinct setup mechanism. Candidate30's
+  exact revision remains preserved for its separate focused diagnostic, independent
+  review and matched interleaved fresh-process confirmation; do not silently
+  substitute35 or combine candidates. No profile or paired cohort has been supplied.
+- Inherited pristine gradients33/161/180, uifo_rand1/3 sensitivity disagreements,
+  unresolved grid FD54/59/63/136/161/163 and first-order reverse-only host VJP
+  remain explicit. Prior extra aLIGO29/29 checks do not certify general accuracy.
+  Stop ends35's hypothesis, not the authorized campaign. Absolute deadline remains
+  2026-11-22 09:27:44 UTC. No benchmarks, commits, installations or agents launched.
+
+
+### Candidate36 — set membership for builder component deduplication
+
+- Supervisor resumed after35 retirement and requested a concrete next experiment.
+  Keep the restoration of simulate.py; do not retain35 or combine other pending
+  variants. Scientific parent ee4fea28c04d482566be16e916b609d7c6a99e5e.
+  Only build.py differs from this parent, in pairs_to_arrays' private bookkeeping.
+  Candidate SHA and both official job IDs pending supervisor submission.
+- Distinct setup mechanism: carrier_components and noise_components were lists
+  used only for membership tests, appending a new component and len(). Source
+  inspection confirms they are not iterated, returned or passed elsewhere.
+  Use sets and add() instead. Component keys are already instruction-dictionary
+  keys, so hashability is required before this check in the original code.
+  Array append order follows the existing instruction/optimization/sweep loops;
+  row labels still use len(components)-1 after a first insertion. Duplicate calls
+  still return before appending arrays. The instruction lookup before membership
+  remains in place, preserving missing-key behavior. No physical inputs inspected.
+- Proven redundant work: list membership scans every earlier component when a new
+  component is encountered and scans again on repeated optimization/sweep calls.
+  Set membership avoids that linear scan for ordinary distinct hashes. On a tiny
+  synthetic sequence of128 unique keys then64 repeats, equality comparisons fall
+  from10144 to0 with identical accumulated arrays and counts. These are operation
+  counts, not elapsed-time or official workload observations; collision-heavy
+  keys can still require linear membership work. Set allocation/hash overhead is
+  counted in build and may offset this saving on small setups.
+- Measured context only:35 build medians74.895 ms large/37.938 ms aLIGO;
+  imports271.584/265.453 ms and gradient compilation52.106/47.084 ms are not
+  targeted. No profile attributes a fraction of build time to this helper, and
+  no36 timing exists. This test is motivated by the source-proven repeated scan,
+  not a promise to recover the entire build phase. Candidate17's name-to-index
+  lookup and33's constant row allocation were retired; neither is retained here.
+- Local validation: experiments/notes/overnight-overhead-seen-components-check.py
+  executes the actual nested helper against the reviewed parent's helper using
+  a stdlib stub only for the unchanged np.ones expression.612 cases cover0–16
+  components, string/tuple/colliding-hash keys, empty/forward/reverse/repeated/
+  randomized insertion sequences and zero/multiple output slots. All accumulated
+  dictionaries and distinct-component counts match. An initial Python3.9 annotation
+  evaluation error was fixed in the diagnostic using future annotations; simulator
+  behavior was unaffected. The diagnostic is structural, not NumPy/JAX execution.
+- Reversing the two set initializers, helper annotation/docstring and add() change
+  reproduces build.py's parent bytes exactly. Nine other simulator modules match
+  parent bytes. All simulator Python syntax and git diff --check pass. No runtime
+  benchmarks, dependency installs, commits, agent spawns or launch changes here.
+- Request both unchanged official full benchmarks, all saved outputs/gradients and
+  fourteen-case seed/pristine generalization on the same exact new revision.
+  Independent source review is required before promotion. If promising, compare
+  with reviewed parent in interleaved fresh processes under matching CPU/resource
+  policy, reporting each sample, separate large/aLIGO medians/ranges, build/total
+  tradeoffs, RSS and known overlap. No warm-only or unpaired millisecond claim.
+- Decision after feedback: retire if build and complete first-run improvement are
+  not repeat-supported. Do not expand to unordered output iteration or global
+  setup caches. Next evidence remains supervisor import/build/trace profiling;
+  specifically attribute append_information call counts/time and membership costs
+  before considering any further builder bookkeeping refinement.
+- Inherited pristine signal/loss/gradient findings including33/161/180,
+  uifo_rand1/3 sensitivity differences, unresolved grid FD54/59/63/136/161/163
+  and first-order reverse-only host VJP remain open. Prior aLIGO29/29 checks are
+  bounded evidence. No solver/refinement/adjoint mathematics, compiler flags,
+  official stage, frequency/design-variable count or tolerances change.
+  Deadline remains2026-11-22 09:27:44 UTC; this is not an evaluated gain.
