@@ -3914,3 +3914,36 @@
   Prior extra aLIGO29/29 is bounded. The whole-pass custom VJP still lacks JVP/
   Hessians; the synthetic wrapper test does not change that claim. No benchmark,
   install, commit, agent, shared environment or protected-file change performed.
+
+### Candidate42 feedback — retired (Claude, resumed session)
+
+- SHA `a4b2e5a6d0fe1cfd55ce2ca05211ed2ce03f8486`; request `18403ca1455b45db896f53a78dff591f`; publication
+  `4cd204d`. Official 3/3 both setups; all 14 generalization cases pass seed tolerances; seed gradient max
+  abs diff unchanged (5.686e-6 large, 3.64e-11 aLIGO). Large 0.835948, 0.793956, 0.795953 (median 0.795953);
+  aLIGO 0.549391, 0.546064, 0.557386 (median 0.549391). Imports 291.4/264.1/267.4 ms large, 267.3/264.8/266.7
+  aLIGO — unchanged vs ~265 ms. No gain; deferred JIT construction is not where imports go. Retired;
+  simulate.py restored (then candidate 7 re-applied, below).
+
+### Cross-candidate observation: first large job pays ~25–30 ms extra import
+
+- In nearly every cohort the first large job's imports are 291–297 ms versus ~264–267 ms for the other five
+  jobs (c12 grid-1 291.3, c15 296.7, c42 291.4, ee4fea2's own first sample is also its slowest). The
+  selection rule "candidate large maximum < incumbent large minimum" therefore compares a cold-first sample
+  against a warm sample, so a real gain smaller than ~30 ms cannot pass without paired evidence. This is an
+  evaluation-protocol observation for the coordinator (proposal: interleave parent/candidate fresh runs, or
+  add an untimed warm-up of the filesystem cache before each cohort); not a reason to drop samples.
+
+## Candidate 43: exact replay of candidate 7 (confirmation, not a new mechanism)
+
+- Simulator source reconstructed to candidate 7 = ee4fea2 + this lane's boundary-op removal: transposed
+  callback outputs with separate residual copies and C-contiguous re-transposed cotangents; `identity_link`
+  placeholder-link skip; empty detector-phase skip (`SKIP_STATIC_NOOPS`). Expected simulator file hashes
+  (from c7 receipt `dacbeb43…`): build.py 6a7d8b20…, host.py 595ff785…, host_pass.py dd2ff39c…,
+  simulate.py 772b44de…; others = ee4fea2. If any differs, the reconstruction is not byte-exact and the run is
+  a functionally equivalent re-implementation, to be reported as such.
+- Evidence so far for this exact combination (c7, 1ea70bf): large 0.806567/0.779121/0.773867 (median 0.779121),
+  aLIGO 0.517428/0.517229/0.521618 (median 0.517428) vs ee4fea2 0.801578/0.548555: −22.5 ms / −31.1 ms, with the
+  ~26 ms lower+compile reduction reproduced in c5, c6, c7 and partially in the isolations c12/c15/c16/21.
+  Only the large first-sample overlap and the missing independent review block it.
+- Request: independent source review of the ee4fea2→candidate diff; direct array comparison with ee4fea2;
+  and ≥5 interleaved fresh runs per revision per setup. Arrays expected identical to ee4fea2.
