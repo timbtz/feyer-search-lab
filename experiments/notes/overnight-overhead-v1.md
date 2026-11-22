@@ -4029,3 +4029,110 @@
 - Purpose: with 9 large and 9 aLIGO samples of this source, plus 6 samples of ee4fea2-equivalent source from this same
   evening, a rank comparison (or median over pooled cohorts) becomes meaningful for the coordinator. The per-phase
   signature (forward lower ~11.5 ms, gradient lower ~11.6 ms) doubles as a hash-independent identity check.
+
+#### Submission 45 feedback (evaluation 1ac82b79af53478d8494ebc849a895b7, SHA c723457)
+
+- Hashes match candidate 7 exactly (build 6a7d8b20…, host 595ff785…, host_pass dd2ff39c…, simulate 772b44de…).
+  Official benchmarks passed on both setups. CORRECTION on successor review: the seed-relative comparisons
+  pass tolerances, but do not show byte identity. Reported maximum gradient differences are 5.686350050382316e-6
+  (large) and 3.637978807091713e-11 (aLIGO). All 14 generalization cases pass seed tolerances. The pristine
+  disagreements are the inherited ones (grid gradients 3, loss 1, signal 131; uifo_rand1 2.04e-4 and uifo_rand3
+  5.81e-5 log errors), with no new discrepancy.
+- Large: 0.842652 / 0.795549 / 0.779962 s (median 0.795549). The first job's imports took 327.3 ms, against 288.7
+  and 266.5 ms in the other two: the same first-job import penalty seen in earlier cohorts, this time larger.
+- aLIGO: 0.553915 / 0.530742 / 0.522961 s (median 0.530742). The first job's imports were 266.0 ms, but its
+  gradient compile was 62.1 ms against about 48–50 ms in the other two.
+- The phase signature reproduced in all six runs. Forward lower was 11.4–11.9 ms and forward compile 27.2–28.5 ms
+  (ee4fea2: about 19.5 and 33.4 ms). Gradient lower was 11.7–17.8 ms and gradient compile 46.4–62.1 ms. Excluding
+  the aLIGO first-job outlier, those are 11.7–12.2 ms and 46.4–50.1 ms (ee4fea2: about 16.9 and 52 ms).
+  Sensitivity and execution phases were unchanged.
+- Selector decision: no promotion, for two reasons: `requires_source_review` and
+  `large_first_run_ranges_overlap_requires_paired_evidence`.
+
+#### Pooled analysis of the exact candidate 7 source (3 cohorts) against ee4fea2-equivalent source (2 cohorts)
+
+- Large, candidate 7 (n=9), sorted: 0.773332, 0.773867, 0.779121, 0.779962, 0.795549, 0.806567, 0.817498,
+  0.826861, 0.842652. Median 0.795549.
+- Large, ee4fea2-equivalent (n=6: ee4fea2 in e4f7b59d and candidate 44 in 22240c43), sorted: 0.794425, 0.801578,
+  0.822484, 0.824077, 0.840081, 0.845525. Median 0.823281. On ee4fea2's own cohort alone the median is 0.801578.
+- Mann–Whitney on large: candidate 7 is lower in 40 of 54 pairs (U' = 14). At n = 9/6 the one-sided 5% critical
+  value is 12, so this is **not significant**. The pooled median difference is about 28 ms, but against ee4fea2's
+  own cohort it is about 6 ms. Cohort-level drift, especially candidate 44's slow cohort, is comparable to the
+  effect.
+- aLIGO, candidate 7 (n=9): median 0.521997, range 0.517229–0.553915. ee4fea2-equivalent (n=6): median 0.548500,
+  range 0.544719–0.622344. Candidate 7 is lower in 49 of 54 pairs (U' = 5), giving the previously reported nominal one-sided p < 0.01 under independent-sample assumptions.
+  These nonrandomized cohorts do not establish those assumptions or a causal timing gain; candidate44 also
+  differs in configuration from ee4fea2. The 54 pair comparisons are not 54 independent observations.
+  The median difference of about 26.5 ms matches the measured lower+compile reduction of about 26 ms.
+- Corrected interpretation: the recurring compile-phase reduction supports the mechanism, and the observed
+  aLIGO totals are promising; matched interleaved confirmation and independent review remain required. On the large setup the same ~26 ms is present in the phases, but per-job noise of about
+  ±30 ms (first-job imports, execution) means three cohorts cannot confirm it under the selector's rule. I do not
+  claim a confirmed large-total gain.
+
+#### Decision and handoff
+
+- The candidate 7 source (latest exact SHA c723457; earlier exact SHAs 1ea70bf and 39b7575) is the lane's only
+  mechanism with repeatable measured evidence. I recommend it to the coordinator for: (1) the independent source
+  review of its small diff against ee4fea2 (identity-link skip, empty detector-phase scatter skip, transposed
+  callback outputs); (2) interleaved paired fresh-process runs of c723457 and ee4fea2 on large, if the coordinator
+  wants a large-total confirmation. Until both are done, ee4fea2 remains the admitted best.
+- No new mechanism has been started. The remaining distinct ideas in this lane have been measured as nulls:
+  plotly deferral (already in the parent), builder loops (candidate 4), host-first transfer (8), readout algebra
+  (9 and later), compact lookup (10), deferred JIT wrappers (42), traceback locations (44). A fourth cohort of the
+  same source would be a repetition and is not requested from this agent.
+- The worktree is left at the exact candidate 7 source, so it matches c723457.
+
+
+### Submission 46: repair no-link registration after another setup registered custom links
+
+- Source parent: c72345797738ce2742c21beea028800153076376 (candidate7 replay, submission45), not a
+  newly admitted best. The strongest reviewed incumbent remains ee4fea28c04d482566be16e916b609d7c6a99e5e.
+  This is a focused compatibility repair to pending candidate7, not a fourth replay or a combination with
+  another lane. New candidate SHA and both official job IDs: pending supervisor commit/evaluation.
+- Actual bug established in the parent's build() final linking block: it appends identity_link to the global
+  LINKING_FUNCTIONS but selects slot0. When a previous setup registered lambda x:2*x+3 in slot0, an unlinked
+  setup selects that function; a synthetic input17 becomes37. The extracted parent block reproduces this.
+  Candidate7's identity guard correctly refuses to skip the wrong function, so it does not mask this bug.
+- Repair: _identity_link_index() finds identity_link by object identity, otherwise appends it and returns its
+  actual index. No-link builds use that index. Existing slots and real link registration are unchanged.
+  Repeated no-link builds reuse the placeholder, avoiding redundant branches in the global registry and
+  subsequent generic lax.switch traces. This reuses structural metadata, never parameter values or results.
+  The freshly imported first no-link build still selects slot0, as before.
+- Scientific hypothesis: correct placeholder selection preserves no-link values/derivatives independently
+  of setup construction order. Reusing its entry bounds placeholder-induced registry growth. This has no
+  claimed first-run timing benefit on a process building only one setup. It makes the pending compilation
+  optimization safer to evaluate across multiple arbitrary setups.
+- Only simulator delta from c723457 is build.py (helper plus placeholder registration call); solver, host
+  adjoints, readout and three JIT stages are unchanged. The larger candidate7 diff against ee4fea2 still
+  requires independent source review, including callback transpose copies and static no-op guards.
+- Local small diagnostic: experiments/notes/overnight-overhead-placeholder-check.py executes actual helpers
+  and the actual final build linking block, extracted with AST to avoid unavailable local dependencies.
+  105 cases PASS: first-build ordering, prior custom links, repeated no-link builds, duplicate old identity
+  entries, later custom registration, stable old slots and preservation of real link mappings. The first
+  diagnostic attempt had an exec/list-comprehension namespace error; repaired diagnostic now passes.
+  Its optional --jax mode has six real/complex generic-switch value/VJP cases including signed zero;
+  UNEXECUTED locally. Please run this small diagnostic in the evaluator environment alongside full validation.
+- Latest measured parent evidence remains submission45 / 1ac82b79af53478d8494ebc849a895b7:
+  large samples0.842652466148138,0.7955493405461311,0.7799616381525993s; median0.7955493405461311,
+  range0.7799616381525993–0.842652466148138. aLIGO samples0.5539150405675173,0.5307415723800659,
+  0.5229607541114092s; median0.5307415723800659, range0.5229607541114092–0.5539150405675173.
+  Phase medians in ms (large/aLIGO): imports288.725/266.042; build72.570/39.449;
+  forward lower11.758/11.408, compile27.363/28.078; sensitivity lower25.583/26.609,
+  compile39.675/41.582; gradient lower11.776/12.214, compile46.559/50.147.
+  Maximum sampled RSS544251904/310837248bytes; generalization894160896bytes. Other-host overlap unknown.
+  These measurements belong to c723457 only. New repair phase deltas, memory and timings are unmeasured.
+- Corrected submission45's unevaluated handoff text above: tolerance passes and zero sensitivity-log error
+  do not imply byte-identical seed gradients. Its pooled rank comparison is exploratory, not matched
+  confirmation; the candidate44 configuration cohort is not an exact incumbent replay.
+- Required evaluation: unchanged full large and official101-frequency aLIGO on the same new SHA, full saved
+  arrays/gradients, all14 generalization cases, plus the optional small JAX diagnostic. If promising, source
+  review and interleaved fresh-process paired runs of this repaired source and ee4fea2 under identical policy.
+  Do not promote solely on candidate7's historical phase results or this structural diagnostic.
+- Unresolved numerical findings remain visible: pristine grid signal/loss and gradients33/161/180;
+  uifo_rand1/uifo_rand3 sensitivity log disagreements~2.04e-4/~5.81e-5; grid finite-difference coordinates
+  54/59/63/136/161/163 unresolved; additional aLIGO29/29 previously confirmed; no JVP/Hessian support.
+  This repair does not resolve those findings. If new differences appear, investigate construction order
+  before attributing them to the inherited numerical disagreements.
+- Decision: ready for supervisor validation as a repair; no speedup or promotion claimed. Next step is inspect
+  that feedback and independent review, not more registry variants. No benchmarks, commits, agents or network
+  operations launched here. Deadline remains2026-11-22 09:27:44UTC.

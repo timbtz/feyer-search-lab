@@ -176,6 +176,15 @@ def identity_link(x):
     return x
 
 
+def _identity_link_index():
+    """Register the no-link placeholder once without changing existing link indices."""
+    for index, function in enumerate(LINKING_FUNCTIONS):
+        if function is identity_link:
+            return index
+    LINKING_FUNCTIONS.append(identity_link)
+    return len(LINKING_FUNCTIONS) - 1
+
+
 def set_instructions(
     instructions: dict,
     node: str,
@@ -1500,8 +1509,10 @@ def build(setup: Setup):
     if len(linked_indices) == 0:
         linked_indices = [0]
         indices_to_link = [0]
-        LINKING_FUNCTIONS.append(identity_link)
-        linking_function_indices = [0]
+        # Other setups may already have registered real linking functions. Select
+        # this placeholder's actual slot, and avoid adding duplicate branches on
+        # each subsequent build. Previously [0] could select an unrelated link.
+        linking_function_indices = [_identity_link_index()]
 
     return (
         (carrier_instructions, signal_instructions, noise_instructions, signal_components, parameter_names),
