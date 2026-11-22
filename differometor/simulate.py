@@ -18,7 +18,6 @@ Conventions used throughout:
 """
 
 import jax
-import jax.scipy.linalg
 from functools import partial
 from time import time
 import jax.numpy as jnp
@@ -1129,6 +1128,11 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
     if NOISE_FACTOR_REUSE not in ("off", "direct", "direct_implicit", "all"):
         raise ValueError(f"Unknown NOISE_FACTOR_REUSE {NOISE_FACTOR_REUSE!r}")
     if NOISE_FACTOR_REUSE != "off":
+        # Imported here: only this dense path needs it, so the default sparse/host
+        # path does not pay for importing jax.scipy.linalg at package import.
+        # The aliased form does not rebind `jax` as a local name.
+        import jax.scipy.linalg as jax_scipy_linalg
+
         # One LU per signal row, shared by the signal solve, the adjoint noise-weight
         # solve (A^H y = s via trans=2) and the covariance solve. Each solve is a
         # custom_linear_solve whose matvec depends differentiably on A, mirroring
@@ -1138,7 +1142,7 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
         factors = (lu_matrix, lu_pivots)
 
         def lu_apply(rhs, trans):
-            return jax.scipy.linalg.lu_solve(factors, rhs, trans=trans)
+            return jax_scipy_linalg.lu_solve(factors, rhs, trans=trans)
 
         def direct_solve(rhs):
             return lax.custom_linear_solve(
@@ -1175,8 +1179,8 @@ def _solve_signal_and_noise(signal_matrix, noise_matrix, base_carrier_selections
                 return lax.custom_linear_solve(
                     lambda x: jnp.einsum("bji,bj->bi", jnp.conjugate(system), x),
                     rhs.astype(jnp.complex128),
-                    solve=lambda _, x: jax.scipy.linalg.lu_solve(adjoint_factors, x, trans=0),
-                    transpose_solve=lambda _, x: jax.scipy.linalg.lu_solve(adjoint_factors, x, trans=1),
+                    solve=lambda _, x: jax_scipy_linalg.lu_solve(adjoint_factors, x, trans=0),
+                    transpose_solve=lambda _, x: jax_scipy_linalg.lu_solve(adjoint_factors, x, trans=1),
                 )
 
             noise_weights = vmap(explicit_adjoint_solve)(carrier_selections)
