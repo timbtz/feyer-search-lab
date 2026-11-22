@@ -937,3 +937,77 @@
   support remain exactly as recorded above. No tolerance or validation policy changes.
 - Prepared before the unchanged 2026-11-22 09:27:44 UTC deadline. Candidate is ready for
   supervisor evaluation; no performance or numerical outcome is claimed yet.
+
+
+### Candidate 13 feedback: no confirmed gain
+
+- SHA **7f9098048a796aba7bff133bb40cecb75a98a7fe**, evaluation
+  **3174de049b084289b49bd2d4264e87a8**, jobs grid-1/2/3 and aligo-1/2/3.
+  Both unchanged official benchmarks passed all three fresh processes.
+- Large samples: **0.822865605, 0.800564464, 0.809530795** seconds; median
+  **0.809530795**, range **0.800564464–0.822865605**. Official aLIGO separately:
+  **0.549647892, 0.550030932, 0.546282323**; median **0.549647892**, range
+  **0.546282323–0.550030932**. Against the unmatched admitted ee4fea2 cohort these
+  medians are 7.953 ms / 1.093 ms higher. No confirmed improvement, no promotion.
+- Build samples large **74.242, 72.503, 72.270 ms**, median72.503; aLIGO
+  **38.780, 38.425, 37.543 ms**, median38.425. Relative to candidate12's separate
+  cohort, build medians differ by -0.820 / +0.528 ms: no stable evidence of benefit.
+  Other phase medians large/aLIGO ms: imports266.190/268.248; forward lower19.515/19.353,
+  compile33.561/33.727, execute181.849/33.948; sensitivity lower25.782/26.292,
+  compile39.889/41.548; gradient lower17.172/16.687, compile51.891/53.406,
+  execute85.733/14.395. These are observational cohorts, not causal paired deltas.
+- Sampled peak RSS bytes large **516026368, 525770752, 503201792**; aLIGO
+  **280772608, 304865280, 308436992**; generalization **988848128**. No budget
+  exceedance or infrastructure failure. CPU2/one logical CPU/library threads1/x64,
+  permitted package flags and no persistent cache unchanged. External contention unknown.
+  Reduced theoretical temporary allocation does not establish a measured RSS improvement.
+- All 14 generalization cases pass initial-seed tolerances, including all saved physical
+  outputs/gradients; pristine-reference comparisons still fail. Official archive hashes
+  unchanged from candidate12. Generalization archive2617a00ec9ccafd5ac149b331c5bd8663e1e2075fa38a2150608c682a4d4958f;
+  no direct parent byte comparison supplied. Initial-seed gradient maximum differences
+  remain5.686350050e-6 large/3.637978807e-11 aLIGO. No newly reported tolerance failure.
+  Independent review absent. These passes do not settle inherited pristine disagreements.
+- Retired candidate13 and restored build.py exactly to ee4fea2; failed revision remains
+  in history. Do not continue tweaking dense identity allocations. Profiling remains pending.
+
+### Candidate 14: slice replacement for consecutive static parameter destinations
+
+- Candidate SHA and jobs pending supervisor. Scientific parent **ee4fea28c04d482566be16e916b609d7c6a99e5e**.
+  Only simulate.py differs from that parent; build.py restoration retires candidate13.
+- Mechanism: _static_set already receives concrete, unique, in-bounds 1-D destinations.
+  If those destinations form a consecutive increasing run (including a single destination),
+  express replacement with lax.dynamic_update_slice; otherwise retain the original lax.scatter.
+  Empty destinations keep the scatter path. Same update dtype conversion and all updates
+  retained. No setup names, dimension thresholds, physical values or callable identities are
+  inspected. This is a narrower refinement of static indexing, distinct from the retired
+  callback-transpose and homogeneous-linking-dispatch proposals.
+- The replacement is exact for every qualifying index sequence: destination[start:start+k]
+  receives the k updates in order. Its transpose zeros that slice in the input cotangent and
+  extracts it for the update cotangent. Equal-valued writes and zero parameters still retain
+  their derivative paths. In particular, no identity-function/no-op recognition is introduced.
+  No host plan state, solver or adjoint mathematics changes, no new cache, no workload/stage
+  changes. Existing requirement to rebuild after changing static index arrays remains.
+- Cost hypothesis: avoid scatter lowering/code generation and its reverse scatter/gather work
+  for slice-shaped updates. Candidate13's forward lower+compile medians sum to roughly53 ms
+  and gradient lower+compile to69 ms in large; only an unknown portion is attributable to
+  this indexing. Added trace-time NumPy contiguous-index inspection is included in the timer.
+  Build/import/solve gains are not claimed. Compilers may already optimize this well; reject
+  if no repeat-supported complete first-run improvement.
+- Added experiments/notes/overnight-overhead-slice-check.py for the supervisor's fixed
+  environment: extracts the actual helper into a separate namespace, compares original
+  scatter and candidate under JIT primal/JVP/VJP for both array inputs, checks primitive
+  selection, covers empty/singleton/full/interior/irregular/reversed index sequences and
+  real/complex updates, signed zero and updates equal to existing values. 56 cases planned.
+  This is synthetic helper coverage only, not optical solver coverage or a benchmark.
+  Local NumPy/JAX unavailable: runtime check remains UNEXECUTED; syntax/scope checks only.
+- Request this focused diagnostic, both unchanged official benchmarks on the new exact SHA,
+  all saved output/gradient comparisons to parent and seed, existing generalization suite and
+  independent source review. Require paired fresh-process parent/candidate confirmations,
+  separate large/aLIGO samples/medians/ranges, phase/RSS and overlap accounting before
+  promotion. No gain or numerical pass is claimed at preparation.
+- Inherited pristine signal/gradients33,161,180/loss disagreements, uifo_rand1/rand3 sensitivity
+  errors and grid FD54,59,63,136,161,163 remain unresolved. Prior aLIGO FD29/29 confirmed.
+  Helper JVP coverage does not imply whole-pass JVP/Hessian support; that remains unsupported.
+- If this indexing refinement is unhelpful, restore ee4fea2 and prioritize the outstanding
+  import/build profile or exact candidate7 review/paired-evidence request; do not stack
+  unconfirmed variants. Deadline unchanged:2026-11-22 09:27:44 UTC.

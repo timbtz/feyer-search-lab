@@ -977,10 +977,17 @@ def _static_take(values, indices):
 
 def _static_set(values, indices, updates):
     """values.at[indices].set(updates) for concrete unique in-bounds indices (1-D)."""
+    indices = np.asarray(indices, dtype=np.int64)
+    updates = jnp.asarray(updates).astype(values.dtype)
+    # A consecutive run is a slice replacement, including a single destination.
+    # The transpose zeros the replaced slice and slices the updates' cotangent;
+    # it preserves dependencies even when an update equals the old value.
+    if indices.size and (indices.size == 1 or np.all(np.diff(indices) == 1)):
+        return lax.dynamic_update_slice(values, updates, (int(indices[0]),))
     return lax.scatter(
         values,
-        np.asarray(indices, dtype=np.int64)[:, None],
-        jnp.asarray(updates).astype(values.dtype),
+        indices[:, None],
+        updates,
         lax.ScatterDimensionNumbers(
             update_window_dims=(), inserted_window_dims=(0,), scatter_dims_to_operand_dims=(0,)
         ),

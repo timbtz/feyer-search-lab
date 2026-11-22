@@ -724,7 +724,7 @@ def build(setup: Setup):
 
     # Carrier matrix: identity on the left block, with a separate right-hand-side column.
     carrier_matrix = np.zeros((system_size, system_size + 1), dtype=complex)
-    np.fill_diagonal(carrier_matrix, 1)
+    carrier_matrix[:, :system_size] = np.eye(system_size, dtype=complex)
 
     # Ensure signal_size is at least 1 to avoid conditional logic later.
     if signal_size == 0:
@@ -732,7 +732,7 @@ def build(setup: Setup):
 
     # Signal matrix includes two carrier-sized blocks plus appended signal block, plus a right-hand-side column.
     signal_matrix = np.zeros((system_size * 2 + signal_size, system_size * 2 + signal_size + 1), dtype=complex)
-    np.fill_diagonal(signal_matrix, 1)
+    signal_matrix[:, : system_size * 2 + signal_size] = np.eye(system_size * 2 + signal_size, dtype=complex)
 
     # Noise matrix has the same shape as the signal matrix without the right-hand side.
     noise_matrix = np.zeros(signal_matrix[:, :-1].shape)
