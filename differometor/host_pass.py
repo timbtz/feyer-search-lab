@@ -357,6 +357,47 @@ def _products(pattern):
     return _PRODUCTS[pattern]
 
 
+# Relative tolerance for treating a noise-source matrix as Hermitian. Replacing N^H
+# by N within this bound perturbs the noise adjoint source by at most a few units
+# of double-precision roundoff relative to max|N|, i.e. the same order as the
+# rounding already present when N is assembled. Any larger asymmetry (or a
+# structurally unpaired nonzero) keeps the explicit adjoint solve.
+HERMITIAN_TOLERANCE = 8 * np.finfo(np.float64).eps
+
+_TRANSPOSES = {}
+
+
+def _transpose_index(pattern):
+    """For each structural entry (r, c): position of (c, r) and whether it exists (static)."""
+    if pattern not in _TRANSPOSES:
+        size = pattern.size
+        keys = pattern.rows.astype(np.int64) * size + pattern.cols
+        order = np.argsort(keys, kind="stable")
+        ordered = keys[order]
+        wanted = pattern.cols.astype(np.int64) * size + pattern.rows
+        position = np.clip(np.searchsorted(ordered, wanted), 0, max(ordered.size - 1, 0))
+        found = ordered[position] == wanted if ordered.size else np.zeros(0, dtype=bool)
+        _TRANSPOSES[pattern] = (order[position] if ordered.size else position, found)
+    return _TRANSPOSES[pattern]
+
+
+def _is_hermitian(pattern, values):
+    """Whether the sparse matrix with these values equals its conjugate transpose (to roundoff)."""
+    values = np.asarray(values)
+    if values.shape[-1] != pattern.rows.size:
+        return False                       # not a plain coefficient vector: keep the solve
+    if values.size == 0:
+        return True
+    scale = np.max(np.abs(values))
+    if scale == 0:
+        return True
+    if not np.isfinite(scale):
+        return False
+    index, found = _transpose_index(pattern)
+    difference = np.where(found, values - np.conj(values[index]), values)
+    return bool(np.max(np.abs(difference)) <= HERMITIAN_TOLERANCE * scale)
+
+
 def _solve(products, values, factor, rhs, trans):
     """Solve op(A) x = rhs with SuperLU and the iterative refinement of `differometor.sparse`."""
     rhs = np.ascontiguousarray(rhs, dtype=np.complex128)
@@ -501,6 +542,7 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
     products, noise_products = _products(pattern), _products(noise_pattern)
     factors = state.get("signal_factors")
     signal_bar = np.asarray(signal_bar)
+    noise_hermitian = [_is_hermitian(noise_pattern, values) for values in state["noise_values"]]
     for row in range(count):
         factor = factors[row] if factors is not None else _factor(pattern, coefficients[row])
         solution = np.concatenate([signal[row][:, None], covariances[row].T], axis=1)           # (N, 1 + D)
@@ -515,9 +557,15 @@ def host_backward(plan, parameters, carrier_values, signal_values, carrier_base,
         sources_bar, weight = rhs_bar[:, 1:], weights[row].T                                    # (N, D)
         noise_row = 0 if plan.noise_row_reuse else row
         noise_values_bar[noise_row] += np.sum(sources_bar[noise_pattern.rows] * weight[noise_pattern.cols], axis=1)
-        weight_bar = noise_products.apply(state["noise_values"][noise_row], sources_bar, "T")
         # w = conj(A)^-T s: s_bar = conj(A)^-1 w_bar = g; conj(A)_bar[r, c] = -g[c] w[r].
-        adjoint = np.conj(_solve(products, coefficients[row], factor, np.conj(weight_bar), "N"))
+        if noise_hermitian[noise_row]:
+            # w_bar = N^T sources_bar = t_bar N^T conj(w), so conj(w_bar) = t_bar N^H w.
+            # For Hermitian N this is t_bar N w = t_bar * (forward sources), whose
+            # A-solve is t_bar * (forward covariance): g = t_bar cov, adjoint = conj(g).
+            adjoint = np.conj(covariances[row].T) * temporary_bar[:, row][None, :]             # (N, D)
+        else:
+            weight_bar = noise_products.apply(state["noise_values"][noise_row], sources_bar, "T")
+            adjoint = np.conj(_solve(products, coefficients[row], factor, np.conj(weight_bar), "N"))
         selection_bar[row] += adjoint.T
         coefficient_bar += np.conj(-np.sum(adjoint[pattern.cols] * weight[pattern.rows], axis=1))
         signal_values_bar[row, : system.nnz] = coefficient_bar

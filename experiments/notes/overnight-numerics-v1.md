@@ -166,6 +166,28 @@ D = 1 noise detector.
   difference, especially on uifo_rand1/rand3, voyager or gradient indices 33/161/180, means reject.
 - Expected: grid gradient exec falls by the cost of one RHS column in each of the 101 refined
   T solves (unmeasured; plausibly 10-25 ms). aLIGO proportional.
+- SHA `5bbb91e38ff993a10486f296a738860339cd05e0`, request/evaluation `2c7810bfe84648299731e98a6bb133ae`.
+  **Confirmed improvement, admitted campaign best** (approved independent source review).
+  Official PASS 3/3 + 3/3. Strict vs seed PASS: grid gradient relL2 9.7e-10 (max abs 5.65e-5),
+  aLIGO gradient relL2 6.5e-13, log-sensitivity error 0.0; generalization 14/14 pass vs seed;
+  pristine profile unchanged (grid signal 131 / gradient 3 / loss 1; rand1 2.04e-4, rand3 5.81e-5).
+  - Grid 0.88236, 0.85061, 0.85267 s (median 0.85267; range non-overlapping with 2b4654f's).
+    Gradient exec 140.6, 142.3, 139.4 ms (candidate 4: 169-182). Forward 184.7, 180.1, 179.6 ms.
+  - aLIGO 0.55571, 0.55179, 0.55841 s (median 0.55571); gradient 24.2, 23.0, 23.4 ms.
+
+## Candidate 6: Hermitian noise source -> no second backward solve (parent = candidate 5)
+- After candidate 5 the backward still does a refined A-solve per row for the noise adjoint:
+  g = A^-1 conj(w_bar), w_bar = N^T sources_bar = t_bar N^T conj(w), so conj(w_bar) = t_bar N^H w.
+  If N^H = N this equals t_bar N w = t_bar * (forward sources), whose solution the forward already
+  computed: g = t_bar * cov. So adjoint = t_bar conj(cov) and the second solve disappears.
+- Generic, measured trigger: per evaluation and noise row, `_is_hermitian` compares every structural
+  noise entry with the conjugate of its transposed entry (static transpose index per pattern;
+  unpaired entries must be ~0) with relative tolerance 8 eps * max|N| (`HERMITIAN_TOLERANCE`).
+  Non-Hermitian, non-finite or augmented noise values keep the explicit solve. Overhead: one vector
+  comparison on ~272 entries per evaluation. Whether it triggers on grid/aLIGO is not known to me
+  (no shell): if gradient exec stays ~140 ms the check did not trigger (correct, just no gain).
+- Numerics: not bitwise vs candidate 5 when triggered (forward covariance refinement replaces a
+  fresh refined solve; tolerance-level N vs N^H). Expected refinement-level differences.
 - Evidence so far on where the time goes: the backward phase (no factorization; two refined solves
   plus small products per row) costs ~1.7 ms/row, about the same as the forward (factor + two
   refined solves). So factorization is a small share; triangular solves + refinement dominate.
