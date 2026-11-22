@@ -1710,3 +1710,85 @@
   visible. Prior aLIGO FD29/29 does not certify all setups. New discrepancies need investigation.
   ready_for_evaluation=true refers to the actual replay implementation now in this worktree.
   Deadline09:27:44 UTC unchanged; this submission does not extend it.
+
+
+### Submission21 feedback — tracing signal reproduced, promotion unresolved
+
+- SHA **f90fa964a73aca5515ba93a3517ec1d26ae32a32**, evaluation
+  **a4d2cd8dcf5f448aafa8d2817fb59644**, grid-1/2/3 and aligo-1/2/3. Source is exactly
+  candidate15's simulator implementation. Both official benchmarks pass3/3; all reported
+  physical output/gradient categories and14 generalization cases pass initial-seed tolerances.
+  No new reported regression. Pristine checks still fail. Independent source review and
+  requested synthetic results are absent; no paired current-parent cohort supplied.
+- Large fresh seconds0.8098749481141567,0.7841489966958761,0.7943564131855965;
+  median0.7943564131855965, range0.7841489966958761–0.8098749481141567.
+  Official aLIGO0.5375279970467091,0.5347207505255938,0.5324668753892183;
+  median0.5347207505255938, range0.5324668753892183–0.5375279970467091.
+  Historical ee4fea2 medians are7.221 ms higher large and13.834 ms higher aLIGO, but
+  large ranges overlap. Admission: confirmed_improvement=false, requires_source_review,
+  large_first_run_ranges_overlap_requires_paired_evidence. Do not pool separate cohorts
+  to conceal spread, infer a quiet ranking cohort, or report an average competition score.
+- Phase medians ms large/aLIGO: imports269.715/266.587; build72.201/37.938;
+  forward lower14.234/13.697, compile30.744/31.207, execute180.251/32.822;
+  sensitivity lower25.666/26.133, compile39.885/41.362, execute0.883/0.483;
+  gradient lower13.308/13.350, compile52.618/52.894, execute85.307/14.715.
+  Forward lowering is within0.143/0.080 ms of candidate15's earlier phase medians;
+  gradient lowering within0.319/0.304 ms. The targeted tracing signal reproduced in this
+  candidate-only cohort. Complete totals still vary, and causal speedup against a matched
+  parent remains unconfirmed. No further empty-phase variant is justified by this receipt.
+- Sampled peak RSS bytes large507691008/496709632/577581056;
+  aLIGO294842368/294936576/294637568; generalization831197184. No infrastructure failure
+  or budget exceedance. CPU2, one logical CPU, threads1, x64, reviewed flags, no persistent
+  cache; host contention not excluded, ranking_eligible=false.
+- Generalization archive5463a96afd9c95ad78c8e2a40700708ce1dd1a3a6c04b9808de09dda6af9237e.
+  Seed gradient max absolute differences5.686350050382316e-6 large and3.637978807091713e-11
+  aLIGO remain. Pristine grid signal/gradients33/161/180/loss, uifo_rand1/rand3 sensitivity,
+  unresolved grid FD54/59/63/136/161/163, and no host-pass JVP/Hessian support remain open.
+- Retain exact f90fa96/2e50e7c in history as an unpromoted candidate for independent review
+  and paired parent confirmation. For the next independent experiment restore simulate.py
+  to reviewed ee4fea2; do not combine this unreviewed change with a builder modification.
+
+### Candidate22 — concatenate sideband instruction indices once
+
+- Semantic parent **ee4fea28c04d482566be16e916b609d7c6a99e5e**. Only build.py differs from
+  it. Candidate SHA and jobs pending supervisor commit. This is distinct from previous
+  name lookup, group classification/staging, matrix allocation and phase-boundary trials.
+- Actual repeated work: set_instructions copies each index array before appending up to
+  three sideband blocks. Each np.concatenate then copies the entire growing prefix again.
+  `_append_sideband_indices` collects the same original and selected blocks and performs
+  one final concatenation per result. With m output arrays and k active masks, it removes
+  m initial prefix copies and replaces k*m concatenations with m concatenations (k>0).
+  With no active mask it still returns fresh copies, preserving aliasing behavior.
+  Boolean selections and nonzero offset additions remain, so this is not a count of all
+  allocations or a measured time saving. Common one-mask calls still avoid the initial copy.
+- Preserved semantics: masks and appended-signal in-place shifts are unchanged. Blocks remain
+  original, only-row, only-column, then row-and-column, keeping duplicate write order. All
+  duplicates read the shifted originals, never an already-expanded prefix. Output row/column
+  selectors are copied in that same order; carrier source IDs are not shifted. Optional
+  output rows, carrier-copy isolation and the no-sideband path remain. No floating optical
+  arithmetic, solver, adjoint, derivative pruning, array staging, import or compiler changes.
+  The helper depends solely on supplied instructions, not optical values or fixture identity.
+- Target is build, currently72.201 ms large and37.938 ms aLIGO in submission21. These are
+  complete build-phase medians, not attributed recoverable time. Python helper/list overhead
+  could outweigh saved copies for short instructions; both complete first-run totals must
+  count it. No expected gain is represented as measured.
+- Local validation:2,000 randomized stdlib list-backed executions of the ACTUAL new helper
+  agree with sequential append order and shifts, preserve fresh result objects, and verify
+  one concatenation per output array whenever any mask is active. This is an algorithmic
+  check, not NumPy dtype/aliasing or optical validation. Unrelated build definitions/statements
+  match parent AST; nine other simulator modules match parent bytes; syntax/diff checks pass.
+- Prepared `experiments/notes/overnight-overhead-sidebands-check.py` with parent set_instructions
+  source embedded verbatim from ee4fea2. Its480 NumPy comparisons exercise complete instruction
+  dictionaries, dtype equality, caller-array mutations and output/input memory sharing across
+  int32/int64/float64, empty and varied lengths, absent/zero/positive sideband sizes, all mixed
+  regions (including negative indices), optional output rows, carrier coupling and padded
+  parameter widths. UNEXECUTED locally because NumPy is unavailable; no packages installed.
+- Request supervisor synthetic check, both unchanged full official benchmarks on the exact
+  new SHA, full outputs/gradients and14 varied-setup generalization comparisons, independent
+  review, then matched parent/candidate fresh-process confirmation if promising. Report every
+  sample, separate medians/ranges, phases, memory and overlap. Initial-seed tolerance passes
+  would not resolve inherited pristine discrepancies; investigate any new difference.
+- If no material build reduction appears, retire sideband concatenation rather than extend
+  it to more builder loops without profiling. Pending import/build attribution remains the
+  next evidence request. No benchmarks, commits, external calls or agents launched locally.
+  Absolute campaign deadline09:27:44 UTC unchanged.

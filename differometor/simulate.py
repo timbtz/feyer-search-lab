@@ -426,12 +426,7 @@ def simulate(
             linking_function_indices, inputs_to_link
         )
         row = _static_set(row, layout.indices_to_link, outputs_to_link)
-        # An empty phase layout has no values or derivative contributions. Avoid
-        # tracing its empty gather, exponential and scatter into the host boundary.
-        if layout.qhd_parameter_indices.size == 0 and layout.qhd_placing_indices.size == 0:
-            qhd_phase_values = None
-        else:
-            qhd_phase_values = jnp.exp(1j * jnp.radians(_static_take(row, layout.qhd_parameter_indices)))
+        qhd_phase_values = jnp.exp(1j * jnp.radians(_static_take(row, layout.qhd_parameter_indices)))
         return _simulate_host_pass(
             host_plan,
             row.reshape(1, -1),
@@ -1006,24 +1001,19 @@ def _simulate_host_pass(
     noise_selection_vectors,
     qhd_placing_indices,
 ):
-    """`_simulate_sparse` evaluated on the host behind one custom VJP.
-
-    Internal callers may pass None for phase values only for an empty built phase
-    layout. Nonempty layouts retain the differentiable phase multiplication.
-    """
+    """`_simulate_sparse` evaluated on the host behind one custom VJP."""
     structure = plan.structure
-    if qhd_phase_values is not None:
-        noise_selection_vectors = lax.scatter_mul(
-            noise_selection_vectors,
-            qhd_placing_indices.reshape(-1, 3),
-            qhd_phase_values,
-            lax.ScatterDimensionNumbers(
-                update_window_dims=(),
-                inserted_window_dims=(0, 1, 2),
-                scatter_dims_to_operand_dims=(0, 1, 2),
-            ),
-            unique_indices=True,
-        )
+    noise_selection_vectors = lax.scatter_mul(
+        noise_selection_vectors,
+        qhd_placing_indices.reshape(-1, 3),
+        qhd_phase_values,
+        lax.ScatterDimensionNumbers(
+            update_window_dims=(),
+            inserted_window_dims=(0, 1, 2),
+            scatter_dims_to_operand_dims=(0, 1, 2),
+        ),
+        unique_indices=True,
+    )
     carrier, signal, noise = _host_pass.host_pass(
         plan,
         parameters.astype(jnp.complex128),
