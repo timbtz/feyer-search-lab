@@ -7,7 +7,8 @@ import unittest
 from unittest.mock import patch
 
 from lab.agent_loop import CodexTurnError, SessionBusyError, exclusive_lock
-from lab.overnight_search import Providers, Supervisor, git, validate_evaluation, write_json
+from lab.overnight_search import (Providers, SHARED_BEST, SHARED_PREFIX, Supervisor, digest, git,
+                                 shared_best_snapshot, turn_error, validate_evaluation, write_json)
 
 
 def response(ready=True):
@@ -161,7 +162,8 @@ class SupervisorTests(unittest.TestCase):
         (self.s.directory / 'turn-01.jsonl').write_text(json.dumps(
             {'type': 'system', 'subtype': 'init', 'session_id': 'recovered', 'model': 'claude-opus-5-5'}) + '\n')
         self.s.model_call = lambda *args: self.fail('repeated completed model call')
-        self.s.model_step()
+        with patch('lab.overnight_search.shared_best_snapshot', side_effect=AssertionError('must not refresh dispatched input')):
+            self.s.model_step()
         self.assertEqual(self.s.state['threads']['claude'], 'recovered')
         self.assertEqual(self.s.state['actual_model'], 'claude-opus-5-5')
         self.assertIn('pending_commit', self.s.state)
@@ -223,6 +225,125 @@ class SupervisorTests(unittest.TestCase):
                 with exclusive_lock(path):
                     self.fail('duplicate writer')
 
+    def shared_fixture(self, large=False):
+        control = self.root / 'control'
+        subprocess.run(['git', 'clone', '-q', str(self.repo), str(control)], check=True)
+        git(control, 'config', 'user.email', 'test@example.invalid')
+        git(control, 'config', 'user.name', 'Test')
+        seed = git(control, 'rev-parse', 'HEAD')
+        content = 'value = 2\n' if not large else 'value = 2\n#' + 'x'*200_001 + '\n'
+        (control / 'differometor/simulate.py').write_text(content)
+        git(control, 'commit', '-qam', 'source improvement')
+        selected = git(control, 'rev-parse', 'HEAD')
+        diff = git(control, 'diff', seed, selected, '--', 'differometor')
+        evaluation = 'b'*32
+        directory = SHARED_PREFIX + '/candidates/' + evaluation
+        review = {'approved': True, 'candidate_sha': selected, 'parent_sha': seed,
+                  'diff_sha256': digest(diff), 'scope': 'no-fixture-specialization-and-integrity',
+                  'reviewer': 'independent', 'provider': 'codex', 'model': 'gpt-6-astra', 'session_id': 'review-session'}
+        review_path = control / directory / 'source-review.json'
+        write_json(review_path, review)
+        import hashlib
+        envelope = {**review, 'artifact_sha256': hashlib.sha256(review_path.read_bytes()).hexdigest()}
+        (control / directory / 'reviewed-source.diff').write_text(diff)
+        metrics = {setup: {'median_seconds': 1.1, 'min_seconds': 1.0, 'max_seconds': 1.2} for setup in ('grid', 'aligo')}
+        record = {'candidate_sha': selected, 'evaluation_id': evaluation,
+                  'decision': {'promote': True, 'metrics': metrics},
+                  'evaluator_receipt': {'candidate_sha': selected, 'source_review': envelope,
+                                        'admission': {'promotion_ready': True}}}
+        write_json(control / directory / 'record.json', record)
+        best = {'status': 'admitted_campaign_best', 'candidate_sha': selected, 'seed_sha': seed,
+                'evaluation_id': evaluation, 'record_path': directory + '/record.json', 'metrics': metrics}
+        write_json(control / SHARED_BEST, best)
+        git(control, 'add', '.')
+        git(control, 'commit', '-qm', 'publish reviewed candidate')
+        return control, seed, best
+
+    def test_shared_best_verified_snapshot_is_captured_and_refreshes_next_turn(self):
+        control, seed, best = self.shared_fixture()
+        self.s.state['shared_best_worktree'] = str(control)
+        seen = []
+        self.s.model_call = lambda provider, iteration, prompt, thread, timeout: (seen.append(prompt) or 'same-thread', response(False))
+        with patch('lab.overnight_search.SHARED_SEED', seed):
+            self.s.model_step()
+            first = json.loads((self.s.directory / 'turn-01.input.json').read_text())['shared_best_snapshot']
+            self.assertEqual(first['status'], 'available')
+            self.assertEqual(first['selected_sha'], best['candidate_sha'])
+            self.assertIn('+value = 2', first['source_diff'])
+            best['metrics']['grid']['median_seconds'] = 1.05
+            write_json(control / SHARED_BEST, best)
+            record_path = control / best['record_path']
+            record = json.loads(record_path.read_text())
+            record['decision']['metrics'] = best['metrics']
+            write_json(record_path, record)
+            git(control, 'commit', '-qam', 'publish fresh repeated timings')
+            self.s.model_step()
+            second = json.loads((self.s.directory / 'turn-02.input.json').read_text())['shared_best_snapshot']
+        self.assertNotEqual(first['artifact_sha256'], second['artifact_sha256'])
+        self.assertEqual(self.s.state['threads']['claude'], 'same-thread')
+        self.assertIn('do not automatically accept, merge or reset', seen[0])
+        self.assertEqual(git(self.repo, 'rev-parse', 'HEAD'), self.s.state['initial_sha'])
+
+    def test_shared_best_uncommitted_or_provisional_is_omitted(self):
+        control, seed, best = self.shared_fixture()
+        best['status'] = 'seed_pending_fresh_calibration'
+        write_json(control / SHARED_BEST, best)
+        with patch('lab.overnight_search.SHARED_SEED', seed):
+            self.assertIn('exact committed', shared_best_snapshot(control)['reason'])
+            git(control, 'commit', '-qam', 'provisional state')
+            rejected = shared_best_snapshot(control)
+        self.assertEqual(rejected['status'], 'omitted')
+        self.assertIn('not admitted', rejected['reason'])
+        self.assertNotIn('source_diff', rejected)
+
+    def test_shared_best_rejects_unreviewed_or_oversized_source(self):
+        control, seed, best = self.shared_fixture(large=True)
+        with patch('lab.overnight_search.SHARED_SEED', seed):
+            self.assertIn('200 KB', shared_best_snapshot(control)['reason'])
+        record_path = control / best['record_path']
+        record = json.loads(record_path.read_text())
+        record['evaluator_receipt']['admission']['promotion_ready'] = False
+        write_json(record_path, record)
+        git(control, 'commit', '-qam', 'reject evidence')
+        with patch('lab.overnight_search.SHARED_SEED', seed):
+            self.assertIn('admission', shared_best_snapshot(control)['reason'])
+
+    def test_shared_best_review_artifact_tamper_is_not_injected(self):
+        control, seed, best = self.shared_fixture()
+        review_path = control / Path(best['record_path']).parent / 'source-review.json'
+        review_path.write_text('{}')
+        git(control, 'commit', '-qam', 'invalid review')
+        with patch('lab.overnight_search.SHARED_SEED', seed):
+            snapshot = shared_best_snapshot(control)
+        self.assertEqual(snapshot['status'], 'omitted')
+        self.assertIn('review artifact digest', snapshot['reason'])
+
+    def test_shared_best_one_explicit_resume_activation_only(self):
+        self.s.state.pop('shared_best_worktree')  # Legacy snapshot predates optional field.
+        self.s.save()
+        self.args.resume = True
+        self.args.shared_best_worktree = str(self.root / 'control')
+        resumed = Supervisor(self.args)
+        resumed.initialize()
+        self.assertEqual(len(resumed.state['shared_best_activation_history']), 1)
+        self.assertEqual(resumed.state['deadline_unix'], 2000)
+        resumed = Supervisor(self.args)
+        resumed.initialize()
+        self.assertEqual(len(resumed.state['shared_best_activation_history']), 1)
+        self.args.shared_best_worktree = str(self.root / 'other')
+        with self.assertRaisesRegex(ValueError, 'cannot change'):
+            Supervisor(self.args).initialize()
+        self.args.shared_best_worktree = None
+        with self.assertRaisesRegex(ValueError, 'cannot change'):
+            Supervisor(self.args).initialize()
+
+    def test_default_disabled_or_missing_shared_artifact_keeps_original_prompt(self):
+        self.assertEqual(shared_best_snapshot(None)['status'], 'disabled')
+        self.assertEqual(self.s.prompt(), self.s.prompt(shared_best_snapshot(None)))
+        missing = shared_best_snapshot(self.root / 'missing')
+        self.assertEqual(missing['status'], 'omitted')
+        self.assertEqual(self.s.prompt(), self.s.prompt(missing))
+
 
 class ProviderTests(unittest.TestCase):
     def setUp(self):
@@ -250,6 +371,15 @@ class ProviderTests(unittest.TestCase):
         self.assertEqual(self.p.failure('codex', 'authentication failed'), 'auth')
         self.assertIsNone(self.p.choose())
 
+    def test_rejected_rate_limit_metadata_honors_reset_but_allowed_event_does_not(self):
+        directory = Path(self.tmp.name)
+        events = directory / 'turn-01.jsonl'
+        events.write_text(json.dumps({'type': 'rate_limit_event', 'rate_limit_info': {'status': 'allowed', 'resetsAt': 999}}))
+        self.assertNotIn('rate_limit_error', turn_error(directory, 1, RuntimeError('transport failed')))
+        events.write_text(json.dumps({'type': 'rate_limit_event', 'rate_limit_info': {'status': 'rejected', 'resetsAt': 999}}))
+        self.p.failure('claude', turn_error(directory, 1, RuntimeError('exited 1')))
+        self.assertEqual(json.loads(self.p.path.read_text())['claude']['blocked_until'], 999)
+
     def test_bad_response_is_transient_not_quota(self):
         self.assertEqual(self.p.failure('claude', 'invalid structured output'), 'transient')
         self.assertEqual(json.loads(self.p.path.read_text())['claude']['blocked_until'], 115)
@@ -259,6 +389,13 @@ class ProviderTests(unittest.TestCase):
         self.p.failure('claude', 'usage limit exceeded')
         self.p.success('claude', started_at=99)
         self.assertEqual(self.p.choose(), 'codex')
+
+    def test_another_lane_transient_probe_does_not_authorize_codex_fallback(self):
+        self.p.failure('claude', 'temporary bad structured response')
+        self.now[0] = 116
+        other = Providers(self.tmp.name, 'two', 50000, lambda: self.now[0])
+        self.assertEqual(self.p.choose(), 'claude')
+        self.assertIsNone(other.choose())
 
     def test_evaluation_identity_and_missing_verdict(self):
         request = {'request_id': 'a'*32, 'sha': 'b'*40}
