@@ -1003,28 +1003,17 @@ def _simulate_host_pass(
 ):
     """`_simulate_sparse` evaluated on the host behind one custom VJP."""
     structure = plan.structure
-    # A structurally empty update is the identity, including its transpose.
-    # Keep phase arrays and their construction unchanged; only avoid tracing
-    # the empty scatter. Nonempty updates retain their original derivatives.
-    empty_phase_update = (
-        qhd_phase_values.shape == (0,)
-        and qhd_placing_indices.size == 0
-        and qhd_placing_indices.dtype.kind in "iu"
-        and noise_selection_vectors.ndim == 3
-        and noise_selection_vectors.dtype == qhd_phase_values.dtype == jnp.complex128
+    noise_selection_vectors = lax.scatter_mul(
+        noise_selection_vectors,
+        qhd_placing_indices.reshape(-1, 3),
+        qhd_phase_values,
+        lax.ScatterDimensionNumbers(
+            update_window_dims=(),
+            inserted_window_dims=(0, 1, 2),
+            scatter_dims_to_operand_dims=(0, 1, 2),
+        ),
+        unique_indices=True,
     )
-    if not empty_phase_update:
-        noise_selection_vectors = lax.scatter_mul(
-            noise_selection_vectors,
-            qhd_placing_indices.reshape(-1, 3),
-            qhd_phase_values,
-            lax.ScatterDimensionNumbers(
-                update_window_dims=(),
-                inserted_window_dims=(0, 1, 2),
-                scatter_dims_to_operand_dims=(0, 1, 2),
-            ),
-            unique_indices=True,
-        )
     carrier, signal, noise = _host_pass.host_pass(
         plan,
         parameters.astype(jnp.complex128),

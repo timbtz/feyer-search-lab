@@ -2216,3 +2216,103 @@
   and first-order-only host VJP remain open. No tolerances, fixtures, flags or workloads changed.
   If27 does not isolate a useful effect, end this empty-scatter refinement and obtain the
   outstanding supervisor profile rather than more equivalent scatter variants.
+
+### Candidate27 feedback — freeze for confirmation, no promotion
+
+- Evaluated SHA **7213fe61c461f63824d1632de3ee22c075abbe62**, request/job
+  **fc011736e58c4fadae64c96444b347c4**, grid-1/2/3 and aligo-1/2/3. Receipt:
+  experiments/runs/overnight-20261122/overnight-overhead-v1/fc011736e58c4fadae64c96444b347c4.json.
+  Both unchanged official benchmarks passed 3/3. All six saved official output/gradient
+  comparisons and all fourteen generalization cases passed initial-seed tolerances.
+  Pristine comparisons retain the inherited disagreements. No new numerical failure is
+  identified by these results; source_review=null and confirmed_improvement=false.
+- Large complete fresh-process seconds: [0.8174483720213175, 0.792569087818265,
+  0.7870335020124912]; median 0.792569087818265, range
+  0.7870335020124912–0.8174483720213175. aLIGO separately:
+  [0.53992441855371, 0.6041343584656715, 0.5329861268401146]; median
+  0.53992441855371, range 0.5329861268401146–0.6041343584656715.
+  Large range overlaps reviewed ee4fea2; aLIGO relative range 13.1774% exceeds the
+  team's 10% stability heuristic. Keep all samples, including aLIGO-2.
+- Phase medians in milliseconds, large/aLIGO: imports 266.698/270.294;
+  initialize 3.527/3.514; load 1.508/0.255; build 74.394/37.831;
+  forward lower 17.370/16.800, compile 30.681/31.012, execution 179.307/32.651;
+  sensitivity lower 25.560/26.610, compile 39.662/41.543, execution 0.866/0.484;
+  gradient lower 13.293/13.301, compile 51.507/52.424, execution 84.920/14.409;
+  host transfer 0.187/0.142. Against26, forward lowering is lower by 2.174/2.339 ms
+  and gradient lowering by 3.255/3.475 ms. These are unpaired observations of different
+  revisions, not causal attribution or a confirmed complete-run gain. Against historical
+  ee4fea2 totals, median differences are -9.009 ms large and -8.631 ms aLIGO; these
+  likewise do not satisfy matched-parent confirmation.
+- The slow aLIGO-2 has larger import, forward lowering/compilation and sensitivity
+  lowering/compilation times; gradient compilation is similar. This does not identify
+  the cause of the slowdown, establish external contention, or justify discarding it.
+- Sampled peak process-group RSS bytes: large [507854848, 510963712, 524447744];
+  aLIGO [295366656, 281542656, 295178240]; generalization 804278272.
+  No infrastructure or memory-budget failure. EPYC9334, CPU2 (one logical CPU), threads1,
+  x64, unchanged permitted flags, no persistent compilation cache. Other-host overlap
+  unknown; ranking_eligible=false. RSS sampling can miss brief peaks.
+- Official array archives remain 112c0407... large and 9c1ce936... aLIGO. Generalization
+  archive f4fc6263bb6ad41c6d883baee45241e31c723332594e184be8a6fd7b992d6d4b.
+  Initial-seed maximum absolute gradient differences remain 5.686350050382316e-6 large
+  and 3.637978807091713e-11 aLIGO; tolerance agreement is not bitwise seed equality.
+  Pristine signal/gradient/loss discrepancies, gradients33/161/180, uifo_rand1/3
+  sensitivity disagreements, grid FD54/59/63/136/161/163 and first-order-only host VJP
+  limitations remain unresolved. The focused JAX empty/nonempty scatter diagnostic
+  is still UNEXECUTED locally; no supervisor result for it has been supplied.
+- Decision: preserve27 exactly for confirmation, with no additional simulator edits.
+  Stop further empty-scatter variants. Reviewed ee4fea2 remains the admitted parent;
+  27 is not promoted. This differs from retiring26: the targeted trace reduction warrants
+  a controlled confirmation, but the existing candidate-only cohort is insufficient.
+- Concrete next supervisor experiment: independently review ee4fea2..7213fe6, execute
+  experiments/notes/overnight-overhead-empty-scatter-check.py on27, then collect five
+  interleaved fresh-process runs per revision per unchanged official setup under identical
+  resource policy. Compare27 with exact ee4fea2, retain every sample, report phase deltas,
+  RSS and known job overlap separately for large and aLIGO, and retain full arrays/gradients
+  plus the fourteen-case generalization audit. No new candidate-only replay or combination
+  is requested. If this fails to establish a stable gain, retire27 and obtain the already
+  prepared import/build/trace profile before choosing another implementation mechanism.
+- This handoff stops the empty-scatter hypothesis pending that evidence, not the authorized
+  campaign. No independent benchmark, install, commit or agent spawn was performed.
+  Recorded 2026-11-22 04:45 UTC; absolute deadline remains 2026-11-22 09:27:44 UTC.
+
+### Candidate28 — retain the already computed unique write positions
+
+- Supervisor resumed with a request for a concrete evaluable change. Candidate27 remains
+  preserved at7213fe61c461f63824d1632de3ee22c075abbe62 with its confirmation request above;
+  it is not combined into28. Restored simulate.py to reviewed ee4fea2. Candidate28's sole
+  simulator delta against ee4fea28c04d482566be16e916b609d7c6a99e5e is in SystemPlan.__init__.
+  New SHA and both official job identifiers are pending supervisor submission.
+- Source evidence: the constructor calls np.unique(writes[::-1], return_index=True),
+  discards its unique-values result, then calls np.unique(writes) for self.written.
+  These inputs are the same flattened int64 positions in reverse order; their sorted
+  unique values are identical. Retain the first result for self.written. The original
+  return_index calculation and last-write mask remain unchanged, including duplicates
+  and empty arrays. No numerical values, zero-valued parameters or derivative slots
+  are removed. The metadata digest and all forward/backward methods are unchanged.
+- Cost hypothesis: remove one redundant np.unique invocation and its result allocation
+  from each of the carrier, signal and noise SystemPlan constructors (three per build).
+  No cache, extra build pass or new mutable state. This is a small setup experiment;
+  no timing benefit is claimed. NumPy versions may use different uniqueness algorithms,
+  so the initial description of two sorts is not a measured algorithm attribution.
+  The actual established redundancy is computing the same unique values twice.
+- Available cost context from27: build medians74.394 ms large and37.831 ms aLIGO;
+  imports266.698/270.294 ms; forward lowering17.370/16.800 ms and gradient lowering
+  13.293/13.301 ms. Those are phase totals from a different candidate, not the expected
+  savings or a current parent calibration.28 does not retain27's scatter tracing reduction.
+- Local validation: all ten simulator modules compile as Python source; nine match
+  reviewed ee4fea2 byte-for-byte. Reversing the two changed assignments/comment restores
+  host_pass.py byte-for-byte to that parent. No NumPy/JAX execution was performed locally
+  because those dependencies are unavailable, and no dependencies were installed.
+  No independent timings or benchmarks were launched.
+- Request both unchanged full official benchmarks on the exact new SHA, complete saved
+  outputs/gradients, fourteen-case seed/pristine generalization comparisons and independent
+  source review. The metadata equivalence argument covers arbitrary integer write orders,
+  including repeated destinations; evaluation must still confirm unchanged physical results.
+  Any apparent millisecond gain requires matched interleaved fresh parent/candidate runs,
+  separate phase medians/ranges and memory/overlap reporting. Do not promote a single sample.
+- If no stable setup gain appears, retire28 rather than try further unique/sort microvariants.
+  Next evidence request is the already prepared supervisor import/build/trace profile;
+  candidate27 confirmation remains separate. Inherited pristine signal/gradient/loss
+  discrepancies, gradients33/161/180, uifo_rand1/3 sensitivity errors, unresolved grid
+  FD54/59/63/136/161/163 and first-order-only host VJP remain open. No workload, tolerance,
+  fixture, flags, solver/refinement or adjoint mathematics changed.
