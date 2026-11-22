@@ -91,6 +91,24 @@ Notes
 """
 
 
+def identity_link(x):
+    """Placeholder linking function used when a setup has no linked parameters.
+
+    The registry lookup selects this exact identity function even after other
+    setups have registered nonidentity links.
+    """
+    return x
+
+
+def _identity_link_index():
+    """Register the no-link placeholder once without changing existing link indices."""
+    for index, function in enumerate(LINKING_FUNCTIONS):
+        if function is identity_link:
+            return index
+    LINKING_FUNCTIONS.append(identity_link)
+    return len(LINKING_FUNCTIONS) - 1
+
+
 def set_instructions(
     instructions: dict,
     node: str,
@@ -1415,8 +1433,7 @@ def build(setup: Setup):
     if len(linked_indices) == 0:
         linked_indices = [0]
         indices_to_link = [0]
-        LINKING_FUNCTIONS.append(lambda x: x)
-        linking_function_indices = [0]
+        linking_function_indices = [_identity_link_index()]
 
     return (
         (carrier_instructions, signal_instructions, noise_instructions, signal_components, parameter_names),
@@ -1586,23 +1603,20 @@ def pairs_to_arrays(
 
     # Compile optimized parameter indices and include any carrier-side components that need updating.
     for ix, optimization_pair in enumerate(optimization_pairs):
-        if not isinstance(optimization_pair[0], list):
-            optimized_component, optimized_parameter = optimization_pair
+        pairs = optimization_pair if isinstance(optimization_pair[0], list) else [optimization_pair]
+        for optimized_component, optimized_parameter in pairs:
             try:
                 optimized_parameter_indices.append(parameter_names.index(f"{optimized_component}_{optimized_parameter}"))
                 optimization_value_indices.append(ix)
             except ValueError:
                 pass
-        else:
-            for optimized_component, optimized_parameter in optimization_pair:
-                try:
-                    optimized_parameter_indices.append(parameter_names.index(f"{optimized_component}_{optimized_parameter}"))
-                    optimization_value_indices.append(ix)
-                except ValueError:
-                    pass
 
-        if optimized_component not in signal_components and optimized_component in parameter_instructions:
-            append_information(parameter_instructions, carrier_arrays, optimized_component, carrier_components)
+            # Every member reads the shared optimized value. Scheduling only the
+            # final member leaves earlier components at their base matrix values
+            # and loses their derivative contributions. append_information keeps
+            # repeated components in this or later groups from being added twice.
+            if optimized_component not in signal_components and optimized_component in parameter_instructions:
+                append_information(parameter_instructions, carrier_arrays, optimized_component, carrier_components)
 
     # Compile changing parameter indices for sweeps.
     for changing_component, changing_parameter in changing_pairs:
@@ -1611,6 +1625,22 @@ def pairs_to_arrays(
         else:
             carrier_changing_parameter_indices.append(parameter_names.index(f"{changing_component}_{changing_parameter}"))
             append_information(parameter_instructions, carrier_arrays, changing_component, carrier_components)
+
+    # A parameter can be read by components other than its named owner. For
+    # example, a space's refractive index also enters both adjacent surfaces.
+    # Schedule those readers too, including at points where their contribution
+    # is currently zero. Keep the existing update order and append only missing
+    # readers; signal-only sweeps are applied after the carrier solve.
+    carrier_inputs = set(optimized_parameter_indices) | set(carrier_changing_parameter_indices)
+    if carrier_inputs:
+        scheduled = set(carrier_components)
+        for component, instruction in parameter_instructions.items():
+            if component not in scheduled and any(
+                index in carrier_inputs
+                for row in instruction["function_input_indices"]
+                for index in row
+            ):
+                append_information(parameter_instructions, carrier_arrays, component, carrier_components)
 
     def combine_arrays(arrays: dict, signal: bool = False):
         """
