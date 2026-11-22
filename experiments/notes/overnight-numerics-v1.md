@@ -2758,3 +2758,131 @@ compared to admitted7/seed and pristine separately. If promising, require matche
 repeated fresh-process parent/candidate samples, medians/ranges, phases, RSS and
 contention evidence. If direct execution still loses, retire this staging path;
 do not hide compilation outside the timer or promote a warm-only benefit.
+
+
+## Candidate31 feedback — hold exact source for paired evidence
+
+Candidate31 SHA316df3dd0e65d2d6edac263e24cf14ea9b80972b, dual request
+ de0216be0f48433bb3591ecb6542d935 (grid-1/2/3 and aligo-1/2/3).
+All six unchanged official runs passed. confirmed_improvement=false; independent
+source review is absent. Selection withheld for missing review and overlapping
+large first-run ranges. The runner's promotion_ready field is not an admission.
+
+Large complete fresh-process seconds:
+[0.8311645332723856, 0.7864642404019833, 0.7932619396597147];
+median0.7932619396597147, range0.7864642404019833–0.8311645332723856,
+relative range5.635%. Official aLIGO seconds:
+[0.5451211351901293, 0.5425091609358788, 0.546032851561904];
+median0.5451211351901293, range0.5425091609358788–0.546032851561904,
+relative range0.646%. These are separate diagnostics, not a combined score or
+an organizer ranking claim. All samples retained, including grid-1's294.213ms
+imports. External contention is not excluded; no matched parent cohort supplied.
+
+Compared with admitted7's earlier medians, large is8.315744ms lower (about1.04%)
+and aLIGO3.434021ms lower (about0.63%). Large ranges overlap. These unpaired
+observations are promising but do not establish a gain. Large median phases:
+forward182.861671ms, reverse79.023715ms, build72.593059ms, imports265.772404ms;
+versus admitted7: +1.698584/-6.333709/-1.401021/+0.171790ms respectively.
+aLIGO medians32.743787/16.462708/37.812274/263.508771ms;
+versus admitted7: -0.146363/+2.078556/-0.150271/-0.000037ms respectively.
+Reverse medians decreased versus30 by8.550042ms large and6.384263ms aLIGO;
+this is consistent with reducing first-call construction, but is not isolated
+causal evidence. Sampled peak RSS maxima: large639741952, aLIGO315441152,
+generalization963862528 bytes. No infrastructure failure or memory exceedance.
+
+Inspected all six returned official array-comparison records/hashes and every
+initial-seed/pristine record across14 generalization cases. Official archive
+hashes and complete strict comparison records equal30. All14 seed comparisons
+pass with zero log-sensitivity error; their complete seed and pristine case
+records equal30. This does not mean bitwise agreement with the initial seed:
+official gradient maxabs differences remain5.686350050382316e-6 large and
+3.637978807091713e-11 aLIGO. Remote raw NPZ payloads were not reopened locally.
+Pristine grid131 signal/3 gradient/1 loss failures and aLIGO1 loss failure remain;
+uifo_rand1/uifo_rand3 sensitivity discrepancies remain about2.04e-4/5.81e-5.
+No new discrepancy is reported by these comparisons. The six unresolved grid
+finite-difference coordinates54/59/63/136/161/163, earlier aLIGO29/29 checks,
+and first-order-only custom VJP limitation remain visible. Candidate28's separate
+native-product disagreements remain unresolved and its implementation is retired.
+
+Decision: hold simulator source exactly31; do not introduce candidate32 or stack
+another allocation variant. The three-trial search rule is not grounds to call
+this an admitted gain. This step seeks missing confirmation of a promising result,
+not another unproductive implementation variant. Admitted7 remains the strongest
+reviewed parent. No simulator changes or independent benchmarks in this turn.
+
+Supervisor request: independently review exact31, especially ordered operation
+interning, typed scalar constants, symbolic Dual dispatch, last-use release,
+Jacobian destination writes, bounded structural-only cache and fresh numerical
+inputs per invocation. Existing synthetic tests cover zero/repeated derivative
+slots, strided/empty inputs and nonfinite cases; these are bounded evidence only.
+Review the delta from admitted7, not merely the smaller30-to31 delta.
+
+Request matched repeated complete fresh-process runs of exact31 and exact
+ ee4fea28c04d482566be16e916b609d7c6a99e5e under the same fixed CPU/thread/cache
+policy, preferably five per setup per revision with paired/interleaved ordering
+chosen by the supervisor. Run both unchanged official workloads on each revision,
+retain every sample and phase/RSS record, record overlap/contention, and compare
+all saved outputs/gradients plus the generalization cases independently against
+parent, seed and pristine. Do not exclude the slow first sample. No timing gain or
+promotion is claimed until paired evidence and independent review arrive. If the
+supervisor cannot supply that evidence, retain admitted7 rather than infer a win
+from these medians. Candidate SHA for this request remains316df3dd0e65d2d6edac263e24cf14ea9b80972b;
+a note-only commit must not be confused with a new simulator mechanism.
+
+## Candidate32 — direct unary/binary operation dispatch
+
+The supervisor requested a concrete follow-up instead of another identical
+hold/repeat handoff. No new evaluator or independent-review evidence arrived;
+31 remains provisional and its paired-run request above remains open.32 is a
+narrow refinement of31's arithmetic interpreter, not an admission or merge.
+
+Source inspection establishes that31 builds a generator and expanded argument
+tuple for every operation, although all19 inspected component graphs contain
+only unary and binary operations.32 directly invokes the same callable with
+one or two indexed operands; the generic generator path remains for other
+arities. Every operation, operand order, value lifetime, Jacobian write and
+conjugation is retained. No constant folding, algebraic simplification, numerical
+zero pruning, changed reduction/scatter order or solve/refinement change.
+First-use structural graph construction remains within the numerical invocation;
+all numerical arrays remain local, fresh and uncached. No fixture/shape dispatch.
+
+An alternative inspected in this turn was graph reachability pruning: each
+component had only0–4 dead operation nodes for all7 seeds (surface3 out of304).
+It was not implemented. Direct call dispatch instead removes interpreter work
+on every arithmetic node without dropping any numerical operation or changing
+which operations encounter exceptional inputs. Expected phase: reverse execution,
+including its first-call interpreter overhead.31's measured reverse medians were
+79.023715ms large and16.462708ms aLIGO, versus admitted7's85.357424/14.384152ms;
+the small-case overhead makes this conservative Python-overhead refinement worth
+one bounded trial. The full-run improvement remains unconfirmed.
+
+Re-ran overnight-numerics-program-check.py:4104 component/Jacobian/contraction,
+8 SystemPlan pullbacks,133 extreme/nonfinite,912 extra shapes/layouts/slots,
+1596 independent finite-difference directions pass. Finite values bitwise match
+admitted7; nonfinite values match elementwise. Maximum scaled finite-difference
+error1.7286649972079704e-9 (unchanged2e-7 bound). Surface transcendental work
+remains114 parent versus15 candidate. Small17x23-row allocation probe including
+first graph construction: parent531448,32 cold611146/warm546224 bytes;
+31 previously616578/547288. These are allocations, not elapsed-time claims.
+
+Added overnight-numerics-dispatch-check.py, which loads exact31's interpreter
+read-only from Git and compares it with32 on identical graph plans and random
+complex128 inputs. All19 component graphs match; additional zero-argument and
+three-argument generic call tests match (21 checks). Operation inventory:
+1149 total =162 unary +987 binary. An isolated temporary Python profile hook
+counts3285 generator-resume events in31 and0 in32 during those calls; this
+corresponds to eliminating1149 generator creations. The test restores any prior
+profile hook and never changes the production code or benchmark validation.
+No independent workload, benchmark, elapsed timing or environment changes run.
+
+Candidate32 SHA and job IDs pending supervisor. Request both unchanged complete
+official benchmarks on one exact revision, saved full-output/gradient comparisons
+and all14 generalization cases versus31/admitted7/seed and pristine separately,
+plus independent review. If promising, matched repeated fresh-process parent and
+candidate samples are required; retain every sample, phases, RSS and contention
+information. No new numerical discrepancies appeared in the bounded synthetic
+checks; all inherited pristine and finite-difference questions remain unresolved.
+This is the third arithmetic-program implementation trial (30/31/32). If32 also
+has no repeat-supported improvement, retire further interpreter variants and
+return to admitted7 for a distinct mechanism; do not stack another tiny dispatch
+variant or claim31's overlapping timing ranges were confirmation.

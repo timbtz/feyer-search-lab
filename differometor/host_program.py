@@ -120,7 +120,15 @@ class _Program:
                 value = node[1]
             else:
                 function, operands = node[1:]
-                value = function(*(values[operand] for operand in operands))
+                # Component arithmetic is predominantly unary/binary. Avoid a
+                # generator and argument tuple for every such operation, keeping
+                # exactly the same callable, arguments and evaluation order.
+                if len(operands) == 1:
+                    value = function(values[operands[0]])
+                elif len(operands) == 2:
+                    value = function(values[operands[0]], values[operands[1]])
+                else:
+                    value = function(*(values[operand] for operand in operands))
             values[index] = value
             for target, column, position in destinations:
                 output = linear if target == "linear" else antilinear
