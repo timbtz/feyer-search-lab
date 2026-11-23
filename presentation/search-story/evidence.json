@@ -1,0 +1,78 @@
+{
+  "scope": "Recorded final six-configuration sweep; one fresh checkout per request, not median-of-three. Official and seed-relative verdicts are separate.",
+  "source": ".lab/worktrees/overnight-control/experiments/campaigns/overnight-finite-v1/results.json",
+  "configs": [
+    {
+      "choice": "choice-00",
+      "parameters": {
+        "factor_layout": "default"
+      },
+      "sha": "3b107d69d9d083f7aaa5f11b952f0098ed0ba528",
+      "request_id": "d8c933313c0e4915bd5ee6a91d5220cb",
+      "large": 0.8527310416102409,
+      "aligo": 0.530437309294939,
+      "official_passed": true,
+      "extra_seed_passed": true
+    },
+    {
+      "choice": "choice-01",
+      "parameters": {
+        "factor_layout": "default_relax4"
+      },
+      "sha": "66c456403441eb20852d9cf0e95714b65e6e0e5b",
+      "request_id": "fa0b0b291fb7410eadade23ac6f4c1a8",
+      "large": 0.8557843286544085,
+      "aligo": 0.5308156311511993,
+      "official_passed": true,
+      "extra_seed_passed": false
+    },
+    {
+      "choice": "choice-02",
+      "parameters": {
+        "factor_layout": "panel8"
+      },
+      "sha": "256ba50deff8e59e9cd0319678632b8b728d8b33",
+      "request_id": "b8526395c56d46a2bdc222d9b2ca104d",
+      "large": 0.8558072876185179,
+      "aligo": 0.5311651714146137,
+      "official_passed": true,
+      "extra_seed_passed": false
+    },
+    {
+      "choice": "choice-03",
+      "parameters": {
+        "factor_layout": "panel8_relax4"
+      },
+      "sha": "273800f05e2ce88a1e1fae290638512e02a1c072",
+      "request_id": "5c1b743fda3343ee9f7d4dc26750ab47",
+      "large": 0.8452240582555532,
+      "aligo": 0.5222206953912973,
+      "official_passed": true,
+      "extra_seed_passed": false
+    },
+    {
+      "choice": "choice-04",
+      "parameters": {
+        "factor_layout": "panel16"
+      },
+      "sha": "0c111e47bbbaaf7181d6d6e921dc1ce589c03719",
+      "request_id": "c00ab6af6b424bd886b67f20ddcbfaf6",
+      "large": 0.860739728435874,
+      "aligo": 0.5284490995109081,
+      "official_passed": true,
+      "extra_seed_passed": false
+    },
+    {
+      "choice": "choice-05",
+      "parameters": {
+        "factor_layout": "panel16_relax4"
+      },
+      "sha": "79d146b40f435cac0afd34ab561ef8ff44f86379",
+      "request_id": "e7e849a346124166831afa6f249d3a2d",
+      "large": 0.8445027563720942,
+      "aligo": 0.527698440477252,
+      "official_passed": true,
+      "extra_seed_passed": false
+    }
+  ]
+}

@@ -1,0 +1,445 @@
+{
+  "baseline_sha": "02ec741d8a1bf1a2278294ea74f9fc1d68f08f1f",
+  "selected_sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+  "selection_status": "Selected submission focus: the approximately one-second host/sparse solution (53f38d3), as requested. Selection does not override recorded validation results.",
+  "candidates": [
+    {
+      "sha": "53f38d342c3228c052785e8c9d63b6ce9c832dd1",
+      "title": "One-second solution \u00b7 host / sparse",
+      "summary": "Selected performance candidate. Grid first-run timing is approximately one second; aLIGO is approximately 0.63 seconds. Exact benchmark reports, repeat runs, logs and code changes are below. Official benchmark checks passed; strict numerical differences and broader gradient diagnostics remain recorded separately.",
+      "concepts": [
+        {
+          "title": "Build static setup arrays on the host",
+          "before": "Small setup operations used JAX array construction and eager kernels.",
+          "after": "NumPy builds concrete setup values and index arrays before conversion to JAX, reducing setup dispatch and compilation.",
+          "refs": [
+            {
+              "path": "differometor/build.py",
+              "symbol": "_host_array"
+            },
+            {
+              "path": "differometor/build.py",
+              "symbol": "build"
+            }
+          ],
+          "target": "Setup / initialization",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Specialize component evaluation by type",
+          "before": "A batched dynamic switch selected each component function.",
+          "after": "Group rows by their known component function and preserve an output permutation. Each group evaluates only its own function.",
+          "refs": [
+            {
+              "path": "differometor/build.py",
+              "symbol": "_group_component_indices"
+            },
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "_evaluate_component_group"
+            }
+          ],
+          "target": "Tracing / compilation",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Remove derivatives of constant inputs",
+          "before": "Dense component input vectors carried tangent entries even for constant slots.",
+          "after": "Static masks identify optimized or linked inputs. Separate scalar slots and stop_gradient remove derivative terms whose true derivatives are zero; lower-sideband variants preserve these scalar slots.",
+          "refs": [
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "_evaluate_component_group_slots"
+            },
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "run_build_step"
+            }
+          ],
+          "target": "Forward and gradient compilation",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Represent and solve structural sparsity",
+          "before": "Dense matrices represented mostly unoccupied optical-system entries.",
+          "after": "Build structural CSC patterns and solve with SciPy SuperLU through callbacks. Strict numerical differences must be assessed separately from official checks.",
+          "refs": [
+            {
+              "path": "differometor/sparse.py",
+              "symbol": "SparseSystem"
+            },
+            {
+              "path": "differometor/sparse.py",
+              "symbol": "sparse_solve"
+            },
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "_build_sparse_structure"
+            }
+          ],
+          "target": "Solve runtime / memory",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Evaluate component arithmetic on the host",
+          "before": "XLA compiled the component bodies and their derivatives.",
+          "after": "NumPy component evaluation and a custom JVP move this arithmetic to the host.",
+          "refs": [
+            {
+              "path": "differometor/host.py",
+              "symbol": "component_outputs"
+            },
+            {
+              "path": "differometor/host.py",
+              "symbol": "_component_outputs_jvp"
+            }
+          ],
+          "target": "Compilation / execution",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Fuse the optical pass behind a custom reverse derivative",
+          "before": "Carrier, signal and noise operations were traced as a large JAX computation.",
+          "after": "A host plan evaluates the forward pass with an explicit reverse pass behind a custom VJP. Broader transformation support and diagnostic failures remain separate evidence.",
+          "refs": [
+            {
+              "path": "differometor/host_pass.py",
+              "symbol": "host_forward"
+            },
+            {
+              "path": "differometor/host_pass.py",
+              "symbol": "host_backward"
+            },
+            {
+              "path": "differometor/host_pass.py",
+              "symbol": "host_pass"
+            }
+          ],
+          "target": "First run / gradient execution",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Reuse signal factors within a forward/backward evaluation",
+          "before": "Solving each right-hand side separately can repeat the same signal-system factorization.",
+          "after": "Factor each signal matrix once, solve signal and noise right-hand sides together, and retain digest-checked factors for the matching reverse pass. Every new forward evaluation factors afresh.",
+          "refs": [
+            {
+              "path": "differometor/host_pass.py",
+              "symbol": "host_forward"
+            },
+            {
+              "path": "differometor/host_pass.py",
+              "symbol": "host_backward"
+            }
+          ],
+          "target": "Signal / noise / gradient execution",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Avoid importing the full sparse solver package on the fast path",
+          "before": "Importing the public scipy.sparse.linalg package also loads unused solver infrastructure.",
+          "after": "Load the SuperLU extension directly for factorization, with a fallback to the public SciPy path. NumPy implements the sparse products used for refinement.",
+          "refs": [
+            {
+              "path": "differometor/host_pass.py",
+              "symbol": "_superlu_gstrf"
+            },
+            {
+              "path": "differometor/host_pass.py",
+              "symbol": "_Products"
+            }
+          ],
+          "target": "Import / initialization",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Reduce compiler optimization for small residual programs",
+          "before": "Default XLA optimization was applied to the remaining small callback/readout programs.",
+          "after": "Package defaults request optimization level 0 and disable CPU fusion emitters before backend initialization, respecting existing flags. This process-wide setting is visible in the source diff.",
+          "refs": [
+            {
+              "path": "differometor/__init__.py",
+              "symbol": "_apply_xla_defaults"
+            }
+          ],
+          "target": "Compilation",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        }
+      ],
+      "artifacts": [
+        ".lab/transfer-audit-20261122/53f38d3.json"
+      ],
+      "artifact_globs": [
+        ".lab/transfer-audit-20261122/fastest/receipt.json",
+        ".lab/transfer-audit-20261122/fastest/*/report.json",
+        ".lab/transfer-audit-20261122/fastest/*/stdout.log",
+        ".lab/transfer-audit-20261122/fastest/extra/*.json",
+        ".lab/transfer-audit-20261122/fastest/extra/*/stdout.log",
+        ".lab/transfer-audit-20261122/fastest/extra/precision-arrays/residuals.json",
+        ".lab/transfer-audit-20261122/fastest/recheck/*.json",
+        ".lab/transfer-audit-20261122/fastest/recheck/*/stdout.log",
+        ".lab/transfer-audit-20261122/fastest/independent/*.json",
+        ".lab/transfer-audit-20261122/fastest/independent/*/stdout.log",
+        ".lab/transfer-audit-20261122/fastest/precision-gradients/*.json",
+        ".lab/transfer-audit-20261122/fastest/precision-gradients/*/stdout.log",
+        ".lab/transfer-audit-20261122/fastest/extended-assembly-gradients/*.json",
+        ".lab/transfer-audit-20261122/fastest/extended-assembly-gradients/*/stdout.log"
+      ]
+    },
+    {
+      "sha": "aac9904cb4dd9b2caae377d8d4694f6782ec3498",
+      "title": "Dense JAX \u00b7 pruning and narrow checkpointing",
+      "summary": "Transfer-tested candidate with Grid and aLIGO official and saved-array passes. Final selection has not been recorded.",
+      "concepts": [
+        {
+          "title": "Build static setup arrays on the host",
+          "before": "Small setup operations used JAX array construction and eager kernels.",
+          "after": "NumPy builds concrete setup values and index arrays before conversion to JAX, reducing setup dispatch and compilation.",
+          "refs": [
+            {
+              "path": "differometor/build.py",
+              "symbol": "_host_array"
+            },
+            {
+              "path": "differometor/build.py",
+              "symbol": "build"
+            }
+          ],
+          "target": "Setup / initialization",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Specialize component evaluation by type",
+          "before": "A batched dynamic switch selected each component function.",
+          "after": "Group rows by their known component function and preserve an output permutation. Each group evaluates only its own function.",
+          "refs": [
+            {
+              "path": "differometor/build.py",
+              "symbol": "_group_component_indices"
+            },
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "_evaluate_component_group"
+            }
+          ],
+          "target": "Tracing / compilation",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Remove derivatives of constant inputs",
+          "before": "Dense component input vectors carried tangent entries even for constant slots.",
+          "after": "Static masks identify optimized or linked inputs. Separate scalar slots and stop_gradient remove derivative terms whose true derivatives are zero; lower-sideband variants preserve these scalar slots.",
+          "refs": [
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "_evaluate_component_group_slots"
+            },
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "run_build_step"
+            }
+          ],
+          "target": "Forward and gradient compilation",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Split constant rows from differentiable rows",
+          "before": "A group-level active slot made the same slot active for every row.",
+          "after": "Stable row partitions evaluate fully constant rows with all tangents stopped, then restore the original output order. The recorded parent trial was within timing noise.",
+          "refs": [
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "_component_values"
+            },
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "run_build_step"
+            }
+          ],
+          "target": "Compilation; isolated gain not established",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Checkpoint only component arithmetic",
+          "before": "Saving component linearization residuals enlarged the forward program; checkpointing the whole assembly shifted work to backward compilation.",
+          "after": "Recompute component values during reverse mode while retaining integer indexing results. Dense scatter and solves stay outside this checkpoint.",
+          "refs": [
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "update"
+            },
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "_save_assembly_indices"
+            }
+          ],
+          "target": "Forward / gradient compilation tradeoff",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Bound assembly by frequency",
+          "before": "All frequency rows were assembled as one large vectorized program.",
+          "after": "Use one-row assembly chunks while retaining full-vectorized solves. All 101 frequencies are still evaluated.",
+          "refs": [
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "simulate"
+            },
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "_map_row_chunks"
+            }
+          ],
+          "target": "Assembly compilation / memory",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Reuse invariant noise assembly and signal factors",
+          "before": "Repeated rows assembled identical noise matrices and signal solves could refactor the same coefficient matrix.",
+          "after": "A builder proof enables noise-row reuse; the direct_implicit path shares the signal LU and keeps an explicit conjugate-transposed noise solve.",
+          "refs": [
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "_solve_signal_and_noise"
+            },
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "run_build_step"
+            }
+          ],
+          "target": "Forward / reverse execution",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        }
+      ],
+      "artifacts": [
+        ".lab/transfer-audit-20261122/aac9904.json",
+        ".lab/transfer-audit-20261122/official-receipt.json",
+        ".lab/transfer-audit-20261122/official/loss-inclusive-comparison.json"
+      ],
+      "artifact_globs": [
+        ".lab/transfer-audit-20261122/official/*/report.json"
+      ]
+    },
+    {
+      "sha": "c4153e7d0058231e80cc56147e139279df929c07",
+      "title": "Host / sparse \u00b7 before compiler defaults",
+      "summary": "Earlier host/sparse revision retained for comparison; archived transfer comparisons report mismatches.",
+      "concepts": [
+        {
+          "title": "Build static setup arrays on the host",
+          "before": "Small setup operations used JAX array construction and eager kernels.",
+          "after": "NumPy builds concrete setup values and index arrays before conversion to JAX, reducing setup dispatch and compilation.",
+          "refs": [
+            {
+              "path": "differometor/build.py",
+              "symbol": "_host_array"
+            },
+            {
+              "path": "differometor/build.py",
+              "symbol": "build"
+            }
+          ],
+          "target": "Setup / initialization",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Specialize component evaluation by type",
+          "before": "A batched dynamic switch selected each component function.",
+          "after": "Group rows by their known component function and preserve an output permutation. Each group evaluates only its own function.",
+          "refs": [
+            {
+              "path": "differometor/build.py",
+              "symbol": "_group_component_indices"
+            },
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "_evaluate_component_group"
+            }
+          ],
+          "target": "Tracing / compilation",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Remove derivatives of constant inputs",
+          "before": "Dense component input vectors carried tangent entries even for constant slots.",
+          "after": "Static masks identify optimized or linked inputs. Separate scalar slots and stop_gradient remove derivative terms whose true derivatives are zero; lower-sideband variants preserve these scalar slots.",
+          "refs": [
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "_evaluate_component_group_slots"
+            },
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "run_build_step"
+            }
+          ],
+          "target": "Forward and gradient compilation",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Represent and solve structural sparsity",
+          "before": "Dense matrices represented mostly unoccupied optical-system entries.",
+          "after": "Build structural CSC patterns and solve with SciPy SuperLU through callbacks. Strict numerical differences must be assessed separately from official checks.",
+          "refs": [
+            {
+              "path": "differometor/sparse.py",
+              "symbol": "SparseSystem"
+            },
+            {
+              "path": "differometor/sparse.py",
+              "symbol": "sparse_solve"
+            },
+            {
+              "path": "differometor/simulate.py",
+              "symbol": "_build_sparse_structure"
+            }
+          ],
+          "target": "Solve runtime / memory",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Evaluate component arithmetic on the host",
+          "before": "XLA compiled the component bodies and their derivatives.",
+          "after": "NumPy component evaluation and a custom JVP move this arithmetic to the host.",
+          "refs": [
+            {
+              "path": "differometor/host.py",
+              "symbol": "component_outputs"
+            },
+            {
+              "path": "differometor/host.py",
+              "symbol": "_component_outputs_jvp"
+            }
+          ],
+          "target": "Compilation / execution",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        },
+        {
+          "title": "Fuse the optical pass behind a custom reverse derivative",
+          "before": "Carrier, signal and noise operations were traced as a large JAX computation.",
+          "after": "A host plan evaluates the forward pass with an explicit reverse pass behind a custom VJP. Broader transformation support and diagnostic failures remain separate evidence.",
+          "refs": [
+            {
+              "path": "differometor/host_pass.py",
+              "symbol": "host_forward"
+            },
+            {
+              "path": "differometor/host_pass.py",
+              "symbol": "host_backward"
+            },
+            {
+              "path": "differometor/host_pass.py",
+              "symbol": "host_pass"
+            }
+          ],
+          "target": "First run / gradient execution",
+          "attribution": "Source mechanism; no isolated per-line timing measurement."
+        }
+      ],
+      "artifacts": [
+        ".lab/transfer-audit-20261122/c4153e7.json"
+      ],
+      "artifact_globs": []
+    }
+  ]
+}

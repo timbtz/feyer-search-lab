@@ -8,7 +8,7 @@ From a checkout containing `lab/live_dashboard.py`:
 
 ```bash
 python3 -m lab.live_dashboard \
-  --repo '/Users/t.betz/Documents/Feyer challenge' \
+  --repo . \
   --port 8765 --sync-remote --sync-team
 ```
 
@@ -20,7 +20,11 @@ Stop the foreground server with Ctrl-C. This only stops the dashboard; it does n
 
 ## Interface and design system
 
-The default **Search graph** fills the workspace with an automatically laid out DAG. It maps recorded research workers and model invocations, frozen topology/operator spaces, small-parameter search lanes, candidate ancestry, research guidance, and optional individual evaluations. **Overview**, **How it works**, and **Results** remain supporting reports. The graph is a read-only map; it has no node dragging, connection editing, or workflow construction. Raw event records, queue payloads and bounded log tails are behind **Technical details**. Individual results expose phase timings, validation records, SMAC acquisition ranks, and GitHub links on demand.
+The existing **Submission** landing view selects the revision in the submission manifest. **Challenge & solution** introduces the project with original final-pitch slides and links to the challenge, results guide, and both repositories. Open `/#story` to go straight to that introduction.
+
+**Search map** offers the topology/session map, run cards, and exact evidence DAG. **Overview**, **Architecture**, **Timing profile**, **Results**, and **Run archive** provide supporting reports. The graph positions records automatically and remains read-only. Technical details expose bounded source records and logs. Source-reported, screened, full-check and extra-validation outcomes retain their separate meanings.
+
+The [standalone frontend](https://github.com/timbtz/feyer-search-frontend) can show its included dated snapshot without this lab’s private state. Both repos are introduced in the [combined project overview](../README.md); the [architecture guide](../docs/ARCHITECTURE.md) explains their boundary.
 
 The frontend uses the actual [Porsche Design System v4](https://designsystem.porsche.com/v4/), pinned to `@porsche-design-system/components-js@4.10.1`, with Feyer branding. The official loader and global CSS are generated without modification from the npm package. Component chunks and font resources load from `https://cdn.ui.porsche.com`; the server permits only that additional asset origin in its CSP. Local campaign data stays on the existing localhost API. No Porsche logo, crest or wordmark is used. The package license and third-party notices are retained in `lab/dashboard`.
 

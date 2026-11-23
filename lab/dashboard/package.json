@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "build:pds": "node build-pds.cjs",
-    "check": "node --check app.js",
+    "check": "node --check app.js && node --check submission.js",
     "test": "node --test tests/*.test.cjs"
   }
 }

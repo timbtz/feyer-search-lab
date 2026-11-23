@@ -1,136 +1,124 @@
-# Faster Physics — START Hack Munich 2026
+# Faster Answers · Feyer Search Lab
 
-Make **Differometor** faster while preserving its physical predictions and gradients.
+**Faster physics, with a Git-traceable system for finding and checking improvements.**
 
-## Team optimization lab
+Our START Hack Munich 2026 project brings together a faster optical simulator, an agentic experiment loop, and a graph that makes the search inspectable. The final pitch tells the journey from **35.8 s to 0.66 s** per complete first evaluation. The lab connects hypotheses, exact code revisions, benchmark runs, validation, and the next decision.
 
-To clone the **complete team setup**, including the simulator, official benchmark,
-serial evaluator and shared search workflow:
+[Final presentation (PDF)](presentation/faster-answers.pdf) · [Challenge brief (PDF)](challenge.pdf) · [Results & evidence](docs/RESULTS.md) · [System architecture](docs/ARCHITECTURE.md) · [Frontend repository](https://github.com/timbtz/feyer-search-frontend)
 
-```bash
-git clone https://github.com/timbtz/feyer-search-lab.git
-cd feyer-search-lab
+[![Faster Answers: final presentation closing slide](presentation/slides/13-faster-answers.png)](presentation/faster-answers.pdf)
+
+*The 0.66 s / approximately 55× headline is reported in the final presentation. It is distinct from the lab’s selected submission and conservative repair. [Measurement scopes and exact revisions](docs/RESULTS.md) keep those results separate; this infrastructure checkout does not automatically contain the headline implementation.*
+
+## One project, two repositories
+
+| Repository | Responsibility | Start here |
+| --- | --- | --- |
+| **[feyer-search-lab](https://github.com/timbtz/feyer-search-lab)** — this repo | Simulator source, experiment coordination, Git provenance, evaluation queue, validation, profiling, and feedback | [Architecture](docs/ARCHITECTURE.md) · [Operating guide](.wiki/README.md) |
+| **[feyer-search-frontend](https://github.com/timbtz/feyer-search-frontend)** | Read-only search graph, challenge story, exact-source submission view, timing profiles, and run archive | [Frontend README](https://github.com/timbtz/feyer-search-frontend#readme) |
+
+The **lab is the operating system for the experiments**. Git records what changed; the evaluator measures an immutable revision; the coordinator turns that evidence into the next task. The frontend is its observatory. It can display live observations, a dated saved snapshot, or a clearly labelled synthetic demo. Opening it does not start an agent or a benchmark.
+
+## The challenge
+
+[Differometor](README.upstream.md) models optical instruments such as gravitational-wave detectors. A useful answer includes both the simulated detector sensitivity and the gradients needed to improve the design.
+
+Feyer asked us to accelerate the **complete first run**: imports, initialization, input preparation, all three compilation stages, simulation, sensitivity, gradients, and result transfer. The supplied workload keeps **101 frequencies, 193 design variables, and double precision**. Validation and reporting sit outside the timer; warm execution is reported separately.
+
+See the [challenge brief](challenge.pdf), [judging criteria](judging-criteria.pdf), and [original setup and benchmark guide](docs/CHALLENGE.md).
+
+## How we reduced the wait
+
+We measured the phases first. In the presentation’s starting run, roughly **19.5 s went into compilation** and **15.3 s into computation**. Two changes drove the solution:
+
+1. **Exploit the optical system’s sparsity.** The example has 2,533 nonzero matrix entries out of 564,001. Structural sparse assembly and SuperLU avoid dense work on zeros; solve reuse reduces repeated preparation. The presentation’s sparse milestone is approximately **11.5 s**.
+2. **Change how the physics executes.** Keep the component formulas, trace their recipe with JAX, and execute values and derivatives on the host with NumPy and sparse solves. The host-engine milestone is **1.74 s**, approximately 20× faster than the starting baseline. First-order reverse differentiation uses an adjoint solve.
+
+Later changes reduced setup dispatch, small compilations, and derivative work, with fallback handling for unsupported components. The presentation ends at **0.66 s**, including an organizer-approved compiler setting. These are selected team milestones, not one reconstructed commit chain or isolated causal measurements.
+
+[![JAX traces the physics; NumPy and sparse solves execute it](presentation/slides/04-host-engine.png)](presentation/faster-answers.pdf#page=4)
+
+The tested fast-path interface supports `jit` and first-order reverse gradients. It does not establish GPU, JVP, Hessian, or higher-order parity. [Results & evidence](docs/RESULTS.md) explains validation, exact candidate identities, and the limits of the speedup claims.
+
+## The agentic loop
+
+An agent explores an owned branch and worktree. The supervisor checks the edit scope, commits a candidate, submits its exact SHA, and resumes the session with measured feedback. A manual operator can own submission instead; ownership remains explicit.
+
+```mermaid
+flowchart LR
+    H[Hypothesis and bounded task] --> A[Agent in isolated worktree]
+    A --> G[Supervisor: commit exact SHA]
+    G --> Q[Durable evaluation queue]
+    Q --> V[Fixed-environment benchmark and checks]
+    V --> E[Timings, arrays, logs and evidence]
+    E --> D[Continue, refine, combine or stop]
+    D -. measured feedback .-> H
+    G --> O[Read-only graph and frontend]
+    E --> O
 ```
 
-Follow the [three-instance team workflow](.wiki/team-search.md) and
-[new AMD instance setup](.wiki/portable-amd.md). Each teammate uses their own local
-Claude/Codex account and evaluator; Qwen and SMAC are optional. The
-[shared GitHub queue](https://github.com/timbtz/feyer-search-lab/tree/control/team-search)
-tracks task ownership, exact candidates, evidence, stalled directions and combinations.
-The [lab documentation](.wiki/README.md) covers existing automated controllers.
-The original challenge instructions follow below.
+Research agents explore implementation changes. Bounded numerical search refines admitted choices: earlier campaigns used SMAC3; the final six-setting SuperLU sweep enumerated the entire menu. Every combination is a new candidate and needs its own evaluation. A faster stopwatch reading is useful only when the required checks pass.
 
-This repository includes the public simulator source, example data, [challenge PDF](challenge.pdf), [judging criteria PDF](judging-criteria.pdf), [editable brief](challenge.docx), a short [start-here example](start_here.py), and a [full benchmark](benchmark.py). No separate simulator checkout or GPU is required.
+[![Coordinate, explore, version, evaluate, tune and learn](presentation/slides/08-agent-loop.png)](presentation/faster-answers.pdf#page=8)
 
-## Start here
+## What the graph shows
 
-Use **Python 3.12 on Linux or WSL2**, with **32 GB RAM recommended**. Clone the repository:
+The graph connects **research directions → agent sessions → candidate revisions → evaluation runs → recorded decisions**. A session can create several candidates; one SHA can have several runs. Each result stays attached to its setup, environment, validation policy, and timing context.
 
-```bash
-git clone https://github.com/feyerlabs/start-hack-munich-2026.git
-cd start-hack-munich-2026
-```
+- **Candidate ancestry** is a DAG of explicit scientific parents, including multiple parents for combinations.
+- **Session and lane groups** organize the display; they do not prove ancestry.
+- **Feedback links** show recorded information returning to the next proposal, separately from ancestry.
+- **Run details** expose official checks, extra comparisons, timing phases, source links, and retained logs. Missing evidence stays unknown.
 
-Alternatively, [download the ZIP](https://github.com/feyerlabs/start-hack-munich-2026/archive/refs/heads/main.zip), unpack it and open a terminal in its root folder. Then install and run:
+Explore the topology map for the broad search, the exact evidence DAG for provenance, and the Submission and Run archive views for individual revisions. The [architecture guide](docs/ARCHITECTURE.md) maps each part to its code.
 
-```bash
-python3.12 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -m pip install -e .
-python start_here.py
-```
+[![Search map of recorded agent sessions, numerical sweeps and decisions](presentation/screenshots/search-map.png)](https://github.com/timbtz/feyer-search-frontend)
 
-[`start_here.py`](start_here.py) walks through one complete simulation and gradient calculation in five steps. It prints setup time, compilation time, and combined simulation/sensitivity/gradient runtime. It runs once using the CPUs available to the process.
+*Frontend screenshot of the dated saved snapshot. The visible historical campaign measurements have their own scope; they are not the final pitch result.*
 
-For reproducible measurements, numerical checks and the five-bar plot, use the full benchmark:
+## Correctness shaped the search
+
+The team checked the full supplied example, a second aLIGO topology, saved outputs and gradients, a 14-case regression suite, and source-level numerical assumptions. Review found unsafe approximate adjoint reuse in an experimental branch; a conservative repair used explicit adjoint solves.
+
+The final finite sweep is a useful example: **all six configurations passed both official benchmarks, but only the default passed the additional seed-relative suite**. The decision was to keep the repaired starting candidate. Finite checks provide evidence for tested cases, not a proof for every optical setup.
+
+## Explore locally
+
+**See the project and saved experiment evidence** — Python 3.9+, no model or evaluator credentials:
 
 ```bash
-python benchmark.py --cpus 1 --output benchmark-baseline.json
+git clone https://github.com/timbtz/feyer-search-frontend.git
+cd feyer-search-frontend
+python3 serve.py
 ```
 
-`--cpus 1` pins the process to one logical CPU on Linux/WSL. The full benchmark takes roughly 5 minutes for ten repetitions and validation, prints `PASS`, and writes `benchmark-baseline.json` and `benchmark-baseline.png`. Use `--repeats 3` for a shorter run or `--save-arrays baseline.npz` to save outputs. The measured peak memory was about 14.4 GiB.
+Open <http://localhost:8770>. Choose **Challenge & solution** for the presentation, **Search map** for the graph, or **Submission** for the selected revision. Use `python3 serve.py --demo` for explicitly synthetic examples. The included snapshot is a dated observation.
 
-## If setup fails
-
-- **Python missing:** install Python 3.12 first. On Debian/Ubuntu, the matching `python3.12-venv` package may also be needed for virtual environments.
-- **Windows:** use WSL2 and make enough RAM available to it. The single-CPU command uses Linux process affinity.
-- **Process killed / out of memory:** close other memory-heavy applications or use a machine with more available RAM. Reducing `--repeats` shortens the run but does not reduce peak memory.
-- **Numerical check fails:** restore the unchanged public fixtures and run the unmodified baseline with the pinned dependencies before investigating your changes.
-
-## The workload
-
-One complete saved 3×3 optical setup, all **101 frequencies from 800–3000 Hz**, and gradients for **193 physical design variables**. Every evaluation computes carrier fields, signal, quantum noise, detector sensitivity, powers and the gradient of mean log sensitivity relative to the public reference.
-
-In `benchmark.py`, the complete first-run total includes input preparation, all compilation, the forward simulation, sensitivity and gradients. Imports, CPU initialization and result transfer are included. Validation and benchmark logging/report/plot generation are excluded. There is no optimization loop.
-
-The benchmark’s five bars group the detailed measurements without dropping work. Setup includes imports, initialization and loading/building inputs. Compilation combines lowering and compilation for all stages. Sensitivity includes readout and host transfer. The raw JSON retains every stage and all warm repetitions.
-
-## Improve and compare
-
-1. Run the unmodified baseline in a fresh Python process.
-2. Use the phase plot to find a bottleneck, then edit `differometor/`.
-3. Run `python benchmark.py --cpus 1 --output benchmark-candidate.json`.
-4. Compare complete time, including compilation, on matching hardware, CPU affinity and software. Report median warm runtime separately and repeat measurements to assess variability.
-
-Keep the setup, every frequency, double precision, physical outputs and gradients. The full benchmark runs the quick correctness checks described below. Precomputed answers and omitted calculations do not count.
-
-Submit your code, before/after JSON reports and plots, and reproduction commands. A short note on your approach and correctness checks is welcome.
-
-## Judging and prizes
-
-Download the standalone [Judging Criteria PDF](judging-criteria.pdf), including timing rules and correctness checks.
-
-- **First prize:** Lowest complete evaluation time among correct submissions.
-- **Second prize:** Second-lowest complete evaluation time among correct submissions.
-- **Special prize:** The most surprising solution, chosen by the Feyer team.
-
-The speed prizes use the **complete first-run benchmark total** on matching hardware and CPU limits. Include imports, initialization, input preparation, all compilation, forward simulation, sensitivity, gradients and result transfer. Validation and benchmark reporting remain outside the timer; warm runtime is reported separately.
-
-AI coding tools are welcome. A high-level explanation of your approach, why it helps and what you learned is encouraged and helps the Feyer team understand your work.
-
-## Correctness: quick checks
-
-A correct submission evaluates the complete setup with all **101 frequencies**, all **193 design variables** and double precision. It preserves the physical results and gradients.
-
-The supplied checks require:
-
-- **Correct sensitivities:** positive sensitivity at every frequency, matching the public reference with `abs(log(sensitivity) - log(reference)) <= 1e-5` (natural logarithm; about 0.001% relative difference).
-- **Finite results:** carrier, signal, noise, sensitivity, powers, loss and all 193 gradient values contain no NaN or infinity; the gradient is not identically zero.
-- **Consistent gradients:** gradients should pass the supplied sanity check.
-
-Run a shorter check with:
+**Read your local lab state** — run from this repository:
 
 ```bash
-python benchmark.py --cpus 1 --repeats 3 --output benchmark-check.json
+python3 -m lab.live_dashboard --repo . --port 8765
 ```
 
-A successful run prints `PASS`. These quick checks cover the supplied workload and run outside the scored time. For larger numerical changes, comparing saved arrays or trying another public setup is helpful.
-
-## CPU baseline
-
-Tested on **16 November 2026** on an **Intel Xeon Platinum 8468**, pinned to **one logical CPU** with **32 GB RAM** allocated. CPU affinity and numerical-library thread limits are recorded in the [raw report](benchmarks/cpu-baseline.json). No GPU was used.
-
-![Time per phase](benchmarks/cpu-baseline.png)
-
-| Measurement | Seconds |
-| --- | ---: |
-| Complete first-run total, including compilation | **44.204** |
-| Total tracing/lowering and compilation | 22.918 |
-| Median warm evaluation, ten repetitions | **17.679** |
-| Warm minimum / maximum | 17.118 / 18.282 |
-
-All 101 frequencies and 193 gradients were evaluated. The public sensitivity test and two-step numerical gradient check passed. This was measured on a shared worker, so record your own baseline. The full benchmark adds archive support and output-path checks to the measured version; its numerical workload is unchanged. The short starter compiles simulation and differentiation together, so its timings are not directly comparable to this staged benchmark.
-
-Replot any saved report without running the simulation:
+Open <http://localhost:8765>. An empty checkout has no private `.lab` history; it does not recreate the team’s running services. To connect the standalone frontend to that observatory, run from the frontend repo:
 
 ```bash
-python plot_timings.py benchmark-baseline.json --output benchmark-baseline.png
+python3 serve.py --api-url http://127.0.0.1:8765
 ```
 
-## Public source and license
+For simulator installation and a baseline run, follow the [challenge guide](docs/CHALLENGE.md). For actual optimization work, follow the [lab runbook](.wiki/runbook.md), [portable AMD setup](.wiki/portable-amd.md), and [experiment rules](AGENTS.md). Managed experiments use the fixed evaluator environment and exact committed revisions.
 
-The simulator is the unmodified public [Artificial Scientist Lab Differometor](https://github.com/artificial-scientist-lab/Differometor) at commit `b0dc7c79e7c72a1b010174f6bdcad01efa51d6ff`. This repository adds the Feyer hackathon brief and benchmarking tools. The full upstream instructions remain in [README.upstream.md](README.upstream.md); the upstream [MIT license](LICENSE) is retained.
+## Repository map
 
-[UPSTREAM.json](UPSTREAM.json) records the original simulator and fixture hashes.
+| Path | Contents |
+| --- | --- |
+| [`differometor/`](differometor/) | Simulator in this checkout; optimized implementations are identified by exact revisions |
+| [`lab/`](lab/) | Supervisors, search controllers, evaluator client/queue/worker, profiling, observatory |
+| [`lab/dashboard/`](lab/dashboard/) | Embedded frontend copy; synced deliberately with the standalone repo |
+| [`experiments/`](experiments/) | Briefs, research notes, published analysis, submission manifest |
+| [`.wiki/`](.wiki/README.md) | Operating guides and historical experiment records |
+| [`docs/`](docs/ARCHITECTURE.md) | Combined architecture, results guide, original challenge instructions |
+| [`presentation/`](presentation/README.md) | Final PDF, original slide exports, presentation evidence and source map |
+| [`tests/`](tests/) | Infrastructure and evidence-integrity checks |
+
+The public challenge derives from [Artificial Scientist Lab’s Differometor](https://github.com/artificial-scientist-lab/Differometor); source provenance is retained in [UPSTREAM.json](UPSTREAM.json) and [README.upstream.md](README.upstream.md). Project code uses the [MIT license](LICENSE). The frontend retains the separate Porsche Design System license and notices.

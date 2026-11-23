@@ -1,43 +1,46 @@
-# Feyer experiment lab
+# Feyer lab — operating guides
 
-The lab separates optimization work from evaluation. Agents explore a direction in their own branch and working directory. A supervisor commits and submits their changes, then returns the AMD evaluator's results so they can decide what to try next. A screening result is provisional; a validated result passes the unchanged official benchmark.
+[Combined project overview](../README.md) · [System architecture](../docs/ARCHITECTURE.md) · [Results & evidence](../docs/RESULTS.md) · [Final presentation](../presentation/faster-answers.pdf) · [Frontend](https://github.com/timbtz/feyer-search-frontend)
 
-The team repository is [timbtz/feyer-search-lab](https://github.com/timbtz/feyer-search-lab). The challenge source and README remain at the repository root.
+The lab separates optimization from evaluation. Agents explore owned branches; a supervisor commits and submits exact candidates; the evaluator produces recorded evidence. Measured feedback determines what happens next. The frontend observes this process.
 
-## Start here
+This directory contains operating guides and historical records from the hackathon. Launch notes, host layouts, budgets and capacity figures describe their recorded sessions, not current service status. Use the dashboard’s source timestamps and the CLI for current observations. A screen result remains provisional; promotion requires the applicable full checks.
 
-- [Team search across three instances](team-search.md) coordinates personal Claude/Codex sessions through GitHub claims, evidence and combination tasks; no Qwen or SMAC dependency.
-- [Expanded CPU capacity](capacity.md) records lane ownership, new budgets, contention receipts and quiet serial confirmation.
-- [Research lineage and feedback](research-lineage.md) defines declared phase targets, exact evaluation links, external research records and separate operational feedback edges.
-- [Guided search frontier](search-frontier.md) supplies bounded, exact-result Pareto evidence to guided sessions while preserving independent-run input isolation.
-- [Prepare a new AMD evaluator](portable-amd.md) reproduces the fixed environment, local baseline and serial worker on a colleague's instance.
-- [Profiling feedback](profiling.md) ranks measured first-run costs and feeds exact-candidate evidence into each proposal.
-- [Architecture](architecture.md) explains branches, candidates, agent sessions and the worker queue.
-- [Live search dashboard](live-dashboard.md) runs the localhost architecture graph, candidate DAG, worker status and evaluation explorer.
-- [Runbook](runbook.md) covers access, evaluation and recovery.
-- [Experiment rules](experiment-rules.md) defines correctness and promotion requirements.
-- [Optimization hypotheses](hypotheses.md) records ideas to investigate without assuming they will work.
-- [Machine and baseline](baseline.md) records the measured starting point.
-- [Storage and retention](storage.md) explains what to retain and what can be recreated.
-- [Token Factory](token-factory.md) covers the Qwen API client, credentials and measured request limits.
-- [Optional Qwen reviews](qwen-worker.md) records bounded streaming, measured limitations and the default proposer-owned repair flow.
-- [Phase exploration](phase-exploration.md) explains candidate comparisons, the interactive viewer and observed Pareto tradeoffs.
-- [A second interactive agent](second-agent.md) explains isolated worktrees and conversation forks.
-- [System audit](system-audit.md) records correctness/resource decisions, fixes and unresolved organizer questions.
-- [Evolution search design](evolution-search-design.md) maps EvoHarness policies to the candidate DAG, Qwen mutations, larger-agent roles and validated timing evidence.
-- [Deterministic search](discrete-search.md) runs enumeration or discrete local search through the existing AMD evaluator without model calls.
-- [SMAC3 integration](smac-search.md) defines when to enumerate or use model-guided search, its evidence rules and isolated controller setup.
-- [DAG controller and evidence ledger](dag-search.md) documents the implemented frozen rounds, write ownership, worker artifacts and three-submission rule.
-- [Initial agent brief](../experiments/initial-agent.md) defines the first bounded exploration session.
+## Start and operate
 
-## Status
+| Guide | Use it to |
+| --- | --- |
+| [Runbook](runbook.md) | Access, evaluate and recover work using the supported client |
+| [Portable AMD setup](portable-amd.md) | Prepare a fixed environment, calibrated baseline and serial worker |
+| [Team search](team-search.md) | Coordinate tasks, branches, evidence and combinations across participants |
+| [Experiment rules](experiment-rules.md) | Understand correctness, permitted changes and promotion requirements |
+| [Detailed architecture](architecture.md) | Follow candidate identity, commit relay, queue lifecycle and feedback |
+| [Live dashboard](live-dashboard.md) | View local or synchronized records without launching experiments |
+| [Machine and baseline](baseline.md) | Interpret the initial measured reference |
+| [Storage and retention](storage.md) | Preserve evidence and distinguish recreatable data |
 
-The AMD instance, SSH access, VS Code connection, isolated Python environment and three official baseline runs have been verified. The serial experiment queue is deployed. Unchanged code passed end-to-end screening and full validation, including strict baseline array comparison. Screening took 37.5 seconds wall time; full validation took 126.1 seconds. The initial supervised Codex session has launched in the separate `codex-seed` worktree on `explore/seed-agent`. Its live status is recorded under `.lab/sessions/seed-agent/status.json`; the launch record is [seed-agent](../experiments/agents/seed-agent.json). It inherits the existing user configuration, `gpt-6-astra` with high reasoning effort. No optimization result is implied by launch status.
+## Follow the evidence
 
-## Working model
+- [Profiling feedback](profiling.md): measured first-run phase attribution.
+- [Research lineage](research-lineage.md): scientific parents and separately recorded feedback artifacts.
+- [Phase exploration](phase-exploration.md): timing comparisons and observed tradeoffs.
+- [Search frontier](search-frontier.md): bounded Pareto evidence for guided sessions.
+- [System audit](system-audit.md): correctness decisions and unresolved questions at the time of review.
+- [Compiler diagnostics](compiler-diagnostics.md): separately admitted diagnostic work.
 
-The first Codex candidate completed the entire feedback cycle: committed on `explore/seed-agent`, screened, fully validated, published its results, and resumed the same Codex conversation for candidate two. Its lazy visualization import preserved all saved arrays exactly. Complete first-run time was 37.00 seconds versus the lab calibration's 36.33 seconds, so this single measurement does not demonstrate a speed gain. See the [candidate report](https://github.com/timbtz/feyer-search-lab/blob/explore/seed-agent/experiments/runs/seed-agent/candidate-01.json).
+## Search controllers
 
-One direction can outlive an agent session. One agent can produce several candidate commits. One candidate can have several evaluation runs. Keep those identities separate so a replacement agent can resume from the written findings and every timing remains attributable to exact code.
+- [DAG controller and evidence ledger](dag-search.md): frozen rounds, ownership and submissions.
+- [Deterministic search](discrete-search.md): enumeration and discrete local search.
+- [SMAC3 integration](smac-search.md): model-guided search over registered implementation choices.
+- [Topology tuning](topology-tuning.md): refine an admitted implementation space.
+- [Evolution search design](evolution-search-design.md): design rationale and early measured lineage.
+- [Optimization hypotheses](hypotheses.md): proposed directions, not promised gains.
 
-The initial evaluator policy is one benchmark at a time. The instance's CPU quota permits more concurrent work, but memory use and shared-machine timing noise must be measured before increasing concurrency.
+The final six-setting SuperLU sweep used **enumeration**, and found no admissible improvement under its extra seed-relative checks. See [results and exact revisions](../docs/RESULTS.md). Earlier search designs and campaigns remain useful history.
+
+## Session and deployment history
+
+[Initial agent brief](../experiments/initial-agent.md) · [Second-agent workflow](second-agent.md) · [Capacity](capacity.md) · [Evaluator lanes](evaluator-lanes.md) · [Queue initialization](queue-initialization.md) · [Token Factory](token-factory.md) · [Optional Qwen reviews](qwen-worker.md)
+
+A direction may outlive one conversation. A session may produce many candidate commits. A candidate may have many runs. Preserve those identities, failed trials, fixed deadlines and handoff notes so later work can resume without inventing history.

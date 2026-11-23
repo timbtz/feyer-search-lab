@@ -371,9 +371,9 @@ if(typeof module!=='undefined')module.exports.TopologyMap=TopologyMap;
 /* Group exact revisions into session processes without equating sessions and jobs. */
 const SessionGraph=(()=>{
  function build(data){
-  const base=TopologyMap.build(data),groups=[],membership=new Map(),campaignRecords=Object.values(data.team_search?.research_records||{}).filter(r=>r.executor?.kind==='campaign'),campaigns=[...(data.campaigns||[])];for(const r of campaignRecords)if(!campaigns.some(c=>c.id===r.executor.id)){const worker=(data.workers||[]).find(w=>w.id===r.executor.id);campaigns.push({id:r.executor.id,status:r.executor_stop_status||r.status,selector:'Selector not exported',candidates:base.nodes.filter(n=>n.runs.some(x=>worker?.branch&&x.branch===worker.branch)||(r.evaluations||[]).some(e=>e.candidate_sha===n.sha)).map(n=>({commit_sha:n.sha})),coverageOnly:true});}const workers=(data.workers||[]).filter(w=>w.branch&&!campaigns.some(c=>c.id===w.id));
+  const base=TopologyMap.build(data),groups=[],membership=new Map(),campaignRecords=Object.values(data.team_search?.research_records||{}).filter(r=>r.executor?.kind==='campaign'),campaigns=[...(data.campaigns||[])];for(const r of campaignRecords)if(!campaigns.some(c=>c.id===r.executor.id)){const worker=(data.workers||[]).find(w=>w.id===r.executor.id);campaigns.push({id:r.executor.id,status:r.executor_stop_status||r.status,selector:'Selector not exported',candidates:base.nodes.filter(n=>n.runs.some(x=>worker?.branch&&x.branch===worker.branch)||(r.evaluations||[]).some(e=>e.candidate_sha===n.sha)).map(n=>({commit_sha:n.sha})),coverageOnly:true});}const workers=(data.workers||[]).filter(w=>(w.branch||w.session_id)&&!campaigns.some(c=>c.id===w.id));
   const add=(g,members)=>{g.members=members;g.runs=[];g.parents=[];g.spaces=[];g.records=g.records||[];g.workers=[];g.phases=[];groups.push(g);for(const n of members){if(!membership.has(n.id))membership.set(n.id,[]);membership.get(n.id).push(g.id);}return g;};
-  for(const w of workers){const id='session:'+w.id+':'+(w.session_id||'uncaptured');const members=base.nodes.filter(n=>!n.planned&&n.runs.some(r=>r.session_id?w.session_id===r.session_id:r.branch===w.branch&&workers.filter(x=>x.branch===w.branch).length===1));add({id,title:w.name||w.id,kind:'session',session_id:w.session_id||null,worker:w,status:w.status,group:'sessions',groupLabel:'Agent sessions',groupKind:'Independent research processes'},members);}
+  for(const w of workers){const id='session:'+w.id+':'+(w.session_id||'uncaptured');const members=base.nodes.filter(n=>!n.planned&&(n.runs.some(r=>r.session_id?w.session_id===r.session_id:!!w.branch&&r.branch===w.branch&&workers.filter(x=>x.branch===w.branch).length===1)||n.records.some(r=>r.executor?.id===w.id&&(r.session_id?r.session_id===w.session_id:workers.filter(x=>x.id===w.id).length===1))));add({id,title:w.name||w.id,kind:'session',session_id:w.session_id||null,worker:w,status:w.status,group:'sessions',groupLabel:'Agent sessions',groupKind:'Independent research processes'},members);}
   for(const c of campaigns){const members=base.nodes.filter(n=>(c.candidates||[]).some(a=>a.commit_sha===n.sha));const coverage=Object.values(data.team_search?.research_records||{}).find(r=>r.executor?.kind==='campaign'&&r.executor.id===c.id&&r.menu);add({id:'sweep:'+c.id,title:c.id,kind:'sweep',status:c.status,campaign:c,menu:coverage?.menu||null,records:coverage?[coverage]:[],group:'sweeps',groupLabel:'Numerical implementation menus',groupKind:'Frozen spaces and selectors'},members);}
   for(const n of base.nodes){const decision=n.records.find(r=>r.kind==='combine'||['stalled','menu_exhausted','budget_exhausted','deadline_reached','failed'].includes(r.status));if(!decision)continue;add({id:'decision:'+n.id,title:decision.kind==='combine'?'Combine approaches':decision.status.replaceAll('_',' '),kind:'decision',status:decision.status,records:[decision],menu:decision.menu||null,decision,sourceNode:n,group:'decisions',groupLabel:'Recorded decisions',groupKind:'Routing and stopping reasons'},[]);}
   const leftovers=base.nodes.filter(n=>!n.planned&&!membership.has(n.id));for(const group of [...new Set(leftovers.map(n=>n.group))]){const members=leftovers.filter(n=>n.group===group);add({id:'evidence:'+group,title:members[0].groupLabel,kind:'evidence',group:'evidence',groupLabel:'Other recorded topology branches',groupKind:'Session ownership unavailable'},members);}
@@ -384,12 +384,35 @@ const SessionGraph=(()=>{
   // Collapsing sessions can yield reciprocal links. Preserve them; use only an acyclic subset for placement.
   const placement=[];const reaches=(a,b,visited=new Set())=>a===b||!visited.has(a)&&(visited.add(a),placement.some(e=>e.source===a&&reaches(e.target,b,visited)));
   for(const e of edges)if(!reaches(e.target,e.source))placement.push(e);
+  for(const e of edges)e.returnLink=!placement.includes(e);
   const placed=SearchDAG.layout({nodes:groups,edges:placement});for(const n of placed.nodes){const g=groups.find(g=>g.id===n.id);g.rank=n.rank;}
+  for(const g of groups){
+   g.memberEdges=base.edges.filter(e=>g.members.some(n=>n.id===e.source)&&g.members.some(n=>n.id===e.target));
+   g.feedbackRecords=[...g.records,...g.members.flatMap(n=>n.records)].filter(r=>r.feedback_ref?.artifact_digest&&r.next_input?.feedback_digest===r.feedback_ref.artifact_digest);
+  }
   return {nodes:groups,edges,issues:base.issues,measurements:base.measurements,grouped:true,base};
  }
  return {build};
 })();
 if(typeof module!=='undefined')module.exports.SessionGraph=SessionGraph;
+
+/* Center each generation; wrap wide research fields without moving children above parents. */
+const TopologyFlow=(()=>{
+ function layout(nodes,edges,columns=4){
+  columns=Math.max(1,Math.floor(columns));
+  const layers=new Map(),positions=new Map(),result=[];
+  for(const n of nodes){const rank=n.rank||0;if(!layers.has(rank))layers.set(rank,[]);layers.get(rank).push(n);}
+  let row=1;
+  for(const [,layer]of [...layers].sort((a,b)=>a[0]-b[0])){
+   const center=n=>{const parents=edges.filter(e=>!e.returnLink&&e.target===n.id&&positions.has(e.source));return parents.length?parents.reduce((sum,e)=>sum+positions.get(e.source),0)/parents.length:columns;};
+   layer.sort((a,b)=>center(a)-center(b)||edges.filter(e=>!e.returnLink&&e.source===b.id).length-edges.filter(e=>!e.returnLink&&e.source===a.id).length||a.id.localeCompare(b.id));
+   for(let offset=0;offset<layer.length;offset+=columns){const band=layer.slice(offset,offset+columns);band.forEach((n,i)=>{const column=columns-band.length+1+i*2;positions.set(n.id,column);result.push({...n,row,column});});row++;}
+  }
+  return {nodes:result,columns};
+ }
+ return {layout};
+})();
+if(typeof module!=='undefined')module.exports.TopologyFlow=TopologyFlow;
 
 /* Read-only presentation of existing campaign evidence. PDS v4 supplies UI primitives. */
 'use strict';
@@ -547,7 +570,7 @@ if(typeof module!=='undefined')module.exports.SessionGraph=SessionGraph;
     if(center){viewport.scrollLeft=x*G.scale+G.offsetX-viewport.clientWidth/2;viewport.scrollTop=y*G.scale-viewport.clientHeight/2;}
   }
   function fitGraph(){if(!G.graph)return;const v=$('graph-viewport');graphScale(Math.min((v.clientWidth-40)/G.graph.width,(v.clientHeight-40)/G.graph.height,1),false);v.scrollLeft=0;v.scrollTop=0;}
-  function openGraph(){if(!G.graph)return;const v=$('graph-viewport');graphScale(Math.min(1,Math.max(.75,(v.clientWidth-40)/G.graph.width)),false);const anchor=G.graph.nodes.find(n=>n.type==='topology'&&n.campaign===S.campaign)||G.graph.nodes[0];v.scrollTop=G.graph.orientation==='down'?0:Math.max(0,(anchor.y+anchor.height/2)*G.scale-v.clientHeight/2);v.scrollLeft=G.graph.orientation==='down'?Math.max(0,(anchor.x+anchor.width/2)*G.scale+(G.offsetX||0)-v.clientWidth/2):0;}
+  function openGraph(){if(!G.graph?.nodes.length)return;const v=$('graph-viewport');graphScale(Math.min(1,Math.max(.75,(v.clientWidth-40)/G.graph.width)),false);const anchor=G.graph.nodes.find(n=>n.type==='topology'&&n.campaign===S.campaign)||G.graph.nodes[0];v.scrollTop=G.graph.orientation==='down'?0:Math.max(0,(anchor.y+anchor.height/2)*G.scale-v.clientHeight/2);v.scrollLeft=G.graph.orientation==='down'?Math.max(0,(anchor.x+anchor.width/2)*G.scale+(G.offsetX||0)-v.clientWidth/2):0;}
   function centerNode(id){const n=G.graph?.nodes.find(n=>n.id===id);if(!n)return;const v=$('graph-viewport');graphScale(Math.max(.85,G.scale),false);v.scrollLeft=(n.x+n.width/2)*G.scale+(G.offsetX||0)-v.clientWidth/2;v.scrollTop=(n.y+n.height/2)*G.scale-v.clientHeight/2;}
   function selectGraphNode(id){G.selected=id;paintGraphSelection();renderGraphDetail();}
   function paintGraphSelection(){
@@ -722,41 +745,82 @@ if(typeof module!=='undefined')module.exports.SessionGraph=SessionGraph;
 
     const filters=clear('topology-filter');for(const g of [{id:'all',label:'All topologies'},...groups]){const button=make('button','topology-filter',human(g.label));button.setAttribute('aria-pressed',String(g.id===T.group));button.addEventListener('click',()=>{T.group=g.id;renderTopology();});filters.append(button);}
     let nodes=data.nodes.filter(n=>T.group==='all'||n.group===T.group);const wanted=new Set(nodes.map(n=>n.id));for(const e of data.edges)if(wanted.has(e.target))wanted.add(e.source);nodes=data.nodes.filter(n=>wanted.has(n.id));
-    const shownGroups=groups.filter(g=>nodes.some(n=>n.group===g.id)),grid=clear('topology-nodes');grid.style.gridTemplateColumns='180px';grid.style.gridAutoColumns='minmax(280px,max-content)';
-    const groupRows=new Map();let nextRow=1;if(!data.grouped)for(const g of shownGroups){const members=nodes.filter(n=>n.group===g.id),maxPerRank=Math.max(1,...[...new Set(members.map(n=>n.rank))].map(rank=>members.filter(n=>n.rank===rank).length));groupRows.set(g.id,nextRow);nextRow+=maxPerRank;const h=make('button','topology-group');h.addEventListener('click',()=>{T.group=g.id;renderTopology();});add(h,make('span','micro-label',g.kind),make('h3','',human(g.label)));h.style.gridColumn=1;h.style.gridRow=groupRows.get(g.id);grid.append(h);}
-    if(data.grouped)grid.style.gridTemplateColumns='minmax(280px,max-content)';
-    const occupied=new Set(),placed=new Map();for(const n of nodes.sort((a,b)=>a.rank-b.rank||a.id.localeCompare(b.id))){let col=n.rank+(data.grouped?1:2),row=data.grouped?1:groupRows.get(n.group);if(data.grouped){col=Math.max(col,...data.edges.filter(e=>e.target===n.id&&placed.has(e.source)).map(e=>placed.get(e.source)+1));while(true){while(row<=3&&occupied.has(`${col}:${row}`))row++;if(row<=3)break;col++;row=1;}}else while(occupied.has(`${col}:${row}`))row++;occupied.add(`${col}:${row}`);placed.set(n.id,col);
-      const card=make('article',`topology-node ${n.kind?'process-'+n.kind:''}${n.planned?' proposed':''}`);card.dataset.topologyNode=n.id;card.style.gridColumn=col;card.style.gridRow=row;
+    const grid=clear('topology-nodes'),flow=TopologyFlow.layout(nodes,data.edges,topologyColumns());
+    grid.style.gridTemplateColumns=`repeat(${flow.columns*2}, minmax(0, 1fr))`;
+    for(const n of flow.nodes){
+      const card=make('article',`topology-node ${n.kind?'process-'+n.kind:''}${n.planned?' proposed':''}`);card.dataset.topologyNode=n.id;card.style.gridColumn=`${n.column} / span 2`;card.style.gridRow=n.row;
       const head=make('div','topology-node-head');add(head,make('span','micro-label',n.kind?human(n.kind):n.planned?'Research record':n.spaces.length?'Numerical / topology':'Research candidate'),make('code','',n.sha?short(n.sha):human(n.status||n.records[0]?.status||'recorded')));card.append(head);const title=make('button','topology-node-title',n.title.length>85?n.title.slice(0,82)+'…':n.title);title.title=n.title;title.addEventListener('click',()=>{$('topology-nodes').querySelectorAll('.selected').forEach(el=>el.classList.remove('selected'));card.classList.add('selected');if(n.kind){detail.open=!detail.open;return;}if(n.latest)inspectProgress('record',n.latest);else{const panel=$('progress-detail');panel.hidden=false;const target=clear('progress-detail-content');add(target,make('h2','',n.title));for(const r of n.records)disclosure(target,'Recorded research assignment',r,'map-inspect-'+r.record_id);if(n.sha)add(target,commitLink(n.sha));}});card.append(title);
       if(n.kind){const meta=make('p','process-meta');meta.textContent=n.kind==='session'?`${n.session_id?'Session '+short(n.session_id):'Session ID not captured'} · ${n.members.length} candidate revisions · ${n.members.reduce((sum,x)=>sum+x.runs.length,0)} evaluations`:n.kind==='sweep'?`${SearchProgression.numerical(n.campaign).selector} · ${n.members.length} candidate revisions`:n.kind==='decision'?(n.decision.stopping_reason||n.decision.change_summary||'Reason not recorded'):`${n.members.length} candidate revisions`;card.append(meta);
         if(n.menu)card.append(make('p','menu-coverage',`${n.menu.covered_count}/${n.menu.legal_count} frozen menu covered`));
         if(n.kind==='sweep')card.append(make('p','process-meta',`Controller: ${human(n.status)} · coverage and budget are separate`));
-        if(n.kind==='session')card.append(make('p','process-meta',`${n.worker.model==='inherited / not recorded'?'Model not recorded':n.worker.model} · ${n.worker.stale?'Stale observation':S.data?.snapshot?'Saved observation':'Observed'}: ${human(n.status)}`));
+        if(n.kind==='session')card.append(make('p','process-meta',`${!n.worker.model||n.worker.model==='inherited / not recorded'?'Model not recorded':n.worker.model} · ${n.worker.stale?'Stale observation':S.data?.snapshot?'Saved observation':'Observed'}: ${human(n.status)}`));
       }
+      if(n.members?.length)card.append(sessionIterations(n));
       const verification=(n.members?.length?n.members:[n]).flatMap(candidate=>VerificationEvidence.checks({sha:candidate.sha,research_records:candidate.records}));
       if(verification.length)card.append(make('p','verification-summary',`Verification · ${verification.length} checks / plans · ${verification.filter(c=>['failed','needs_review','blocked','unsupported'].includes(c.status)).length} findings · ${verification.filter(c=>c.status==='pending').length} pending`));
       if(n.workers.length)card.append(make('p','topology-worker',[...new Set(n.workers)].join(' · ')));
       if(n.latest){const v=RunMetrics.values(n.latest),verdict=SearchProgression.verdict(n.latest),ref=RunMetrics.reference(n.latest,data.measurements,S.data?.historical?.baseline),d=RunMetrics.delta(v.total,'total',ref),stats=make('div','topology-stats');add(stats,make('strong','',metricTime(v.total)),make('span',`metric-delta ${d.tone}`,metricDelta(d)),make('span',`run-verdict ${verdict.tone}`,verdict.label));card.append(stats);card.append(make('p','topology-job',`${n.runs.length} evaluation${n.runs.length===1?'':'s'} · latest ${short(n.latest.job_id)}`));
         const profile=make('details','topology-profile');profile.dataset.key='map-profile-'+n.id;profile.append(make('summary','','Profiler feedback'));const body=make('div','topology-profile-body');for(const k of RunMetrics.objectives)body.append(metricTree(k,v,ref));body.append(make('p','run-comparator',ref.label||ref.reason));profile.append(body);card.append(profile);
       }else card.append(make('p','topology-job',n.planned?'No measured output attached':'Input evidence unavailable here'));
-      const detail=make('details','topology-expand');detail.dataset.key='map-details-'+n.id;detail.append(make('summary','',n.members?.length?'Expand candidate subprocesses':n.kind==='decision'?'Decision & reason':'Decisions & run details'));const body=make('div','topology-detail-body');
+      const detail=make('details','topology-expand');detail.dataset.key='map-details-'+n.id;detail.append(make('summary','',n.members?.length?'Decisions & evaluation details':n.kind==='decision'?'Decision & reason':'Decisions & run details'));const body=make('div','topology-detail-body');
       detail.addEventListener('toggle',()=>{if(detail.open&&!body.childElementCount){for(const r of n.records){add(body,make('p','micro-label',human(r.status)),make('p','',r.change_summary||r.hypothesis));disclosure(body,'Research decision receipt',r,'map-record-'+r.record_id);}if(n.members?.length){const subprocesses=make('div','session-subprocesses');for(const child of n.members){const item=make('section','session-subprocess');add(item,make('code','',short(child.sha)),make('h4','',child.title),make('p','process-meta',`${child.runs.length} exact evaluations`));if(child.parents.length)item.append(make('p','process-meta',`Declared inputs: ${child.parents.map(short).join(' · ')}`));for(const r of child.runs){const job=make('details','subprocess-job');job.dataset.key=n.id+'-'+r.job_id;job.append(make('summary','',`${human(r.profile)} · ${short(r.job_id)} · ${metricTime(r.metrics?.total)} · ${SearchProgression.verdict(r).label}`));job.addEventListener('toggle',()=>{if(job.open&&!job.querySelector('.run-card'))job.append(runCard(r,0));});item.append(job);}subprocesses.append(item);}body.append(subprocesses);}if(n.runs.length)for(const [i,r]of n.runs.entries())body.append(runCard(r,i));else if(n.sha)body.append(commitLink(n.sha));}requestAnimationFrame(drawTopologyLines);});detail.append(body);card.append(detail);if(n.kind==='decision')card.addEventListener('click',e=>{if(e.target===card)detail.open=!detail.open;});
       if(n.runs.length){const grader=make('section','evaluator-node');grader.dataset.evaluator=n.id;grader.append(make('span','micro-label','Evaluator · feasibility + time'));for(const r of n.runs){const row=make('button','evaluator-result'),v=SearchProgression.verdict(r),checks=r.evidence?.checks||{};row.dataset.job=r.job_id;add(row,make('span','evaluator-job',`${human(r.profile)} · ${short(r.job_id)}`),make('strong',`run-verdict ${v.tone}`,metricTime(r.metrics?.total)),make('span','evaluator-checks',`Official: ${checks.official||r.official_check||'unknown'} · Strict: ${checks.strict||r.strict_check||'unknown'}`));row.title=v.label+' · '+SearchProgression.timing(r.comparison_context);row.addEventListener('click',()=>inspectProgress('record',r));grader.append(row);}card.append(grader);}
       for(const r of n.records.filter(r=>['stalled','menu_exhausted','budget_exhausted','deadline_reached','failed'].includes(r.status))){const stop=make('div','branch-stop');add(stop,make('strong','',human(r.status)),make('span','',r.stopping_reason||r.resolution||'Stopping reason not recorded'));card.append(stop);}
       grid.append(card);
     }
     $('topology-count').textContent=`${nodes.length} ${data.grouped?'sessions / sweeps / decisions':'revisions / assignments'} · ${data.edges.filter(e=>wanted.has(e.source)&&wanted.has(e.target)).length} recorded links`;
-    $('topology-note').textContent=(data.grouped?'Left-to-right process map. Session groups contain exact candidate revisions and separate evaluation jobs. Links summarize recorded candidate ancestry or explicit decisions; reciprocal group links do not change the underlying scientific DAG. ':'Left-to-right candidate graph. Solid arrows are declared scientific parents; rows separate topology or phase focus. ')+(data.issues.length?data.issues.join(' · '):'Worker names are supporting context.');
+    $('topology-note').textContent=(data.grouped?'Read from top to bottom. Outlined groups contain one agent’s candidate revisions or one numerical sweep. Solid links show recorded ancestry; dashed return links show recorded decisions or feedback artifacts. ':'Read from top to bottom. Solid links show declared scientific parents. ')+(data.issues.length?data.issues.join(' · '):'');
     grid.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>requestAnimationFrame(drawTopologyLines)));requestAnimationFrame(drawTopologyLines);
   }
+  function topologyColumns(){return Math.max(1,Math.min(4,Math.floor(($('topology-map').clientWidth/T.scale-64)/304)));}
+  function sessionIterations(n){
+    const field=make('div','session-iterations'+(n.members.length>3?' iteration-field':'')),lines=svg('svg',{'aria-hidden':'true',class:'iteration-lines'});field.append(lines);
+    const heading=make('p','iteration-heading',n.kind==='session'?'Candidates from this agent':'Candidate revisions');field.append(heading);
+    for(const child of [...n.members].sort((a,b)=>a.rank-b.rank||((a.records.find(r=>r.iteration!=null)?.iteration??Infinity)-(b.records.find(r=>r.iteration!=null)?.iteration??Infinity))||Math.min(...a.runs.map(r=>r.created_at||Infinity))-Math.min(...b.runs.map(r=>r.created_at||Infinity))||a.id.localeCompare(b.id))){
+      const button=make('button','iteration-node');button.dataset.iterationNode=child.id;
+      const iteration=child.records.find(r=>r.iteration!=null)?.iteration;
+      add(button,make('code','',short(child.sha)),make('span','iteration-title',child.title),make('small','',`${iteration!=null?'Iteration '+iteration+' · ':''}${child.runs.length} evaluation${child.runs.length===1?'':'s'}${child.latest?' · '+metricTime(child.latest.metrics?.total):''}`));
+      button.title=child.title;button.setAttribute('aria-label',`${child.title} · ${short(child.sha)} · ${child.runs.length} evaluations`);button.addEventListener('click',()=>{if(child.latest)inspectProgress('record',child.latest);else{const target=clear('progress-detail-content');add(target,make('h2','',child.title),commitLink(child.sha));for(const r of child.records)disclosure(target,'Research record',r,'iteration-'+r.record_id);$('progress-detail').hidden=false;}});field.append(button);
+    }
+    if(n.feedbackRecords?.length){const loop=make('div','iteration-feedback');add(loop,make('span','','↶'),make('span','',`Feedback → next input · ${n.feedbackRecords.length} recorded artifact${n.feedbackRecords.length===1?'':'s'}`));loop.title='A feedback digest is referenced by a recorded next-input artifact. This does not establish delivery to a later model call.';field.append(loop);}
+    return field;
+  }
   function drawTopologyLines(){
-    if($('topology-map').hidden)return;const grid=$('topology-nodes'),lines=clear('topology-lines'),bounds=grid.getBoundingClientRect(),z=T.scale;lines.setAttribute('width',grid.offsetWidth);lines.setAttribute('height',grid.offsetHeight);const boxes=new Map([...grid.querySelectorAll('[data-topology-node]')].map(el=>[el.dataset.topologyNode,el.getBoundingClientRect()]));
-    for(const e of T.model?.edges||[]){const a=boxes.get(e.source),b=boxes.get(e.target);if(!a||!b)continue;const x1=(a.right-bounds.left)/z,y1=(a.top+Math.min(a.height,120*z)/2-bounds.top)/z,x2=(b.left-bounds.left)/z,y2=(b.top+Math.min(b.height,120*z)/2-bounds.top)/z,mid=(x1+x2)/2;const wire=svg('path',{d:`M${x1} ${y1} C${mid} ${y1},${mid} ${y2},${x2} ${y2}`,class:'topology-edge'+(e.kind&&e.kind!=='candidate_lineage'?' decision-edge':'')});const label=svg('title');label.textContent=e.kind==='candidate_lineage'?'Scientific ancestry between contained candidates; not evidence of feedback delivered between sessions':human(e.kind||'Declared scientific parent');wire.append(label);lines.append(wire);lines.append(svg('path',{d:`M${x2-6} ${y2-4} L${x2} ${y2} L${x2-6} ${y2+4}`,class:'topology-edge'}));}
+    if($('topology-map').hidden)return;
+    const grid=$('topology-nodes'),lines=clear('topology-lines'),bounds=grid.getBoundingClientRect(),z=T.scale;
+    const visible=[...grid.querySelectorAll('[data-topology-node]')],ids=new Set(visible.map(el=>el.dataset.topologyNode));
+    const flow=TopologyFlow.layout((T.model?.nodes||[]).filter(n=>ids.has(n.id)),T.model?.edges||[],topologyColumns());
+    grid.style.gridTemplateColumns=`repeat(${flow.columns*2}, minmax(0, 1fr))`;
+    for(const n of flow.nodes){const el=visible.find(el=>el.dataset.topologyNode===n.id);el.style.gridColumn=`${n.column} / span 2`;el.style.gridRow=n.row;}
+    lines.setAttribute('width',grid.offsetWidth);lines.setAttribute('height',grid.offsetHeight);
+    const boxes=new Map(visible.map(el=>[el.dataset.topologyNode,el.getBoundingClientRect()]));
+    for(const e of T.model?.edges||[]){
+      const a=boxes.get(e.source),b=boxes.get(e.target);if(!a||!b)continue;
+      const returning=e.returnLink||b.top<=a.top,x1=((a.left+a.right)/2-bounds.left)/z,y1=(a.bottom-bounds.top)/z,x2=((b.left+b.right)/2-bounds.left)/z,y2=(b.top-bounds.top)/z,mid=(y1+y2)/2;
+      const rail=(Math.max(a.right,b.right)-bounds.left)/z+22;
+      const d=returning?`M${x1} ${y1} C${x1} ${y1+24},${rail} ${y1+24},${rail} ${y1} L${rail} ${y2-24} Q${rail} ${y2-40},${x2} ${y2-40} L${x2} ${y2}`:`M${x1} ${y1} C${x1} ${mid},${x2} ${mid},${x2} ${y2}`;
+      const cls='topology-edge'+(returning?' return-edge':e.kind&&e.kind!=='candidate_lineage'?' decision-edge':'');
+      const wire=svg('path',{d,class:cls}),label=svg('title');label.textContent=e.kind==='candidate_lineage'?'Recorded candidate ancestry between groups':human(e.kind||'Declared scientific parent');wire.append(label);lines.append(wire,svg('path',{d:`M${x2-4} ${y2-7} L${x2} ${y2} L${x2+4} ${y2-7}`,class:cls}));
+    }
+    for(const el of visible){
+      const n=T.model.nodes.find(n=>n.id===el.dataset.topologyNode),field=el.querySelector('.session-iterations');if(!field)continue;
+      const svgLayer=field.querySelector('svg');svgLayer.replaceChildren();svgLayer.setAttribute('width',field.offsetWidth);svgLayer.setAttribute('height',field.offsetHeight);
+      const box=field.getBoundingClientRect(),members=new Map([...field.querySelectorAll('[data-iteration-node]')].map(child=>[child.dataset.iterationNode,child.getBoundingClientRect()]));
+      for(const e of n.memberEdges||[]){
+        const a=members.get(e.source),b=members.get(e.target);if(!a||!b)continue;
+        if(field.classList.contains('iteration-field')){
+          const sideways=Math.abs(a.top-b.top)<1,x1=((sideways?a.right:(a.left+a.right)/2)-box.left)/z,y1=((sideways?(a.top+a.bottom)/2:a.bottom)-box.top)/z,x2=((sideways?b.left:(b.left+b.right)/2)-box.left)/z,y2=((sideways?(b.top+b.bottom)/2:b.top)-box.top)/z,mid=(y1+y2)/2;
+          svgLayer.append(svg('path',{d:`M${x1} ${y1} C${x1} ${mid},${x2} ${mid},${x2} ${y2}`,class:'iteration-edge'}));
+        }else{const y1=(a.top+a.height/2-box.top)/z,y2=(b.top+b.height/2-box.top)/z;svgLayer.append(svg('path',{d:`M17 ${y1} C3 ${y1},3 ${y2},17 ${y2} M12 ${y2-4} L17 ${y2} L12 ${y2+4}`,class:'iteration-edge'}));}
+      }
+
+    }
   }
   $('topology-sessions').addEventListener('change',e=>{T.sessions=e.target.checked;T.group='all';T.signature='';renderTopology();});
   $('topology-collapse').addEventListener('click',()=>{$('topology-nodes').querySelectorAll('details').forEach(d=>{d.open=false;});requestAnimationFrame(drawTopologyLines);});
   $('topology-zoom').addEventListener('input',e=>{T.scale=Number(e.target.value)/100;$('topology-plane').style.zoom=T.scale;$('topology-scale').textContent=e.target.value+'%';requestAnimationFrame(drawTopologyLines);});
   new ResizeObserver(()=>requestAnimationFrame(drawTopologyLines)).observe($('topology-nodes'));
+  new ResizeObserver(()=>requestAnimationFrame(drawTopologyLines)).observe($('topology-map'));
 
   function renderProgression(){
     const model=SearchProgression.build(S.data||{});P.model=model;
@@ -823,7 +887,9 @@ if(typeof module!=='undefined')module.exports.SessionGraph=SessionGraph;
     if(G.selected&&!byId.has(G.selected))G.selected=null;
     $('graph-empty').hidden=graph.nodes.length>1;
     $('graph-workspace').dataset.warnings=String(graph.warnings.length);
-    if(graph.warnings.length){$('notice').hidden=false;$('notice').textContent=[...new Set(graph.warnings)].join(' ');}
+    const warnings=[...new Set(graph.warnings)];$('graph-warning').hidden=!warnings.length;
+    $('graph-warning-summary').textContent=`${warnings.length} provenance notices · inspect incomplete or excluded relationships`;
+    $('graph-warning-details').textContent=warnings.join('\n');
     graphScale(G.scale,false);paintGraphSelection();renderGraphDetail();
     if(activeNode){const button=[...container.children].find(b=>b.dataset.node===activeNode);button?.focus({preventScroll:true});}
     if(!G.initialized&&S.view==='graph'){
@@ -883,17 +949,21 @@ if(typeof module!=='undefined')module.exports.SessionGraph=SessionGraph;
     else if(pending&&c?.controller?.process_alive===false){notice.textContent='The local controller has stopped with work still pending. Remote results remain available; see technical details.';notice.hidden=false;}
     else if(S.data?.queue?.enabled&&S.data.queue.stale&&S.data.queue.error){notice.textContent='The AMD connection is unavailable. Showing the last recorded results.';notice.hidden=false;}
     $('round-caption').textContent=c?`${statusLabel(c)}${c.source_updated_at?` · last evidence ${time(c.source_updated_at)}`:''}`:'No search evidence available.';
+    SubmissionReport.render(S.data);
     renderProfiler();renderTeam();renderProgression();renderTopology();renderGraph();renderSummary();renderNow();drawTable($('latest'),rows().filter(r=>r.kind!=='seed').slice(-3).reverse(),true);renderWorkflow();renderResults();renderTechnical();
     for(const d of document.querySelectorAll('details[data-key]'))d.open=opened.includes(d.dataset.key);
     if(focused&&document.activeElement===document.body&&$(focused))$(focused).focus({preventScroll:true});
     $('freshness').textContent=`${S.data?.snapshot?'Saved snapshot · source time':S.data?.demo?'Synthetic demo · example time':'Read-only · refreshed'} ${time(S.data?.generated_at)}${S.data?.queue?.enabled&&!S.data?.snapshot?` · AMD ${S.data.queue.stale?'last observation':'connected'}`:''}`;
   }
+  const viewIds = Array.from(document.querySelectorAll('#navigation [data-view]'), button => button.dataset.view);
   function showView(view) {
-    if(!['graph','overview','workflow','profiler','results'].includes(view))view='graph';S.view=view;
-    for(const id of ['graph','overview','workflow','profiler','results'])$(id).hidden=id!==view;
-    const index=['graph','overview','workflow','profiler','results'].indexOf(view);$('navigation').setAttribute('active-tab-index',String(index));if(customElements.get('p-tabs-bar'))$('navigation').activeTabIndex=index;
+    if(!viewIds.includes(view))view='graph';S.view=view;
+    for(const id of viewIds)$(id).hidden=id!==view;
+    const index=viewIds.indexOf(view);$('navigation').setAttribute('active-tab-index',String(index));if(customElements.get('p-tabs-bar'))$('navigation').activeTabIndex=index;
     for(const button of document.querySelectorAll('[data-view]'))button.setAttribute('aria-selected',String(button.dataset.view===view));
     document.body.classList.toggle('showing-graph',view==='graph');
+    document.body.classList.toggle('showing-story',view==='story');
+    if(location.hash!==`#${view}`)window.history.replaceState(null,'',`#${view}`);
     if(view==='graph'){requestAnimationFrame(drawProgressLines);requestAnimationFrame(drawTopologyLines);}
     if(view==='graph'&&G.graph&&!G.initialized){G.initialized=true;requestAnimationFrame(openGraph);}
 
@@ -905,13 +975,15 @@ if(typeof module!=='undefined')module.exports.SessionGraph=SessionGraph;
     finally{S.fetching=false;}
   }
   $('campaign').addEventListener('change',e=>{S.campaign=e.target.value;S.selected=null;render();});
-  document.querySelector('.brand').addEventListener('click',e=>{e.preventDefault();showView('graph');window.scrollTo({top:0,behavior:'smooth'});});
+  document.querySelector('.brand').addEventListener('click',e=>{e.preventDefault();showView('story');window.scrollTo({top:0,behavior:'smooth'});});
   for(const b of document.querySelectorAll('[data-view]'))b.addEventListener('click',()=>showView(b.dataset.view));
-  $('navigation').addEventListener('update',e=>{if(e.target===$('navigation'))showView(['graph','overview','workflow','profiler','results'][e.detail.activeTabIndex]);});
+  $('navigation').addEventListener('update',e=>{if(e.target===$('navigation'))showView(viewIds[e.detail.activeTabIndex]);});
   for(const a of document.querySelectorAll('p-accordion'))a.addEventListener('update',e=>{if(e.target===a)a.open=e.detail.open;});
   $('show-workflow').addEventListener('click',()=>showView('workflow'));$('show-results').addEventListener('click',()=>showView('results'));
   $('result-filter').addEventListener('change',e=>{S.filter=e.target.value;renderResults();});
   $('technical-toggle').addEventListener('click',()=>{$('technical').hidden=!$('technical').hidden;$('technical-toggle').textContent=$('technical').hidden?'Technical details':'Hide technical details';if(!$('technical').hidden)$('technical').scrollIntoView({behavior:'smooth'});});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
-  showView(location.hash.slice(1));refresh();setInterval(()=>{if(!document.hidden)refresh();},5000);
+  for(const link of document.querySelectorAll('.story-nav'))link.addEventListener('click',e=>{e.preventDefault();showView(link.hash.slice(1));window.scrollTo({top:0,behavior:'smooth'});});
+  window.addEventListener('hashchange',()=>showView(location.hash.slice(1)||'submission'));
+  showView(location.hash.slice(1)||'submission');refresh();setInterval(()=>{if(!document.hidden)refresh();},5000);
 })();

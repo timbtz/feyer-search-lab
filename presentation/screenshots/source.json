@@ -1,0 +1,11 @@
+{
+  "source_repository": "https://github.com/timbtz/feyer-search-frontend",
+  "source_path": "data/latest.json",
+  "snapshot_sha256": "c9469a88d8fc6709ec10136d6865036a96b09ba6cee40ee889bde426c4cac374",
+  "screenshot": "search-map.png",
+  "mode": "saved snapshot, graph focus, 50% zoom",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  }
+}

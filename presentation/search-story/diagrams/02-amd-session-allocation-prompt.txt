@@ -1,0 +1,40 @@
+Redesign this presentation architecture image. Keep its minimal white background, large black sans-serif typography, thin grey borders, simple rectangular cards, orange coordination accents. Landscape 16:9, high-resolution, refined editorial style. The NEW composition must show THREE LARGE HOST BOXES side by side, filled with their actual proposed roles and many small agent-session tiles. Clearly a planned architecture, not measured deployment. No 3D, gradients or clutter.
+
+Title: "One coordinated search. Three AMD instances."
+Small badge: "PROPOSED ALLOCATION"
+Small top-right callout: "1 strong session : 4 support sessions"
+
+Immediately beneath title, a thin shared horizontal band: "GitHub · tasks · branches · commits · evidence". Thin neutral connectors down to all three instance boxes, implying versioned collaboration. GitHub does not execute jobs. No separate agent card outside hosts: all session clients are inside host boxes.
+
+Three equally sized large boxes, headings:
+"AMD 01 / CONTROL + EVALUATION"
+"AMD 02 / AGENTS + LOCAL MODEL"
+"AMD 03 / AGENT POOL"
+Arrange the contents so readable and generous, each host box clearly encloses all its modules.
+
+AMD01 upper half:
+- Orange small block "Coordinator"
+- beside it outlined block "Durable queue"
+- next row "Numerical optimizer" with small subtitle "SMAC / finite sweeps"
+- dominant lightly grey panel "Full physics evaluator", sublabel "≈14 GB system RAM / job", and smaller line "CPU · original + aLIGO". This evaluator is only inside AMD01. Indicate short local arrows Coordinator → Queue → Evaluator and Numerical optimizer → Queue if space permits; no overlapping text.
+AMD01 lower half:
+Heading "2 Claude / Codex sessions". Draw exactly 2 black-bordered strong-session tiles in a row.
+Below draw 2 groups each consisting of 4 small colored squares = 8 support clients total; in each group 2 purple Qwen squares + 2 blue DeepSeek squares. Bracket shows each group belongs to one strong session. Label underneath "8 support sessions".
+
+AMD02:
+Upper panel saturated pale-blue outline "DeepSeek · self-hosted", sublabel "One shared GPU model server", smaller "GPU VRAM + host RAM". Blue is reserved for DeepSeek; do NOT depict one copy of model weights per session. Small network glyph and "Serves all three hosts".
+Next heading "4 Claude / Codex sessions", exactly 4 black-bordered strong-session tiles in a 2x2 grid. Below each tile, group exactly4 tiny colored squares (2purple+2blue). Total16support squares, labelled "16 support sessions".
+Bottom small pale gray panel "Quick local checks · CPU + RAM".
+
+AMD03:
+Heading "6 Claude / Codex sessions", exactly6 black-bordered strong-session tiles in a 2x3 grid. Each of those six parent tiles has4tiny colored support squares directly below it (2purpleQwen+2blueDeepSeek), visually six groups. Total24 support squares, labelled "24 support sessions".
+Bottom small palegray panel "Quick local checks · CPU + RAM".
+Additional small text: "Independent branches".
+
+Under all hosts, one clean shared rail labelled "Candidates → evaluation queue → measured feedback", with simple directional connections to AMD01 queue and back toward agent hosts; schematic not individual lines for every square.
+A separate thin BLUE connection from DeepSeek server to the support pools shows network inference, labelled "Shared model endpoint" if space allows.
+At bottom an explicit legend: black-outline tile "Claude / Codex", PURPLE square "Qwen · hosted API", BLUE square "DeepSeek · local model". Qwen weights are hosted externally, session clients inside boxes still use CPU/RAM. Claude/Codex likewise remote provider inference with local CLI clients; do NOT claim their weights live on these machines.
+Footer in clear small text: "All session clients use CPU + RAM. Local model weights use GPU VRAM."
+Second footer: "Illustrative counts · RAM-aware admission · isolated final timing"
+
+Crucial: the 1:4 ratio is represented visually for every strong session. Exactly2,4,6 strong sessions across hosts and8,16,24 support sessions respectively. Support mix2Qwen+2DeepSeek per parent is illustrative. Each support session is a little square, not an actual giant model replica. Evaluator14GB is original workload systemRAM not computeunits orVRAM. Numerical optimizer is lightweight controller, it sends expensive trials to full evaluator. These are proposed session counts, not guaranteed simultaneous execution. Color distinction crisp BLUEDeepSeek vsPURPLEQwen. Maintain minimal text but enough role labels. Strong big three-box architecture, not a search tree.

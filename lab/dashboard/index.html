@@ -5,42 +5,71 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="light">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23010b13'/%3E%3Ctext x='10' y='24' font-family='Arial' font-size='24' fill='white'%3EF%3C/text%3E%3C/svg%3E">
-  <title>Feyer — Search lab</title>
+  <title>Faster Answers — Feyer Search Lab</title>
+  <meta name="description" content="Faster optical simulation, a Git-traceable experiment loop, and a read-only graph connecting ideas, exact revisions and measured evidence.">
   <link rel="stylesheet" href="/pds-variables.css">
   <link rel="stylesheet" href="/pds-normalize.css">
   <link rel="stylesheet" href="/pds-font-face.css">
   <link rel="stylesheet" href="/style.css">
   <script defer src="/pds-loader.js"></script>
+  <script defer src="/submission.js"></script>
   <script defer src="/app.js"></script>
 </head>
 <body>
   <a href="#main" class="skip-link">Skip to content</a>
   <header class="site-header">
-    <a class="brand" href="#graph" aria-label="Feyer search lab home">FEYER<span>Search lab</span></a>
+    <a class="brand" href="#story" aria-label="Feyer search lab home">FEYER<span>Search lab</span></a>
     <div class="header-right"><span id="connection" role="status">Connecting…</span><a href="https://github.com/timbtz/feyer-search-frontend" target="_blank" rel="noopener noreferrer">GitHub</a></div>
   </header>
   <main id="main">
     <div class="intro">
-      <div><p class="eyebrow">Feyer / distributed research</p><h1>Many ideas.<br>One better solution.</h1></div>
-      <p class="lead">Explore different approaches. Refine what works.<br>Combine the strongest ideas and test them again.</p>
+      <div><p class="eyebrow">Faster Answers / Feyer Search Lab</p><h1>Faster physics.<br>Every step traceable.</h1></div>
+      <p class="lead">From a hypothesis to an exact revision and a measured result.<br>Explore the solution, the search, and the evidence.</p>
     </div>
     <p-tabs-bar id="navigation" compact="true" active-tab-index="0" aria="{'aria-label':'Search lab views'}">
+      <button type="button" data-view="story" id="tab-story" aria-controls="story">Challenge &amp; solution</button>
       <button type="button" data-view="graph" id="tab-graph" aria-controls="graph">Search map</button>
       <button type="button" data-view="overview" id="tab-overview" aria-controls="overview">Overview</button>
       <button type="button" data-view="workflow" id="tab-workflow" aria-controls="workflow">Architecture</button>
       <button type="button" data-view="profiler" id="tab-profiler" aria-controls="profiler">Timing profile</button>
       <button type="button" data-view="results" id="tab-results" aria-controls="results">Results</button>
+      <button type="button" data-view="submission" id="tab-submission" aria-controls="submission">Submission</button>
+      <button type="button" data-view="archive" id="tab-archive" aria-controls="archive">Run archive</button>
     </p-tabs-bar>
     <div class="round-bar"><div><label for="campaign">Search round</label><select id="campaign"><option value="">Loading…</option></select></div><p id="round-caption"></p></div>
     <div id="notice" class="notice" hidden role="status"></div>
     <div id="comparison-mode" class="notice" hidden role="status"></div>
+    <details id="graph-warning" class="notice" hidden><summary id="graph-warning-summary"></summary><p id="graph-warning-details"></p></details>
+
+
+    <section id="story" class="view story-view" role="tabpanel" aria-labelledby="tab-story" hidden>
+      <div class="story-hero">
+        <div><p class="eyebrow">START Hack Munich 2026 / Faster Answers</p><h2>Less waiting.<br>More physics.</h2><p>We made an optical simulator faster, then built a Git-traceable lab to explore, measure, and explain every experiment.</p><div class="story-actions"><a class="story-primary" href="https://github.com/timbtz/feyer-search-lab/blob/main/presentation/faster-answers.pdf" target="_blank" rel="noopener noreferrer">Read the final pitch ↗</a><a href="https://github.com/timbtz/feyer-search-lab/blob/main/challenge.pdf" target="_blank" rel="noopener noreferrer">The challenge brief ↗</a></div></div>
+        <div class="story-headline"><span>Complete first evaluation · final pitch</span><div><s>35.8 s</s><strong>0.66<span> s</span></strong></div><p>Approximately 55× faster in the presentation’s reported runs.</p><a href="https://github.com/timbtz/feyer-search-lab/blob/main/docs/RESULTS.md" target="_blank" rel="noopener noreferrer">Measurement scopes & exact revisions ↗</a></div>
+      </div>
+      <p class="story-scope">Presentation milestones describe the team’s journey. They are separate from the selected submission and later repaired candidate shown in the evidence views.</p>
+      <div class="story-contract"><div><strong>101</strong><span>frequencies</span></div><div><strong>193</strong><span>design variables</span></div><div><strong>64-bit</strong><span>precision preserved</span></div><div><strong>First run</strong><span>imports through gradients</span></div></div>
+      <div class="story-section-heading"><span class="micro-label">01 / THE CHALLENGE</span><h3>A faster answer has to include the gradient.</h3><p>Differometor models light moving through optical instruments, including gravitational-wave detectors. Feyer asked us to reduce the complete evaluation time while preserving the physical outputs and gradients. Compilation counts. Every frequency and design variable stays in the workload.</p></div>
+      <div class="story-pair"><article><span class="micro-label">02 / THE SOLUTION</span><h3>Skip the zeros.<br>Rethink compilation.</h3><p>The example matrix has just 2,533 nonzero entries out of 564,001. Sparse assembly and SuperLU remove dense work. Then a host engine executes the JAX-traced component recipe with NumPy, sparse solves, and adjoint gradients.</p><p>The formulas remain the source of the physics. Later work reduces setup dispatch, small compilations, and unnecessary derivative work.</p><a href="https://github.com/timbtz/feyer-search-lab/blob/main/docs/RESULTS.md" target="_blank" rel="noopener noreferrer">Follow the optimization story ↗</a></article><figure><a href="/story-assets/04-host-engine.png" target="_blank" rel="noopener noreferrer" aria-label="Open original host-engine slide at full size"><img src="/story-assets/04-host-engine.png" width="1440" height="810" alt="Original slide: JAX traces the physics; NumPy executes values and derivatives with sparse solves and an adjoint gradient." loading="lazy"></a><figcaption>Final pitch · slide 4. The approximately 20× gain compares 1.74 s with the 35.8 s baseline.</figcaption></figure></div>
+      <ol class="story-milestones" aria-label="Selected presentation milestones"><li><span>Profile first</span><strong>35.8 s</strong><p>19.5 s compiling.<br>15.3 s computing.</p></li><li><span>Sparse solves</span><strong>≈11.5 s</strong><p>Exploit the matrix’s<br>structural sparsity.</p></li><li><span>Host engine</span><strong>1.74 s</strong><p>Execute the recipe<br>without the large XLA compile.</p></li><li><span>Final pitch</span><strong>0.66 s</strong><p>Reduce remaining setup,<br>derivative and compiler overhead.</p></li></ol>
+      <p class="story-scope">Selected milestones, not a literal commit chain. Warm runtime is separate. The 0.66 s result includes the compiler setting described as organizer-approved in the deck.</p>
+      <div class="story-section-heading"><span class="micro-label">03 / THE OPERATING LOOP</span><h3>One experiment teaches the next.</h3><p>The lab coordinates owned worktrees, exact Git revisions, a durable evaluation queue, and measured feedback. The frontend makes that process inspectable.</p></div>
+      <figure class="story-wide-slide"><a href="/story-assets/08-agent-loop.png" target="_blank" rel="noopener noreferrer" aria-label="Open original agent-loop slide at full size"><img src="/story-assets/08-agent-loop.png" width="1440" height="810" alt="Coordinate, explore with Claude and Codex, version exact Git SHAs, evaluate on AMD, tune numerical settings, and learn from feedback." loading="lazy"></a><figcaption>Final pitch · slide 8. GitHub versions source and evidence; controllers and evaluator workers execute the experiments.</figcaption></figure>
+      <ol class="story-loop"><li><strong>Explore</strong><p>A bounded hypothesis and an owned agent worktree.</p></li><li><strong>Version</strong><p>The supervisor checks scope and commits an exact SHA.</p></li><li><strong>Evaluate</strong><p>A separate checkout runs the fixed workload and checks.</p></li><li><strong>Learn</strong><p>Evidence informs continuation, refinement, combination, or stopping.</p></li></ol>
+      <div class="story-pair story-graph-guide"><article><span class="micro-label">04 / THE GRAPH</span><h3>Trace an idea all the way to its evidence.</h3><p>Sessions contain candidate revisions. Each candidate can have multiple evaluation runs. The graph keeps scientific parents, display groups, and feedback links distinct.</p><a class="story-nav" href="#graph">Explore the search map →</a></article><dl><div><dt>Candidate ancestry</dt><dd>Explicit parent revisions form a DAG. A combination retains every declared parent.</dd></div><div><dt>Sessions & search lanes</dt><dd>Groups organize who explored what. Membership alone does not establish ancestry.</dd></div><div><dt>Feedback & decisions</dt><dd>Separate links show recorded feedback. Missing delivery evidence stays unknown.</dd></div><div><dt>Exact run receipts</dt><dd>Open timings, validation, source changes and logs. Repeats stay attached to their SHA.</dd></div></dl></div>
+      <div class="story-validation"><div><span class="micro-label">05 / TRUST THE EVIDENCE</span><h3>PASS was the beginning.</h3><p>Official large and aLIGO benchmarks, saved-array comparisons, a 14-case regression suite, and source review shaped the result. Review led to an explicit-adjoint repair in an experimental branch.</p><p>In the final six-setting SuperLU sweep, all settings passed the official checks. Only the default passed the extra seed-relative suite. We kept the repaired starting candidate.</p><a class="story-nav" href="#submission">Inspect the selected submission →</a></div><div class="story-verdict"><strong>6 / 6</strong><span>official benchmark pairs passed</span><strong>1 / 6</strong><span>extra seed-relative suites passed</span><p>No admissible improvement in that sweep.</p></div></div>
+      <p class="story-scope">Finite tests establish evidence for tested cases. The host fast path supports the tested jit and first-order reverse-gradient interface; JVPs, Hessians and GPU parity are outside that demonstrated scope. New optical-design search is a future application.</p>
+      <div class="story-repos"><a href="https://github.com/timbtz/feyer-search-lab" target="_blank" rel="noopener noreferrer"><span class="micro-label">THE LAB</span><h3>Operate the search ↗</h3><p>Simulator, Git provenance, task coordination, evaluator, validation, and feedback.</p></a><a href="https://github.com/timbtz/feyer-search-frontend" target="_blank" rel="noopener noreferrer"><span class="micro-label">THE FRONTEND</span><h3>Understand the search ↗</h3><p>Live observations or a dated snapshot, with graphs, profiles, source dossiers, and run history.</p></a></div>
+      <p class="story-source">Slides are direct exports from the supplied final presentation. <a href="https://github.com/timbtz/feyer-search-lab/blob/main/presentation/README.md" target="_blank" rel="noopener noreferrer">Presentation sources</a> · <a href="https://github.com/timbtz/feyer-search-lab/blob/main/docs/ARCHITECTURE.md" target="_blank" rel="noopener noreferrer">Combined architecture</a></p>
+    </section>
 
     <section id="graph" class="view" role="tabpanel" aria-labelledby="tab-graph">
       <div class="map-heading"><div><span class="micro-label">THE SEARCH SPACE</span><p id="progress-subtitle">Recorded research and its evidence</p></div><div class="map-controls"><button id="progress-focus" class="text-button">Focus map</button><div class="map-switch" aria-label="Map view"><button data-map-mode="topology" aria-pressed="true">Topology map</button><button data-map-mode="progression" aria-pressed="false">Run cards</button><button data-map-mode="evidence" aria-pressed="false">Exact evidence DAG</button></div></div></div>
       <div id="topology-map">
         <div id="topology-results" class="topology-results"></div>
         <div class="topology-toolbar"><div id="topology-filter" class="topology-filters" aria-label="Topology focus"></div><label><input id="topology-sessions" type="checkbox" checked> Group agent sessions</label><label class="topology-zoom">Zoom <input id="topology-zoom" type="range" min="35" max="120" value="80"><output id="topology-scale">80%</output></label><button id="topology-collapse" class="text-button">Collapse all</button></div>
-        <div class="topology-viewport" tabindex="0" aria-label="Topology graph. Scroll to explore; expand nodes for profiler feedback or decisions."><div id="topology-plane" style="zoom:.8"><svg id="topology-lines" aria-hidden="true"></svg><div id="topology-nodes"></div></div></div>
+        <div class="topology-key" aria-label="Graph legend"><span class="key-group">One agent / search group</span><span>Recorded ancestry</span><span class="key-feedback">Return / feedback artifact</span></div>
+        <div class="topology-viewport" tabindex="0" aria-label="Top-down search graph. Agent outlines contain candidate revisions. Scroll down to follow combinations and decisions."><div id="topology-plane" style="zoom:.8"><svg id="topology-lines" aria-hidden="true"></svg><div id="topology-nodes"></div></div></div>
         <p id="topology-count" class="meta-line"></p><p id="topology-note" class="meta-line"></p>
       </div>
       <div id="progression" hidden>
@@ -98,8 +127,8 @@
     </section>
 
     <section id="workflow" class="view" role="tabpanel" aria-labelledby="tab-workflow" tabindex="0" hidden aria-label="How it works">
-      <div class="section-intro"><h2>The search is the architecture.</h2><p>Five steps. Each result informs the next attempt. Select a step to see what it does.</p></div>
-      <figure class="architecture-figure"><img src="/search-architecture.svg" alt="Search workflow: baseline, research branches, local refinement, stop unproductive branches, combine, and confirm an exact final revision"><figcaption>Conceptual workflow. Host placement and launcher details are subject to change.</figcaption></figure>
+      <div class="section-intro"><h2>A Git-traceable operating loop.</h2><p>The lab coordinates the work; the frontend exposes its evidence. Select a step to follow an experiment from proposal to measured feedback.</p></div>
+      <figure class="architecture-figure"><img src="/search-architecture.svg" alt="Search workflow: baseline, research branches, local refinement, stop unproductive branches, combine, and confirm an exact final revision"><figcaption>Conceptual workflow. Candidate ancestry and operational feedback remain separate. Host placement is a deployment detail.</figcaption></figure>
       <div class="walkthrough"><ol id="steps" class="steps"></ol><article id="step-detail" class="step-detail" aria-live="polite"></article></div>
       <p-accordion id="topology-accordion" ><h3 slot="summary">What can the search change?</h3><div class="accordion-body" id="topology"></div></p-accordion>
       <p-accordion ><h3 slot="summary">Where does everything run?</h3><div class="accordion-body host-grid"><div><h3>Each participant</h3><p>A local checkout, personal Claude or Codex account, and owned research branches.</p></div><div><h3>Optional Hetzner services</h3><p>A broker or selection helper can run remotely. Host placement is subject to change; colleagues do not need VPS access.</p></div><div><h3>Each AMD instance</h3><p>One serial evaluation queue, the fixed benchmark environment, and a separately calibrated baseline.</p></div><div><h3>GitHub</h3><p>Source commits, owned branches, hypotheses, and published results.</p></div></div></p-accordion>
@@ -116,6 +145,15 @@
       <div class="section-intro"><h2>Where the time goes.</h2><p>Recorded benchmark phases for one exact job. First-run, warm timing, and job wall time remain separate.</p></div>
       <div class="profiler-controls"><label>Find an exact job or commit<input id="profiler-filter" type="search" placeholder="Job ID or candidate SHA"></label><label>Recorded evaluation<select id="profiler-select"></select></label></div>
       <p id="profiler-source" class="meta-line" role="status"></p><div id="profiler-detail"></div>
+    </section>
+    <section id="submission" class="view" role="tabpanel" aria-labelledby="tab-submission" hidden>
+      <div class="section-intro"><h2>From baseline to submission.</h2><p>Inspect the exact code, the optimization concepts, and the evidence behind each candidate.</p></div>
+      <div class="dossier-controls"><label>Candidate revision<select id="submission-select"></select></label></div><div id="submission-detail"></div>
+    </section>
+    <section id="archive" class="view" role="tabpanel" aria-labelledby="tab-archive" hidden>
+      <div class="section-intro"><h2>Every recorded evaluation.</h2><p>Search the latest evaluator receipts, validation results, phase timings and retained logs across all rounds.</p></div>
+      <div class="dossier-controls"><label>Search runs<input id="archive-query" type="search" placeholder="SHA, job ID, branch, hypothesis or status"></label></div>
+      <p id="archive-count" class="meta-line" role="status"></p><div id="archive-list"></div><button id="archive-more" class="graph-action" type="button" hidden>Show 30 more runs</button>
     </section>
     <footer><span id="freshness">Waiting for evidence.</span><button id="technical-toggle" class="text-button">Technical details</button></footer>
     <section id="technical" hidden aria-label="Technical details"><div class="technical-heading"><h2>Technical details</h2><p>Source records and logs for debugging. This view is read-only.</p></div><div id="technical-content"></div></section>

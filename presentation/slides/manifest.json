@@ -1,0 +1,47 @@
+{
+  "source": "../faster-answers.pdf",
+  "source_sha256": "05f24b3e9441bd9b674a9521195e7d5797155af30408ac059353ca77eee8d99e",
+  "width_px": 1440,
+  "slides": [
+    {
+      "page": 2,
+      "file": "slides/02-profile.png",
+      "sha256": "0cb9ecf56a577c17049d02d3c69cb5eedc055d005d04e476d60d2b50e5fc1fa3"
+    },
+    {
+      "page": 3,
+      "file": "slides/03-sparse.png",
+      "sha256": "861c54822e49e2ac51e826eeae3b87e28c72be7c9fed6837d8cf7c524cb2736b"
+    },
+    {
+      "page": 4,
+      "file": "slides/04-host-engine.png",
+      "sha256": "49cf1b39aa41f156ae531e442eaa1e7fa620863c3002d382704475a8059fbbb7"
+    },
+    {
+      "page": 5,
+      "file": "slides/05-last-second.png",
+      "sha256": "e5bbc799d5abce30f122536966062cf29bbabbbd1ca2640f58d387d3169e9521"
+    },
+    {
+      "page": 6,
+      "file": "slides/06-validation.png",
+      "sha256": "481b5fb0286b203fdfa29cdaa018a9331960d095d9030fb6af4081c2313f7861"
+    },
+    {
+      "page": 8,
+      "file": "slides/08-agent-loop.png",
+      "sha256": "273bd0cdb8790b03869cca3a19deff41adb872c027a3b5bd32fd90d0352630d4"
+    },
+    {
+      "page": 9,
+      "file": "slides/09-search.png",
+      "sha256": "7fe89f352dcb5d62c1eff15af0ac88f8dc7b563e28462edbd86bf103163a9c95"
+    },
+    {
+      "page": 13,
+      "file": "slides/13-faster-answers.png",
+      "sha256": "0ec62f40a4ab6f3a7cf887af2786b9dd7b8bbf194496fb2b3b2e99bb9d5d86f8"
+    }
+  ]
+}

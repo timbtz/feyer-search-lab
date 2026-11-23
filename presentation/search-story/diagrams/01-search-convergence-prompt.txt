@@ -1,0 +1,18 @@
+Use case: infographic-diagram. Redesign the attached presentation image. Preserve its clean white background, large black sans-serif headings, cobalt blue graph highlights, orange decision accents and thin pale-gray lines. REPLACE the entire left-to-right architecture pipeline with a TOP-TO-BOTTOM CONVERGING SEARCH GRAPH. Landscape 16:9 slide, high resolution, very polished minimalist editorial design with readable text and generous spacing.
+
+Title at top left: "Many directions. One selected solution."
+Small subtitle: "Explore → prune → refine → validate"
+
+The main subject is a downward tapering search DAG, wide at its top and narrow at its bottom. It must look like an exploration graph with individual circles and connections, not a funnel illustration or a stack of process boxes. Use about 22 nodes total. Thin light-gray edges for explored routes, a prominent continuous cobalt blue path for the retained route, small gray stop caps at abandoned branches. No dense web or crossing labels. This is a simplified conceptual search story, NOT an exact historical lineage.
+
+Upper graph region: a broad row of 7 circles spans most of the slide width. Small group label to left: "Explore". Tiny labels above three node groups only: "Assembly", "Solvers", "Compilation". Graph flows down to 5 circles spanning a narrower width; some pale routes terminate with stop caps. Next row 3 circles, still narrower. Left side label at this tier: "Prune + refine". A subtle orange decision ring on the highlighted path emphasizes selection. Small note alongside stopped gray routes: "Archive dead ends".
+The highlighted blue route makes one visually striking lateral departure from the mostly gray routes before continuing down; label it "Change approach". This represents a new implementation direction; no invented claim of measured timings.
+Then converge into ONE large blue rounded capsule centered at about 60% slide height, labelled "Selected solution". Only surviving routes reach it; terminated branches do not merge into it.
+
+BELOW this selected solution, show one compact secondary fan of EXACTLY SIX small blue outlined SQUARE nodes connected from the selected solution. These represent the later finite numerical parameter sweep. Label to left: "Numerical tuning". Small supporting text: "6 settings". Have five of the square nodes fade gray with small stop marks, and one continuing blue path corresponding to retained configuration. This mini-search must stay much narrower than the upper exploration graph.
+Below the mini-search place a single clean outlined validation gate/card centered: "Original benchmark + aLIGO", with two small check glyphs. Small supporting label: "Outputs · gradients · fresh-run timing". This is required validation for the selected result. Do NOT claim all six settings passed all additional checks.
+Final small blue capsule at bottom of the graph, text "Retain validated solution". Small note beside it: "No admissible gain in this sweep".
+
+Use the right margin for a tiny unobtrusive legend with three symbols and labels: blue line "Retained", gray stop "Stopped", orange ring "Decision". No other sidebars or architecture modules. No CPU, GitHub or queue boxes on this slide: those belong to the separate architecture diagram.
+Footer bottom left, very small: "Simplified search story · not an exact run graph"
+No numerical runtime labels, no global-fastest assertion. Clear directed down arrows at major transitions. Visually the whole structure unmistakably gets narrower from top to bottom and ends in ONE solution after refinement and the two-benchmark gate. All text correctly spelled. Keep graph dominant, sparse text, sophisticated spacing.

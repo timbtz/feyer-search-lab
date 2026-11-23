@@ -12,3 +12,21 @@ test('coverage-only numerical sweep preserves budget outcome separately from com
 test('empty session invents no results or shared feedback',()=>{
  const g=SessionGraph.build({workers:[{id:'independent',session_id:'i',branch:'explore/independent',status:'running'}]});assert.equal(g.nodes.length,1);assert.equal(g.nodes[0].members.length,0);assert.equal(g.edges.length,0);assert.equal(g.measurements.length,0);
 });
+
+test('unevaluated candidates join their recorded agent session and retain internal ancestry',()=>{
+ const g=SessionGraph.build({workers:[{id:'agent',session_id:'one'}],team_search:{research_records:{
+  first:{record_id:'first',executor:{id:'agent'},session_id:'one',candidate_sha:'a',parents:[],hypothesis:'First idea'},
+  next:{record_id:'next',executor:{id:'agent'},session_id:'one',candidate_sha:'b',parents:['a'],hypothesis:'Second idea',feedback_ref:{artifact_digest:'digest'},next_input:{feedback_digest:'digest'}}
+ }}});
+ const session=g.nodes.find(n=>n.kind==='session');
+ assert.deepEqual(session.members.map(n=>n.sha),['a','b']);assert.deepEqual(session.memberEdges,[{source:'a',target:'b'}]);assert.equal(session.feedbackRecords.length,1);assert.equal(g.edges.length,0);
+});
+test('a feedback reference alone never implies a recorded next input',()=>{
+ const g=SessionGraph.build({workers:[{id:'agent',session_id:'one'}],team_search:{research_records:{r:{record_id:'r',executor:{id:'agent'},session_id:'one',candidate_sha:'a',parents:[],feedback_ref:{artifact_digest:'first'},next_input:{feedback_digest:'different'}}}}});
+ assert.equal(g.nodes.find(n=>n.kind==='session').feedbackRecords.length,0);
+});
+test('reciprocal group links remain visible as returns without reversing the placement DAG',()=>{
+ const g=SessionGraph.build({workers:[{id:'agent',session_id:'one',branch:'work'}],jobs:[{id:'a',sha:'a',session_id:'one'},{id:'b',sha:'b',session_id:'one'}],team_search:{research_records:{r:{record_id:'r',candidate_sha:'b',parents:['a'],kind:'combine'}}}});
+ assert.equal(g.edges.length,2);assert.equal(g.edges.filter(e=>e.returnLink).length,1);
+ const byId=new Map(g.nodes.map(n=>[n.id,n]));for(const e of g.edges.filter(e=>!e.returnLink))assert.ok(byId.get(e.source).rank<byId.get(e.target).rank);
+});
