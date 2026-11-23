@@ -25,6 +25,8 @@ The README and both frontends use selected PNG exports at 1440 pixels wide. [`sl
 python3 presentation/render_slides.py
 ```
 
+The same command renders the original one-page `challenge.pdf` to [`challenge/01-brief.png`](challenge/01-brief.png), with source and image hashes in [`challenge/manifest.json`](challenge/manifest.json). The optical-setup image used beside it in the README is the unchanged upstream `media/uifo.png`, not an image extracted from that brief.
+
 This is a documentation utility; PyMuPDF is not a simulator or evaluator dependency. The frontend uses a subset under `story-assets/`; deliberately sync those files to both frontend copies when updating the deck.
 
 [`search-story/`](search-story/README.md) retains earlier storyboard prompts, source notes, schematic alternatives, and machine-readable sweep evidence. Its deployment illustrations are planning aids, not evidence of installed capacity. Use the final PDF as the presentation reference and recorded experiment artifacts as measurement evidence.

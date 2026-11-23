@@ -1,4 +1,4 @@
-"""Render selected pages of the supplied final pitch (requires PyMuPDF)."""
+"""Render the final pitch and original challenge brief (requires PyMuPDF)."""
 import hashlib
 import json
 from pathlib import Path
@@ -27,6 +27,20 @@ def main():
     manifest = {"source": "../faster-answers.pdf",
                 "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
                 "width_px": 1440, "slides": slides}
+    (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+
+    source = ROOT.parent / "challenge.pdf"
+    output = ROOT / "challenge"
+    output.mkdir(exist_ok=True)
+    target = output / "01-brief.png"
+    with fitz.open(source) as document:
+        page = document[0]
+        scale = 1200 / page.rect.width
+        page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False).save(target)
+    manifest = {"source": "../../challenge.pdf", "page": 1,
+                "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+                "file": target.name, "width_px": 1200,
+                "sha256": hashlib.sha256(target.read_bytes()).hexdigest()}
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
 
 
