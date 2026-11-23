@@ -4,19 +4,15 @@
 
 Faster optical simulations. A Git-traceable lab for finding, testing, and explaining improvements.
 
-[**Our presentation ↗**](presentation/faster-answers.pdf) · [**Feyer’s challenge ↗**](challenge.pdf) · [**Frontend ↗**](https://github.com/timbtz/feyer-search-frontend)
+[**Our presentation ↗**](presentation/faster-answers.pdf) · [**Feyer’s introduction ↗**](presentation/feyer-challenge.pdf) · [**Frontend ↗**](https://github.com/timbtz/feyer-search-frontend)
 
 ## The challenge
 
-Accelerate Differometor’s complete first evaluation: **101 frequencies · 193 variables · double precision · physical outputs and gradients preserved.**
+[![Feyer’s vision: AI-invented hardware for medicine, computing, and energy](presentation/feyer-slides/01-vision.png)](presentation/feyer-challenge.pdf#page=1)
 
-<table>
-<tr>
-<td width="50%" align="center"><a href="challenge.pdf"><img src="presentation/challenge/01-brief.png" alt="Feyer’s original Faster Physics challenge brief" width="100%"></a></td>
-<td width="50%" align="center"><a href="media/uifo.png"><img src="media/uifo.png" alt="Original Differometor illustration of the optical interferometer setup" width="100%"></a></td>
-</tr>
-<tr><td align="center">Feyer’s original brief · click to open PDF</td><td align="center">Optical setup · original Differometor visual</td></tr>
-</table>
+[![Feyer’s mission: scale physics simulation and AI exploration across the hardware design space](presentation/feyer-slides/02-mission.png)](presentation/feyer-challenge.pdf#page=2)
+
+**Our task:** accelerate Differometor’s complete first evaluation. **101 frequencies · 193 variables · double precision · physical outputs and gradients preserved.** [Challenge rules →](challenge.pdf)
 
 ## Our solution
 

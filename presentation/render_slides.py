@@ -1,4 +1,4 @@
-"""Render the final pitch and original challenge brief (requires PyMuPDF)."""
+"""Render the team pitch, Feyer introduction, and brief (requires PyMuPDF)."""
 import hashlib
 import json
 from pathlib import Path
@@ -25,6 +25,24 @@ def main():
             slides.append({"page": number, "file": "slides/" + target.name,
                            "sha256": hashlib.sha256(target.read_bytes()).hexdigest()})
     manifest = {"source": "../faster-answers.pdf",
+                "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+                "width_px": 1440, "slides": slides}
+    (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+
+    source = ROOT / "feyer-challenge.pdf"
+    output = ROOT / "feyer-slides"
+    output.mkdir(exist_ok=True)
+    slides = []
+    with fitz.open(source) as document:
+        for number, name in {1: "01-vision", 2: "02-mission"}.items():
+            page = document[number - 1]
+            scale = 1440 / page.rect.width
+            target = output / (name + ".png")
+            page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False).save(target)
+            slides.append({"page": number, "file": target.name,
+                           "sha256": hashlib.sha256(target.read_bytes()).hexdigest()})
+    manifest = {"source": "../feyer-challenge.pdf",
+                "original_filename": "26_11_21_StartHackathon.pdf",
                 "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
                 "width_px": 1440, "slides": slides}
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")

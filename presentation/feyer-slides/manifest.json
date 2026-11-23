@@ -1,0 +1,18 @@
+{
+  "source": "../feyer-challenge.pdf",
+  "original_filename": "26_11_21_StartHackathon.pdf",
+  "source_sha256": "92102e48e11e01ccbd1ac2a12c0b90d9594e4288cd35862b1ef681abd0387179",
+  "width_px": 1440,
+  "slides": [
+    {
+      "page": 1,
+      "file": "01-vision.png",
+      "sha256": "db2044db9ef19ae5403f8e3567389884f7dfde021ca4c936168b5b448629281e"
+    },
+    {
+      "page": 2,
+      "file": "02-mission.png",
+      "sha256": "e2f6e660efcd4141d2dd44fc8233851af27263f1d4060354ffe3ee7f6d2b1832"
+    }
+  ]
+}
