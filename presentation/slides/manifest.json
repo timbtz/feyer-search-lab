@@ -42,6 +42,11 @@
       "page": 13,
       "file": "slides/13-faster-answers.png",
       "sha256": "0ec62f40a4ab6f3a7cf887af2786b9dd7b8bbf194496fb2b3b2e99bb9d5d86f8"
+    },
+    {
+      "page": 14,
+      "file": "slides/14-remaining-time.png",
+      "sha256": "6e5eebbcf4c85d08d1913294fe2c24f47cf15d2a5bfbcbbb541f245088bb2281"
     }
   ]
 }

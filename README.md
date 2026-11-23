@@ -14,7 +14,15 @@ Faster optical simulations. A Git-traceable lab for finding, testing, and explai
 
 **Our task:** accelerate Differometor’s complete first evaluation. **101 frequencies · 193 variables · double precision · physical outputs and gradients preserved.** [Challenge rules →](challenge.pdf)
 
-## Our solution
+## Where the original time went: 44.20 seconds
+
+[![Feyer’s original timing breakdown: setup 3.66 seconds, compilation 22.92 seconds, forward simulation 13.29 seconds, sensitivity 1.37 milliseconds, gradient 4.34 seconds; total 44.20 seconds](benchmarks/cpu-baseline.png)](benchmarks/cpu-baseline.json)
+
+*Feyer’s published baseline on one Intel Xeon logical CPU. On our AMD machine, the starting workload took **35.8 s**—the baseline for our speedup.*
+
+[![Our starting profile: 19.5 seconds compiling and 15.3 seconds computing](presentation/slides/02-profile.png)](presentation/faster-answers.pdf#page=2)
+
+## How we solved it
 
 **Exploit sparsity. Execute the traced physics on the host.**
 
@@ -25,6 +33,8 @@ Faster optical simulations. A Git-traceable lab for finding, testing, and explai
 ## From 35.8 seconds to 0.66
 
 [![The final steps: host setup, leaner derivatives, fallback, and compiler settings](presentation/slides/05-last-second.png)](presentation/faster-answers.pdf#page=5)
+
+[![Inside the final 0.66 seconds: 0.26 seconds importing JAX, approximately 0.16 seconds compiling readout, and approximately 0.23 seconds in our build, simulation and gradient code](presentation/slides/14-remaining-time.png)](presentation/faster-answers.pdf#page=14)
 
 *Final-pitch measurements; approximately 55× overall. The host-engine slide’s 20× compares against the original baseline. [Exact revisions, validation, and measurement scopes →](docs/RESULTS.md)*
 

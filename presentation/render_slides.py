@@ -8,7 +8,7 @@ import fitz
 ROOT = Path(__file__).resolve().parent
 PAGES = {2: "02-profile", 3: "03-sparse", 4: "04-host-engine",
          5: "05-last-second", 6: "06-validation", 8: "08-agent-loop",
-         9: "09-search", 13: "13-faster-answers"}
+         9: "09-search", 13: "13-faster-answers", 14: "14-remaining-time"}
 
 
 def main():
